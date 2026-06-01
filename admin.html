@@ -56,7 +56,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:bold;">AW109 検索・管理コンソール <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px; vertical-align:middle;">v3.0</span></div>
+    <div style="font-weight:bold;">AW109 検索・管理コンソール <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px; vertical-align:middle;">v4.0</span></div>
     <button class="hdr-btn" onclick="location.reload()" style="color:var(--sub);">🔒 ロック</button>
   </header>
 
@@ -72,8 +72,8 @@
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
         <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">要請番号</label><input type="text" id="q-id" placeholder="IDを入力" style="width:100%;"></div>
         <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">ステータス</label><select id="q-status" style="width:100%;"><option value="">全て</option><option value="未完了">⚠️ 未完了</option><option value="代行入力完了">◯ 完了</option></select></div>
-        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">出場先</label><select id="q-dest" style="width:100%;"></select></div>
-        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">スタッフ (Dr / Ns)</label><select id="q-staff" style="width:100%;"></select></div>
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">出場先</label><select id="q-dest" style="width:100%;"><option value="">読込中...</option></select></div>
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">スタッフ (Dr / Ns)</label><select id="q-staff" style="width:100%;"><option value="">読込中...</option></select></div>
       </div>
       
       <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
@@ -137,11 +137,14 @@
       <div class="form-group" style="margin-top:12px;"><label>更新・操作履歴 (自動記録)</label><textarea id="edit-history" rows="4" readonly style="width:100%; background:var(--bg); border:none; padding:8px; border-radius:6px; color:var(--sub); outline:none; resize:none;"></textarea></div>
       
       <div class="no-print" style="margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
-        <p style="font-size:12px; font-weight:bold; color:var(--brand); margin-top:0;">※データを修正して上書き保存する場合は、担当者名を入力してください。</p>
-        <input type="text" id="edit-person" placeholder="修正者の名前を入力 (必須)" style="width:100%; margin-bottom:12px;">
-        <div style="display:flex; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <p style="font-size:12px; font-weight:bold; color:var(--brand); margin:0;">※データを修正・完了にする場合は、担当者名を入力してください。</p>
+        </div>
+        <input type="text" id="edit-person" placeholder="担当者名 (カナ) 必須" style="width:100%; margin-bottom:12px;">
+        <div style="display:flex; gap:8px;">
           <button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal('detail-modal')">キャンセル</button>
           <button style="flex:1;" onclick="saveRecord()">💾 上書き保存</button>
+          <button style="flex:1; background:#007aff;" id="btn-complete" onclick="markComplete()">✅ カルテ完了にする</button>
         </div>
       </div>
     </div>
@@ -171,26 +174,10 @@
 <script>
   // ── 設定 ──
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740"; // 🔐 ログイン用パスワード
+  const PIN_CODE = "5740"; 
   
   let allData = [];
   let filteredData = [];
-
-  const MASTERS = {
-    dest: ["鹿児島市","姶良市","阿久根市","伊佐市","出水市","いちき串木野市","指宿市","大崎町","鹿屋市","肝付町","さつま町","薩摩川内市","志布志市","曽於市","垂水市","長島町","中種子町","西之表市","日置市","東串良町","霧島市","錦江町","枕崎市","南大隅町","南九州市","南さつま市","南種子町","屋久島町","湧水町","えびの市","都城市","宮崎市","黒島","薩摩硫黄島","竹島","口永良部島","口之島","中之島","平島","諏訪之瀬島","悪石島","小宝島","宝島","熊本市","宇城市","甑島","名瀬","馬毛島"],
-    staff: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部","その他"]
-  };
-
-  window.onload = () => {
-    const destOpts = '<option value="">選択...</option>' + MASTERS.dest.map(v=>`<option value="${v}">${v}</option>`).join("");
-    const staffOpts = '<option value="">選択...</option>' + MASTERS.staff.map(v=>`<option value="${v}">${v}</option>`).join("");
-    
-    document.getElementById("q-dest").innerHTML = destOpts;
-    document.getElementById("q-staff").innerHTML = staffOpts;
-    document.getElementById("edit-dest").innerHTML = destOpts;
-    document.getElementById("edit-dr").innerHTML = staffOpts;
-    document.getElementById("edit-ns").innerHTML = staffOpts;
-  };
 
   function checkLogin() {
     const input = document.getElementById("login-pin").value;
@@ -204,16 +191,22 @@
   }
 
   function openModal(id) { document.getElementById(id).classList.add('show'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  function closeModal(id) { document.getElementById(id || 'detail-modal').classList.remove('show'); }
 
   function quickFilter(type) {
-    document.getElementById("q-id").value = ""; document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = "";
-    document.getElementById("q-status").value = ""; document.getElementById("q-dest").value = ""; document.getElementById("q-staff").value = "";
+    document.getElementById("q-id").value = "";
+    document.getElementById("q-date-start").value = "";
+    document.getElementById("q-date-end").value = "";
+    document.getElementById("q-status").value = "";
+    document.getElementById("q-dest").value = "";
+    document.getElementById("q-staff").value = "";
 
     if(type === '未完了') document.getElementById("q-status").value = "未完了";
     else if(type === '本日') {
-      const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      document.getElementById("q-date-start").value = today; document.getElementById("q-date-end").value = today;
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      document.getElementById("q-date-start").value = today;
+      document.getElementById("q-date-end").value = today;
     }
     fetchData();
   }
@@ -269,12 +262,10 @@
     } catch(e) { document.getElementById("results").innerHTML = `<p style="text-align:center; color:var(--red);">通信エラー: ${e.message}</p>`; }
   }
 
-  // 📝 詳細・修正モーダル展開
   function openDetail(row) {
     document.getElementById("edit-old-id").value = row["要請番号"];
     document.getElementById("edit-id").value = row["要請番号"];
     
-    // 日付を input type="date" 用の書式 (YYYY-MM-DD) に変換
     let dStr = row["日付"] || ""; dStr = dStr.replace(/\//g, "-");
     document.getElementById("edit-date").value = dStr;
     
@@ -283,7 +274,6 @@
     document.getElementById("edit-dr").value = row["フライトドクター"] || "";
     document.getElementById("edit-ns").value = row["フライトナース"] || "";
     
-    // 時間を input type="time" 用の書式 (HH:MM) に変換
     const fmtTime = (t) => t ? String(t).substring(0,5) : "";
     document.getElementById("edit-contact").value = fmtTime(row["接触"]);
     document.getElementById("edit-arrival").value = fmtTime(row["病着"]);
@@ -299,10 +289,36 @@
     if(String(row["心嚢穿刺・心嚢ドレナージ"]||"").includes("キット")) supply.push("・心嚢ドレナージキット: <b>使用</b>");
     
     document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "<span style='color:var(--sub);'>消費した主な資機材はありません</span>";
+    
+    // 完了済みの場合は完了ボタンを非表示
+    const isDone = (row["ステータス"]||"").includes("完了") && !(row["ステータス"]||"").includes("未完了");
+    document.getElementById("btn-complete").style.display = isDone ? "none" : "block";
+
     openModal("detail-modal");
   }
 
-  // 💾 上書き保存処理
+  // 🌟 カルテ転記完了ボタン処理
+  async function markComplete() {
+    const editor = document.getElementById("edit-person").value.trim();
+    if(!editor) return alert("完了処理を行うには「担当者名」を入力してください。");
+    const id = document.getElementById("edit-old-id").value;
+    
+    if(!confirm(`事案番号 [ ${id} ] のカルテ転記を「完了」にしますか？`)) return;
+    
+    const btn = document.getElementById("btn-complete");
+    btn.innerText = "処理中..."; btn.disabled = true;
+    
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_status", password:PIN_CODE, id:id, who:"代行(管理画面): "+editor}), redirect:"follow" });
+      const textRes = await res.text(); let json;
+      try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw e; }
+      
+      if(json.status==="success") { alert("カルテ転記を完了しました！"); closeModal('detail-modal'); document.getElementById("edit-person").value = ""; fetchData(); }
+      else { alert("エラー: " + json.message); }
+    } catch(e) { alert("通信エラー: " + e.message); }
+    btn.innerText = "✅ カルテ完了にする"; btn.disabled = false;
+  }
+
   async function saveRecord() {
     const editor = document.getElementById("edit-person").value.trim();
     if(!editor) return alert("データを上書き保存するには「修正者の名前」を入力してください。");
@@ -355,9 +371,23 @@
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
-      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual:[]}; else throw err; }
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
       
       if(jsonRes.status === "success") {
+        // 🌟 マスタデータの反映（プルダウン生成）
+        if (jsonRes.masters) {
+          const destOpts = '<option value="">全出場先</option>' + jsonRes.masters.dest.map(v=>`<option value="${v}">${v}</option>`).join("");
+          const drOpts = '<option value="">全スタッフ</option>' + [...new Set([...jsonRes.masters.dr, ...jsonRes.masters.ns])].map(v=>`<option value="${v}">${v}</option>`).join("");
+          
+          document.getElementById("q-dest").innerHTML = destOpts;
+          document.getElementById("q-staff").innerHTML = drOpts;
+          
+          document.getElementById("edit-dest").innerHTML = '<option value="">選択...</option>' + jsonRes.masters.dest.map(v=>`<option value="${v}">${v}</option>`).join("");
+          const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...jsonRes.masters.dr, ...jsonRes.masters.ns])].map(v=>`<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
+          document.getElementById("edit-dr").innerHTML = staffEditOpts;
+          document.getElementById("edit-ns").innerHTML = staffEditOpts;
+        }
+
         const qaBox = document.getElementById("qa-list");
         if(jsonRes.qa && jsonRes.qa.length > 0) qaBox.innerHTML = jsonRes.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a.replace(/\\n/g, '<br>')}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid #ccc;">`).join("");
         else qaBox.innerHTML = '<p style="text-align:center; font-size:13px;">公開されているQ&Aはありません。</p>';
