@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>AW109 EMS Record</title>
   <style>
-    /* ── AW109 Sleek iOSメモ風ホワイトデザイン復元 ── */
+    /* ── AW109 Sleek iOSメモ風ホワイトデザイン ── */
     :root {
       --ink: #1c1c1e; --sub: #8e8e93; --bg: #f2f2f7; --card: #ffffff;
       --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --red: #ff3b30;
@@ -21,7 +21,6 @@
     header { height: 56px; display: flex; align-items: center; justify-content: center; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); font-size: 17px; font-weight: 600; letter-spacing: -0.3px; position: relative; flex-shrink: 0; }
     main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 24px; }
     
-    /* インライン・カード構造の復元 */
     .card { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .card-section { padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
     .card-section:last-child { border-bottom: none; }
@@ -34,21 +33,19 @@
     select, input[type="number"], input[type="text"], input[type="date"] { text-align: right; font-size: 17px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 500; }
     textarea { width: 100%; border: none; font-size: 16px; background: transparent; outline: none; resize: none; color: var(--ink); }
 
-    /* セグメントコントロール・スキームボタン */
     .scheme-picker { display: grid; gap: 6px; padding: 4px; background: rgba(118,118,128,0.12); border-radius: var(--radius-md); }
     .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .scheme-row-bot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 5%; }
     .scheme-btn { padding: 8px 4px; border: none; border-radius: 10px; background: transparent; font-size: 12px; font-weight: 500; color: var(--sub); cursor: pointer; transition: all 0.2s; line-height: 1.3; text-align: center; }
     .scheme-btn.active { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
 
-    /* タイムラインのiOS純正風復元 */
     .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .time-cell { display: flex; flex-direction: column; gap: 4px; }
     .time-cell-label { font-size: 11px; font-weight: 600; color: var(--sub); text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
-    .time-tap { background: var(--bg); border: none; border-radius: var(--radius-md); padding: 14px 8px; font-size: 22px; font-weight: 700; color: var(--sub); text-align: center; cursor: pointer; transition: all 0.15s; }
-    .time-tap.set { background: #fff9db; color: var(--brand); border: 0.5px solid rgba(213,47,47,0.3); }
+    .time-box { background: var(--bg); border-radius: var(--radius-md); padding: 14px 8px; text-align: center; font-size: 20px; font-weight: 700; color: var(--sub); cursor: pointer; transition: all 0.15s; }
+    .time-box.set { background: #fff9db; color: var(--brand); border: 0.5px solid rgba(213,47,47,0.3); }
+    .time-box.disabled { opacity: 0.3; background: #e5e5ea; color: #aeaeb2; cursor: not-allowed; }
 
-    /* 自動判定バッジの美化 */
     .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .verdict-pill { border-radius: var(--radius-md); padding: 12px 8px; text-align: center; transition: all 0.2s; cursor: pointer; }
     .verdict-pill .v-label { font-size: 11px; font-weight: 600; color: var(--sub); margin-bottom: 4px; }
@@ -64,7 +61,6 @@
     .monitor-label { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 600; }
     .monitor-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-    /* アコーディオン・チップのiOS風マージ */
     .acc-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; font-size: 17px; font-weight: 500; }
     .acc-header:last-child { border-bottom: none; }
     .acc-header span { color: var(--sub); font-size: 14px; margin-left: auto; }
@@ -73,18 +69,16 @@
     .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { background: var(--bg); border: 1.5px solid transparent; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); }
     .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 600; }
-    .sub-panel { background: var(--card); border-radius: var(--radius-md); padding: 12px; margin-top: 8px; border: 0.5px solid var(--line); width: 100%; }
+    .sub-panel { background: var(--card); border-radius: var(--radius-md); padding: 12px; margin-top: 8px; border: 0.5px solid var(--line); width: 100%; display: none; }
     .radio-group { display: flex; gap: 10px; width: 100%; }
     .radio-btn { flex: 1; text-align: center; padding: 8px; border: 0.5px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
     .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
 
-    /* ボタン・エラー */
     .btn-clear { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; }
     .btn-add-action { background: none; border: none; color: var(--blue); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; }
     .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: var(--radius-md); padding: 18px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 16px; }
     .error-msg { background: #ffebeb; color: var(--brand); padding: 12px; border-radius: var(--radius-md); font-weight: 600; font-size: 13px; margin-bottom: 16px; display: none; border: 0.5px solid var(--brand); line-height: 1.5; }
     
-    /* 下部タブバーのiOS風復元 */
     .tab-bar { height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; flex-shrink: 0; z-index: 10; }
     .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; color: var(--sub); font-size: 10px; font-weight: 500; cursor: pointer; }
     .tab-btn.active { color: var(--brand); font-weight: 600; }
@@ -92,7 +86,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* ドラムロールピッカーの iOS風完全復元 */
     .dial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9998; display: none; align-items: flex-end; justify-content: center; }
     .dial-overlay.show { display: flex; }
     .dial-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); }
@@ -229,7 +222,7 @@
       <div class="card">
         <div class="card-section">
           <div class="section-label">事案検索コックピット</div>
-          <p style="font-size:14px; color:var(--sub); line-height:1.5;">過去の事案データの検索・同期処理を行います（GASバックエンド接続後にフル有効化）。</p>
+          <p style="font-size:14px; color:var(--sub); line-height:1.5;">過去の事案データの検索・同期処理を行います。</p>
         </div>
       </div>
     </div>
@@ -251,7 +244,10 @@
 </div>
 
 <script>
-  // ── マスタデータ ──
+  // ── マスタデータ ＆ GAS URL ──
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbweVnL-tKL35gCvNVDg4G4tuR5__RbL-yc5fucXPwEkgLnxK7WLdRNdQH19IWSfcY4U/exec";
+  const PIN_CODE = "5740";
+
   const MASTERS = {
     dest: ["鹿児島市","姶良市","阿久根市","伊佐市","出水市","いちき串木野市","指宿市","大崎町","鹿屋市","肝付町","さつま町","薩摩川内市","志布志市","曽於市","垂水市","長島町","中種子町","西之表市","日置市","東串良町","霧島市","錦江町","枕崎市","南大隅町","南九州市","南さつま市","南種子町","屋久島町","湧水町","えびの市","都城市","宮崎市","黒島","薩摩硫黄島","竹島","口永良部島","口之島","中之島","平島","諏訪之瀬島","悪石島","小宝島","宝島","熊本市","宇城市","甑島","名瀬","馬毛島"],
     dr: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","その他"],
@@ -274,19 +270,19 @@
     line: ["20G","18G","22G","24G","ベニューラ","骨髄針"]
   };
 
-  // ── グローバル状態管理 ──
   const st = { 
     scheme: "", times: {}, vals: {}, chips: {}, dyn: { 酸素:0, 圧迫:0, 呼吸器:0 },
     calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" }
   };
 
   window.onload = () => {
-    const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
+    // 日付自動生成バグの完全修正
+    const d = new Date(); 
+    document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     
+    fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
     buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); buildLines(STRUCT.line, "box-line");
     
-    // 最初は1つ目の入力枠だけを最小限で立ち上げる
     addDynRaw('酸素'); addDynRaw('圧迫'); addDynRaw('呼吸器');
   };
 
@@ -322,6 +318,7 @@
     document.getElementById(boxId).innerHTML = html;
   }
 
+  // 🌟 スマート設計：ONの時だけ本数を出す仕様に完全修正
   function buildLines(arr, boxId) {
     document.getElementById(boxId).innerHTML = arr.map(k=> `
       <div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>
@@ -341,26 +338,37 @@
   function setScheme(btn, s) {
     st.scheme = s;
     document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn));
+    
+    // 🌟 Iターン救急隊のみのときは病着を完全ロック
+    const arrivalBox = document.getElementById("t-病着");
+    if (s === "Iターン救急隊のみ") {
+      st.times["病着"] = ""; 
+      arrivalBox.textContent = "対象外"; 
+      arrivalBox.classList.remove("set");
+      arrivalBox.classList.add("disabled");
+    } else {
+      arrivalBox.classList.remove("disabled");
+      if(arrivalBox.textContent === "対象外") arrivalBox.textContent = "--:--";
+    }
     recalcAuto();
   }
 
   function clearTimeline() {
     ["接触","病着","終了"].forEach(k => { st.times[k] = ""; document.getElementById(`t-${k}`).textContent = "--:--"; document.getElementById(`t-${k}`).classList.remove("set"); });
+    const arrivalBox = document.getElementById("t-病着");
+    if(st.scheme === "Iターン救急隊のみ") { arrivalBox.textContent = "対象外"; arrivalBox.classList.add("disabled"); }
     recalcAuto();
   }
 
   function tCalc(key) { st.calc[key] = !st.calc[key]; document.getElementById(`calc-${key}`).classList.toggle('on', st.calc[key]); if(key==='spo2') document.getElementById("lbl-spo2").textContent = st.calc.spo2 ? "✓ SpO2算定 ON" : "— SpO2算定 OFF"; renderPreview(); }
 
-  // ── ★ 自動判定ロジックの完全リセット＆クリーン化 ──
   function recalcAuto() {
     const sc = st.scheme, c = st.times["接触"], a = st.times["病着"], e = st.times["終了"];
-    
-    // スキーム切り替え時に一度フラグを全消去
     st.calc.oshin = false; st.calc.hansho = false; st.calc.long = false; st.calc.mTime = "--:--";
     
     if(sc) {
       st.calc.oshin = true; 
-      if(sc.indexOf("救急隊のみ") === -1) st.calc.hansho = true; // 「Iターン救急隊のみ」なら搬送は絶対にfalse！
+      if(sc.indexOf("救急隊のみ") === -1) st.calc.hansho = true; 
     }
     if(c && e) {
       let cmins = parseInt(c.split(":")[0])*60 + parseInt(c.split(":")[1]);
@@ -376,7 +384,6 @@
       }
     }
     
-    // 見た目バッジのON/OFF連動
     setVerdictUI("calc-oshin", st.calc.oshin, "往診料");
     setVerdictUI("calc-hansho", st.calc.hansho, "搬送料");
     setVerdictUI("calc-long", st.calc.long, "長時間加算");
@@ -386,7 +393,7 @@
   }
 
   function setVerdictUI(domId, isOn, label) {
-    const el = document.getElementById(domId); el.className = `verdict-pill ${isOn ? "on" : "off"}`;
+    const el = document.getElementById(domId); if(!el) return; el.className = `verdict-pill ${isOn ? "on" : "off"}`;
     el.innerHTML = `<div class="v-label">${label}</div><span class="v-icon">${isOn ? "✓" : "—"}</span><div class="v-text">${isOn ? "◯ 算定" : "なし"}</div>`;
   }
 
@@ -421,9 +428,9 @@
     st.dyn[type] = 0; addDynRaw(type); renderPreview();
   }
 
-  // ── ★ 時間・リアルタイムピッカーバグの完全修正 ──
   let dialMode = "", dialKey = "";
   function openDial(mode, key) {
+    if(mode === 'time' && key === '病着' && st.scheme === 'Iターン救急隊のみ') return; // ロック時はピッカーを開かない
     dialMode = mode; dialKey = key; document.getElementById("dialTitle").textContent = key.replace(/[【】]/g,''); const wh = document.getElementById("dialWheels");
     const mk = (n, start=0, sfx="") => `<div class="dial-wheel" id="dW1" onscroll="hls('dW1')"><div class="dial-spacer"></div>` + Array.from({length:n},(_,i)=>`<div class="dial-opt">${String(i+start).padStart(mode==='time'?2:1,'0')}${sfx}</div>`).join("") + `<div class="dial-spacer"></div></div>`;
     
@@ -431,12 +438,10 @@
       wh.innerHTML = mk(24) + `<div class="dial-sep">:</div>` + mk(60).replace('dW1','dW2').replace('dW1','dW2');
       let v = st.times[key];
       if(!v) { 
-        // 🌟 リアルタイムの現在時刻を取得（100%修正）
         const now = new Date();
         v = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
       }
       const parts = v.split(":");
-      // スクロール位置を正確に現在時刻に合わせる
       setTimeout(() => {
         document.getElementById("dW1").scrollTop = parseInt(parts[0]) * 40;
         document.getElementById("dW2").scrollTop = parseInt(parts[1]) * 40;
@@ -486,7 +491,7 @@
     const id = document.getElementById("v-id").value; const eda = document.getElementById("chk-edaban").checked ? "-" + document.getElementById("v-edaban").value : "";
     
     let s = `【基本情報】\n要請番号: ${id}${eda}\n日付: ${document.getElementById("v-date").value}\n出場先: ${document.getElementById("v-dest").value}\n担当スタッフ: Ｄｒ.${document.getElementById("v-dr").value} / Ｎｓ.${document.getElementById("v-ns").value}\nスキーム: ${st.scheme || "未選択"}\n\n`;
-    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||'--:--'}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター算定時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  SpO2算定: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
+    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||((st.scheme === 'Iターン検急隊のみ' || st.scheme === 'Iターン救急隊のみ') ? '対象外' : '--:--')}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター算定時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  SpO2算定: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
     s += `【実施処置】\n`; let procs = [];
     Object.keys(st.chips).forEach(k => {
       if(st.chips[k]) { let detail = ""; if(k==="頸動脈パルス") detail = st.vals["頸動脈パルス詳細"] ? `(${st.vals["頸動脈パルス詳細"]})` : ""; else if(k==="気管挿管") detail = `(サイズ:${st.vals["気管挿管サイズ"]||"未指定"} / カフ:${st.vals["カフ有無"]||"未指定"})`; else if(k==="除細動") detail = `(${st.vals["除細動パッド"]||"未指定"})`; else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) detail = `(${st.vals[k+"本数"]||"1本"})`; else if(st.vals[k+"詳細"]) detail = `(所見:${st.vals[k+"詳細"]})`; procs.push(` ・ ${k} ${detail}`); }
@@ -501,6 +506,7 @@
     document.getElementById("preview-box").textContent = s;
   }
 
+  // ── ★ 送信バグの完全修正（GAS_API_URLへの直結） ──
   async function submitData() {
     if(validateTimes().length > 0) return alert("時間入力にエラーがあります。赤字の警告内容を修正してください。");
     const id = document.getElementById("v-id").value.trim(); if(!id) return alert("要請番号を入力してください。");
@@ -538,7 +544,8 @@
 
     alert("データベースへ送信し、関係各所へ共有メールを一斉送信しています...🚁");
     try {
-      const res = await fetch(GAS_URL, { method:"POST", body:JSON.stringify({action:"submit", password:"5740", data:payload}) });
+      // 🌟 ここを GAS_API_URL に完全に修正結合しました
+      const res = await fetch(GAS_API_URL, { method:"POST", body:JSON.stringify({action:"submit", password:PIN_CODE, data:payload}) });
       if((await res.json()).status==="success") { alert("送信が正常に完了しました！共有メールが送出されました。🚁"); location.reload(); }
     } catch(e) { alert("通信エラーが発生しました。インターネット環境をお確かめください。"); }
   }
