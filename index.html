@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ヘリ記録</title>
+  <style>
+    /* ── Design Tokens (Apple iOS UI Specs) ── */
+    :root {
+      --ink:        #1c1c1e;
+      --sub:        #8e8e93;
+      --bg:         #f2f2f7;
+      --card:       #ffffff;
+      --brand:      #007aff;
+      --green:      #34c759;
+      --yellow:     #ff9500;
+      --red:        #ff3b30;
+      --line:       rgba(60,60,67,0.12);
+      --radius-lg:  16px;
+      --radius-md:  12px;
+      --radius-sm:  8px;
+      --safe-top:   env(safe-area-inset-top);
+      --safe-bot:   env(safe-area-inset-bottom);
+      --header-h:   56px;
+      --tabbar-h:   56px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", sans-serif;
+      background: var(--bg); color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── App Layout ── */
+    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding-top: var(--safe-top); }
+    header { height: var(--header-h); display: flex; align-items: center; justify-content: center; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); position: relative; flex-shrink: 0; }
+    .header-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+    .header-action { position: absolute; right: 16px; font-size: 15px; color: var(--brand); background: none; border: none; font-weight: 500; cursor: pointer; }
+    main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 16px 16px 24px; }
+
+    /* ── Apple クリーン品質レイアウトクラス ── */
+    .card { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .card-section { padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
+    .card-section:last-child { border-bottom: none; }
+    .section-label { font-size: 12px; font-weight: 600; color: var(--sub); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px; }
+    .flex-row { display: flex; align-items: center; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    
+    /* ── インライン入力 ── */
+    .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; }
+    .inline-field:last-child { border-bottom: none; }
+    .field-label { font-size: 17px; color: var(--ink); flex: 1; }
+    .field-value { font-size: 17px; color: var(--sub); display: flex; align-items: center; gap: 6px; }
+    .field-value.set { color: var(--ink); }
+    .field-chevron { color: var(--line); font-size: 12px; margin-left: 4px; }
+    .select-mask { position: relative; }
+    .select-mask select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+    /* ── スキーム（iOSセグメント風） ── */
+    .scheme-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px; background: rgba(118,118,128,0.12); border-radius: var(--radius-md); }
+    .scheme-btn { padding: 10px 4px; border: none; border-radius: 10px; background: transparent; font-size: 12px; font-weight: 500; color: var(--sub); cursor: pointer; transition: all 0.2s; line-height: 1.3; text-align: center; }
+    .scheme-btn.active { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+    .scheme-picker .scheme-btn:nth-child(4), .scheme-picker .scheme-btn:nth-child(5) { grid-column: span 1; }
+
+    /* ── タイムライン ── */
+    .time-cell { display: flex; flex-direction: column; gap: 4px; }
+    .time-cell-label { font-size: 11px; font-weight: 600; color: var(--sub); text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
+    .time-tap { background: var(--bg); border: none; border-radius: var(--radius-md); padding: 14px 8px; font-size: 22px; font-weight: 700; color: var(--sub); text-align: center; cursor: pointer; transition: all 0.15s; }
+    .time-tap.set { background: #fff9db; color: var(--yellow); }
+    .now-btn { background: var(--brand); color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; padding: 4px 8px; cursor: pointer; align-self: center; margin: 4px auto 0; display: block; letter-spacing: 0.3px; }
+
+    /* ── 自動判定プレビュー ── */
+    .verdict-pill { border-radius: var(--radius-md); padding: 12px 8px; text-align: center; transition: all 0.2s; }
+    .verdict-pill .v-label { font-size: 11px; font-weight: 600; color: var(--sub); margin-bottom: 4px; }
+    .verdict-pill .v-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+    .verdict-pill .v-text { font-size: 12px; font-weight: 700; }
+    .verdict-pill.on { background: #d1fae5; }
+    .verdict-pill.on .v-label, .verdict-pill.on .v-text { color: #065f46; }
+    .verdict-pill.off { background: var(--bg); }
+    .verdict-pill.off .v-text { color: var(--sub); }
+    .monitor-time-box { background: var(--ink); color: #fff; border-radius: var(--radius-md); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+    .monitor-label { font-size: 13px; color: rgba(255,255,255,0.6); }
+    .monitor-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    /* ── チップ・動的フォーム群 ── */
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { background: var(--bg); border: 1.5px solid transparent; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; transition: all 0.15s; }
+    .chip.on { background: #d1fae5; border-color: var(--green); color: #065f46; font-weight: 600; }
+    .chip.btn-add { background: #e0f2fe; color: #0369a1; border: 1px dashed #0369a1; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 8px; }
+    .input-yellow { background: #fff9db !important; border: 1px solid #fcc419 !important; }
+    .input-gray { background: #f2f2f7 !important; border: none !important; color: #8e8e93; }
+    .dynamic-input { height: 44px; text-align: center; font-size: 15px; border-radius: var(--radius-md); width: 100%; appearance: none; -webkit-appearance: none; }
+    .line-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid var(--line); }
+    .line-row:last-child { border-bottom: none; }
+
+    /* ── ロック画面（テンキー） ── */
+    #lockView { position: fixed; inset: 0; background: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; z-index: 9999; transition: opacity 0.4s ease; }
+    #lockView.hidden { opacity: 0; pointer-events: none; }
+    .lock-icon { font-size: 64px; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .pin-dots { display: flex; gap: 16px; }
+    .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); background: transparent; transition: background 0.15s; }
+    .pin-dot.filled { background: #fff; border-color: #fff; }
+    .numpad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+    .numpad-btn { width: 72px; height: 72px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); color: #fff; font-size: 22px; font-weight: 300; cursor: pointer; transition: background 0.1s, transform 0.08s; backdrop-filter: blur(8px); }
+    .numpad-btn:active { background: rgba(255,255,255,0.28); transform: scale(0.94); }
+    .numpad-btn.del { font-size: 18px; font-weight: 400; }
+    .numpad-btn.empty { visibility: hidden; }
+
+    /* ── 基盤パーツ ── */
+    .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: var(--radius-md); padding: 18px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 16px; letter-spacing: -0.2px; }
+    .submit-btn:active { opacity: 0.85; transform: scale(0.99); }
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; flex-shrink: 0; z-index: 1000; }
+    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; color: var(--sub); font-size: 10px; font-weight: 500; cursor: pointer; transition: color 0.15s; }
+    .tab-btn.active { color: var(--brand); font-weight: 600; }
+    .tab-icon { font-size: 22px; line-height: 1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .search-bar { width: 100%; background: rgba(118,118,128,0.12); border: none; border-radius: 10px; padding: 10px 14px 10px 36px; font-size: 17px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; }
+    .list-row { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; gap: 12px; }
+    .list-row:last-child { border-bottom: none; }
+    .list-row:active { background: var(--bg); }
+    .list-main { flex: 1; }
+    .list-num { font-size: 17px; font-weight: 600; }
+    .list-sub { font-size: 13px; color: var(--sub); margin-top: 2px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.done { background: var(--green); }
+    .status-dot.pending { background: var(--yellow); }
+
+    /* ── ドラム式ピッカー ── */
+    .dial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: flex-end; justify-content: center; }
+    .dial-overlay.show { display: flex; }
+    .dial-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); }
+    .dial-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 10px auto 0; }
+    .dial-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px 10px; }
+    .dial-wheels { display: flex; justify-content: center; align-items: center; gap: 4px; height: 220px; padding: 0 20px; position: relative; }
+    .dial-wheels::before { content: ''; position: absolute; top: 50%; transform: translateY(-50%); left: 20px; right: 20px; height: 44px; background: rgba(118,118,128,0.1); border-radius: 10px; pointer-events: none; }
+    .dial-wheel { flex: 1; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .dial-wheel::-webkit-scrollbar { display: none; }
+    .dial-spacer { height: calc(50% - 22px); }
+    .dial-opt { height: 44px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: start; transition: all 0.1s; }
+    .dial-sep { font-size: 26px; font-weight: 700; color: var(--ink); padding: 0 4px; }
+    .summary-view { background: #fafafa; border: 1px dashed var(--line); border-radius: 12px; padding: 14px; font-size: 13px; line-height: 1.7; min-height: 260px; white-space: pre-wrap; font-family: monospace; }
+  </style>
+</head>
+<body>
+
+<div id="lockView">
+  <div class="lock-icon">🚁</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="dot-0"></div>
+    <div class="pin-dot" id="dot-1"></div>
+    <div class="pin-dot" id="dot-2"></div>
+    <div class="pin-dot" id="dot-3"></div>
+  </div>
+  <div class="numpad">
+    <button class="numpad-btn" onclick="pinInput(1)">1</button>
+    <button class="numpad-btn" onclick="pinInput(2)">2</button>
+    <button class="numpad-btn" onclick="pinInput(3)">3</button>
+    <button class="numpad-btn" onclick="pinInput(4)">4</button>
+    <button class="numpad-btn" onclick="pinInput(5)">5</button>
+    <button class="numpad-btn" onclick="pinInput(6)">6</button>
+    <button class="numpad-btn" onclick="pinInput(7)">7</button>
+    <button class="numpad-btn" onclick="pinInput(8)">8</button>
+    <button class="numpad-btn" onclick="pinInput(9)">9</button>
+    <button class="numpad-btn empty"></button>
+    <button class="numpad-btn" onclick="pinInput(0)">0</button>
+    <button class="numpad-btn del" onclick="pinDelete()">⌫</button>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <span class="header-title" id="headerTitle">要請・時間</span>
+    <button class="header-action" id="headerAction" onclick="submitToBackend()" style="display:none">送信</button>
+  </header>
+
+  <main id="mainScroll">
+
+    <div id="tab-input" class="tab-content active">
+      <div class="card">
+        <div class="inline-field" onclick="document.getElementById('f-date').showPicker()">
+          <span class="field-label">出動日付</span>
+          <span class="field-value set" id="disp-date">--</span>
+          <span class="field-chevron">›</span>
+        </div>
+        <input type="date" id="f-date" style="display:none" onchange="document.getElementById('disp-date').textContent=this.value.replace(/-/g, '/')">
+
+        <div class="inline-field">
+          <span class="field-label">要請番号</span>
+          <input id="f-id" type="text" inputmode="numeric" placeholder="例: 19771" style="border:none; background:none; text-align:right; font-size:17px; color:var(--ink); width:140px; outline:none;" oninput="updateHeaderActionVisibility()">
+        </div>
+
+        <div class="inline-field select-mask">
+          <span class="field-label">出場先</span>
+          <span class="field-value" id="disp-dest">選択してください</span>
+          <span class="field-chevron">›</span>
+          <select id="f-dest" onchange="document.getElementById('disp-dest').textContent=this.value; document.getElementById('disp-dest').classList.add('set');"><option>読込中...</option></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-section">
+          <div class="section-label">担当スタッフ</div>
+          <div class="grid-2">
+            <div class="select-mask" style="background:var(--bg); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:16px;" id="disp-dr">ドクター</span>
+              <select id="f-dr" onchange="document.getElementById('disp-dr').textContent=this.value;"><option>読込中...</option></select>
+              <span class="field-chevron">›</span>
+            </div>
+            <div class="select-mask" style="background:var(--bg); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:16px;" id="disp-ns">ナース</span>
+              <select id="f-ns" onchange="document.getElementById('disp-ns').textContent=this.value;"><option>読込中...</option></select>
+              <span class="field-chevron">›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-section">
+          <div class="section-label">スキーム選択</div>
+          <div class="scheme-picker" id="schemePicker">
+            <button class="scheme-btn" onclick="setScheme(this,'Uターン')">Uターン</button>
+            <button class="scheme-btn" onclick="setScheme(this,'Jターン')">Jターン</button>
+            <button class="scheme-btn" onclick="setScheme(this,'Iターン：救急隊')">I救急</button>
+            <button class="scheme-btn" onclick="setScheme(this,'Iターン：乗り込み')">I乗込</button>
+            <button class="scheme-btn" onclick="setScheme(this,'施設間')">施設間</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-section">
+          <div class="section-label">タイムライン</div>
+          <div class="grid-3">
+            <div class="time-cell">
+              <div class="time-cell-label">接触</div>
+              <button class="time-tap" id="t-contact" onclick="openDial('接触')">--:--</button>
+              <button class="now-btn" onclick="setNow('接触')">NOW</button>
+            </div>
+            <div class="time-cell">
+              <div class="time-cell-label">病着</div>
+              <button class="time-tap" id="t-arrival" onclick="openDial('病着')">--:--</button>
+              <button class="now-btn" onclick="setNow('病着')">NOW</button>
+            </div>
+            <div class="time-cell">
+              <div class="time-cell-label">終了</div>
+              <button class="time-tap" id="t-end" onclick="openDial('終了')">--:--</button>
+              <button class="now-btn" onclick="setNow('終了')">NOW</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <div class="section-label">自動計算結果判定</div>
+          <div class="verdict-row">
+            <div class="verdict-pill off" id="v-oshin"><div class="v-label">往診料</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
+            <div class="verdict-pill off" id="v-hansho"><div class="v-label">搬送料</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
+            <div class="verdict-pill off" id="v-long"><div class="v-label">長時間</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
+          </div>
+          <div class="monitor-time-box">
+            <span class="monitor-label">モニター算定時間</span>
+            <span class="monitor-value" id="monitorTime">--:--</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitToBackend()">送信してメール共有 ✉️</button>
+    </div>
+
+    <div id="tab-proc" class="tab-content">
+      <div class="card">
+        <div class="card-section">
+          <div class="section-label">エコー項目 (タップでON)</div>
+          <div class="chip-grid" id="echo-group"></div>
+        </div>
+        <div class="card-section">
+          <div class="section-label">その他処置項目 (タップでON)</div>
+          <div class="chip-grid" id="other-group"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-section">
+          <div class="section-label">ライン・骨髄針 (親指特化型・スマートトグルカウンター)</div>
+          <div id="line-container"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-section">
+          <div class="flex-between" style="margin-bottom: 8px;">
+            <div class="section-label" style="margin:0;">🌬️ 移動用酸素</div>
+            <button class="chip btn-add" onclick="addDynamicRow('oxygen')">＋ 酸素枠を追加</button>
+          </div>
+          <div id="dynamic-oxygen-box"></div>
+        </div>
+
+        <div class="card-section">
+          <div class="flex-between" style="margin-bottom: 8px;">
+            <div class="section-label" style="margin:0;">💓 胸骨圧迫</div>
+            <button class="chip btn-add" onclick="addDynamicRow('compression')">＋ 圧迫枠を追加</button>
+          </div>
+          <div id="dynamic-compression-box"></div>
+        </div>
+
+        <div class="card-section">
+          <div class="flex-between" style="margin-bottom: 8px;">
+            <div class="section-label" style="margin:0;">🤖 人工呼吸器</div>
+            <button class="chip btn-add" onclick="addDynamicRow('ventilator')">＋ 呼吸器枠を追加</button>
+          </div>
+          <div id="dynamic-ventilator-box"></div>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitToBackend()">送信してメール共有 ✉️</button>
+    </div>
+
+    <div id="tab-search" class="tab-content">
+      <div style="margin-bottom:12px; display:flex; gap:8px;">
+        <input class="search-bar" id="searchBar" placeholder="事案番号やナース名で瞬時フィルタ..." oninput="filterSearchList()">
+        <button onclick="fetchAllDataFromDatabase()" style="background:var(--card); border:1px solid var(--line); border-radius:10px; padding:0 12px; font-weight:600; font-size:13px; cursor:pointer;">同期 🔄</button>
+      </div>
+
+      <div class="card" id="recordList">
+        <p style="padding:20px; text-align:center; color:var(--sub);">同期中...</p>
+      </div>
+
+      <div class="card" id="summaryCard" style="display:none;">
+        <div class="card-section" style="display:flex; justify-content:space-between; align-items:center; background:#fafafa;">
+          <span style="font-weight:600; font-size:15px; color:var(--brand);">📋 電子カルテ転記用サマリー</span>
+          <button onclick="closeSummaryCard()" style="color:var(--red); background:none; border:none; font-size:22px; font-weight:bold; cursor:pointer;">×</button>
+        </div>
+        <div class="card-section">
+          <div id="summaryViewContainer" class="summary-view"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" id="tbtn-input" onclick="switchTab('input','要請・時間','tbtn-input')">
+      <span class="tab-icon">⏱️</span><span>要請・時間</span>
+    </button>
+    <button class="tab-btn" id="tbtn-proc" onclick="switchTab('proc','処置・資機材','tbtn-proc')">
+      <span class="tab-icon">💉</span><span>処置・資機材</span>
+    </button>
+    <button class="tab-btn" id="tbtn-search" onclick="switchTab('search','事案検索コックピット','tbtn-search'); fetchAllDataFromDatabase();">
+      <span class="tab-icon">🔍</span><span>検索コックピット</span>
+    </button>
+  </nav>
+</div>
+
+<div class="dial-overlay" id="dialOverlay" onclick="if(event.target===this)closeDial(false)">
+  <div class="dial-box">
+    <div class="dial-handle"></div>
+    <div class="dial-header">
+      <button class="dial-cancel" onclick="closeDial(false)">キャンセル</button>
+      <span class="dial-title" id="dialTitle">時刻を選択</span>
+      <button class="dial-done" onclick="closeDial(true)">完了</button>
+    </div>
+    <div class="dial-wheels">
+      <div class="dial-wheel" id="wh" onscroll="syncDialHighlight()"></div>
+      <div class="dial-sep">:</div>
+      <div class="dial-wheel" id="wm" onscroll="syncDialHighlight()"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─────────────────────────────────────────
+  //  定数 ＆ 唯一の真実のソース（Source of Truth）
+  // ─────────────────────────────────────────
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbweVnL-tKL35gCvNVDg4G4tuR5__RbL-yc5fucXPwEkgLnxK7WLdRNdQH19IWSfcY4U/exec";
+
+  const CHIPS = {
+    echo:  ["心エコー","FAST","大血管評価","頸動脈 パルス あり","頸動脈 パルス なし","胸部エコー","消化器系エコー","婦人科系エコー","その他エコー"],
+    other: ["十二誘導心電図","血糖測定","静脈血採取","動脈血採取","気管挿管","EtCO2","吸引"],
+    lines: ["２０G","１８G","２２G","２４G","ベニューラ","骨髄針"]
+  };
+
+  const state = {
+    pin: "",
+    scheme: "",
+    times: {},        // 各イベントの時刻を保持
+    chips: {},        // 各処置項目の真偽値を保持 (Source of Truth)
+    lineCounts: {},   // 各ラインのカウント状態 (0:OFF, 1:◯, 2〜:本数)
+    records: [],
+    masters: {},
+    verdicts: { oshin: false, hansho: false, longAdd: false, monitorTime: "--:--" }, // 指摘通り状態管理へ集約
+    counts: { oxygen: 1, compression: 1, ventilator: 1 }
+  };
+
+  // ─────────────────────────────────────────
+  //  PIN認証制御
+  // ─────────────────────────────────────────
+  function pinInput(n) {
+    if (state.pin.length >= 4) return;
+    state.pin += String(n);
+    updatePinDots();
+    if (state.pin.length === 4) setTimeout(checkPin, 120);
+  }
+
+  function pinDelete() {
+    state.pin = state.pin.slice(0, -1);
+    updatePinDots();
+  }
+
+  function updatePinDots() {
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`dot-${i}`).classList.toggle("filled", i < state.pin.length);
+    }
+  }
+
+  function checkPin() {
+    if (state.pin === PIN_CORRECT) {
+      localStorage.setItem("heli_auth", "passed");
+      const lock = document.getElementById("lockView");
+      lock.classList.add("hidden");
+      setTimeout(() => lock.style.display = "none", 400);
+      bootApp();
+    } else {
+      document.querySelector(".pin-dots").animate(
+        [{ transform:"translateX(-6px)" }, { transform:"translateX(6px)" }, { transform:"translateX(0)" }],
+        { duration: 300, iterations: 1 }
+      );
+      state.pin = "";
+      setTimeout(updatePinDots, 200);
+    }
+  }
+
+  // ─────────────────────────────────────────
+  //  アプリケーション起動・初期構築
+  // ─────────────────────────────────────────
+  function bootApp() {
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById("f-date").value = today;
+    document.getElementById("disp-date").textContent = today.replace(/-/g, '/');
+
+    buildChips();
+    buildLineRows();
+    renderDynamicRows('oxygen');
+    renderDynamicRows('compression');
+    renderDynamicRows('ventilator');
+    fetchMasters();
+    fetchAllDataFromDatabase();
+  }
+
+  function buildChips() {
+    renderChipGroup("echo-group", CHIPS.echo);
+    renderChipGroup("other-group", CHIPS.other);
+  }
+
+  function renderChipGroup(containerId, items) {
+    document.getElementById(containerId).innerHTML = items.map(name => `
+      <button class="chip" id="chip-${name}" onclick="toggleChip(this,'${name}')">${name}</button>
+    `).join("");
+  }
+
+  function toggleChip(el, key) {
+    state.chips[key] = !state.chips[key];
+    el.classList.toggle("on", !!state.chips[key]);
+  }
+
+  // ジョブズ的親指特化UI：セレクトボックスを完全撤去したスマートトグル機構
+  function buildLineRows() {
+    document.getElementById("line-container").innerHTML = CHIPS.lines.map(name => {
+      state.lineCounts[name] = 0; // 0: 未選択
+      return `
+        <div class="line-row">
+          <button class="chip" id="chip-line-${name}" onclick="toggleLineCount('${name}')" style="min-width:140px; text-align:left;">
+            ${name} : <span id="txt-line-${name}" style="font-weight:700;">OFF</span>
+          </button>
+          <span style="font-size:12px; color:var(--sub); padding-right:8px;">タップで本数カウントアップ</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function toggleLineCount(name) {
+    let current = state.lineCounts[name];
+    current = (current + 1) % 6; // 0(OFF) ➔ 1(◯) ➔ 2(2本) ➔ 3(3本) ➔ 4(4本) ➔ 5(5本) ➔ 0
+    state.lineCounts[name] = current;
+
+    const btn = document.getElementById(`chip-line-${name}`);
+    const txt = document.getElementById(`txt-line-${name}`);
+
+    if (current === 0) {
+      btn.classList.remove("on");
+      txt.textContent = "OFF";
+    } else if (current === 1) {
+      btn.classList.add("on");
+      txt.textContent = "◯";
+    } else {
+      btn.classList.add("on");
+      txt.textContent = `${current}本`;
+    }
+    recalc();
+  }
+
+  function setScheme(btn, name) {
+    state.scheme = name;
+    document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle("active", b === btn));
+    recalc();
+  }
+
+  function setNow(key) {
+    const d = new Date();
+    state.times[key] = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    refreshTimeUI(key);
+    recalc();
+  }
+
+  const TIME_IDS = { "接触":"t-contact", "病着":"t-arrival", "終了":"t-end" };
+  function refreshTimeUI(key) {
+    const el = document.getElementById(TIME_IDS[key]);
+    if (!el) return;
+    const val = state.times[key];
+    el.textContent = val || "--:--";
+    el.classList.toggle("set", !!val);
+  }
+
+  function addDynamicRow(type) {
+    if(type === 'oxygen' && state.counts.oxygen < 3) state.counts.oxygen++;
+    if(type === 'compression' && state.counts.compression < 3) state.counts.compression++;
+    if(type === 'ventilator' && state.counts.ventilator < 2) state.counts.ventilator++;
+    renderDynamicRows(type);
+  }
+
+  function renderDynamicRows(type) {
+    if(type === 'oxygen') {
+      const box = document.getElementById("dynamic-oxygen-box");
+      box.innerHTML = "";
+      for(let i=1; i<=state.counts.oxygen; i++) {
+        box.insertAdjacentHTML('beforeend', `
+          <div style="margin-top:8px;">
+            <div class="grid-3">
+              <div class="time-cell"><div class="time-cell-label">酸素${i}開始</div><button class="time-tap" id="t-酸素${i}開始" onclick="openDial('【酸素${i}】開始')">--:--</button></div>
+              <div class="time-cell"><div class="time-cell-label">酸素${i}終了</div><button class="time-tap" id="t-酸素${i}終了" onclick="openDial('【酸素${i}】終了')">--:--</button></div>
+              <div class="time-cell"><div class="time-cell-label">流量(L/min)</div><input type="text" id="v-酸素${i}流量" class="dynamic-input input-gray" placeholder="未入力" oninput="recalc()"></div>
+            </div>
+          </div>
+        `);
+      }
+    }
+    if(type === 'compression') {
+      const box = document.getElementById("dynamic-compression-box");
+      box.innerHTML = "";
+      for(let i=1; i<=state.counts.compression; i++) {
+        box.insertAdjacentHTML('beforeend', `
+          <div style="margin-top:8px;">
+            <div class="grid-2">
+              <div class="time-cell"><div class="time-cell-label">圧迫${i}開始</div><button class="time-tap" id="t-圧迫${i}開始" onclick="openDial('【圧迫${i}】開始')">--:--</button></div>
+              <div class="time-cell"><div class="time-cell-label">圧迫${i}終了</div><button class="time-tap" id="t-圧迫${i}終了" onclick="openDial('【圧迫${i}】終了')">--:--</button></div>
+            </div>
+          </div>
+        `);
+      }
+    }
+    if(type === 'ventilator') {
+      const box = document.getElementById("dynamic-ventilator-box");
+      box.innerHTML = "";
+      for(let i=1; i<=state.counts.ventilator; i++) {
+        box.insertAdjacentHTML('beforeend', `
+          <div style="margin-top:8px;">
+            <div class="grid-3">
+              <div class="time-cell"><div class="time-cell-label">呼吸器${i}開始</div><button class="time-tap" id="t-呼吸器${i}開始" onclick="openDial('【呼吸器${i}】開始')">--:--</button></div>
+              <div class="time-cell"><div class="time-cell-label">呼吸器${i}終了</div><button class="time-tap" id="t-呼吸器${i}終了" onclick="openDial('【呼吸器${i}】終了')">--:--</button></div>
+              <div class="time-cell"><div class="time-cell-label">FiO2</div><input type="text" id="v-呼吸器${i}FIO2" class="dynamic-input input-gray" placeholder="未入力" oninput="recalc()"></div>
+            </div>
+          </div>
+        `);
+      }
+    }
+    refreshDynamicUI();
+  }
+
+  function refreshDynamicUI() {
+    for(let i=1; i<=3; i++) {
+      syncDynamicRowUI(`【酸素${i}】開始`, `t-酸素${i}開始`, `【酸素${i}】終了`, `t-酸素${i}終了`, `v-酸素${i}流量`);
+      syncDynamicRowUI(`【圧迫${i}】開始`, `t-圧迫${i}開始`, `【圧迫${i}】終了`, `t-圧迫${i}終了`);
+      syncDynamicRowUI(`【呼吸器${i}】開始`, `t-呼吸器${i}開始`, `【呼吸器${i}】終了`, `t-呼吸器${i}終了`, `v-呼吸器${i}FIO2`);
+    }
+  }
+
+  function syncDynamicRowUI(keyStart, domStart, keyEnd, domEnd, domInput) {
+    const sVal = state.times[keyStart];
+    const eVal = state.times[keyEnd];
+    const bStart = document.getElementById(domStart);
+    const bEnd = document.getElementById(domEnd);
+    const inp = document.getElementById(domInput);
+
+    if(bStart) { bStart.textContent = sVal || "--:--"; bStart.classList.toggle("set", !!sVal); }
+    if(bEnd) { bEnd.textContent = eVal || "--:--"; bEnd.classList.toggle("set", !!eVal); }
+
+    if(inp) {
+      if(sVal || eVal) {
+        inp.classList.remove("input-gray");
+        inp.classList.add("input-yellow");
+        inp.disabled = false;
+      } else {
+        inp.classList.remove("input-yellow");
+        inp.classList.add("input-gray");
+        inp.value = "";
+        inp.disabled = true;
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────
+  //  🧮 タイムラインロジック判定 ＆ 状態格納
+  // ─────────────────────────────────────────
+  function recalc() {
+    const sc = state.scheme;
+    const c  = state.times["接触"];
+    const a  = state.times["病着"];
+    const e  = state.times["終了"];
+
+    const oshin  = !!sc;
+    const hansho = !!sc && sc !== "Iターン：救急隊";
+    let longAdd = false;
+    let monitor = "--:--";
+
+    if (c && e) {
+      const diff = timeDiff(c, e);
+      if (diff >= 30) longAdd = true;
+
+      if (sc === "Iターン：救急隊") {
+        monitor = minsToStr(diff);
+      } else if (a) {
+        monitor = minsToStr(timeDiff(c, a));
+      }
+    }
+
+    // 指摘通り判定結果をHTML要素から完全に切り離し、stateオブジェクトへ安全格納
+    state.verdicts = { oshin, hansho, longAdd, monitorTime: monitor };
+
+    setVerdictUI("v-oshin",  oshin,  "往診料", "◯", "—");
+    setVerdictUI("v-hansho", hansho, "搬送料", "◯", "—");
+    setVerdictUI("v-long",   longAdd,"長時間", "◯", "—");
+    document.getElementById("monitorTime").textContent = monitor;
+
+    refreshDynamicUI();
+    updateHeaderActionVisibility();
+  }
+
+  function setVerdictUI(id, isOn, label, onTxt, offTxt) {
+    const el = document.getElementById(id);
+    el.className = `verdict-pill ${isOn ? "on" : "off"}`;
+    el.innerHTML = `
+      <div class="v-label">${label}</div>
+      <span class="v-icon">${isOn ? "✓" : "—"}</span>
+      <div class="v-text">${isOn ? onTxt : offTxt}</div>
+    `;
+  }
+
+  function timeDiff(from, to) {
+    const toMins = s => {
+      const [h,m] = s.split(":").map(Number);
+      return h * 60 + m;
+    };
+    let d = toMins(to) - toMins(from);
+    if (d < 0) d += 1440;
+    return d;
+  }
+
+  function minsToStr(m) {
+    return `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;
+  }
+
+  // ─────────────────────────────────────────
+  //  ドラム式ピッカー制御
+  // ─────────────────────────────────────────
+  let dialKey = "";
+  function openDial(key) {
+    dialKey = key;
+    document.getElementById("dialTitle").textContent = `${key.replace(/[【】]/g,'')}の時刻を選択`;
+    const wh = document.getElementById("wh");
+    const wm = document.getElementById("wm");
+
+    const mkWheel = n => {
+      const sp = '<div class="dial-spacer"></div>';
+      const opts = Array.from({length:n}, (_,i) => `<div class="dial-opt">${String(i).padStart(2,"0")}</div>`).join("");
+      return sp + opts + sp;
+    };
+
+    const cur = (state.times[key] || "09:00").split(":");
+    wh.innerHTML = mkWheel(24);
+    wm.innerHTML = mkWheel(60);
+
+    wh.scrollTop = parseInt(cur[0]) * 44;
+    wm.scrollTop = parseInt(cur[1]) * 44;
+
+    document.getElementById("dialOverlay").classList.add("show");
+    syncDialHighlight();
+  }
+
+  function syncDialHighlight() {
+    ["wh","wm"].forEach(id => {
+      const wheel = document.getElementById(id);
+      const idx = Math.round(wheel.scrollTop / 44);
+      wheel.querySelectorAll(".dial-opt").forEach((el, i) => {
+        const sel = i === idx;
+        el.style.color = sel ? "var(--ink)" : "var(--sub)";
+        el.style.fontSize = sel ? "22px" : "18px";
+        el.style.fontWeight = sel ? "700" : "400";
+      });
+    });
+  }
+
+  function closeDial(confirm) {
+    if (confirm) {
+      const hIdx = Math.round(document.getElementById("wh").scrollTop / 44);
+      const mIdx = Math.round(document.getElementById("wm").scrollTop / 44);
+      state.times[dialKey] = `${String(hIdx).padStart(2,"0")}:${String(mIdx).padStart(2,"0")}`;
+      refreshTimeUI(dialKey);
+      recalc();
+    }
+    document.getElementById("dialOverlay").classList.remove("show");
+  }
+
+  function switchTab(tabId, title, btnId) {
+    document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+    document.getElementById(`tab-${tabId}`).classList.add("active");
+    document.getElementById(btnId).classList.add("active");
+    document.getElementById("headerTitle").textContent = title;
+    updateHeaderActionVisibility();
+  }
+
+  async function fetchMasters() {
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action:"fetch_masters", password: PIN_CORRECT }) });
+      const json = await res.json();
+      if (json.status === "success") {
+        fillSelect("f-dr", json.doctors);
+        fillSelect("f-ns", json.nurses);
+        fillSelect("f-dest", json.destinations);
+      }
+    } catch(e) { console.warn("マスタ取得失敗", e); }
+  }
+
+  function fillSelect(id, arr) {
+    document.getElementById(id).innerHTML = `<option value="">選択してください</option>` + arr.map(v => `<option value="${v}">${v}</option>`).join("");
+  }
+
+  function updateHeaderActionVisibility() {
+    const hasId = document.getElementById("f-id").value.trim();
+    const activeTab = document.querySelector(".tab-content.active").id;
+    document.getElementById("headerAction").style.display = (hasId && activeTab !== "tab-search") ? "block" : "none";
+  }
+
+  // ─────────────────────────────────────────
+  //  📦 唯一の真実のソース（state）からの確実なパッキング
+  // ─────────────────────────────────────────
+  async function submitToBackend() {
+    const id = document.getElementById("f-id").value.trim();
+    if (!id) { alert("要請番号を入力してください"); return; }
+
+    // 完璧なカプセル化データパッキング
+    const payload = {
+      "要請番号": id,
+      "日付": document.getElementById("f-date").value,
+      "出場先": document.getElementById("f-dest").value,
+      "フライトドクター": document.getElementById("f-dr").value,
+      "フライトナース": document.getElementById("f-ns").value,
+      "スキーム選択": state.scheme,
+      "接触": state.times["接触"] || "",
+      "病着": state.times["病着"] || "",
+      "終了": state.times["終了"] || "",
+      "往診料": state.verdicts.oshin ? "◯" : "",
+      "搬送料": state.verdicts.hansho ? "◯" : "",
+      "搬送料（長時間）": state.verdicts.longAdd ? "◯" : ""
+    };
+
+    // 処置チップの真偽値を100%忠実に回収
+    CHIPS.echo.concat(CHIPS.other).forEach(k => {
+      payload[k] = state.chips[k] ? "◯" : "";
+    });
+
+    // カウントアップされたライン本数の回収
+    CHIPS.lines.forEach(k => {
+      const cnt = state.lineCounts[k] || 0;
+      if (cnt === 0) payload[k] = "";
+      else if (cnt === 1) payload[k] = "◯";
+      else payload[k] = String(cnt);
+    });
+
+    // 動的項目の回収
+    for(let i=1; i<=3; i++) {
+      payload[`【酸素${i}】開始`] = state.times[`【酸素${i}】開始`] || "";
+      payload[`【酸素${i}】終了`] = state.times[`【酸素${i}】終了`] || "";
+      const o2Inp = document.getElementById(`v-酸素${i}流量`);
+      payload[`【酸素${i}】流量`] = o2Inp ? o2Inp.value : "";
+      payload[`【圧迫${i}】開始`] = state.times[`【圧迫${i}】開始`] || "";
+      payload[`【圧迫${i}】終了`] = state.times[`【圧迫${i}】終了`] || "";
+    }
+    for(let i=1; i<=2; i++) {
+      payload[`【呼吸器${i}】開始`] = state.times[`【呼吸器${i}】開始`] || "";
+      payload[`【呼吸器${i}】終了`] = state.times[`【呼吸器${i}】終了`] || "";
+      const ventInp = document.getElementById(`v-呼吸器${i}FIO2`);
+      payload[`【呼吸器${i}】FIO2`] = ventInp ? ventInp.value : "";
+    }
+
+    alert("データベースへ送信し、完了通知メールを一斉送信しています...🚁");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "submit", password: PIN_CORRECT, data: payload }) });
+      const json = await res.json();
+      if (json.status === "success") {
+        alert("送信完了 ✉️");
+        clearForm(); // 明示的かつ完璧な全クリア
+      } else { alert("エラー: " + json.message); }
+    } catch(e) { alert("通信エラーが発生しました。"); }
+  }
+
+  // 偶然性に依存しない、ジョブズ的クリーンな完全初期化関数
+  function clearForm() {
+    state.scheme = "";
+    state.times = {};
+    state.chips = {};
+    state.lineCounts = {};
+    state.counts = { oxygen: 1, compression: 1, ventilator: 1 };
+    
+    document.getElementById("f-id").value = "";
+    document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.remove("active"));
+    
+    // 基本3タイムラインのリセット
+    ["接触","病着","終了"].forEach(k => refreshTimeUI(k));
+    
+    // 各プルダウン表示テキストの初期化
+    document.getElementById("disp-dest").textContent = "選択してください";
+    document.getElementById("disp-dest").classList.remove("set");
+    document.getElementById("disp-dr").textContent = "ドクター";
+    document.getElementById("disp-ns").textContent = "ナース";
+
+    bootApp();
+    recalc();
+  }
+
+  async function fetchAllDataFromDatabase() {
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "fetch_all", password: PIN_CORRECT }) });
+      const json = await res.json();
+      if (json.status === "success") {
+        state.records = json.data;
+        renderList(json.data);
+      }
+    } catch(e) { console.warn("同期失敗", e); }
+  }
+
+  function renderList(records) {
+    const box = document.getElementById("recordList");
+    if (!records.length) { box.innerHTML = `<p style="padding:20px;text-align:center;color:var(--sub);">事案なし</p>`; return; }
+    box.innerHTML = records.map((r, i) => `
+      <div class="list-row" onclick="openSummary(${i})">
+        <div class="list-main">
+          <div class="list-num">No.${r["要請番号"]}</div>
+          <div class="list-sub">${r["日付"]}　${r["フライトナース"] || "ナース未定"}</div>
+        </div>
+        <div class="status-dot ${r["ステータス"] === "◯ カルテ完了" ? "done" : "pending"}"></div>
+      </div>
+    `).join("");
+  }
+
+  function filterSearchList() {
+    const q = document.getElementById("searchBar").value.toLowerCase();
+    const filtered = state.records.filter(r =>
+      String(r["要請番号"]).toLowerCase().includes(q) || String(r["フライトナース"] || "").toLowerCase().includes(q)
+    );
+    renderList(filtered);
+  }
+
+  function openSummary(i) {
+    const r = state.records[i];
+    let s = `要請番号  No.${r["要請番号"]}\n`;
+    s += `日付      ${r["日付"]}\n`;
+    s += `出場先    ${r["出場先"] || "未指定"}\n`;
+    s += `スキーム  ${r["スキーム選択"]}\n`;
+    s += `ドクター  ${r["フライトドクター"]}\n`;
+    s += `ナース    ${r["フライトナース"]}\n`;
+    s += `${"─".repeat(34)}\n`;
+    s += `【活動タイムライン】\n`;
+    if(r["接触"]) s += ` ・ 接触時刻: ${r["接触"]}\n`;
+    if(r["病着"]) s += ` ・ 病着時刻: ${r["病着"]}\n`;
+    if(r["終了"]) s += ` ・ 終了時刻: ${r["終了"]}\n`;
+    s += `${"─".repeat(34)}\n`;
+    s += `【実施処置 ＆ 資機材一覧】\n`;
+    Object.entries(r).forEach(([k, v]) => {
+      const skip = ["要請番号","ステータス","日付","出場先","フライトドクター","フライトナース","スキーム選択","接触","病着","終了","往診料","搬送料","搬送料（長時間）"];
+      const val = String(v).trim();
+      if (!skip.includes(k) && val && val !== "00:00" && val !== "0:00" && val !== "false") {
+        s += ` ・ ${k.padEnd(12)} : ${val}\n`;
+      }
+    });
+    document.getElementById("summaryViewContainer").textContent = s;
+    document.getElementById("summaryCard").style.display = "block";
+    document.getElementById("summaryCard").scrollIntoView({ behavior:"smooth" });
+  }
+
+  function closeSummaryCard() { document.getElementById("summaryCard").style.display = "none"; }
+</script>
+</body>
+</html>
