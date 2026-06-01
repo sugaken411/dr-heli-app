@@ -54,7 +54,7 @@
     .acc-header:last-child { border-bottom: none; }
     .acc-header span { color: var(--sub); font-size: 14px; margin-left: auto; }
     .acc-body { display: none; padding: 14px 16px; background: rgba(242,242,247,0.5); border-bottom: 0.5px solid var(--line); }
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.04);}
     .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 600; }
     .sub-panel { background: var(--card); border-radius: var(--radius-md); padding: 12px; margin-top: 8px; border: 0.5px solid var(--line); width: 100%; display: none; }
@@ -95,6 +95,7 @@
     .dial-opt { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: center; transition: all 0.1s; }
     .dial-sep { font-size: 24px; font-weight: 700; color: var(--ink); padding: 0 4px; }
     
+    /* 検索UI */
     .search-box { padding: 12px; background: var(--bg); border-radius: var(--radius-md); margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
     .search-input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 0.5px solid var(--line); font-size: 14px; outline: none; background: #fff; min-width: 120px; }
     .search-btn { width: 100%; padding: 12px 16px; background: var(--blue); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 4px; }
@@ -108,11 +109,12 @@
 <div id="app">
   <header>
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
-    <div style="text-align:center;">AW109 EMS<span class="version-tag">v5.2</span></div>
+    <div style="text-align:center;">AW109 EMS<span class="version-tag">v5.3</span></div>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
   </header>
 
   <main id="mainScroll">
+    <!-- ① 入力タブ -->
     <div id="tab-input" class="tab-content active">
       <div class="card">
         <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
@@ -205,6 +207,7 @@
       </div>
     </div>
     
+    <!-- ② 送信・プレビュータブ -->
     <div id="tab-send" class="tab-content">
       <div class="card">
         <div class="card-section">
@@ -216,6 +219,7 @@
       </div>
     </div>
     
+    <!-- ③ 検索タブ -->
     <div id="tab-search" class="tab-content">
       <div class="card">
         <div class="card-section">
@@ -251,6 +255,7 @@
   </nav>
 </div>
 
+<!-- 取扱説明書 モーダル -->
 <div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
   <div class="modal-box">
     <h3 style="margin-bottom:12px; color:var(--ink);">📖 取扱説明書</h3>
@@ -261,6 +266,7 @@
   </div>
 </div>
 
+<!-- Q&A・要望BOX モーダル -->
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3>
@@ -276,6 +282,7 @@
   </div>
 </div>
 
+<!-- ピッカー -->
 <div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)">
   <div class="dial-box"><div class="dial-handle"></div><div class="dial-header"><button class="dial-cancel" onclick="closeDial(false)">キャンセル</button><span class="dial-title" id="dialTitle">選択</span><button class="dial-done" onclick="closeDial(true)">完了</button></div><div class="dial-wheels" id="dialWheels"></div></div>
 </div>
@@ -301,7 +308,7 @@
       {k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]},
       {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"},
       {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"},
-      {k:"胸腔ドレナージ"}, {k:"1%カルボカイン10ml使用"}, {k:"28Frトロッカー"}, {k:"20Frトロッカー"},
+      {k:"胸腔ドレナージ", sub:"checks", opts:["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"]},
       {k:"心嚢穿刺・心嚢ドレナージ", sub:"radio", opts:["心嚢ドレナージキット","V1","V2","V3"], skey:"心嚢穿刺・心嚢ドレナージ詳細"}, 
       {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"},
       {k:"その他処置", sub:"text"}
@@ -549,11 +556,12 @@
     document.getElementById("preview-box").innerHTML = s; 
   }
 
-  // 🌟【エラー自動報告機能付き送信処理】
+  // 🌟 エラー自動報告機能
   async function sendErrorLog(errMsg, payload) {
     try { await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"error_log", password:PIN_CODE, error_message: errMsg, app_state: JSON.stringify(payload, null, 2)}), redirect:"follow" }); } catch(e) {}
   }
 
+  // 🌟【修正】フリー入力項目もすべて「◯」をつけて格納
   async function submitData() {
     if(validateTimes().length > 0) return alert("時間入力にエラーがあります。赤字の警告内容を修正してください。");
     const id = document.getElementById("v-id").value.trim(); if(!id) return alert("要請番号を入力してください。");
@@ -571,7 +579,8 @@
       
       "心エコー": st.chips["心エコー"]?"◯":"", "FAST": st.chips["FAST"]?"◯":"", "大血管評価": st.chips["大血管評価"]?"◯":"",
       "頸動脈パルス": st.chips["頸動脈パルス"]?st.vals["頸動脈パルス"]||"◯":"", "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"",
-      "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", "その他エコー": st.chips["その他エコー"]?st.vals["その他エコー"]||"◯":"",
+      "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", 
+      "その他エコー": st.chips["その他エコー"] ? (st.vals["その他エコー"] ? "◯ " + st.vals["その他エコー"] : "◯") : "",
       
       "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"", "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"",
       "気管挿管サイズ": st.chips["気管挿管"]?st.vals["気管挿管サイズ"]||"":"", "カフ有無": st.chips["気管挿管"]?st.vals["カフ有無"]||"":"",
@@ -579,8 +588,9 @@
       
       "胸腔ドレナージ": st.chips["胸腔ドレナージ"]?"◯":"", "1%カルボカイン10ml使用": st.chips["1%カルボカイン10ml使用"]?"◯":"", "28Frトロッカー": st.chips["28Frトロッカー"]?"◯":"", "20Frトロッカー": st.chips["20Frトロッカー"]?"◯":"",
       "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"] ? (st.vals["心嚢穿刺・心嚢ドレナージ詳細"] ? "◯ " + st.vals["心嚢穿刺・心嚢ドレナージ詳細"] : "◯") : "", 
-      "開胸心マッサージ": st.chips["開胸心マッサージ"]?st.vals["開胸心マッサージ"]||"◯":"", "心膜開窓": st.chips["心膜開窓"]?st.vals["心膜開窓"]||"◯":"",
-      "その他処置": st.chips["その他処置"]?st.vals["その他処置"]||"◯":"",
+      "開胸心マッサージ": st.chips["開胸心マッサージ"] ? (st.vals["開胸心マッサージ"] ? "◯ " + st.vals["開胸心マッサージ"] : "◯") : "", 
+      "心膜開窓": st.chips["心膜開窓"] ? (st.vals["心膜開窓"] ? "◯ " + st.vals["心膜開窓"] : "◯") : "",
+      "その他処置": st.chips["その他処置"] ? (st.vals["その他処置"] ? "◯ " + st.vals["その他処置"] : "◯") : "",
       
       "20G": st.chips["20G"]?st.vals["20G本数"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G本数"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G本数"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G本数"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":""
     };
@@ -601,13 +611,11 @@
         body: JSON.stringify({action:"submit", password:PIN_CODE, data:payload}),
         redirect: "follow" 
       });
-      
       const textRes = await res.text();
       let jsonRes;
       try {
         jsonRes = JSON.parse(textRes);
       } catch(parseErr) {
-        // 🌟 Google特有の「成功してるのに謎のエラーテキストが返ってくる現象」を無視して成功させる魔法
         if(textRes.includes("Redirect OK")) {
           jsonRes = { status: "success" };
         } else {
