@@ -210,4 +210,177 @@
     document.getElementById("q-id").value = ""; document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = "";
     document.getElementById("q-status").value = ""; document.getElementById("q-dest").value = ""; document.getElementById("q-staff").value = "";
 
-    if(type === '未完了') document.getElementById("q-status").value =
+    if(type === '未完了') document.getElementById("q-status").value = "未完了";
+    else if(type === '本日') {
+      const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      document.getElementById("q-date-start").value = today; document.getElementById("q-date-end").value = today;
+    }
+    fetchData();
+  }
+
+  async function fetchData(forceStatus = null) {
+    document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">データベースから検索中...🔍</p>';
+    const qId = document.getElementById("q-id").value.trim(); const dStart = document.getElementById("q-date-start").value;
+    const dEnd = document.getElementById("q-date-end").value; const stVal = document.getElementById("q-status").value;
+    const destVal = document.getElementById("q-dest").value; const staffVal = document.getElementById("q-staff").value;
+    
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_all", password:PIN_CODE}), redirect:"follow" });
+      const textRes = await res.text(); let json;
+      try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success",data:[]}; else throw e; }
+      
+      if(json.status==="success") {
+        allData = json.data;
+        filteredData = allData.filter(r => {
+          let m = true;
+          if(forceStatus && r["ステータス"] && !r["ステータス"].includes(forceStatus)) m = false;
+          if(qId && r["要請番号"] && !String(r["要請番号"]).includes(qId)) m = false;
+          if(stVal && r["ステータス"] && !String(r["ステータス"]).includes(stVal)) m = false;
+          if(destVal && r["出場先"] && !String(r["出場先"]).includes(destVal)) m = false;
+          if(dStart || dEnd) {
+            let dStr = r["日付"] ? String(r["日付"]).replace(/\//g, "-") : "";
+            if (dStart && dStr < dStart) m = false;
+            if (dEnd && dStr > dEnd) m = false;
+          }
+          if(staffVal) {
+            const isDr = r["フライトドクター"] && String(r["フライトドクター"]).includes(staffVal);
+            const isNs = r["フライトナース"] && String(r["フライトナース"]).includes(staffVal);
+            if(!isDr && !isNs) m = false;
+          }
+          return m;
+        });
+        
+        document.getElementById("result-count").innerText = `検索結果: ${filteredData.length} 件`;
+
+        if(filteredData.length===0) { document.getElementById("results").innerHTML = '<p style="text-align:center; color:var(--red); padding:40px; background:#fff; border-radius:12px;">データが見つかりません。</p>'; return; }
+        
+        document.getElementById("results").innerHTML = filteredData.map((r, i) => {
+          const isDone = (r["ステータス"]||"").includes("完了") && !(r["ステータス"]||"").includes("未完了");
+          return `<div class="res-item" onclick='openDetail(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <b style="font-size:15px;">No.${r["要請番号"]} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${r["日付"]||"日付不明"})</span></b>
+              <span class="badge" style="background:${isDone?'#d1fae5':'#ffebeb'}; color:${isDone?'#065f46':'#d32f2f'}">${r["ステータス"]||"未完了"}</span>
+            </div>
+            <div style="font-size:12px; color:var(--sub);"><b>出場先:</b> ${r["出場先"]||"-"} ｜ <b>Dr:</b> ${r["フライトドクター"]||"-"} / <b>Ns:</b> ${r["フライトナース"]||"-"}</div>
+            <div style="font-size:12px; color:var(--sub); margin-top:4px;"><b>接触:</b> ${r["接触"]||"--:--"} ｜ <b>病着:</b> ${r["病着"]||"--:--"} ｜ <b>終了:</b> ${r["終了"]||"--:--"}</div>
+          </div>`;
+        }).join("");
+      }
+    } catch(e) { document.getElementById("results").innerHTML = `<p style="text-align:center; color:var(--red);">通信エラー: ${e.message}</p>`; }
+  }
+
+  // 📝 詳細・修正モーダル展開
+  function openDetail(row) {
+    document.getElementById("edit-old-id").value = row["要請番号"];
+    document.getElementById("edit-id").value = row["要請番号"];
+    
+    // 日付を input type="date" 用の書式 (YYYY-MM-DD) に変換
+    let dStr = row["日付"] || ""; dStr = dStr.replace(/\//g, "-");
+    document.getElementById("edit-date").value = dStr;
+    
+    document.getElementById("edit-dest").value = row["出場先"] || "";
+    document.getElementById("edit-scheme").value = row["スキーム選択"] || "";
+    document.getElementById("edit-dr").value = row["フライトドクター"] || "";
+    document.getElementById("edit-ns").value = row["フライトナース"] || "";
+    
+    // 時間を input type="time" 用の書式 (HH:MM) に変換
+    const fmtTime = (t) => t ? String(t).substring(0,5) : "";
+    document.getElementById("edit-contact").value = fmtTime(row["接触"]);
+    document.getElementById("edit-arrival").value = fmtTime(row["病着"]);
+    document.getElementById("edit-end").value = fmtTime(row["終了"]);
+    
+    document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
+    
+    let supply = [];
+    ["20G","18G","22G","24G","ベニューラ","骨髄針","1%カルボカイン10ml使用","28Frトロッカー","20Frトロッカー"].forEach(k => {
+      let v = String(row[k]||""); if(v.includes("◯")) { let num = v.match(/\d+本/); supply.push(`・${k}: <b>${num?num[0]:"1本"}</b>`); }
+    });
+    if(String(row["除細動パッド"]||"").includes("◯")) supply.push("・除細動パッド: <b>使用</b>");
+    if(String(row["心嚢穿刺・心嚢ドレナージ"]||"").includes("キット")) supply.push("・心嚢ドレナージキット: <b>使用</b>");
+    
+    document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "<span style='color:var(--sub);'>消費した主な資機材はありません</span>";
+    openModal("detail-modal");
+  }
+
+  // 💾 上書き保存処理
+  async function saveRecord() {
+    const editor = document.getElementById("edit-person").value.trim();
+    if(!editor) return alert("データを上書き保存するには「修正者の名前」を入力してください。");
+    
+    const oldId = document.getElementById("edit-old-id").value;
+    const newId = document.getElementById("edit-id").value.trim();
+    const newDate = document.getElementById("edit-date").value;
+    
+    const payload = {
+      "要請番号": newId, "日付": newDate,
+      "出場先": document.getElementById("edit-dest").value,
+      "スキーム選択": document.getElementById("edit-scheme").value,
+      "フライトドクター": document.getElementById("edit-dr").value,
+      "フライトナース": document.getElementById("edit-ns").value,
+      "接触": document.getElementById("edit-contact").value,
+      "病着": document.getElementById("edit-arrival").value,
+      "終了": document.getElementById("edit-end").value,
+    };
+    
+    if(!confirm(`事案番号 [ ${oldId} ] のデータを上書きしてよろしいですか？`)) return;
+    
+    const btn = event.target; btn.innerText = "保存中..."; btn.disabled = true;
+    
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_record", password:PIN_CODE, old_id:oldId, editor:editor, data:payload}), redirect:"follow" });
+      const textRes = await res.text(); let json;
+      try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw e; }
+      
+      if(json.status==="success") { alert("データの修正・上書き保存が完了しました。"); closeModal('detail-modal'); document.getElementById("edit-person").value = ""; fetchData(); }
+      else { alert("エラー: " + json.message); }
+    } catch(e) { alert("通信エラー: " + e.message); }
+    btn.innerText = "💾 上書き保存"; btn.disabled = false;
+  }
+
+  function exportCSV() {
+    if(filteredData.length === 0) return alert("出力するデータがありません。先に検索を行ってください。");
+    const headers = Object.keys(filteredData[0]);
+    let csvContent = headers.join(",") + "\n";
+    filteredData.forEach(row => {
+      let rowArray = headers.map(header => { let val = String(row[header] || "").replace(/"/g, '""'); return `"${val}"`; });
+      csvContent += rowArray.join(",") + "\n";
+    });
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" }); 
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `AW109_事案データ_${new Date().getTime()}.csv`; a.click(); URL.revokeObjectURL(url);
+  }
+
+  async function fetchInit() {
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual:[]}; else throw err; }
+      
+      if(jsonRes.status === "success") {
+        const qaBox = document.getElementById("qa-list");
+        if(jsonRes.qa && jsonRes.qa.length > 0) qaBox.innerHTML = jsonRes.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a.replace(/\\n/g, '<br>')}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid #ccc;">`).join("");
+        else qaBox.innerHTML = '<p style="text-align:center; font-size:13px;">公開されているQ&Aはありません。</p>';
+        
+        const mBox = document.getElementById("manual-list");
+        if(jsonRes.manual && jsonRes.manual.length > 0) mBox.innerHTML = jsonRes.manual.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("");
+        else mBox.innerHTML = '<p style="text-align:center; font-size:13px;">マニュアルはまだありません。</p>';
+      }
+    } catch(e) { console.log("初期データ取得エラー"); }
+  }
+
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("質問や要望を入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success"}; else throw err; }
+      if(jsonRes.status === "success") { alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } 
+      else { alert("エラー: " + jsonRes.message); }
+    } catch(e) { alert("通信エラー: " + e.message); }
+    btn.textContent = "送信する ✉️"; btn.disabled = false;
+  }
+</script>
+</body>
+</html>
