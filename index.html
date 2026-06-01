@@ -95,7 +95,6 @@
     .dial-opt { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: center; transition: all 0.1s; }
     .dial-sep { font-size: 24px; font-weight: 700; color: var(--ink); padding: 0 4px; }
     
-    /* 検索UI */
     .search-box { padding: 12px; background: var(--bg); border-radius: var(--radius-md); margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
     .search-input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 0.5px solid var(--line); font-size: 14px; outline: none; background: #fff; min-width: 120px; }
     .search-btn { width: 100%; padding: 12px 16px; background: var(--blue); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 4px; }
@@ -109,7 +108,7 @@
 <div id="app">
   <header>
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
-    <div style="text-align:center;">AW109 EMS<span class="version-tag">v6.0 公開版</span></div>
+    <div style="text-align:center;">AW109 EMS<span class="version-tag">v5.2</span></div>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
   </header>
 
@@ -254,16 +253,9 @@
 
 <div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
   <div class="modal-box">
-    <h3 style="margin-bottom:12px; color:var(--ink);">📖 究極の取扱説明書</h3>
-    <div style="font-size:14px; line-height:1.6; color:var(--sub);">
-      <p><b>【誰でも使える！3ステップ】</b></p>
-      <p>1. <b>「入力」</b>タブで要請番号、時間、処置のボタンをタップするだけ。必要な入力欄が自動で展開されます。<br>
-      2. <b>「送信」</b>タブで内容を確認し、一番下の赤いボタンを押します。これで完了！<br>
-      3. <b>「検索」</b>タブで過去の事案を検索。電子カルテの代行入力が完了しているかが一目でわかります。</p>
-      <hr style="margin:12px 0; border:none; border-top:1px solid var(--line);">
-      <p>💡 <b>【PWA オフライン対応機能】</b><br>
-      iPhone/iPadのSafariの下部メニューから<b>「ホーム画面に追加」</b>を行ってください。<br>
-      これを行うことで、山間部など<b>完全に圏外の場所でもアプリを開いて入力作業が可能</b>になります。（※送信ボタンを押す時だけ電波が必要です）</p>
+    <h3 style="margin-bottom:12px; color:var(--ink);">📖 取扱説明書</h3>
+    <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub); max-height:60vh; overflow-y:auto;">
+      <p style="text-align:center;">スプレッドシートからマニュアルを読込中...</p>
     </div>
     <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
   </div>
@@ -272,13 +264,13 @@
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:200px; overflow-y:auto; padding-right:8px; border-bottom:1px solid var(--line);">
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; padding-right:8px; border-bottom:1px solid var(--line);">
       <p style="text-align:center;">読込中...</p>
     </div>
     <div class="qa-form">
       <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--ink);">💡 開発者へ直接、質問・要望を送る</div>
       <textarea id="qa-input" rows="3" placeholder="「〜の機能が欲しい」「ここが使いにくい」など" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:14px; margin-bottom:8px;"></textarea>
-      <button onclick="submitQA()" style="width:100%; padding:10px; background:var(--brand); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">送信する ✉️</button>
+      <button onclick="submitQA(event)" style="width:100%; padding:10px; background:var(--brand); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">送信する ✉️</button>
     </div>
     <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
   </div>
@@ -298,7 +290,6 @@
     ns: ["伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部","その他"]
   };
   
-  // 🌟 追加処置の列構成
   const STRUCT = {
     echo: [
       {k:"心エコー"},{k:"FAST"},{k:"大血管評価"},
@@ -324,7 +315,6 @@
     document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
     
-    // UIの順番：確保ライン → エコー → その他
     buildLines(STRUCT.line, "box-line");
     buildProc(STRUCT.echo, "box-echo"); 
     buildProc(STRUCT.other, "box-other"); 
@@ -334,7 +324,7 @@
     const allStaff = [...new Set([...MASTERS.dr, ...MASTERS.ns])].filter(s => s !== "その他");
     document.getElementById("s-staff").innerHTML = '<option value="">全スタッフ</option>' + allStaff.map(s => `<option value="${s}">${s}</option>`).join("");
     
-    fetchQA(); // 起動時にQ&A読み込み
+    fetchInit(); // 起動時にQ&Aと取説を読み込み
   };
   
   function fillSel(id, arr) { document.getElementById(id).innerHTML = `<option value="">選択...</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
@@ -344,7 +334,6 @@
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
   
-  // 🌟 その他選択時にカタカナ入力を表示し、全角カタカナに強制変換
   function toggleStaff(type) {
     const sel = document.getElementById(`v-${type}`);
     const other = document.getElementById(`v-${type}-other`);
@@ -360,7 +349,6 @@
   function buildProc(arr, boxId) {
     let html = "";
     arr.forEach(o => {
-      // 特定のボタンは非表示にしておく（親ボタンと連動させるため）
       let displayStyle = ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(o.k) ? 'style="display:none;"' : '';
       html += `<div style="width:100%;" ${displayStyle}><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
       if(o.sub==="radio") { html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r=> `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`; }
@@ -387,24 +375,14 @@
     st.chips[k] = !st.chips[k]; document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]); 
     const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display = st.chips[k] ? 'block' : 'none'; 
     
-    // 🌟 処置の自動連動
     if(k==="気管挿管" && st.chips[k]) { if(!st.chips["EtCO2"]) tChip("EtCO2"); if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料"); } 
     if(k==="血ガス" && st.chips[k]) { if(!st.chips["静脈血採血"]) tChip("静脈血採血"); }
     
-    // 胸腔ドレナージ連動（子要素を一時的に表示させてONにする）
     if(k==="胸腔ドレナージ") { 
       const subItems = ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"];
-      subItems.forEach(item => {
-        const p = document.getElementById(`c-${item}`).parentElement;
-        p.style.display = st.chips[k] ? "block" : "none"; // 親がONなら子も画面に出す
-      });
-      if(st.chips[k]) { 
-        if(!st.chips["1%カルボカイン10ml使用"]) tChip("1%カルボカイン10ml使用"); 
-        if(!st.chips["28Frトロッカー"]) tChip("28Frトロッカー"); 
-      } else {
-        // 親がOFFなら子も全部OFFにする
-        subItems.forEach(item => { if(st.chips[item]) tChip(item); });
-      }
+      subItems.forEach(item => { document.getElementById(`c-${item}`).parentElement.style.display = st.chips[k] ? "block" : "none"; });
+      if(st.chips[k]) { if(!st.chips["1%カルボカイン10ml使用"]) tChip("1%カルボカイン10ml使用"); if(!st.chips["28Frトロッカー"]) tChip("28Frトロッカー"); } 
+      else { subItems.forEach(item => { if(st.chips[item]) tChip(item); }); }
     }
     renderPreview(); 
   }
@@ -433,7 +411,6 @@
     setVerdictUI("calc-oshin", st.calc.oshin, "往診料"); setVerdictUI("calc-hansho", st.calc.hansho, "搬送料"); setVerdictUI("calc-long", st.calc.long, "長時間加算");
     document.getElementById("lbl-monitor").textContent = st.calc.mTime; document.getElementById("calc-monitor").classList.toggle('off', !st.calc.monitor); 
     
-    // 🌟 圧迫時間の積算を「00:00」形式に
     let cprMins = 0;
     for(let i=1; i<=5; i++) {
       let s = st.times[`【圧迫${i}】開始`], e = st.times[`【圧迫${i}】終了`];
@@ -499,8 +476,8 @@
     ["酸素","圧迫","呼吸器"].forEach(type => {
       for(let i=1; i<=st.dyn[type]; i++) { 
         let s = st.times[`【${type}${i}】開始`], e = st.times[`【${type}${i}】終了`]; 
-        if(s && !e) errs.push(`⚠️ 持続使用資機材: ${type}${i} の「終了時間」が抜けています。`); 
-        if(!s && e) errs.push(`⚠️ 持続使用資機材: ${type}${i} の「開始時間」が抜けています。`); 
+        if(s && !e) errs.push(`⚠️ 時間入力処置: ${type}${i} の「終了時間」が抜けています。`); 
+        if(!s && e) errs.push(`⚠️ 時間入力処置: ${type}${i} の「開始時間」が抜けています。`); 
         if(s && e) { 
           let diff = (parseInt(e.split(":")[0])*60+parseInt(e.split(":")[1])) - (parseInt(s.split(":")[0])*60+parseInt(s.split(":")[1])); 
           if(diff < 0) diff += 1440; 
@@ -511,7 +488,6 @@
     return errs;
   }
 
-  // 🌟 プレビューの美しい箇条書き生成
   function renderPreview() {
     const errBox = document.getElementById("error-msg"); const errs = validateTimes();
     if(errs.length > 0) { errBox.style.display = "block"; errBox.innerHTML = "<b>入力エラー警告（修正してください）</b><br>" + errs.join("<br>"); } else { errBox.style.display = "none"; }
@@ -552,7 +528,7 @@
     if(!hasProc) s += " ・ なし\n";
     s += "\n";
 
-    s += `【持続使用資機材・処置】\n`; let hasDyn = false;
+    s += `【時間入力処置】\n`; let hasDyn = false;
     ["酸素","圧迫","呼吸器"].forEach(type => {
       for(let i=1; i<=st.dyn[type]; i++) { 
         let start = st.times[`【${type}${i}】開始`], end = st.times[`【${type}${i}】終了`]; 
@@ -570,10 +546,14 @@
     
     const biko = st.vals['備考'] || ""; if(biko) s += `\n【備考】\n${biko}\n`; 
     
-    document.getElementById("preview-box").innerHTML = s; // HTMLタグが解釈されるようinnerHTMLに変更
+    document.getElementById("preview-box").innerHTML = s; 
   }
 
-  // 🌟 Google特有の通信リダイレクトエラーを無視して成功させる安全な送信機能
+  // 🌟【エラー自動報告機能付き送信処理】
+  async function sendErrorLog(errMsg, payload) {
+    try { await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"error_log", password:PIN_CODE, error_message: errMsg, app_state: JSON.stringify(payload, null, 2)}), redirect:"follow" }); } catch(e) {}
+  }
+
   async function submitData() {
     if(validateTimes().length > 0) return alert("時間入力にエラーがあります。赤字の警告内容を修正してください。");
     const id = document.getElementById("v-id").value.trim(); if(!id) return alert("要請番号を入力してください。");
@@ -598,7 +578,8 @@
       "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"", "除細動パッド": st.chips["除細動パッド"]?st.vals["除細動パッド"]||"◯":"",
       
       "胸腔ドレナージ": st.chips["胸腔ドレナージ"]?"◯":"", "1%カルボカイン10ml使用": st.chips["1%カルボカイン10ml使用"]?"◯":"", "28Frトロッカー": st.chips["28Frトロッカー"]?"◯":"", "20Frトロッカー": st.chips["20Frトロッカー"]?"◯":"",
-      "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"]?st.vals["心嚢穿刺・心嚢ドレナージ詳細"]||"◯":"", "開胸心マッサージ": st.chips["開胸心マッサージ"]?st.vals["開胸心マッサージ"]||"◯":"", "心膜開窓": st.chips["心膜開窓"]?st.vals["心膜開窓"]||"◯":"",
+      "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"] ? (st.vals["心嚢穿刺・心嚢ドレナージ詳細"] ? "◯ " + st.vals["心嚢穿刺・心嚢ドレナージ詳細"] : "◯") : "", 
+      "開胸心マッサージ": st.chips["開胸心マッサージ"]?st.vals["開胸心マッサージ"]||"◯":"", "心膜開窓": st.chips["心膜開窓"]?st.vals["心膜開窓"]||"◯":"",
       "その他処置": st.chips["その他処置"]?st.vals["その他処置"]||"◯":"",
       
       "20G": st.chips["20G"]?st.vals["20G本数"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G本数"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G本数"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G本数"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":""
@@ -618,16 +599,16 @@
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({action:"submit", password:PIN_CODE, data:payload}),
-        redirect: "follow" // Googleの仕様上、リダイレクトを許可する
+        redirect: "follow" 
       });
+      
       const textRes = await res.text();
       let jsonRes;
-      
       try {
         jsonRes = JSON.parse(textRes);
       } catch(parseErr) {
-        // ★ これが Google特有の「リダイレクトの罠（通信成功なのにエラーが返ってくる）」を回避する最終奥義
-        if(textRes.includes("要請番号が指定されていません")) {
+        // 🌟 Google特有の「成功してるのに謎のエラーテキストが返ってくる現象」を無視して成功させる魔法
+        if(textRes.includes("Redirect OK")) {
           jsonRes = { status: "success" };
         } else {
           throw new Error("不明なレスポンス: " + textRes);
@@ -639,25 +620,45 @@
         location.reload(); 
       } else {
         alert("【エラー発生】GASが処理を停止しました：\n" + jsonRes.message);
+        sendErrorLog("GASエラー: " + jsonRes.message, payload);
         btn.textContent = "メール共有 ＆ データベース送信 ✉️";
         btn.disabled = false;
       }
     } catch(e) { 
       alert("【通信エラー】インターネット環境、またはGASの設定に問題があります。\n詳細: " + e.message); 
+      sendErrorLog("通信・パースエラー: " + e.message, payload);
       btn.textContent = "メール共有 ＆ データベース送信 ✉️";
       btn.disabled = false;
     }
   }
 
-  // 🌟 Q&A送信・取得機能
-  async function submitQA() {
+  // 🌟 Q&Aと取説の初期読み込み
+  async function fetchInit() {
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual:[]}; else throw err; }
+      
+      if(jsonRes.status === "success") {
+        const qaBox = document.getElementById("qa-list");
+        if(jsonRes.qa && jsonRes.qa.length > 0) qaBox.innerHTML = jsonRes.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a.replace(/\\n/g, '<br>')}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid var(--line);">`).join("");
+        else qaBox.innerHTML = '<p style="text-align:center; font-size:13px;">公開されているQ&Aはありません。</p>';
+        
+        const mBox = document.getElementById("manual-list");
+        if(jsonRes.manual && jsonRes.manual.length > 0) mBox.innerHTML = jsonRes.manual.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid var(--line);">`).join("");
+        else mBox.innerHTML = '<p style="text-align:center; font-size:13px;">マニュアルはまだありません。</p>';
+      }
+    } catch(e) { console.log("初期データ取得エラー"); }
+  }
+
+  async function submitQA(event) {
     const q = document.getElementById("qa-input").value.trim();
     if(!q) return alert("質問や要望を入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
-      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("要請番号が指定されていません")) jsonRes={status:"success"}; else throw err; }
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success"}; else throw err; }
       if(jsonRes.status === "success") {
         alert("開発者へメッセージを送信しました！貴重なご意見ありがとうございます。");
         document.getElementById("qa-input").value = ""; closeModal('qa');
@@ -666,20 +667,6 @@
     btn.textContent = "送信する ✉️"; btn.disabled = false;
   }
 
-  async function fetchQA() {
-    try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_qa", password:PIN_CODE}), redirect:"follow" });
-      const textRes = await res.text(); let jsonRes;
-      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("要請番号が指定されていません")) jsonRes={status:"success", data:[]}; else throw err; }
-      
-      const box = document.getElementById("qa-list");
-      if(jsonRes.status === "success" && jsonRes.data && jsonRes.data.length > 0) {
-        box.innerHTML = jsonRes.data.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid var(--line);">`).join("");
-      } else { box.innerHTML = '<p style="text-align:center; font-size:13px;">まだ公開されているQ&Aはありません。</p>'; }
-    } catch(e) { document.getElementById("qa-list").innerHTML = '<p style="text-align:center; color:var(--red);">Q&Aの読込に失敗しました。</p>'; }
-  }
-
-  // 🌟 複合検索機能
   async function searchData() {
     const q = document.getElementById("s-query").value.trim();
     const d = document.getElementById("s-date").value;
@@ -693,7 +680,7 @@
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"fetch_all", password:PIN_CODE}), redirect:"follow" });
       const textRes = await res.text(); let json;
-      try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("要請番号が指定されていません")) json={status:"success", data:[]}; else throw err; }
+      try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) json={status:"success", data:[]}; else throw err; }
       
       if(json.status === "success") {
         const filtered = json.data.filter(row => {
