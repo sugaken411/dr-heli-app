@@ -244,7 +244,7 @@
 </div>
 
 <script>
-  // ── マスタデータ ＆ GAS URL ──
+  // ── マスタデータ ──
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbweVnL-tKL35gCvNVDg4G4tuR5__RbL-yc5fucXPwEkgLnxK7WLdRNdQH19IWSfcY4U/exec";
   const PIN_CODE = "5740";
 
@@ -276,9 +276,11 @@
   };
 
   window.onload = () => {
-    // 日付自動生成バグの完全修正
     const d = new Date(); 
-    document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const yStr = d.getFullYear();
+    const mStr = String(d.getMonth() + 1).padStart(2, '0');
+    const dStr = String(d.getDate()).padStart(2, '0');
+    document.getElementById("v-date").value = `${yStr}-${mStr}-${dStr}`;
     
     fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
     buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); buildLines(STRUCT.line, "box-line");
@@ -318,7 +320,6 @@
     document.getElementById(boxId).innerHTML = html;
   }
 
-  // 🌟 スマート設計：ONの時だけ本数を出す仕様に完全修正
   function buildLines(arr, boxId) {
     document.getElementById(boxId).innerHTML = arr.map(k=> `
       <div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>
@@ -339,7 +340,6 @@
     st.scheme = s;
     document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn));
     
-    // 🌟 Iターン救急隊のみのときは病着を完全ロック
     const arrivalBox = document.getElementById("t-病着");
     if (s === "Iターン救急隊のみ") {
       st.times["病着"] = ""; 
@@ -403,9 +403,9 @@
     h += `<div class="time-cell"><div class="time-cell-label">${type}${i}開始</div><button class="time-tap" id="t-【${type}${i}】開始" onclick="openDial('time', '【${type}${i}】開始')">--:--</button></div>`;
     h += `<div class="time-cell"><div class="time-cell-label">${type}${i}終了</div><button class="time-tap" id="t-【${type}${i}】終了" onclick="openDial('time', '【${type}${i}】終了')">--:--</button></div>`;
     if(type==="酸素" || type==="呼吸器") {
-      h += `<div class="time-cell"><div class="time-cell-label">流量/濃度</div><button class="time-tap" style="font-size:14px; padding:6px 2px;" id="v-${type}${i}流量" onclick="openDial('flow', '${type}${i}流量')">選択</button>`;
-      h += `<button class="time-tap" style="font-size:13px; padding:4px 2px; margin-top:4px; background:#e3f2fd; color:var(--blue);" id="v-${type}${i}FiO2" onclick="openDial('fio2', '${type}${i}FiO2')">100%</button></div>`;
-      st.vals[`${type}${i}FiO2`] = "100";
+      h += `<div class="time-cell"><div class="time-cell-label">流量/濃度</div><button class="time-tap" style="font-size:14px; padding:6px 2px;" id="v-${type}${i}流量" onclick="openDial('flow', '【${type}${i}】流量')">選択</button>`;
+      h += `<button class="time-tap" style="font-size:13px; padding:4px 2px; margin-top:4px; background:#e3f2fd; color:var(--blue);" id="v-${type}${i}FiO2" onclick="openDial('fio2', '【${type}${i}】FiO2')">100%</button></div>`;
+      st.vals[`【${type}${i}】FiO2`] = "100";
     }
     h += `</div></div>`; document.getElementById(`dyn-${type}`).insertAdjacentHTML('beforeend', h);
   }
@@ -424,13 +424,13 @@
 
   function resetSection(type) {
     document.getElementById(`dyn-${type}`).innerHTML = "";
-    for(let i=1; i<=5; i++) { delete st.times[`【${type}${i}】開始`]; delete st.times[`【${type}${i}】終了`]; delete st.vals[`${type}${i}流量`]; delete st.vals[`${type}${i}FiO2`]; }
+    for(let i=1; i<=5; i++) { delete st.times[`【${type}${i}】開始`]; delete st.times[`【${type}${i}】終了`]; delete st.vals[`【${type}${i}】流量`]; delete st.vals[`【${type}${i}】FiO2`]; }
     st.dyn[type] = 0; addDynRaw(type); renderPreview();
   }
 
   let dialMode = "", dialKey = "";
   function openDial(mode, key) {
-    if(mode === 'time' && key === '病着' && st.scheme === 'Iターン救急隊のみ') return; // ロック時はピッカーを開かない
+    if(mode === 'time' && key === '病着' && st.scheme === 'Iターン救急隊のみ') return; 
     dialMode = mode; dialKey = key; document.getElementById("dialTitle").textContent = key.replace(/[【】]/g,''); const wh = document.getElementById("dialWheels");
     const mk = (n, start=0, sfx="") => `<div class="dial-wheel" id="dW1" onscroll="hls('dW1')"><div class="dial-spacer"></div>` + Array.from({length:n},(_,i)=>`<div class="dial-opt">${String(i+start).padStart(mode==='time'?2:1,'0')}${sfx}</div>`).join("") + `<div class="dial-spacer"></div></div>`;
     
@@ -491,7 +491,7 @@
     const id = document.getElementById("v-id").value; const eda = document.getElementById("chk-edaban").checked ? "-" + document.getElementById("v-edaban").value : "";
     
     let s = `【基本情報】\n要請番号: ${id}${eda}\n日付: ${document.getElementById("v-date").value}\n出場先: ${document.getElementById("v-dest").value}\n担当スタッフ: Ｄｒ.${document.getElementById("v-dr").value} / Ｎｓ.${document.getElementById("v-ns").value}\nスキーム: ${st.scheme || "未選択"}\n\n`;
-    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||((st.scheme === 'Iターン検急隊のみ' || st.scheme === 'Iターン救急隊のみ') ? '対象外' : '--:--')}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター算定時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  SpO2算定: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
+    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||(st.scheme === 'Iターン救急隊のみ' ? '対象外' : '--:--')}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター算定時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  SpO2算定: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
     s += `【実施処置】\n`; let procs = [];
     Object.keys(st.chips).forEach(k => {
       if(st.chips[k]) { let detail = ""; if(k==="頸動脈パルス") detail = st.vals["頸動脈パルス詳細"] ? `(${st.vals["頸動脈パルス詳細"]})` : ""; else if(k==="気管挿管") detail = `(サイズ:${st.vals["気管挿管サイズ"]||"未指定"} / カフ:${st.vals["カフ有無"]||"未指定"})`; else if(k==="除細動") detail = `(${st.vals["除細動パッド"]||"未指定"})`; else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) detail = `(${st.vals[k+"本数"]||"1本"})`; else if(st.vals[k+"詳細"]) detail = `(所見:${st.vals[k+"詳細"]})`; procs.push(` ・ ${k} ${detail}`); }
@@ -499,14 +499,13 @@
     s += procs.length > 0 ? procs.join("\n") + "\n\n" : " ・ なし\n\n";
     s += `【動的資機材】\n`; let hasDyn = false;
     ["酸素","圧迫","呼吸器"].forEach(type => {
-      for(let i=1; i<=st.dyn[type]; i++) { let start = st.times[`【${type}${i}】開始`], end = st.times[`【${type}${i}】終了`]; if(start || end) { let flow = st.vals[`${type}${i}流量`] ? ` / 流量:${st.vals[`${type}${i}流量`]}L` : ""; let fio2 = st.vals[`${type}${i}FiO2`] ? ` / FiO2:${st.vals[`${type}${i}FiO2`]}%` : ""; if(type==="圧迫") { flow=""; fio2=""; } if(type==="呼吸器") { flow=""; } s += ` ・ ${type}${i}: ${start||'--:--'} 〜 ${end||'--:--'}${flow}${fio2}\n`; hasDyn = true; } }
+      for(let i=1; i<=st.dyn[type]; i++) { let start = st.times[`【${type}${i}】開始`], end = st.times[`【${type}${i}】終了`]; if(start || end) { let flow = st.vals[`【${type}${i}】流量`] ? ` / 流量:${st.vals[`【${type}${i}】流量`]}L` : ""; let fio2 = st.vals[`【${type}${i}】FiO2`] ? ` / FiO2:${st.vals[`【${type}${i}】FiO2`]}%` : ""; if(type==="圧迫") { flow=""; fio2=""; } if(type==="呼吸器") { flow=""; } s += ` ・ ${type}${i}: ${start||'--:--'} 〜 ${end||'--:--'}${flow}${fio2}\n`; hasDyn = true; } }
     });
     if(!hasDyn) s += ` ・ なし\n`;
     const biko = st.vals['備考'] || ""; if(biko) s += `\n【備考欄】\n${biko}\n`;
     document.getElementById("preview-box").textContent = s;
   }
 
-  // ── ★ 送信バグの完全修正（GAS_API_URLへの直結） ──
   async function submitData() {
     if(validateTimes().length > 0) return alert("時間入力にエラーがあります。赤字の警告内容を修正してください。");
     const id = document.getElementById("v-id").value.trim(); if(!id) return alert("要請番号を入力してください。");
@@ -537,14 +536,25 @@
       "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":""
     };
 
-    for(let i=1; i<=5; i++) { payload[`酸素${i}開始`] = st.times[`【酸素${i}】開始`] || ""; payload[`酸素${i}終了`] = st.times[`【酸素${i}】終了`] || ""; payload[`酸素${i}流量`] = st.vals[`酸素${i}流量`] || ""; payload[`酸素${i}FiO2`] = st.vals[`酸素${i}FiO2`] || ""; }
-    for(let i=1; i<=5; i++) { payload[`圧迫${i}開始`] = st.times[`【圧迫${i}】開始`] || ""; payload[`圧迫${i}終了`] = st.times[`【圧迫${i}】終了`] || ""; }
-    for(let i=1; i<=5; i++) { payload[`呼吸器${i}開始`] = st.times[`【呼吸器${i}】開始`] || ""; payload[`呼吸器${i}終了`] = st.times[`【呼吸器${i}】終了`] || ""; payload[`呼吸器${i}FiO2`] = st.vals[`呼吸器${i}FiO2`] || ""; }
+    for(let i=1; i<=5; i++) { 
+      payload[`酸素${i}開始`] = st.times[`【酸素${i}】開始`] || ""; 
+      payload[`酸素${i}終了`] = st.times[`【酸素${i}】終了`] || ""; 
+      payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || ""; 
+      payload[`酸素${i}FiO2`] = st.vals[`【酸素${i}】FiO2`] || ""; 
+    }
+    for(let i=1; i<=5; i++) { 
+      payload[`圧迫${i}開始`] = st.times[`【圧迫${i}】開始`] || ""; 
+      payload[`圧迫${i}終了`] = st.times[`【圧迫${i}】終了`] || ""; 
+    }
+    for(let i=1; i<=5; i++) { 
+      payload[`呼吸器${i}開始`] = st.times[`【呼吸器${i}】開始`] || ""; 
+      payload[`呼吸器${i}終了`] = st.times[`【呼吸器${i}】終了`] || ""; 
+      payload[`呼吸器${i}FiO2`] = st.vals[`【呼吸器${i}】FiO2`] || ""; 
+    }
     payload["備考"] = st.vals["備考"] || "";
 
     alert("データベースへ送信し、関係各所へ共有メールを一斉送信しています...🚁");
     try {
-      // 🌟 ここを GAS_API_URL に完全に修正結合しました
       const res = await fetch(GAS_API_URL, { method:"POST", body:JSON.stringify({action:"submit", password:PIN_CODE, data:payload}) });
       if((await res.json()).status==="success") { alert("送信が正常に完了しました！共有メールが送出されました。🚁"); location.reload(); }
     } catch(e) { alert("通信エラーが発生しました。インターネット環境をお確かめください。"); }
