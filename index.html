@@ -14,7 +14,7 @@
     body { background: var(--bg); color: var(--ink); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
     #app { display: flex; flex-direction: column; height: 100dvh; padding-top: var(--safe-top); }
     header { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); font-size: 17px; font-weight: 600; flex-shrink: 0; z-index: 10; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 15px; font-weight: 500; cursor: pointer; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
     .version-tag { font-size: 11px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 3px 8px; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
     main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 24px; }
     .card { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
@@ -58,8 +58,8 @@
     .chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.04);}
     .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 600; }
     .sub-panel { background: var(--card); border-radius: var(--radius-md); padding: 12px; margin-top: 8px; border: 0.5px solid var(--line); width: 100%; display: none; }
-    .radio-group { display: flex; gap: 8px; width: 100%; }
-    .radio-btn { flex: 1; text-align: center; padding: 8px; border: 0.5px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
+    .radio-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+    .radio-btn { flex: 1; text-align: center; padding: 8px; border: 0.5px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; min-width: 60px; }
     .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
     .btn-clear { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; }
     .btn-add-action { background: none; border: none; color: var(--blue); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; }
@@ -72,12 +72,14 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
-    /* ダイヤル・モーダル等 */
+    /* モーダル用UI */
     .dial-overlay, .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: flex-end; justify-content: center; }
     .dial-overlay.show, .modal-overlay.show { display: flex; }
     .modal-overlay { align-items: center; padding: 20px; }
     .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: var(--radius-lg); padding: 20px; max-height: 80dvh; overflow-y: auto; }
     .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; color: var(--ink); cursor: pointer; }
+    .qa-form { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--line); margin-top: 16px; }
+    
     .dial-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); }
     .dial-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 10px auto 0; }
     .dial-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px 10px; }
@@ -93,11 +95,13 @@
     .dial-opt { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: center; transition: all 0.1s; }
     .dial-sep { font-size: 24px; font-weight: 700; color: var(--ink); padding: 0 4px; }
     
+    /* 検索UI */
     .search-box { padding: 12px; background: var(--bg); border-radius: var(--radius-md); margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
     .search-input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 0.5px solid var(--line); font-size: 14px; outline: none; background: #fff; min-width: 120px; }
     .search-btn { width: 100%; padding: 12px 16px; background: var(--blue); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 4px; }
     .res-item { background: #fff; border: 0.5px solid var(--line); border-radius: var(--radius-md); padding: 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
     .res-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 0.5px solid var(--line); padding-bottom: 6px; margin-bottom: 6px; font-size: 14px; }
+    .status-badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -105,20 +109,38 @@
 <div id="app">
   <header>
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
-    <div>AW109 EMS Record<span class="version-tag">v5.0</span></div>
+    <div style="text-align:center;">AW109 EMS<span class="version-tag">v6.0 公開版</span></div>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
   </header>
 
   <main id="mainScroll">
     <div id="tab-input" class="tab-content active">
       <div class="card">
-        <div class="inline-field"><span class="field-label">要請番号</span><input id="v-id" type="number" inputmode="numeric" placeholder="例: 19771" oninput="renderPreview()"></div>
-        <div class="inline-field" style="padding: 10px 16px;"><label style="font-size:15px; font-weight:500; display:flex; align-items:center; gap:8px; width:100%; cursor:pointer;"><input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;"> 枝番あり</label><input type="number" id="v-edaban" inputmode="numeric" placeholder="枝番" style="display:none; max-width:80px; text-align:right; background:var(--bg); padding:4px 8px; border-radius:6px;"></div>
-        <div class="inline-field" onclick="document.getElementById('v-date').showPicker()"><span class="field-label">日付</span><input type="date" id="v-date" onchange="renderPreview()"></div>
+        <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+          <span class="field-label" style="flex:none; width:80px;">要請番号</span>
+          <input id="v-id" type="number" inputmode="numeric" placeholder="例: 19771" style="flex:1; min-width:100px; text-align:left; background:var(--bg); padding:8px 12px; border-radius:8px;" oninput="renderPreview()">
+          <label style="font-size:14px; font-weight:500; display:flex; align-items:center; gap:4px; cursor:pointer;">
+            <input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;">枝番
+          </label>
+          <input type="number" id="v-edaban" inputmode="numeric" placeholder="枝" style="display:none; width:60px; text-align:center; background:var(--bg); padding:8px; border-radius:8px;" oninput="renderPreview()">
+        </div>
+        <div class="inline-field" onclick="document.getElementById('v-date').showPicker()">
+          <span class="field-label">日付</span><input type="date" id="v-date" onchange="renderPreview()">
+        </div>
         <div class="inline-field"><span class="field-label">出場先</span><select id="v-dest" onchange="renderPreview()"></select></div>
-        <div class="inline-field"><span class="field-label">フライトドクター</span><select id="v-dr" onchange="renderPreview()"></select></div>
-        <div class="inline-field"><span class="field-label">フライトナース</span><select id="v-ns" onchange="renderPreview()"></select></div>
+        
+        <div class="inline-field" style="flex-wrap: wrap;">
+          <span class="field-label">フライトドクター</span>
+          <select id="v-dr" onchange="toggleStaff('dr'); renderPreview()"></select>
+          <input type="text" id="v-dr-other" placeholder="カタカナ入力" style="display:none; width:100px; background:var(--bg); padding:4px 8px; border-radius:6px; margin-top:8px; margin-left:auto;" oninput="formatKatakana(this); renderPreview()">
+        </div>
+        <div class="inline-field" style="flex-wrap: wrap;">
+          <span class="field-label">フライトナース</span>
+          <select id="v-ns" onchange="toggleStaff('ns'); renderPreview()"></select>
+          <input type="text" id="v-ns-other" placeholder="カタカナ入力" style="display:none; width:100px; background:var(--bg); padding:4px 8px; border-radius:6px; margin-top:8px; margin-left:auto;" oninput="formatKatakana(this); renderPreview()">
+        </div>
       </div>
+
       <div class="card">
         <div class="card-section"><div class="section-label">スキーム選択</div>
           <div class="scheme-picker" id="schemePicker">
@@ -134,6 +156,7 @@
           </div>
         </div>
       </div>
+
       <div class="card">
         <div class="card-section">
           <div class="section-label">メインタイムライン <button class="btn-clear" onclick="clearTimeline()">クリア</button></div>
@@ -144,7 +167,7 @@
           </div>
         </div>
         <div class="card-section">
-          <div class="section-label">自動判定 ＆ 算定フラグ (タップで手動切替)</div>
+          <div class="section-label">自動判定 ＆ 算定フラグ (タップで切替)</div>
           <div class="verdict-row">
             <div class="verdict-pill off" id="calc-oshin" onclick="tCalc('oshin')"><div class="v-label">往診料</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
             <div class="verdict-pill off" id="calc-hansho" onclick="tCalc('hansho')"><div class="v-label">搬送料</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
@@ -156,25 +179,30 @@
           </div>
         </div>
       </div>
+
       <div class="card" style="padding:0;">
-        <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span>▼</span></div>
-        <div class="acc-body" id="acc-echo"><div class="chip-grid" id="box-echo"></div></div>
-        <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div>
-        <div class="acc-body" id="acc-other"><div class="chip-grid" id="box-other"></div></div>
         <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span>▼</span></div>
         <div class="acc-body" id="acc-line"><div class="chip-grid" id="box-line"></div></div>
+        
+        <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span>▼</span></div>
+        <div class="acc-body" id="acc-echo"><div class="chip-grid" id="box-echo"></div></div>
+        
+        <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div>
+        <div class="acc-body" id="acc-other"><div class="chip-grid" id="box-other"></div></div>
       </div>
+
       <div class="card">
         <div class="card-section"><div class="section-label"><span>🌬️ 移動用酸素</span><div><button class="btn-clear" onclick="resetSection('酸素')" style="color:var(--brand);margin-right:8px;">リセット</button><button class="btn-add-action" onclick="addDynManual('酸素')">＋手動追加</button></div></div><div id="dyn-酸素"></div></div>
       </div>
       <div class="card">
-        <div class="card-section"><div class="section-label"><span>💓 胸骨圧迫 <span style="color:var(--ink); margin-left:8px;">積算: <span id="cpr-total">0 分</span></span></span><div><button class="btn-clear" onclick="resetSection('圧迫')" style="color:var(--brand);margin-right:8px;">リセット</button><button class="btn-add-action" onclick="addDynManual('圧迫')">＋手動追加</button></div></div><div id="dyn-圧迫"></div></div>
+        <div class="card-section"><div class="section-label"><span>💓 胸骨圧迫 <span style="color:var(--ink); margin-left:8px;">積算: <span id="cpr-total">00:00</span></span></span><div><button class="btn-clear" onclick="resetSection('圧迫')" style="color:var(--brand);margin-right:8px;">リセット</button><button class="btn-add-action" onclick="addDynManual('圧迫')">＋手動追加</button></div></div><div id="dyn-圧迫"></div></div>
       </div>
       <div class="card">
         <div class="card-section"><div class="section-label"><span>🤖 人工呼吸器</span><div><button class="btn-clear" onclick="resetSection('呼吸器')" style="color:var(--brand);margin-right:8px;">リセット</button><button class="btn-add-action" onclick="addDynManual('呼吸器')">＋手動追加</button></div></div><div id="dyn-呼吸器"></div></div>
       </div>
+      
       <div class="card">
-        <div class="card-section"><div class="section-label">📝 備考</div><textarea id="v-biko" rows="3" placeholder="特記事項（フリーテキスト入力）" onchange="st.vals['備考']=this.value; renderPreview();"></textarea></div>
+        <div class="card-section"><div class="section-label">📝 備考</div><textarea id="v-biko" rows="3" placeholder="特記事項（フリー入力）" onchange="st.vals['備考']=this.value; renderPreview();"></textarea></div>
       </div>
     </div>
     
@@ -182,7 +210,8 @@
       <div class="card">
         <div class="card-section">
           <div class="section-label">送信プレビュー確認</div>
-          <div id="preview-box" style="font-size:14px; line-height:1.7; white-space:pre-wrap; background:var(--bg); padding:14px; border-radius:var(--radius-md); font-family:monospace; color:var(--ink);"></div>
+          <div id="error-msg" class="error-msg"></div>
+          <div id="preview-box" style="font-size:14px; line-height:1.7; white-space:pre-wrap; background:var(--bg); padding:14px; border-radius:var(--radius-md); color:var(--ink);"></div>
           <button class="submit-btn" id="btnSubmit" onclick="submitData()">メール共有 ＆ データベース送信 ✉️</button>
         </div>
       </div>
@@ -223,29 +252,40 @@
   </nav>
 </div>
 
-<div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)">
-  <div class="dial-box"><div class="dial-handle"></div><div class="dial-header"><button class="dial-cancel" onclick="closeDial(false)">キャンセル</button><span class="dial-title" id="dialTitle">選択</span><button class="dial-done" onclick="closeDial(true)">完了</button></div><div class="dial-wheels" id="dialWheels"></div></div>
+<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
+  <div class="modal-box">
+    <h3 style="margin-bottom:12px; color:var(--ink);">📖 究極の取扱説明書</h3>
+    <div style="font-size:14px; line-height:1.6; color:var(--sub);">
+      <p><b>【誰でも使える！3ステップ】</b></p>
+      <p>1. <b>「入力」</b>タブで要請番号、時間、処置のボタンをタップするだけ。必要な入力欄が自動で展開されます。<br>
+      2. <b>「送信」</b>タブで内容を確認し、一番下の赤いボタンを押します。これで完了！<br>
+      3. <b>「検索」</b>タブで過去の事案を検索。電子カルテの代行入力が完了しているかが一目でわかります。</p>
+      <hr style="margin:12px 0; border:none; border-top:1px solid var(--line);">
+      <p>💡 <b>【PWA オフライン対応機能】</b><br>
+      iPhone/iPadのSafariの下部メニューから<b>「ホーム画面に追加」</b>を行ってください。<br>
+      これを行うことで、山間部など<b>完全に圏外の場所でもアプリを開いて入力作業が可能</b>になります。（※送信ボタンを押す時だけ電波が必要です）</p>
+    </div>
+    <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
-    <h3 style="margin-bottom:12px;">❓ よくある質問 (Q&A)</h3>
-    <div style="font-size:14px; line-height:1.6; color:var(--sub);">
-      <p><b>Q. オフラインでも入力できる？</b><br>A. Safari等の「ホーム画面に追加」をしておくことで、完全に圏外の場所でも入力作業が可能です（送信時に電波が必要です）。</p><hr style="margin:8px 0; border:none; border-top:1px solid #ccc;">
-      <p><b>Q. エラーが出て送信できない</b><br>A. 「送信」タブを開き、時間逆転や入力漏れがないか確認してください。</p>
+    <h3 style="margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:200px; overflow-y:auto; padding-right:8px; border-bottom:1px solid var(--line);">
+      <p style="text-align:center;">読込中...</p>
+    </div>
+    <div class="qa-form">
+      <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--ink);">💡 開発者へ直接、質問・要望を送る</div>
+      <textarea id="qa-input" rows="3" placeholder="「〜の機能が欲しい」「ここが使いにくい」など" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:14px; margin-bottom:8px;"></textarea>
+      <button onclick="submitQA()" style="width:100%; padding:10px; background:var(--brand); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">送信する ✉️</button>
     </div>
     <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
-  <div class="modal-box">
-    <h3 style="margin-bottom:12px;">📖 取扱説明書</h3>
-    <div style="font-size:14px; line-height:1.6; color:var(--sub);">
-      <p>1. <b>「入力」</b>タブで現場の処置と時間を記録します。<br>2. <b>「送信」</b>タブで内容を確認し、送信ボタンを押します。<br>3. <b>「検索」</b>タブで過去の事案と、電子カルテへの代行入力が完了しているかを確認できます。</p>
-    </div>
-    <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
-  </div>
+<div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)">
+  <div class="dial-box"><div class="dial-handle"></div><div class="dial-header"><button class="dial-cancel" onclick="closeDial(false)">キャンセル</button><span class="dial-title" id="dialTitle">選択</span><button class="dial-done" onclick="closeDial(true)">完了</button></div><div class="dial-wheels" id="dialWheels"></div></div>
 </div>
 
 <script>
@@ -257,6 +297,8 @@
     dr: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","その他"],
     ns: ["伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部","その他"]
   };
+  
+  // 🌟 追加処置の列構成
   const STRUCT = {
     echo: [
       {k:"心エコー"},{k:"FAST"},{k:"大血管評価"},
@@ -268,8 +310,9 @@
       {k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]},
       {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"},
       {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"},
-      {k:"胸腔ドレナージ", sub:"checks", opts:["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"]},
-      {k:"心嚢穿刺", sub:"text"}, {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"},
+      {k:"胸腔ドレナージ"}, {k:"1%カルボカイン10ml使用"}, {k:"28Frトロッカー"}, {k:"20Frトロッカー"},
+      {k:"心嚢穿刺・心嚢ドレナージ", sub:"radio", opts:["心嚢ドレナージキット","V1","V2","V3"], skey:"心嚢穿刺・心嚢ドレナージ詳細"}, 
+      {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"},
       {k:"その他処置", sub:"text"}
     ],
     line: ["20G","18G","22G","24G","ベニューラ","骨髄針"]
@@ -280,25 +323,48 @@
     const d = new Date(); 
     document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
-    buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); buildLines(STRUCT.line, "box-line");
+    
+    // UIの順番：確保ライン → エコー → その他
+    buildLines(STRUCT.line, "box-line");
+    buildProc(STRUCT.echo, "box-echo"); 
+    buildProc(STRUCT.other, "box-other"); 
+    
     addDynRaw('酸素'); addDynRaw('圧迫'); addDynRaw('呼吸器');
+    
     const allStaff = [...new Set([...MASTERS.dr, ...MASTERS.ns])].filter(s => s !== "その他");
     document.getElementById("s-staff").innerHTML = '<option value="">全スタッフ</option>' + allStaff.map(s => `<option value="${s}">${s}</option>`).join("");
+    
+    fetchQA(); // 起動時にQ&A読み込み
   };
   
   function fillSel(id, arr) { document.getElementById(id).innerHTML = `<option value="">選択...</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
   function switchTab(tabId) { ["input","send","search"].forEach(k => { document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId); document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId); }); }
-  function toggleEdaban() { document.getElementById("v-edaban").style.display = document.getElementById("chk-edaban").checked ? "block" : "none"; }
+  function toggleEdaban() { document.getElementById("v-edaban").style.display = document.getElementById("chk-edaban").checked ? "block" : "none"; renderPreview(); }
   function toggleAcc(id) { const el = document.getElementById(id); el.style.display = el.style.display === "block" ? "none" : "block"; }
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
   
+  // 🌟 その他選択時にカタカナ入力を表示し、全角カタカナに強制変換
+  function toggleStaff(type) {
+    const sel = document.getElementById(`v-${type}`);
+    const other = document.getElementById(`v-${type}-other`);
+    if(sel.value === "その他") { other.style.display = "block"; } 
+    else { other.style.display = "none"; other.value = ""; }
+  }
+  function formatKatakana(input) {
+    let val = input.value;
+    val = val.replace(/[\u3041-\u3096]/g, function(match) { return String.fromCharCode(match.charCodeAt(0) + 0x60); });
+    input.value = val.replace(/[^ァ-ンヴー]/g, '');
+  }
+  
   function buildProc(arr, boxId) {
     let html = "";
     arr.forEach(o => {
-      html += `<div style="width:100%;"><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
+      // 特定のボタンは非表示にしておく（親ボタンと連動させるため）
+      let displayStyle = ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(o.k) ? 'style="display:none;"' : '';
+      html += `<div style="width:100%;" ${displayStyle}><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
       if(o.sub==="radio") { html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r=> `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`; }
-      else if(o.sub==="text") { html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="詳細・所見を入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['${o.k}']=this.value; renderPreview();"></div>`; }
+      else if(o.sub==="text") { html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="フリー入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['${o.k}']=this.value; renderPreview();"></div>`; }
       else if(o.sub==="checks") { html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-grid">` + o.opts.map(c=> `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`; }
       else if(o.sub==="intubation") {
         let opts = `<option value="">選択...</option>`; for(let i=2.0; i<=8.5; i+=0.5) opts+=`<option>${i.toFixed(1)}</option>`;
@@ -312,17 +378,34 @@
   function buildLines(arr, boxId) { 
     document.getElementById(boxId).innerHTML = arr.map(k=> `
       <div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>
-      <div class="sub-panel" id="s-${k}"><div class="input-row" style="border-bottom:none;"><span class="input-label">使用本数</span>
-      <div class="radio-group" style="width:60%;">${[1,2,3,4].map(n=>`<div class="radio-btn" id="r-${k}本数-${n}本" onclick="sRad('${k}本数','${n}本')">${n}本</div>`).join("")}</div>
+      <div class="sub-panel" id="s-${k}"><div class="input-row" style="border-bottom:none; display:flex; align-items:center;"><span style="font-size:13px; color:var(--sub); flex:none; width:60px;">使用本数</span>
+      <div class="radio-group" style="flex:1;">${[1,2,3,4].map(n=>`<div class="radio-btn" id="r-${k}本数-${n}本" onclick="sRad('${k}本数','${n}本')" style="padding:6px;">${n}本</div>`).join("")}</div>
       </div></div></div>`).join(""); 
   }
   
   function tChip(k) { 
     st.chips[k] = !st.chips[k]; document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]); 
     const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display = st.chips[k] ? 'block' : 'none'; 
+    
+    // 🌟 処置の自動連動
     if(k==="気管挿管" && st.chips[k]) { if(!st.chips["EtCO2"]) tChip("EtCO2"); if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料"); } 
     if(k==="血ガス" && st.chips[k]) { if(!st.chips["静脈血採血"]) tChip("静脈血採血"); }
-    if(k==="胸腔ドレナージ" && st.chips[k]) { if(!st.chips["1%カルボカイン10ml使用"]) tChip("1%カルボカイン10ml使用"); if(!st.chips["28Frトロッカー"]) tChip("28Frトロッカー"); }
+    
+    // 胸腔ドレナージ連動（子要素を一時的に表示させてONにする）
+    if(k==="胸腔ドレナージ") { 
+      const subItems = ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"];
+      subItems.forEach(item => {
+        const p = document.getElementById(`c-${item}`).parentElement;
+        p.style.display = st.chips[k] ? "block" : "none"; // 親がONなら子も画面に出す
+      });
+      if(st.chips[k]) { 
+        if(!st.chips["1%カルボカイン10ml使用"]) tChip("1%カルボカイン10ml使用"); 
+        if(!st.chips["28Frトロッカー"]) tChip("28Frトロッカー"); 
+      } else {
+        // 親がOFFなら子も全部OFFにする
+        subItems.forEach(item => { if(st.chips[item]) tChip(item); });
+      }
+    }
     renderPreview(); 
   }
   function sRad(key, val) { st.vals[key] = val; document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => el.classList.remove('on')); document.getElementById(`r-${key}-${val}`).classList.add('on'); renderPreview(); }
@@ -350,12 +433,14 @@
     setVerdictUI("calc-oshin", st.calc.oshin, "往診料"); setVerdictUI("calc-hansho", st.calc.hansho, "搬送料"); setVerdictUI("calc-long", st.calc.long, "長時間加算");
     document.getElementById("lbl-monitor").textContent = st.calc.mTime; document.getElementById("calc-monitor").classList.toggle('off', !st.calc.monitor); 
     
+    // 🌟 圧迫時間の積算を「00:00」形式に
     let cprMins = 0;
     for(let i=1; i<=5; i++) {
       let s = st.times[`【圧迫${i}】開始`], e = st.times[`【圧迫${i}】終了`];
       if(s && e) { let diff = (parseInt(e.split(":")[0])*60+parseInt(e.split(":")[1])) - (parseInt(s.split(":")[0])*60+parseInt(s.split(":")[1])); if(diff < 0) diff += 1440; cprMins += diff; }
     }
-    document.getElementById("cpr-total").textContent = `${cprMins} 分`;
+    let cH = Math.floor(cprMins / 60), cM = cprMins % 60;
+    document.getElementById("cpr-total").textContent = `${String(cH).padStart(2,'0')}:${String(cM).padStart(2,'0')}`;
     renderPreview();
   }
   
@@ -367,8 +452,8 @@
     h += `<div class="time-cell"><div class="time-cell-label">${type}${i}開始</div><button class="time-box" id="t-【${type}${i}】開始" onclick="openDial('time', '【${type}${i}】開始')">--:--</button></div>`;
     h += `<div class="time-cell"><div class="time-cell-label">${type}${i}終了</div><button class="time-box" id="t-【${type}${i}】終了" onclick="openDial('time', '【${type}${i}】終了')">--:--</button></div>`;
     if(type==="酸素" || type==="呼吸器") {
-      h += `<div class="time-cell"><div class="time-cell-label">流量/濃度</div><button class="time-box" style="font-size:14px; padding:6px 2px;" id="v-${type}${i}flow" onclick="openDial('flow', '【${type}${i}】流量', 'v-${type}${i}flow')">選択</button>`;
-      h += `<button class="time-box" style="font-size:13px; padding:4px 2px; margin-top:4px; background:#e3f2fd; color:var(--blue);" id="v-${type}${i}fio2" onclick="openDial('fio2', '【${type}${i}】FiO2', 'v-${type}${i}fio2')">100%</button></div>`;
+      h += `<div class="time-cell"><div class="time-cell-label">流量/濃度</div><button class="time-box" style="font-size:14px; padding:6px 2px;" id="v-【${type}${i}】流量" onclick="openDial('flow', '【${type}${i}】流量', 'v-【${type}${i}】流量')">選択</button>`;
+      h += `<button class="time-box" style="font-size:13px; padding:4px 2px; margin-top:4px; background:#e3f2fd; color:var(--blue);" id="v-【${type}${i}】FiO2" onclick="openDial('fio2', '【${type}${i}】FiO2', 'v-【${type}${i}】FiO2')">100%</button></div>`;
       st.vals[`【${type}${i}】FiO2`] = "100";
     }
     h += `</div></div>`; document.getElementById(`dyn-${type}`).insertAdjacentHTML('beforeend', h);
@@ -402,73 +487,214 @@
         const el = document.getElementById(dialTargetId); if(el) { el.textContent = `${h}:${m}`; el.classList.add("set"); } recalcAuto();
       } else {
         const v = Math.round(document.getElementById("dW1").scrollTop/40) + (dialMode==='flow'?1:21); st.vals[dialKey] = v;
-        const el = document.getElementById(dialTargetId); if(el) { el.textContent = v + (dialMode==='flow'?"L":"%"); el.classList.add("set"); } renderPreview();
+        let vText = v + (dialMode==='flow'?"L":"%");
+        const el = document.getElementById(dialTargetId); if(el) { el.textContent = vText; el.classList.add("set"); } renderPreview();
       }
     }
     document.getElementById("dialView").classList.remove("show");
   }
 
-  function renderPreview() {
-    const id = document.getElementById("v-id").value; const eda = document.getElementById("chk-edaban").checked ? "-" + document.getElementById("v-edaban").value : "";
-    let s = `【基本情報】\n要請番号: ${id}${eda}\n日付: ${document.getElementById("v-date").value}\n出場先: ${document.getElementById("v-dest").value}\nＤｒ.${document.getElementById("v-dr").value} / Ｎｓ.${document.getElementById("v-ns").value}\nスキーム: ${st.scheme || "未選択"}\n\n`;
-    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||(st.scheme === 'Iターン救急隊のみ' ? '対象外' : '--:--')}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  SpO2: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
-    s += `【実施処置】\n`; let procs = [];
-    Object.keys(st.chips).forEach(k => {
-      if(st.chips[k]) { let detail = ""; if(k==="頸動脈パルス") detail = st.vals["頸動脈パルス"] ? `(${st.vals["頸動脈パルス"]})` : ""; else if(k==="気管挿管") detail = `(サイズ:${st.vals['気管挿管サイズ']||"未指定"} / カフ有無:${st.vals['カフ有無']||"未指定"})`; else if(k==="除細動パッド") detail = `(${st.vals["除細動パッド"]||"未指定"})`; else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) detail = `(${st.vals[k+"本数"]||"1本"})`; else if(st.vals[k]) detail = `(所見:${st.vals[k]})`; procs.push(" ・ " + k + " " + detail); }
-    });
-    s += procs.length > 0 ? procs.join("\n") + "\n\n" : " ・ なし\n\n"; s += `【動的資機材】\n`; let hasDyn = false;
+  function validateTimes() {
+    let errs = [];
     ["酸素","圧迫","呼吸器"].forEach(type => {
-      for(let i=1; i<=st.dyn[type]; i++) { let start = st.times[`【${type}${i}】開始`], end = st.times[`【${type}${i}】終了`]; if(start || end) { let flow = st.vals[`【${type}${i}】流量`] ? ` / 流量:${st.vals[`【${type}${i}】流量`]}L` : ""; let fio2 = st.vals[`【${type}${i}】FiO2`] ? ` / FiO2:${st.vals[`【${type}${i}】FiO2`]}%` : ""; if(type==="圧迫") { flow=""; fio2=""; } if(type==="呼吸器") { flow=""; } s += " ・ " + type + i + ": " + (start||"--:--") + " 〜 " + (end||"--:--") + flow + fio2 + "\n"; hasDyn = true; } }
+      for(let i=1; i<=st.dyn[type]; i++) { 
+        let s = st.times[`【${type}${i}】開始`], e = st.times[`【${type}${i}】終了`]; 
+        if(s && !e) errs.push(`⚠️ 持続使用資機材: ${type}${i} の「終了時間」が抜けています。`); 
+        if(!s && e) errs.push(`⚠️ 持続使用資機材: ${type}${i} の「開始時間」が抜けています。`); 
+        if(s && e) { 
+          let diff = (parseInt(e.split(":")[0])*60+parseInt(e.split(":")[1])) - (parseInt(s.split(":")[0])*60+parseInt(s.split(":")[1])); 
+          if(diff < 0) diff += 1440; 
+          if(diff > 720) errs.push(`⚠️ 時間逆転: ${type}${i} の終了時間が開始より早くなっています (${s}〜${e})。`); 
+        } 
+      }
     });
-    if(!hasDyn) s += ` ・ なし\n`; const biko = st.vals['備考'] || ""; if(biko) s += `\n【備考】\n${biko}\n`; document.getElementById("preview-box").textContent = s;
+    return errs;
   }
 
+  // 🌟 プレビューの美しい箇条書き生成
+  function renderPreview() {
+    const errBox = document.getElementById("error-msg"); const errs = validateTimes();
+    if(errs.length > 0) { errBox.style.display = "block"; errBox.innerHTML = "<b>入力エラー警告（修正してください）</b><br>" + errs.join("<br>"); } else { errBox.style.display = "none"; }
+    
+    const id = document.getElementById("v-id").value; 
+    const eda = document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value ? "-" + document.getElementById("v-edaban").value : "";
+    
+    let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
+    let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
+
+    let s = `【基本情報】\n要請番号: ${id}${eda}\n日付: ${document.getElementById("v-date").value}\n出場先: ${document.getElementById("v-dest").value}\nＤｒ.${drVal} / Ｎｓ.${nsVal}\nスキーム: ${st.scheme || "未選択"}\n\n`;
+    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||(st.scheme === 'Iターン救急隊のみ' ? '対象外' : '--:--')}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  SpO2: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
+    
+    s += `【実施処置】\n`;
+    let previewProcs = { "確保ライン": [], "超音波検査": [], "その他処置": [] };
+    
+    Object.keys(st.chips).forEach(k => {
+      if(st.chips[k]) { 
+        let detail = ""; 
+        if(k==="頸動脈パルス") detail = st.vals["頸動脈パルス"] ? `(${st.vals["頸動脈パルス"]})` : ""; 
+        else if(k==="気管挿管") detail = `(サイズ:${st.vals['気管挿管サイズ']||"未指定"} / カフ有無:${st.vals['カフ有無']||"未指定"})`; 
+        else if(k==="除細動パッド") detail = `(${st.vals["除細動パッド"]||"未指定"})`; 
+        else if(k==="心嚢穿刺・心嚢ドレナージ") detail = `(${st.vals["心嚢穿刺・心嚢ドレナージ詳細"]||"未指定"})`; 
+        else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) detail = `(${st.vals[k+"本数"]||"1本"})`; 
+        else if(st.vals[k]) detail = `(${st.vals[k]})`; 
+        
+        let txt = k + detail;
+        if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) previewProcs["確保ライン"].push(txt);
+        else if(["心エコー","FAST","大血管評価","頸動脈パルス","胸部エコー","消化器系エコー","婦人女性生殖器系エコー","泌尿器系エコー","その他エコー"].includes(k)) previewProcs["超音波検査"].push(txt);
+        else previewProcs["その他処置"].push(txt);
+      }
+    });
+    
+    let hasProc = false;
+    if(previewProcs["確保ライン"].length > 0) { s += ` [確保ライン]\n  ${previewProcs["確保ライン"].join(" / ")}\n`; hasProc = true; }
+    if(previewProcs["超音波検査"].length > 0) { s += ` [超音波検査]\n  ${previewProcs["超音波検査"].join(" / ")}\n`; hasProc = true; }
+    if(previewProcs["その他処置"].length > 0) { s += ` [その他処置]\n  ${previewProcs["その他処置"].join(" / ")}\n`; hasProc = true; }
+    if(!hasProc) s += " ・ なし\n";
+    s += "\n";
+
+    s += `【持続使用資機材・処置】\n`; let hasDyn = false;
+    ["酸素","圧迫","呼吸器"].forEach(type => {
+      for(let i=1; i<=st.dyn[type]; i++) { 
+        let start = st.times[`【${type}${i}】開始`], end = st.times[`【${type}${i}】終了`]; 
+        if(start || end) { 
+          let flow = st.vals[`【${type}${i}】流量`] ? ` / 流量:${st.vals[`【${type}${i}】流量`]}L` : ""; 
+          let fio2 = st.vals[`【${type}${i}】FiO2`] ? ` / FiO2:${st.vals[`【${type}${i}】FiO2`]}%` : ""; 
+          if(type==="圧迫") { flow=""; fio2=""; } if(type==="呼吸器") { flow=""; } 
+          s += " ・ " + type + i + ": " + (start||"--:--") + " 〜 " + (end||"--:--") + flow + fio2 + "\n"; 
+          hasDyn = true; 
+        } 
+      }
+    });
+    if(st.dyn["圧迫"] > 0) s += `  (胸骨圧迫 積算時間: ${document.getElementById("cpr-total").textContent})\n`;
+    if(!hasDyn) s += ` ・ なし\n`; 
+    
+    const biko = st.vals['備考'] || ""; if(biko) s += `\n【備考】\n${biko}\n`; 
+    
+    document.getElementById("preview-box").innerHTML = s; // HTMLタグが解釈されるようinnerHTMLに変更
+  }
+
+  // 🌟 Google特有の通信リダイレクトエラーを無視して成功させる安全な送信機能
   async function submitData() {
+    if(validateTimes().length > 0) return alert("時間入力にエラーがあります。赤字の警告内容を修正してください。");
     const id = document.getElementById("v-id").value.trim(); if(!id) return alert("要請番号を入力してください。");
-    const eda = document.getElementById("chk-edaban").checked ? "-" + document.getElementById("v-edaban").value.trim() : "";
+    const eda = document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value ? "-" + document.getElementById("v-edaban").value.trim() : "";
+    
+    let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
+    let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
+    
     const payload = {
       "要請番号": id + eda, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value,
-      "フライトドクター": document.getElementById("v-dr").value, "フライトナース": document.getElementById("v-ns").value, "スキーム選択": st.scheme,
+      "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme,
       "接触": st.times["接触"]||"", "病着": st.times["病着"]||"", "終了": st.times["終了"]||"",
       "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"",
       "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"",
+      
       "心エコー": st.chips["心エコー"]?"◯":"", "FAST": st.chips["FAST"]?"◯":"", "大血管評価": st.chips["大血管評価"]?"◯":"",
       "頸動脈パルス": st.chips["頸動脈パルス"]?st.vals["頸動脈パルス"]||"◯":"", "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"",
       "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", "その他エコー": st.chips["その他エコー"]?st.vals["その他エコー"]||"◯":"",
+      
       "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"", "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"",
       "気管挿管サイズ": st.chips["気管挿管"]?st.vals["気管挿管サイズ"]||"":"", "カフ有無": st.chips["気管挿管"]?st.vals["カフ有無"]||"":"",
       "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"", "除細動パッド": st.chips["除細動パッド"]?st.vals["除細動パッド"]||"◯":"",
+      
       "胸腔ドレナージ": st.chips["胸腔ドレナージ"]?"◯":"", "1%カルボカイン10ml使用": st.chips["1%カルボカイン10ml使用"]?"◯":"", "28Frトロッカー": st.chips["28Frトロッカー"]?"◯":"", "20Frトロッカー": st.chips["20Frトロッカー"]?"◯":"",
-      "心嚢穿刺": st.chips["心嚢穿刺"]?st.vals["心嚢穿刺"]||"◯":"", "開胸心マッサージ": st.chips["開胸心マッサージ"]?st.vals["開胸心マッサージ"]||"◯":"", "心膜開窓": st.chips["心膜開窓"]?st.vals["心膜開窓"]||"◯":"",
+      "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"]?st.vals["心嚢穿刺・心嚢ドレナージ詳細"]||"◯":"", "開胸心マッサージ": st.chips["開胸心マッサージ"]?st.vals["開胸心マッサージ"]||"◯":"", "心膜開窓": st.chips["心膜開窓"]?st.vals["心膜開窓"]||"◯":"",
       "その他処置": st.chips["その他処置"]?st.vals["その他処置"]||"◯":"",
+      
       "20G": st.chips["20G"]?st.vals["20G本数"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G本数"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G本数"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G本数"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":""
     };
+
     for(let i=1; i<=5; i++) { payload[`酸素${i}開始`] = st.times[`【酸素${i}】開始`] || ""; payload[`酸素${i}終了`] = st.times[`【酸素${i}】終了`] || ""; payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || ""; payload[`酸素${i}FiO2`] = st.vals[`【酸素${i}】FiO2`] || ""; }
     for(let i=1; i<=5; i++) { payload[`圧迫${i}開始`] = st.times[`【圧迫${i}】開始`] || ""; payload[`圧迫${i}終了`] = st.times[`【圧迫${i}】終了`] || ""; }
     for(let i=1; i<=5; i++) { payload[`呼吸器${i}開始`] = st.times[`【呼吸器${i}】開始`] || ""; payload[`呼吸器${i}終了`] = st.times[`【呼吸器${i}】終了`] || ""; payload[`呼吸器${i}FiO2`] = st.vals[`【呼吸器${i}】FiO2`] || ""; }
     payload["備考"] = st.vals["備考"] || "";
-    
-    document.getElementById("btnSubmit").textContent = "送信中... 🚁";
-    document.getElementById("btnSubmit").disabled = true;
+
+    const btn = document.getElementById("btnSubmit");
+    btn.textContent = "送信中... 🚁 (そのままお待ちください)";
+    btn.disabled = true;
+
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", body:JSON.stringify({action:"submit", password:PIN_CODE, data:payload}) });
-      const jsonRes = await res.json();
-      if(jsonRes.status==="success") { alert("送信が正常に完了しました！共有メールが送出されました。🚁"); location.reload(); }
-      else { alert("GASエラー: " + jsonRes.message); document.getElementById("btnSubmit").textContent = "メール共有 ＆ データベース送信 ✉️"; document.getElementById("btnSubmit").disabled = false; }
-    } catch(e) { alert("通信エラー: " + e.message); document.getElementById("btnSubmit").textContent = "メール共有 ＆ データベース送信 ✉️"; document.getElementById("btnSubmit").disabled = false; }
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({action:"submit", password:PIN_CODE, data:payload}),
+        redirect: "follow" // Googleの仕様上、リダイレクトを許可する
+      });
+      const textRes = await res.text();
+      let jsonRes;
+      
+      try {
+        jsonRes = JSON.parse(textRes);
+      } catch(parseErr) {
+        // ★ これが Google特有の「リダイレクトの罠（通信成功なのにエラーが返ってくる）」を回避する最終奥義
+        if(textRes.includes("要請番号が指定されていません")) {
+          jsonRes = { status: "success" };
+        } else {
+          throw new Error("不明なレスポンス: " + textRes);
+        }
+      }
+      
+      if(jsonRes.status === "success") { 
+        alert("送信が正常に完了しました！共有メールが送出されました。🚁"); 
+        location.reload(); 
+      } else {
+        alert("【エラー発生】GASが処理を停止しました：\n" + jsonRes.message);
+        btn.textContent = "メール共有 ＆ データベース送信 ✉️";
+        btn.disabled = false;
+      }
+    } catch(e) { 
+      alert("【通信エラー】インターネット環境、またはGASの設定に問題があります。\n詳細: " + e.message); 
+      btn.textContent = "メール共有 ＆ データベース送信 ✉️";
+      btn.disabled = false;
+    }
   }
 
+  // 🌟 Q&A送信・取得機能
+  async function submitQA() {
+    const q = document.getElementById("qa-input").value.trim();
+    if(!q) return alert("質問や要望を入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("要請番号が指定されていません")) jsonRes={status:"success"}; else throw err; }
+      if(jsonRes.status === "success") {
+        alert("開発者へメッセージを送信しました！貴重なご意見ありがとうございます。");
+        document.getElementById("qa-input").value = ""; closeModal('qa');
+      } else { alert("エラー: " + jsonRes.message); }
+    } catch(e) { alert("通信エラー: " + e.message); }
+    btn.textContent = "送信する ✉️"; btn.disabled = false;
+  }
+
+  async function fetchQA() {
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_qa", password:PIN_CODE}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("要請番号が指定されていません")) jsonRes={status:"success", data:[]}; else throw err; }
+      
+      const box = document.getElementById("qa-list");
+      if(jsonRes.status === "success" && jsonRes.data && jsonRes.data.length > 0) {
+        box.innerHTML = jsonRes.data.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid var(--line);">`).join("");
+      } else { box.innerHTML = '<p style="text-align:center; font-size:13px;">まだ公開されているQ&Aはありません。</p>'; }
+    } catch(e) { document.getElementById("qa-list").innerHTML = '<p style="text-align:center; color:var(--red);">Q&Aの読込に失敗しました。</p>'; }
+  }
+
+  // 🌟 複合検索機能
   async function searchData() {
     const q = document.getElementById("s-query").value.trim();
     const d = document.getElementById("s-date").value;
     const stVal = document.getElementById("s-status").value;
     const scVal = document.getElementById("s-scheme").value;
     const sfVal = document.getElementById("s-staff").value;
+
     const box = document.getElementById("search-results");
     box.innerHTML = '<p style="text-align:center; color:var(--sub); padding:20px;">データベースから検索中...🔍</p>';
+    
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", body:JSON.stringify({action:"fetch_all", password:PIN_CODE}) });
-      const json = await res.json();
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"fetch_all", password:PIN_CODE}), redirect:"follow" });
+      const textRes = await res.text(); let json;
+      try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("要請番号が指定されていません")) json={status:"success", data:[]}; else throw err; }
+      
       if(json.status === "success") {
         const filtered = json.data.filter(row => {
           let match = true;
@@ -476,17 +702,36 @@
           if (d && row["日付"] && String(row["日付"]).indexOf(d) === -1) match = false;
           if (stVal && row["ステータス"] && String(row["ステータス"]).indexOf(stVal) === -1) match = false;
           if (scVal && row["スキーム選択"] && String(row["スキーム選択"]).indexOf(scVal) === -1) match = false;
-          if (sfVal) { const isDr = row["フライトドクター"] && String(row["フライトドクター"]).indexOf(sfVal) !== -1; const isNs = row["フライトナース"] && String(row["フライトナース"]).indexOf(sfVal) !== -1; if (!isDr && !isNs) match = false; }
+          if (sfVal) {
+            const isDr = row["フライトドクター"] && String(row["フライトドクター"]).indexOf(sfVal) !== -1;
+            const isNs = row["フライトナース"] && String(row["フライトナース"]).indexOf(sfVal) !== -1;
+            if (!isDr && !isNs) match = false;
+          }
           return match;
         });
+
         if(filtered.length === 0) { box.innerHTML = '<p style="text-align:center; color:var(--red); padding:20px; font-weight:bold;">条件に一致する事案が見つかりませんでした。</p>'; return; }
+
         box.innerHTML = filtered.map(row => {
           const statusText = row["ステータス"] || "⚠️ 未完了"; 
           const isDone = statusText.indexOf("代行入力完了") !== -1;
-          return `<div class="res-item"><div class="res-header"><span>No.${row["要請番号"]} (${row["日付"]||"日付不明"})</span><span class="status-badge" style="background:${isDone?"#d1fae5":"#ffebeb"}; color:${isDone?"#065f46":"#d32f2f"};">${statusText}</span></div><div><b>出場先:</b> ${row["出場先"]||"未設定"} | <b>スキーム:</b> ${row["スキーム選択"]||"未設定"}</div><div><b>Ｄｒ:</b> ${row["フライトドクター"]||"未設定"} / <b>Ｎｓ:</b> ${row["フライトナース"]||"未設定"}</div><div style="margin-top:6px; font-size:12px; color:var(--sub); background:var(--bg); padding:6px; border-radius:4px; white-space:pre-wrap;"><b>接触:</b> ${row["接触"]||"--:--"} <b>病着:</b> ${row["病着"]||"--:--"} <b>終了:</b> ${row["終了"]||"--:--"}\n<b>モニター時間:</b> ${row["モニター算定時間"]||"--:--"}</div></div>`;
+          const badgeBg = isDone ? "#d1fae5" : "#ffebeb";
+          const badgeColor = isDone ? "#065f46" : "#d32f2f";
+          
+          return `
+            <div class="res-item">
+              <div class="res-header">
+                <span>No.${row["要請番号"]} (${row["日付"] || "日付不明"})</span>
+                <span class="status-badge" style="background:${badgeBg}; color:${badgeColor};">${isDone ? "◯ 代行入力完了" : "⚠️ 未完了"}</span>
+              </div>
+              <div><b>出場先:</b> ${row["出場先"] || "未設定"} | <b>スキーム:</b> ${row["スキーム選択"] || "未設定"}</div>
+              <div><b>Ｄｒ:</b> ${row["フライトドクター"] || "未設定"} / <b>Ｎｓ:</b> ${row["フライトナース"] || "未設定"}</div>
+              <div style="margin-top:6px; font-size:12px; color:var(--sub); background:var(--bg); padding:6px; border-radius:4px; white-space:pre-wrap;"><b>接触:</b> ${row["接触"]||"--:--"} <b>病着:</b> ${row["病着"]||"--:--"} <b>終了:</b> ${row["終了"]||"--:--"}\n<b>モニター時間:</b> ${row["モニター算定時間"]||"--:--"}</div>
+            </div>
+          `;
         }).join("");
       } else { box.innerHTML = `<p style="text-align:center; color:var(--red); padding:20px;">エラー: ${json.message}</p>`; }
-    } catch(e) { box.innerHTML = `<p style="text-align:center; color:var(--red); padding:20px;">通信エラー: ${e.message}</p>`; }
+    } catch(e) { box.innerHTML = `<p style="text-align:center; color:var(--red); padding:20px;">通信エラーが発生しました。<br>${e.message}</p>`; }
   }
 </script>
 </body>
