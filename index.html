@@ -102,4 +102,360 @@
     <button class="numpad-btn" onclick="pin(1)">1</button><button class="numpad-btn" onclick="pin(2)">2</button><button class="numpad-btn" onclick="pin(3)">3</button>
     <button class="numpad-btn" onclick="pin(4)">4</button><button class="numpad-btn" onclick="pin(5)">5</button><button class="numpad-btn" onclick="pin(6)">6</button>
     <button class="numpad-btn" onclick="pin(7)">7</button><button class="numpad-btn" onclick="pin(8)">8</button><button class="numpad-btn" onclick="pin(9)">9</button>
-    <div></div><button class="n
+    <div></div><button class="numpad-btn" onclick="pin(0)">0</button><button class="numpad-btn" style="background:none;" onclick="pinDel()">⌫</button>
+  </div>
+</div>
+
+<div id="syncBadge" class="sync-badge">⚠️ 未送信のオフライン保存データがあります <button onclick="syncOffline()" style="margin-left:10px;padding:4px 8px;">今すぐ同期</button></div>
+
+<header id="hTitle">要請・タイムライン</header>
+
+<main id="mainScroll">
+  <div id="tab-1" class="tab-content on">
+    <div class="card">
+      <div class="card-title">基本情報</div>
+      <div class="input-row"><span class="input-label">要請番号</span><input type="number" id="v-id" placeholder="例: 19771"></div>
+      <div class="input-row"><span class="input-label">日付</span><input type="date" id="v-date"></div>
+      <div class="input-row"><span class="input-label">出場先</span><select id="v-dest"></select></div>
+      <div class="input-row"><span class="input-label">ドクター</span><select id="v-dr"></select></div>
+      <div class="input-row"><span class="input-label">ナース</span><select id="v-ns"></select></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">スキーム</div>
+      <div class="scheme-grid" id="scheme-box">
+        <div class="scheme-row-top">
+          <button class="btn-scheme" onclick="setScheme('Uターン')">Uターン</button>
+          <button class="btn-scheme" onclick="setScheme('Jターン')">Jターン</button>
+          <button class="btn-scheme" onclick="setScheme('施設間')">施設間</button>
+        </div>
+        <div class="scheme-row-bot">
+          <button class="btn-scheme" onclick="setScheme('Iターン乗り込み')">Iターン乗込</button>
+          <button class="btn-scheme" onclick="setScheme('Iターン救急')">Iターン救急</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">メインタイムライン</div>
+      <div class="time-grid">
+        <div><div class="time-label">接触</div><div class="time-box" id="t-接触" onclick="openDial('接触')">--:--</div></div>
+        <div><div class="time-label">病着</div><div class="time-box" id="t-病着" onclick="openDial('病着')">--:--</div></div>
+        <div><div class="time-label">終了</div><div class="time-box" id="t-終了" onclick="openDial('終了')">--:--</div></div>
+      </div>
+      <div style="margin-top:16px; font-size:12px; color:var(--sub); display:flex; justify-content:space-between;">
+        <span id="auto-oshin">往診: -</span> <span id="auto-hansho">搬送: -</span> <span id="auto-long">長時間: -</span> <span id="auto-monitor" style="color:var(--brand);font-weight:bold;">モニター: --:--</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-2" class="tab-content">
+    <div class="card">
+      <div class="card-title">エコー</div>
+      <div class="chip-wrap" id="box-echo"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">その他処置</div>
+      <div class="chip-wrap" id="box-other"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">確保ライン (選択で本数入力)</div>
+      <div class="chip-wrap" id="box-line"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="display:flex; justify-content:space-between;"><span>移動用酸素</span> <button onclick="addDyn('酸素')" style="color:var(--blue);background:none;border:none;font-weight:bold;">＋追加</button></div>
+      <div id="dyn-酸素"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex; justify-content:space-between;"><span>胸骨圧迫</span> <button onclick="addDyn('圧迫')" style="color:var(--blue);background:none;border:none;font-weight:bold;">＋追加</button></div>
+      <div id="dyn-圧迫"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex; justify-content:space-between;"><span>人工呼吸器</span> <button onclick="addDyn('呼吸器')" style="color:var(--blue);background:none;border:none;font-weight:bold;">＋追加</button></div>
+      <div id="dyn-呼吸器"></div>
+    </div>
+
+    <button class="btn-submit" onclick="submitData()">データベースへ送信する 🚁</button>
+  </div>
+</main>
+
+<nav class="tab-bar">
+  <button class="tab-btn on" id="tb-1" onclick="switchTab(1, '要請・タイムライン')"><span style="font-size:20px;margin-bottom:4px;">⏱️</span>基本</button>
+  <button class="tab-btn" id="tb-2" onclick="switchTab(2, '処置・資機材入力')"><span style="font-size:20px;margin-bottom:4px;">💉</span>処置</button>
+</nav>
+
+<div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)">
+  <div class="dial-box">
+    <div class="dial-header"><span style="color:var(--sub);" onclick="closeDial(false)">キャンセル</span><span id="dialTitle">時刻</span><span style="color:var(--brand);" onclick="closeDial(true)">完了</span></div>
+    <div class="dial-wheels">
+      <div class="dial-sel"></div>
+      <div class="dial-wheel" id="wH" onscroll="hls('wH')"></div>
+      <div style="line-height:200px; font-weight:bold; font-size:24px;">:</div>
+      <div class="dial-wheel" id="wM" onscroll="hls('wM')"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── データベース直結マスタ（完全オフライン対応） ──
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbweVnL-tKL35gCvNVDg4G4tuR5__RbL-yc5fucXPwEkgLnxK7WLdRNdQH19IWSfcY4U/exec";
+  const PIN_CODE = "5740";
+  
+  const MASTERS = {
+    dest: ["鹿児島市","姶良市","阿久根市","伊佐市","出水市","いちき串木野市","指宿市","大崎町","鹿屋市","肝付町","さつま町","薩摩川内市","志布志市","曽於市","垂水市","長島町","中種子町","西之表市","日置市","東串良町","霧島市","錦江町","枕崎市","南大隅町","南九州市","南さつま市","南種子町","屋久島町","湧水町","えびの市","都城市","宮崎市","黒島","薩摩硫黄島","竹島","口永良部島","口之島","中之島","平島","諏訪之瀬島","悪石島","小宝島","宝島","熊本市","宇城市","甑島","名瀬","馬毛島"],
+    dr: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","その他"],
+    ns: ["伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部","その他"]
+  };
+
+  // ── 処置の構造定義（アコーディオン自動生成） ──
+  const STRUCT = {
+    echo: [
+      {k:"心エコー"},{k:"FAST"},{k:"大血管評価"},
+      {k:"頸動脈", sub:"radio", opts:["パルスあり","パルスなし"], skey:"頸動脈パルス"},
+      {k:"胸部エコー", sub:"text"}, {k:"消化器系エコー", sub:"text"},
+      {k:"婦人女性生殖器系エコー", sub:"text"}, {k:"泌尿器系エコー", sub:"text"}, {k:"その他エコー", sub:"text"}
+    ],
+    other: [
+      {k:"12誘導心電図"}, {k:"血糖測定"},
+      {k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]},
+      {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"},
+      {k:"除細動", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"}
+    ],
+    line: ["20G","18G","22G","24G","ベニューラ","骨髄針"]
+  };
+
+  // ── 状態管理（State） ──
+  const st = {
+    pin: "", scheme: "", times: {}, chips: {}, vals: {},
+    dyn: { 酸素: 0, 圧迫: 0, 呼吸器: 0 },
+    pending: JSON.parse(localStorage.getItem('heli_pending') || '[]')
+  };
+
+  // ── 起動ロジック ──
+  window.onload = () => {
+    if(localStorage.getItem("heli_auth") === "ok") { document.getElementById("lockView").style.display="none"; initApp(); }
+    checkPending();
+  };
+
+  function pin(n) { st.pin+=n; drawPin(); if(st.pin.length===4) setTimeout(checkPin,100); }
+  function pinDel() { st.pin=st.pin.slice(0,-1); drawPin(); }
+  function drawPin() { [0,1,2,3].forEach(i=> document.getElementById('dot-'+i).className = i<st.pin.length ? 'pin-dot filled':'pin-dot'); }
+  function checkPin() {
+    if(st.pin===PIN_CODE){ localStorage.setItem("heli_auth","ok"); document.getElementById("lockView").style.opacity=0; setTimeout(()=>document.getElementById("lockView").style.display="none",300); initApp(); }
+    else { st.pin=""; drawPin(); } // 失敗時は無音リセット
+  }
+
+  function initApp() {
+    const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
+    buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); buildLines();
+    addDyn('酸素'); addDyn('圧迫'); addDyn('呼吸器'); // 初期枠
+  }
+
+  function fillSel(id, arr) { document.getElementById(id).innerHTML = `<option value="">選択...</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
+  function switchTab(idx, title) {
+    [1,2].forEach(i=>{ document.getElementById('tab-'+i).classList.toggle('on', i===idx); document.getElementById('tb-'+i).classList.toggle('on', i===idx); });
+    document.getElementById("hTitle").textContent = title;
+    document.getElementById("mainScroll").scrollTop = 0;
+  }
+
+  // ── アコーディオン ＆ チップ生成 ──
+  function buildProc(arr, boxId) {
+    let html = "";
+    arr.forEach(o => {
+      html += `<div style="width:100%;"><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
+      if(o.sub==="radio") {
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r=> `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`;
+      } else if(o.sub==="text") {
+        html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="所見・詳細を入力" style="width:100%;text-align:left;background:#fff;padding:8px;border:1px solid #ccc;border-radius:4px;" onchange="st.vals['${o.k}']=this.value"></div>`;
+      } else if(o.sub==="checks") {
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-wrap">` + o.opts.map(c=> `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`;
+      } else if(o.sub==="intubation") {
+        let opts = `<option value="">サイズ選択</option>`; for(let i=2.0; i<=8.5; i+=0.5) opts+=`<option>${i.toFixed(1)}</option>`;
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="input-row"><span class="input-label">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value">${opts}</select></div><div class="input-row"><span class="input-label">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div></div>`;
+      }
+      html += `</div>`;
+    });
+    document.getElementById(boxId).innerHTML = html;
+  }
+
+  function buildLines() {
+    document.getElementById("box-line").innerHTML = STRUCT.line.map(k=> `
+      <div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>
+      <div class="sub-panel" id="s-${k}"><div class="input-row"><span class="input-label">使用本数</span><select onchange="st.vals['${k}']=this.value">`+ [1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}本</option>`).join("") +`</select></div></div></div>
+    `).join("");
+  }
+
+  function tChip(k) {
+    st.chips[k] = !st.chips[k];
+    document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]);
+    const sub = document.getElementById(`s-${k}`);
+    if(sub) sub.style.display = st.chips[k] ? 'block' : 'none';
+    
+    // 気管挿管の連動マジック
+    if(k==="気管挿管" && st.chips[k]) {
+      if(!st.chips["EtCO2"]) tChip("EtCO2");
+      if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料");
+    }
+  }
+
+  function sRad(key, val) {
+    st.vals[key] = val;
+    document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => el.classList.remove('on'));
+    document.getElementById(`r-${key}-${val}`).classList.add('on');
+  }
+
+  // ── 動的タイムライン (Max 5) ──
+  function addDyn(type) {
+    if(st.dyn[type] >= 5) return;
+    st.dyn[type]++;
+    const i = st.dyn[type];
+    
+    let html = `<div class="dyn-row"><div class="time-grid">`;
+    html += `<div><div class="time-label">${type}${i}開始</div><div class="time-box" id="t-【${type}${i}】開始" onclick="openDial('【${type}${i}】開始')">--:--</div></div>`;
+    html += `<div><div class="time-label">${type}${i}終了</div><div class="time-box" id="t-【${type}${i}】終了" onclick="openDial('【${type}${i}】終了')">--:--</div></div>`;
+    
+    if(type==="酸素") html += `<div><div class="time-label">流量/FiO2</div><input type="number" placeholder="L/min" style="width:100%;text-align:center;background:#fff;padding:12px 0;border-radius:8px;" onchange="st.vals['【${type}${i}】流量']=this.value"><input type="number" value="100" style="width:100%;text-align:center;background:#fff;padding:8px 0;margin-top:4px;font-size:12px;" onchange="st.vals['【${type}${i}】FiO2']=this.value"></div>`;
+    if(type==="呼吸器") html += `<div><div class="time-label">FiO2(%)</div><input type="number" value="100" style="width:100%;text-align:center;background:#fff;padding:12px 0;border-radius:8px;" onchange="st.vals['【${type}${i}】FiO2']=this.value"></div>`;
+    
+    html += `</div></div>`;
+    document.getElementById(`dyn-${type}`).insertAdjacentHTML('beforeend', html);
+    
+    // 初期値セット
+    if(type==="酸素" || type==="呼吸器") st.vals[`【${type}${i}】FiO2`] = "100";
+  }
+
+  // ── 時間ピッカー (NOW自動) ＆ 連動 ──
+  let curDial = "";
+  function openDial(key) {
+    curDial = key; document.getElementById("dialTitle").textContent = key.replace(/[【】]/g,'');
+    let v = st.times[key];
+    if(!v) { const d = new Date(); v = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+    
+    const mk = n => `<div style="height:80px"></div>` + Array.from({length:n},(_,i)=>`<div class="dial-opt">${String(i).padStart(2,'0')}</div>`).join("") + `<div style="height:80px"></div>`;
+    const wh=document.getElementById("wH"), wm=document.getElementById("wM");
+    wh.innerHTML=mk(24); wm.innerHTML=mk(60);
+    wh.scrollTop = parseInt(v.split(":")[0])*40; wm.scrollTop = parseInt(v.split(":")[1])*40;
+    
+    document.getElementById("dialView").style.display="flex"; hls('wH'); hls('wM');
+  }
+
+  function hls(id) {
+    const w = document.getElementById(id); const idx = Math.round(w.scrollTop/40);
+    w.querySelectorAll('.dial-opt').forEach((el,i)=>{ el.style.fontWeight = i===idx?"800":"400"; el.style.color = i===idx?"var(--ink)":"var(--sub)"; });
+  }
+
+  function closeDial(ok) {
+    if(ok) {
+      const h = String(Math.round(document.getElementById("wH").scrollTop/40)).padStart(2,'0');
+      const m = String(Math.round(document.getElementById("wM").scrollTop/40)).padStart(2,'0');
+      const time = `${h}:${m}`;
+      st.times[curDial] = time;
+      
+      const box = document.getElementById(`t-${curDial}`);
+      if(box) { box.textContent = time; box.classList.add("set"); }
+
+      // 自動引継ぎマジック: 終了が打たれたら、次の開始に自動コピー
+      const match = curDial.match(/【(酸素|圧迫|呼吸器)(\d+)】終了/);
+      if(match) {
+        const t = match[1], next = parseInt(match[2])+1;
+        if(next <= st.dyn[t]) {
+          const nk = `【${t}${next}】開始`;
+          if(!st.times[nk]) { st.times[nk] = time; document.getElementById(`t-${nk}`).textContent=time; document.getElementById(`t-${nk}`).classList.add('set'); }
+        }
+      }
+      recalc();
+    }
+    document.getElementById("dialView").style.display="none";
+  }
+
+  // ── 計算ロジック ──
+  function setScheme(s) {
+    st.scheme = s;
+    document.querySelectorAll(".btn-scheme").forEach(b => b.classList.toggle('on', b.textContent.includes(s)));
+    recalc();
+  }
+
+  function recalc() {
+    const sc=st.scheme, c=st.times["接触"], a=st.times["病着"], e=st.times["終了"];
+    let o="なし", h="なし", l="なし", m="--:--";
+    if(sc) { o="◯"; if(sc.indexOf("救急")===-1) h="◯"; }
+    if(c && e) {
+      const diff = tDiff(c,e); if(diff>=30) l="◯";
+      if(sc.indexOf("救急")!==-1) m = mStr(diff); else if(a) m = mStr(tDiff(c,a));
+    }
+    document.getElementById("auto-oshin").textContent = `往診: ${o}`;
+    document.getElementById("auto-hansho").textContent = `搬送: ${h}`;
+    document.getElementById("auto-long").textContent = `長時間: ${l}`;
+    document.getElementById("auto-monitor").textContent = `モニター: ${m}`;
+  }
+  function tDiff(c,e) { let d = (parseInt(e.split(":")[0])*60+parseInt(e.split(":")[1])) - (parseInt(c.split(":")[0])*60+parseInt(c.split(":")[1])); return d<0?d+1440:d; }
+  function mStr(min) { return `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`; }
+
+  // ── パッキング＆オフライン保存送信 ──
+  function getDyn(pfx, max, sfxs) {
+    let res = {};
+    for(let i=1; i<=max; i++) sfxs.forEach(s => res[`${pfx}${i}${s}`] = st.times[`【${pfx}${i}】${s}`] || st.vals[`【${pfx}${i}】${s}`] || "");
+    return res;
+  }
+
+  async function submitData() {
+    const id = document.getElementById("v-id").value;
+    if(!id) return alert("要請番号は必須です");
+
+    const p = {
+      "要請番号": id, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value,
+      "フライトドクター": document.getElementById("v-dr").value, "フライトナース": document.getElementById("v-ns").value, "スキーム選択": st.scheme,
+      "接触": st.times["接触"]||"", "病着": st.times["病着"]||"", "終了": st.times["終了"]||"",
+      "往診料": document.getElementById("auto-oshin").textContent.includes("◯")?"◯":"",
+      "搬送料": document.getElementById("auto-hansho").textContent.includes("◯")?"◯":"",
+      "搬送料（長時間）": document.getElementById("auto-long").textContent.includes("◯")?"◯":"",
+      "モニター算定時間": document.getElementById("auto-monitor").textContent.split(" ")[1],
+      
+      "心エコー": st.chips["心エコー"]?"◯":"", "FAST": st.chips["FAST"]?"◯":"", "大血管評価": st.chips["大血管評価"]?"◯":"",
+      "頸動脈パルス": st.chips["頸動脈"]?st.vals["頸動脈パルス"]||"◯":"",
+      "胸部エコー": st.chips["胸部エコー"]?st.vals["胸部エコー"]||"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?st.vals["消化器系エコー"]||"◯":"",
+      "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?st.vals["婦人女性生殖器系エコー"]||"◯":"",
+      "泌尿器系エコー": st.chips["泌尿器系エコー"]?st.vals["泌尿器系エコー"]||"◯":"", "その他エコー": st.chips["その他エコー"]?st.vals["その他エコー"]||"◯":"",
+      
+      "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"",
+      "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"",
+      "気管挿管サイズ": st.chips["気管挿管"]?st.vals["気管挿管サイズ"]||"":"", "カフ有無": st.chips["気管挿管"]?st.vals["カフ有無"]||"":"",
+      "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"",
+      "除細動パッド": st.chips["除細動"]?st.vals["除細動パッド"]||"":"",
+      
+      "20G": st.chips["20G"]?st.vals["20G"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針"]||"1本":"",
+      
+      ...getDyn("酸素", 5, ["開始","終了","流量","FiO2"]), ...getDyn("圧迫", 5, ["開始","終了"]), ...getDyn("呼吸器", 5, ["開始","終了","FiO2"])
+    };
+
+    // オフライン対応送信
+    if(!navigator.onLine) {
+      st.pending.push(p); localStorage.setItem('heli_pending', JSON.stringify(st.pending));
+      alert("電波がないため端末に一時保存しました！"); checkPending(); location.reload(); return;
+    }
+
+    try {
+      const res = await fetch(GAS_URL, { method:"POST", body:JSON.stringify({action:"submit", password:PIN_CODE, data:p}) });
+      if((await res.json()).status==="success") { alert("送信完了 🚁"); location.reload(); }
+    } catch(e) {
+      st.pending.push(p); localStorage.setItem('heli_pending', JSON.stringify(st.pending));
+      alert("通信エラー。一時保存しました。"); checkPending(); location.reload();
+    }
+  }
+
+  function checkPending() { document.getElementById("syncBadge").style.display = st.pending.length>0 ? "block":"none"; }
+  async function syncOffline() {
+    if(!navigator.onLine) return alert("まだオフラインです");
+    let remain = [];
+    for(let p of st.pending) {
+      try { await fetch(GAS_URL, { method:"POST", body:JSON.stringify({action:"submit", password:PIN_CODE, data:p}) }); }
+      catch(e) { remain.push(p); }
+    }
+    st.pending = remain; localStorage.setItem('heli_pending', JSON.stringify(st.pending));
+    alert(remain.length>0 ? "一部失敗しました":"同期完了！"); checkPending();
+  }
+</script>
+</body>
+</html>
