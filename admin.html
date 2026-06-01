@@ -28,8 +28,12 @@
     .form-group label { display:block; font-weight:bold; font-size:12px; margin-bottom:4px; color:var(--sub); }
     .form-group input, .form-group textarea, .form-group select { width:100%; }
     
-    /* ログイン用オーバーレイ */
     #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
+    
+    /* 🌟 ローディングスピナー */
+    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; display:none; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(211,47,47,0.2); border-top: 4px solid var(--brand); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     @media print {
       body * { visibility: hidden; }
@@ -51,12 +55,17 @@
     </div>
   </div>
 
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div style="margin-top:16px; font-weight:bold; color:var(--ink);">🚁 システム準備中...</div>
+  </div>
+
   <header>
     <div style="display:flex; gap:16px;">
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:bold;">AW109 検索・管理コンソール <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px; vertical-align:middle;">v4.0</span></div>
+    <div style="font-weight:bold;">AW109 検索・管理コンソール <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px; vertical-align:middle;">v4.1</span></div>
     <button class="hdr-btn" onclick="location.reload()" style="color:var(--sub);">🔒 ロック</button>
   </header>
 
@@ -160,11 +169,11 @@
 
   <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
     <div class="modal-box">
-      <h3 style="margin-top:0; color:var(--ink);">❓ Q&A ＆ 要望BOX (現場同期)</h3>
+      <h3 style="margin-top:0; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3>
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div>
       <div style="background:var(--bg); padding:12px; border-radius:8px;">
-        <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 管理側から要望やメモを残す</div>
-        <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
+        <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 開発チームへシステム改善の要望を送る</div>
+        <textarea id="qa-input" rows="3" placeholder="追加してほしい機能やバグの報告など" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
         <button onclick="submitQA(event)" style="width:100%; padding:10px;">送信する ✉️</button>
       </div>
       <button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
@@ -172,7 +181,6 @@
   </div>
 
 <script>
-  // ── 設定 ──
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740"; 
   
@@ -183,6 +191,7 @@
     const input = document.getElementById("login-pin").value;
     if(input === PIN_CODE) {
       document.getElementById("login-overlay").style.display = "none";
+      document.getElementById("global-loader").style.display = "flex"; // 🌟 ロード画面表示
       fetchInit(); 
     } else {
       document.getElementById("login-err").style.display = "block";
@@ -194,19 +203,13 @@
   function closeModal(id) { document.getElementById(id || 'detail-modal').classList.remove('show'); }
 
   function quickFilter(type) {
-    document.getElementById("q-id").value = "";
-    document.getElementById("q-date-start").value = "";
-    document.getElementById("q-date-end").value = "";
-    document.getElementById("q-status").value = "";
-    document.getElementById("q-dest").value = "";
-    document.getElementById("q-staff").value = "";
+    document.getElementById("q-id").value = ""; document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = "";
+    document.getElementById("q-status").value = ""; document.getElementById("q-dest").value = ""; document.getElementById("q-staff").value = "";
 
     if(type === '未完了') document.getElementById("q-status").value = "未完了";
     else if(type === '本日') {
-      const d = new Date();
-      const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      document.getElementById("q-date-start").value = today;
-      document.getElementById("q-date-end").value = today;
+      const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      document.getElementById("q-date-start").value = today; document.getElementById("q-date-end").value = today;
     }
     fetchData();
   }
@@ -290,14 +293,12 @@
     
     document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "<span style='color:var(--sub);'>消費した主な資機材はありません</span>";
     
-    // 完了済みの場合は完了ボタンを非表示
     const isDone = (row["ステータス"]||"").includes("完了") && !(row["ステータス"]||"").includes("未完了");
     document.getElementById("btn-complete").style.display = isDone ? "none" : "block";
 
     openModal("detail-modal");
   }
 
-  // 🌟 カルテ転記完了ボタン処理
   async function markComplete() {
     const editor = document.getElementById("edit-person").value.trim();
     if(!editor) return alert("完了処理を行うには「担当者名」を入力してください。");
@@ -371,10 +372,9 @@
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
-      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual_admin:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
       
       if(jsonRes.status === "success") {
-        // 🌟 マスタデータの反映（プルダウン生成）
         if (jsonRes.masters) {
           const destOpts = '<option value="">全出場先</option>' + jsonRes.masters.dest.map(v=>`<option value="${v}">${v}</option>`).join("");
           const drOpts = '<option value="">全スタッフ</option>' + [...new Set([...jsonRes.masters.dr, ...jsonRes.masters.ns])].map(v=>`<option value="${v}">${v}</option>`).join("");
@@ -393,10 +393,12 @@
         else qaBox.innerHTML = '<p style="text-align:center; font-size:13px;">公開されているQ&Aはありません。</p>';
         
         const mBox = document.getElementById("manual-list");
-        if(jsonRes.manual && jsonRes.manual.length > 0) mBox.innerHTML = jsonRes.manual.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("");
+        if(jsonRes.manual_admin && jsonRes.manual_admin.length > 0) mBox.innerHTML = jsonRes.manual_admin.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("");
         else mBox.innerHTML = '<p style="text-align:center; font-size:13px;">マニュアルはまだありません。</p>';
+        
+        document.getElementById("global-loader").style.display = "none";
       }
-    } catch(e) { console.log("初期データ取得エラー"); }
+    } catch(e) { console.log("初期データ取得エラー"); document.getElementById("global-loader").style.display = "none"; }
   }
 
   async function submitQA(event) {
@@ -406,7 +408,7 @@
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
       try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success"}; else throw err; }
-      if(jsonRes.status === "success") { alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } 
+      if(jsonRes.status === "success") { alert("開発チームへ要望を送信しました！"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } 
       else { alert("エラー: " + jsonRes.message); }
     } catch(e) { alert("通信エラー: " + e.message); }
     btn.textContent = "送信する ✉️"; btn.disabled = false;
