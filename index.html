@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>AW109 EMS Record</title>
   <style>
-    /* ── AW109 Sleek iOSメモ風ホワイトデザイン ── */
     :root {
       --ink: #1c1c1e; --sub: #8e8e93; --bg: #f2f2f7; --card: #ffffff;
       --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --red: #ff3b30;
@@ -16,36 +15,29 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
-
     #app { display: flex; flex-direction: column; height: 100dvh; padding-top: var(--safe-top); }
     header { height: 56px; display: flex; align-items: center; justify-content: center; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); font-size: 17px; font-weight: 600; letter-spacing: -0.3px; position: relative; flex-shrink: 0; }
     main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 24px; }
-    
     .card { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .card-section { padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
     .card-section:last-child { border-bottom: none; }
     .section-label { font-size: 12px; font-weight: 600; color: var(--sub); letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-
     .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
     .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 17px; color: var(--ink); flex: 1; font-weight: 500; }
-    
     select, input[type="number"], input[type="text"], input[type="date"] { text-align: right; font-size: 17px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 500; }
     textarea { width: 100%; border: none; font-size: 16px; background: transparent; outline: none; resize: none; color: var(--ink); }
-
     .scheme-picker { display: grid; gap: 6px; padding: 4px; background: rgba(118,118,128,0.12); border-radius: var(--radius-md); }
     .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .scheme-row-bot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 5%; }
     .scheme-btn { padding: 8px 4px; border: none; border-radius: 10px; background: transparent; font-size: 12px; font-weight: 500; color: var(--sub); cursor: pointer; transition: all 0.2s; line-height: 1.3; text-align: center; }
     .scheme-btn.active { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
-
     .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .time-cell { display: flex; flex-direction: column; gap: 4px; }
     .time-cell-label { font-size: 11px; font-weight: 600; color: var(--sub); text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
     .time-box { background: var(--bg); border-radius: var(--radius-md); padding: 14px 8px; text-align: center; font-size: 20px; font-weight: 700; color: var(--sub); cursor: pointer; transition: all 0.15s; }
     .time-box.set { background: #fff9db; color: var(--brand); border: 0.5px solid rgba(213,47,47,0.3); }
     .time-box.disabled { opacity: 0.3; background: #e5e5ea; color: #aeaeb2; cursor: not-allowed; }
-
     .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .verdict-pill { border-radius: var(--radius-md); padding: 12px 8px; text-align: center; transition: all 0.2s; cursor: pointer; }
     .verdict-pill .v-label { font-size: 11px; font-weight: 600; color: var(--sub); margin-bottom: 4px; }
@@ -55,17 +47,14 @@
     .verdict-pill.on .v-label, .verdict-pill.on .v-text { color: #065f46; }
     .verdict-pill.off { background: var(--bg); }
     .verdict-pill.off .v-text { color: var(--sub); }
-    
     .monitor-time-box { background: var(--ink); color: #fff; border-radius: var(--radius-md); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; cursor: pointer; }
     .monitor-time-box.off { background: var(--sub); opacity: 0.6; }
     .monitor-label { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 600; }
     .monitor-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
-
     .acc-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; font-size: 17px; font-weight: 500; }
     .acc-header:last-child { border-bottom: none; }
     .acc-header span { color: var(--sub); font-size: 14px; margin-left: auto; }
     .acc-body { display: none; padding: 14px 16px; background: rgba(242,242,247,0.5); border-bottom: 0.5px solid var(--line); }
-    
     .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { background: var(--bg); border: 1.5px solid transparent; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; transition: all 0.15s; color: var(--ink); }
     .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); font-weight: 600; }
@@ -73,19 +62,16 @@
     .radio-group { display: flex; gap: 10px; width: 100%; }
     .radio-btn { flex: 1; text-align: center; padding: 8px; border: 0.5px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
     .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
-
     .btn-clear { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; }
     .btn-add-action { background: none; border: none; color: var(--blue); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 8px; }
     .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: var(--radius-md); padding: 18px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 16px; }
     .error-msg { background: #ffebeb; color: var(--brand); padding: 12px; border-radius: var(--radius-md); font-weight: 600; font-size: 13px; margin-bottom: 16px; display: none; border: 0.5px solid var(--brand); line-height: 1.5; }
-    
     .tab-bar { height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; flex-shrink: 0; z-index: 10; }
     .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; color: var(--sub); font-size: 10px; font-weight: 500; cursor: pointer; }
     .tab-btn.active { color: var(--brand); font-weight: 600; }
     .tab-icon { font-size: 22px; line-height: 1; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-
     .dial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9998; display: none; align-items: flex-end; justify-content: center; }
     .dial-overlay.show { display: flex; }
     .dial-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); }
@@ -105,44 +91,20 @@
   </style>
 </head>
 <body>
-
 <div id="app">
   <header id="hTitle">要請・タイムライン</header>
-
   <main id="mainScroll">
     <div id="tab-input" class="tab-content active">
-      
       <div class="card">
-        <div class="inline-field">
-          <span class="field-label">要請番号</span>
-          <input id="v-id" type="number" inputmode="numeric" placeholder="例: 19771" oninput="renderPreview()">
-        </div>
-        <div class="inline-field" style="padding: 10px 16px;">
-          <label style="font-size:15px; font-weight:500; display:flex; align-items:center; gap:8px; width:100%; cursor:pointer;">
-            <input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;"> 枝番あり
-          </label>
-          <input type="number" id="v-edaban" inputmode="numeric" placeholder="枝番" style="display:none; max-width:80px; text-align:right; background:var(--bg); padding:4px 8px; border-radius:6px;">
-        </div>
-        <div class="inline-field" onclick="document.getElementById('v-date').showPicker()">
-          <span class="field-label">日付</span>
-          <input type="date" id="v-date" onchange="renderPreview()">
-        </div>
-        <div class="inline-field">
-          <span class="field-label">出場先</span>
-          <select id="v-dest" onchange="renderPreview()"></select>
-        </div>
-        <div class="inline-field">
-          <span class="field-label">ドクター</span>
-          <select id="v-dr" onchange="renderPreview()"></select>
-        </div>
-        <div class="inline-field">
-          <span class="field-label">ナース</span>
-          <select id="v-ns" onchange="renderPreview()"></select>
-        </div>
+        <div class="inline-field"><span class="field-label">要請番号</span><input id="v-id" type="number" inputmode="numeric" placeholder="例: 19771" oninput="renderPreview()"></div>
+        <div class="inline-field" style="padding: 10px 16px;"><label style="font-size:15px; font-weight:500; display:flex; align-items:center; gap:8px; width:100%; cursor:pointer;"><input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;"> 枝番あり</label><input type="number" id="v-edaban" inputmode="numeric" placeholder="枝番" style="display:none; max-width:80px; text-align:right; background:var(--bg); padding:4px 8px; border-radius:6px;"></div>
+        <div class="inline-field" onclick="document.getElementById('v-date').showPicker()"><span class="field-label">日付</span><input type="date" id="v-date" onchange="renderPreview()"></div>
+        <div class="inline-field"><span class="field-label">出場先</span><select id="v-dest" onchange="renderPreview()"></select></div>
+        <div class="inline-field"><span class="field-label">フライトドクター</span><select id="v-dr" onchange="renderPreview()"></select></div>
+        <div class="inline-field"><span class="field-label">フライトナース</span><select id="v-ns" onchange="renderPreview()"></select></div>
       </div>
-
       <div class="card">
-        <div class="card-section"><div class="section-label">スキーム</div>
+        <div class="card-section"><div class="section-label">スキーム選択</div>
           <div class="scheme-picker" id="schemePicker">
             <div class="scheme-row-top">
               <button class="scheme-btn" onclick="setScheme(this,'Uターン')">Uターン</button>
@@ -156,7 +118,6 @@
           </div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-section">
           <div class="section-label">メインタイムライン <button class="btn-clear" onclick="clearTimeline()">クリア</button></div>
@@ -166,7 +127,6 @@
             <div class="time-cell"><div class="time-cell-label">終了</div><button class="time-tap" id="t-終了" onclick="openDial('time', '終了')">--:--</button></div>
           </div>
         </div>
-
         <div class="card-section">
           <div class="section-label">自動判定 ＆ 算定フラグ (タップで手動切替)</div>
           <div class="verdict-row">
@@ -175,23 +135,19 @@
             <div class="verdict-pill off" id="calc-long" onclick="tCalc('long')"><div class="v-label">長時間加算</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
-            <div class="monitor-time-box" id="calc-monitor" onclick="tCalc('monitor')"><span class="monitor-label">モニター算定</span><span class="monitor-value" id="lbl-monitor">--:--</span></div>
-            <div class="monitor-time-box" id="calc-spo2" onclick="tCalc('spo2')" style="justify-content:center;font-size:14px;font-weight:600;"><span id="lbl-spo2">✓ SpO2算定 ON</span></div>
+            <div class="monitor-time-box" id="calc-monitor" onclick="tCalc('monitor')"><span class="monitor-label">モニター算定時間</span><span class="monitor-value" id="lbl-monitor">--:--</span></div>
+            <div class="monitor-time-box" id="calc-spo2" onclick="tCalc('spo2')" style="justify-content:center;font-size:14px;font-weight:600;"><span id="lbl-spo2">✓ 経皮的酸素飽和度 ON</span></div>
           </div>
         </div>
       </div>
-
       <div class="card" style="padding:0;">
         <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span>▼</span></div>
         <div class="acc-body" id="acc-echo"><div class="chip-grid" id="box-echo"></div></div>
-
         <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div>
         <div class="acc-body" id="acc-other"><div class="chip-grid" id="box-other"></div></div>
-
         <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span>▼</span></div>
         <div class="acc-body" id="acc-line"><div class="chip-grid" id="box-line"></div></div>
       </div>
-
       <div class="card">
         <div class="card-section"><div class="section-label"><span>🌬️ 移動用酸素</span><div><button class="btn-clear" onclick="resetSection('酸素')" style="color:var(--brand);margin-right:8px;">リセット</button><button class="btn-add-action" onclick="addDynManual('酸素')">＋手動追加</button></div></div><div id="dyn-酸素"></div></div>
       </div>
@@ -201,12 +157,10 @@
       <div class="card">
         <div class="card-section"><div class="section-label"><span>🤖 人工呼吸器</span><div><button class="btn-clear" onclick="resetSection('呼吸器')" style="color:var(--brand);margin-right:8px;">リセット</button><button class="btn-add-action" onclick="addDynManual('呼吸器')">＋手動追加</button></div></div><div id="dyn-呼吸器"></div></div>
       </div>
-
       <div class="card">
         <div class="card-section"><div class="section-label">📝 備考</div><textarea id="v-biko" rows="3" placeholder="特記事項（フリーテキスト入力）" onchange="st.vals['備考']=this.value; renderPreview();"></textarea></div>
       </div>
     </div>
-
     <div id="tab-send" class="tab-content">
       <div class="card">
         <div class="card-section">
@@ -217,7 +171,6 @@
         </div>
       </div>
     </div>
-
     <div id="tab-search" class="tab-content">
       <div class="card">
         <div class="card-section">
@@ -227,14 +180,12 @@
       </div>
     </div>
   </main>
-
   <nav class="tab-bar">
     <button class="tab-btn active" id="tb-input" onclick="switchTab('input', '要請・処置入力')"><span class="tab-icon">📝</span><span>入力</span></button>
     <button class="tab-btn" id="tb-send" onclick="switchTab('send', '送信プレビュー'); renderPreview();"><span class="tab-icon">✉️</span><span>送信</span></button>
     <button class="tab-btn" id="tb-search" onclick="switchTab('search', '事案検索')"><span class="tab-icon">🔍</span><span>検索</span></button>
   </nav>
 </div>
-
 <div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)">
   <div class="dial-box">
     <div class="dial-handle"></div>
@@ -242,161 +193,74 @@
     <div class="dial-wheels" id="dialWheels"></div>
   </div>
 </div>
-
 <script>
-  // ── マスタデータ ＆ GAS URL ──
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbweVnL-tKL35gCvNVDg4G4tuR5__RbL-yc5fucXPwEkgLnxK7WLdRNdQH19IWSfcY4U/exec";
   const PIN_CODE = "5740";
-
   const MASTERS = {
     dest: ["鹿児島市","姶良市","阿久根市","伊佐市","出水市","いちき串木野市","指宿市","大崎町","鹿屋市","肝付町","さつま町","薩摩川内市","志布志市","曽於市","垂水市","長島町","中種子町","西之表市","日置市","東串良町","霧島市","錦江町","枕崎市","南大隅町","南九州市","南さつま市","南種子町","屋久島町","湧水町","えびの市","都城市","宮崎市","黒島","薩摩硫黄島","竹島","口永良部島","口之島","中之島","平島","諏訪之瀬島","悪石島","小宝島","宝島","熊本市","宇城市","甑島","名瀬","馬毛島"],
     dr: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","その他"],
     ns: ["伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部","その他"]
   };
-
   const STRUCT = {
     echo: [
       {k:"心エコー"},{k:"FAST"},{k:"大血管評価"},
-      {k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス詳細"},
+      {k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},
       {k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}
     ],
     other: [
       {k:"12誘導心電図"}, {k:"血糖測定"},
       {k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]},
       {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"},
-      {k:"除細動", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"},
+      {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"},
       {k:"その他処置", sub:"text"}
     ],
     line: ["20G","18G","22G","24G","ベニューラ","骨髄針"]
   };
-
-  const st = { 
-    scheme: "", times: {}, vals: {}, chips: {}, dyn: { 酸素:0, 圧迫:0, 呼吸器:0 },
-    calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" }
-  };
-
+  const st = { scheme: "", times: {}, vals: {}, chips: {}, dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" } };
   window.onload = () => {
-    const d = new Date(); 
-    const yStr = d.getFullYear();
-    const mStr = String(d.getMonth() + 1).padStart(2, '0');
-    const dStr = String(d.getDate()).padStart(2, '0');
-    document.getElementById("v-date").value = `${yStr}-${mStr}-${dStr}`;
-    
+    const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
     buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); buildLines(STRUCT.line, "box-line");
-    
     addDynRaw('酸素'); addDynRaw('圧迫'); addDynRaw('呼吸器');
   };
-
   function fillSel(id, arr) { document.getElementById(id).innerHTML = `<option value="">選択...</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
-  
-  function switchTab(tabId, title) {
-    ["input","send","search"].forEach(k => {
-      document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId);
-      document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId);
-    });
-    document.getElementById("hTitle").textContent = title;
-  }
-
+  function switchTab(tabId, title) { ["input","send","search"].forEach(k => { document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId); document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId); }); document.getElementById("hTitle").textContent = title; }
   function toggleEdaban() { const chk = document.getElementById("chk-edaban").checked; document.getElementById("v-edaban").style.display = chk ? "block" : "none"; }
   function toggleAcc(id) { const el = document.getElementById(id); el.style.display = el.style.display === "block" ? "none" : "block"; }
-
   function buildProc(arr, boxId) {
     let html = "";
     arr.forEach(o => {
       html += `<div style="width:100%;"><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
-      if(o.sub==="radio") {
-        html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r=> `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`;
-      } else if(o.sub==="text") {
-        html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="詳細・所見を入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['${o.k}詳細']=this.value; renderPreview();"></div>`;
-      } else if(o.sub==="checks") {
-        html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-grid">` + o.opts.map(c=> `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`;
-      } else if(o.sub==="intubation") {
+      if(o.sub==="radio") { html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r=> `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`; }
+      else if(o.sub==="text") { html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="詳細・所見を入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['${o.k}']=this.value; renderPreview();"></div>`; }
+      else if(o.sub==="checks") { html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-grid">` + o.opts.map(c=> `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`; }
+      else if(o.sub==="intubation") {
         let opts = `<option value="">選択...</option>`; for(let i=2.0; i<=8.5; i+=0.5) opts+=`<option>${i.toFixed(1)}</option>`;
-        html += `<div class="sub-panel" id="s-${o.k}"><div class="input-row"><span class="input-label">チューブサイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; renderPreview();">${opts}</select></div><div class="input-row" style="border-bottom:none;"><span class="input-label">カフ</span><div class="radio-group" style="width:50%;"><div class="radio-btn" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div></div>`;
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="input-row"><span class="input-label">チューブサイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; renderPreview();">${opts}</select></div><div class="input-row" style="border-bottom:none;"><span class="input-label">カフ有無</span><div class="radio-group" style="width:50%;"><div class="radio-btn" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div></div>`;
       }
       html += `</div>`;
     });
     document.getElementById(boxId).innerHTML = html;
   }
-
-  function buildLines(arr, boxId) {
-    document.getElementById(boxId).innerHTML = arr.map(k=> `
-      <div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>
-      <div class="sub-panel" id="s-${k}"><div class="input-row" style="border-bottom:none;"><span class="input-label">使用本数</span><select onchange="st.vals['${k}本数']=this.value; renderPreview();">`+ [1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}本</option>`).join("") +`</select></div></div></div>
-    `).join("");
-  }
-
-  function tChip(k) {
-    st.chips[k] = !st.chips[k]; document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]);
-    const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display = st.chips[k] ? 'block' : 'none';
-    if(k==="気管挿管" && st.chips[k]) { if(!st.chips["EtCO2"]) tChip("EtCO2"); if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料"); }
-    renderPreview();
-  }
-
+  function buildLines(arr, boxId) { document.getElementById(boxId).innerHTML = arr.map(k=> `<div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div><div class="sub-panel" id="s-${k}"><div class="input-row" style="border-bottom:none;"><span class="input-label">使用本数</span><select onchange="st.vals['${k}']=this.value; renderPreview();">`+ [1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}本">${n}本</option>`).join("") +`</select></div></div></div>`).join(""); }
+  function tChip(k) { st.chips[k] = !st.chips[k]; document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]); const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display = st.chips[k] ? 'block' : 'none'; if(k==="気管挿管" && st.chips[k]) { if(!st.chips["EtCO2"]) tChip("EtCO2"); if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料"); } renderPreview(); }
   function sRad(key, val) { st.vals[key] = val; document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => el.classList.remove('on')); document.getElementById(`r-${key}-${val}`).classList.add('on'); renderPreview(); }
-  
-  function setScheme(btn, s) {
-    st.scheme = s;
-    document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn));
-    
-    const arrivalBox = document.getElementById("t-病着");
-    if (s === "Iターン救急隊のみ") {
-      st.times["病着"] = ""; 
-      arrivalBox.textContent = "対象外"; 
-      arrivalBox.classList.remove("set");
-      arrivalBox.classList.add("disabled");
-    } else {
-      arrivalBox.classList.remove("disabled");
-      if(arrivalBox.textContent === "対象外") arrivalBox.textContent = "--:--";
-    }
-    recalcAuto();
-  }
-
-  function clearTimeline() {
-    ["接触","病着","終了"].forEach(k => { st.times[k] = ""; document.getElementById(`t-${k}`).textContent = "--:--"; document.getElementById(`t-${k}`).classList.remove("set"); });
-    const arrivalBox = document.getElementById("t-病着");
-    if(st.scheme === "Iターン救急隊のみ") { arrivalBox.textContent = "対象外"; arrivalBox.classList.add("disabled"); }
-    recalcAuto();
-  }
-
-  function tCalc(key) { st.calc[key] = !st.calc[key]; document.getElementById(`calc-${key}`).classList.toggle('on', st.calc[key]); if(key==='spo2') document.getElementById("lbl-spo2").textContent = st.calc.spo2 ? "✓ SpO2算定 ON" : "— SpO2算定 OFF"; renderPreview(); }
-
+  function setScheme(btn, s) { st.scheme = s; document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); const arrivalBox = document.getElementById("t-病着"); if (s === "Iターン救急隊のみ") { st.times["病着"] = ""; arrivalBox.textContent = "対象外"; arrivalBox.classList.remove("set"); arrivalBox.classList.add("disabled"); } else { arrivalBox.classList.remove("disabled"); if(arrivalBox.textContent === "対象外") arrivalBox.textContent = "--:--"; } recalcAuto(); }
+  function clearTimeline() { ["接触","病着","終了"].forEach(k => { st.times[k] = ""; document.getElementById(`t-${k}`).textContent = "--:--"; document.getElementById(`t-${k}`).classList.remove("set"); }); const arrivalBox = document.getElementById("t-病着"); if(st.scheme === "Iターン救急隊のみ") { arrivalBox.textContent = "対象外"; arrivalBox.classList.add("disabled"); } recalcAuto(); }
+  function tCalc(key) { st.calc[key] = !st.calc[key]; document.getElementById(`calc-${key}`).classList.toggle('on', st.calc[key]); if(key==='spo2') document.getElementById("lbl-spo2").textContent = st.calc.spo2 ? "✓ 経皮的酸素飽和度 ON" : "— 経皮的酸素飽和度 OFF"; renderPreview(); }
   function recalcAuto() {
-    const sc = st.scheme, c = st.times["接触"], a = st.times["病着"], e = st.times["終了"];
-    st.calc.oshin = false; st.calc.hansho = false; st.calc.long = false; st.calc.mTime = "--:--";
-    
-    if(sc) {
-      st.calc.oshin = true; 
-      if(sc.indexOf("救急隊のみ") === -1) st.calc.hansho = true; 
-    }
+    const sc = st.scheme, c = st.times["接触"], a = st.times["病着"], e = st.times["終了"]; st.calc.oshin = false; st.calc.hansho = false; st.calc.long = false; st.calc.mTime = "--:--";
+    if(sc) { st.calc.oshin = true; if(sc.indexOf("救急隊のみ") === -1) st.calc.hansho = true; }
     if(c && e) {
-      let cmins = parseInt(c.split(":")[0])*60 + parseInt(c.split(":")[1]);
-      let emins = parseInt(e.split(":")[0])*60 + parseInt(e.split(":")[1]);
-      let diff = emins - cmins; if(diff < 0) diff += 1440;
-      if(diff >= 30) st.calc.long = true;
-      
+      let cmins = parseInt(c.split(":")[0])*60 + parseInt(c.split(":")[1]), emins = parseInt(e.split(":")[0])*60 + parseInt(e.split(":")[1]);
+      let diff = emins - cmins; if(diff < 0) diff += 1440; if(diff >= 30) st.calc.long = true;
       if(sc.indexOf("救急隊のみ") !== -1) st.calc.mTime = `${String(Math.floor(diff/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
-      else if(a) {
-        let amins = parseInt(a.split(":")[0])*60 + parseInt(a.split(":")[1]);
-        let mdiff = amins - cmins; if(mdiff < 0) mdiff += 1440;
-        st.calc.mTime = `${String(Math.floor(mdiff/60)).padStart(2,'0')}:${String(mdiff%60).padStart(2,'0')}`;
-      }
+      else if(a) { let amins = parseInt(a.split(":")[0])*60 + parseInt(a.split(":")[1]), mdiff = amins - cmins; if(mdiff < 0) mdiff += 1440; st.calc.mTime = `${String(Math.floor(mdiff/60)).padStart(2,'0')}:${String(mdiff%60).padStart(2,'0')}`; }
     }
-    
-    setVerdictUI("calc-oshin", st.calc.oshin, "往診料");
-    setVerdictUI("calc-hansho", st.calc.hansho, "搬送料");
-    setVerdictUI("calc-long", st.calc.long, "長時間加算");
-    document.getElementById("lbl-monitor").textContent = st.calc.mTime;
-    document.getElementById("calc-monitor").classList.toggle('off', !st.calc.monitor);
-    renderPreview();
+    setVerdictUI("calc-oshin", st.calc.oshin, "往診料"); setVerdictUI("calc-hansho", st.calc.hansho, "搬送料"); setVerdictUI("calc-long", st.calc.long, "長時間加算");
+    document.getElementById("lbl-monitor").textContent = st.calc.mTime; document.getElementById("calc-monitor").classList.toggle('off', !st.calc.monitor); renderPreview();
   }
-
-  function setVerdictUI(domId, isOn, label) {
-    const el = document.getElementById(domId); if(!el) return; el.className = `verdict-pill ${isOn ? "on" : "off"}`;
-    el.innerHTML = `<div class="v-label">${label}</div><span class="v-icon">${isOn ? "✓" : "—"}</span><div class="v-text">${isOn ? "◯ 算定" : "なし"}</div>`;
-  }
-
+  function setVerdictUI(domId, isOn, label) { const el = document.getElementById(domId); if(!el) return; el.className = `verdict-pill ${isOn ? "on" : "off"}`; el.innerHTML = `<div class="v-label">${label}</div><span class="v-icon">${isOn ? "✓" : "—"}</span><div class="v-text">${isOn ? "◯ 算定" : "なし"}</div>`; }
   function addDynRaw(type) {
     st.dyn[type]++; const i = st.dyn[type];
     let h = `<div id="div-${type}-${i}" style="border-bottom:0.5px solid var(--line); padding:10px 0; margin-bottom:4px;"><div class="time-grid">`;
@@ -409,74 +273,33 @@
     }
     h += `</div></div>`; document.getElementById(`dyn-${type}`).insertAdjacentHTML('beforeend', h);
   }
-
-  function addDynManual(type) {
-    if(st.dyn[type] >= 5) return;
-    const preIdx = st.dyn[type]; const preEndVal = st.times[`【${type}${preIdx}】終了`] || "";
-    addDynRaw(type);
-    const nextIdx = st.dyn[type];
-    if(preEndVal) {
-      const nextKey = `【${type}${nextIdx}】開始`; st.times[nextKey] = preEndVal;
-      const el = document.getElementById(`t-${nextKey}`); if(el) { el.textContent = preEndVal; el.classList.add("set"); }
-    }
-    renderPreview();
-  }
-
-  function resetSection(type) {
-    document.getElementById(`dyn-${type}`).innerHTML = "";
-    for(let i=1; i<=5; i++) { delete st.times[`【${type}${i}】開始`]; delete st.times[`【${type}${i}】終了`]; delete st.vals[`【${type}${i}】流量`]; delete st.vals[`【${type}${i}】FiO2`]; }
-    st.dyn[type] = 0; addDynRaw(type); renderPreview();
-  }
-
+  function addDynManual(type) { if(st.dyn[type] >= 5) return; const preIdx = st.dyn[type]; const preEndVal = st.times[`【${type}${preIdx}】終了`] || ""; addDynRaw(type); const nextIdx = st.dyn[type]; if(preEndVal) { const nextKey = `【${type}${nextIdx}】開始`; st.times[nextKey] = preEndVal; const el = document.getElementById(`t-${nextKey}`); if(el) { el.textContent = preEndVal; el.classList.add("set"); } } renderPreview(); }
+  function resetSection(type) { document.getElementById(`dyn-${type}`).innerHTML = ""; for(let i=1; i<=5; i++) { delete st.times[`【${type}${i}】開始`]; delete st.times[`【${type}${i}】終了`]; delete st.vals[`【${type}${i}】流量`]; delete st.vals[`【${type}${i}】FiO2`]; } st.dyn[type] = 0; addDynRaw(type); renderPreview(); }
   let dialMode = "", dialKey = "";
   function openDial(mode, key) {
-    if(mode === 'time' && key === '病着' && st.scheme === 'Iターン救急隊のみ') return; 
-    dialMode = mode; dialKey = key; document.getElementById("dialTitle").textContent = key.replace(/[【】]/g,''); const wh = document.getElementById("dialWheels");
+    if(mode === 'time' && key === '病着' && st.scheme === 'Iターン救急隊のみ') return; dialMode = mode; dialKey = key; document.getElementById("dialTitle").textContent = key.replace(/[【】]/g,''); const wh = document.getElementById("dialWheels");
     const mk = (n, start=0, sfx="") => `<div class="dial-wheel" id="dW1" onscroll="hls('dW1')"><div class="dial-spacer"></div>` + Array.from({length:n},(_,i)=>`<div class="dial-opt">${String(i+start).padStart(mode==='time'?2:1,'0')}${sfx}</div>`).join("") + `<div class="dial-spacer"></div></div>`;
-    
     if(mode === 'time') {
       wh.innerHTML = mk(24) + `<div class="dial-sep">:</div>` + mk(60).replace('dW1','dW2').replace('dW1','dW2');
-      let v = st.times[key];
-      if(!v) { 
-        const now = new Date();
-        v = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-      }
-      const parts = v.split(":");
-      setTimeout(() => {
-        document.getElementById("dW1").scrollTop = parseInt(parts[0]) * 40;
-        document.getElementById("dW2").scrollTop = parseInt(parts[1]) * 40;
-        hls('dW1'); hls('dW2');
-      }, 10);
-    } else if(mode === 'flow') {
-      wh.innerHTML = mk(20, 1, " L");
-      setTimeout(() => { document.getElementById("dW1").scrollTop = (parseInt(st.vals[key]||1)-1)*40; hls('dW1'); }, 10);
-    } else if(mode === 'fio2') {
-      wh.innerHTML = mk(80, 21, "%");
-      setTimeout(() => { document.getElementById("dW1").scrollTop = (parseInt(st.vals[key]||100)-21)*40; hls('dW1'); }, 10);
-    }
+      let v = st.times[key]; if(!v) { const now = new Date(); v = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
+      const parts = v.split(":"); setTimeout(() => { document.getElementById("dW1").scrollTop = parseInt(parts[0]) * 40; document.getElementById("dW2").scrollTop = parseInt(parts[1]) * 40; hls('dW1'); hls('dW2'); }, 10);
+    } else if(mode === 'flow') { wh.innerHTML = mk(20, 1, " L"); setTimeout(() => { document.getElementById("dW1").scrollTop = (parseInt(st.vals[key]||1)-1)*40; hls('dW1'); }, 10); }
+    else if(mode === 'fio2') { wh.innerHTML = mk(80, 21, "%"); setTimeout(() => { document.getElementById("dW1").scrollTop = (parseInt(st.vals[key]||100)-21)*40; hls('dW1'); }, 10); }
     document.getElementById("dialView").classList.add("show");
   }
-
   function hls(id) { const w = document.getElementById(id); if(!w) return; const idx = Math.round(w.scrollTop/40); w.querySelectorAll('.dial-opt').forEach((el,i)=>{ const sel = i === idx; el.style.fontWeight=sel?"700":"400"; el.style.color=sel?"var(--ink)":"var(--sub)"; el.style.fontSize=sel?"22px":"18px"; }); }
-
   function closeDial(ok) {
     if(ok) {
       if(dialMode === 'time') {
-        const h = String(Math.round(document.getElementById("dW1").scrollTop/40)).padStart(2,'0');
-        const m = String(Math.round(document.getElementById("dW2").scrollTop/40)).padStart(2,'0');
-        st.times[dialKey] = `${h}:${m}`;
-        const el = document.getElementById(`t-${dialKey}`); if(el) { el.textContent = `${h}:${m}`; el.classList.add("set"); }
-        recalcAuto();
+        const h = String(Math.round(document.getElementById("dW1").scrollTop/40)).padStart(2,'0'); const m = String(Math.round(document.getElementById("dW2").scrollTop/40)).padStart(2,'0'); st.times[dialKey] = `${h}:${m}`;
+        const el = document.getElementById(`t-${dialKey}`); if(el) { el.textContent = `${h}:${m}`; el.classList.add("set"); } recalcAuto();
       } else {
-        const v = Math.round(document.getElementById("dW1").scrollTop/40) + (dialMode==='flow'?1:21);
-        st.vals[dialKey] = v;
-        const el = document.getElementById(`v-${dialKey}`); if(el) { el.textContent = v + (dialMode==='flow'?"L":"%"); el.classList.add("set"); }
-        renderPreview();
+        const v = Math.round(document.getElementById("dW1").scrollTop/40) + (dialMode==='flow'?1:21); st.vals[dialKey] = v;
+        const el = document.getElementById(`v-${dialKey}`); if(el) { el.textContent = v + (dialMode==='flow'?"L":"%"); el.classList.add("set"); } renderPreview();
       }
     }
     document.getElementById("dialView").classList.remove("show");
   }
-
   function validateTimes() {
     let errs = [];
     ["酸素","圧迫","呼吸器"].forEach(type => {
@@ -484,76 +307,43 @@
     });
     return errs;
   }
-
   function renderPreview() {
-    const errBox = document.getElementById("error-msg"); const errs = validateTimes();
-    if(errs.length > 0) { errBox.style.display = "block"; errBox.innerHTML = "<b>入力エラー警告（修正してください）</b><br>" + errs.join("<br>"); } else { errBox.style.display = "none"; }
+    const errBox = document.getElementById("error-msg"); const errs = validateTimes(); if(errs.length > 0) { errBox.style.display = "block"; errBox.innerHTML = "<b>入力エラー警告（修正してください）</b><br>" + errs.join("<br>"); } else { errBox.style.display = "none"; }
     const id = document.getElementById("v-id").value; const eda = document.getElementById("chk-edaban").checked ? "-" + document.getElementById("v-edaban").value : "";
-    
-    let s = `【基本情報】\n要請番号: ${id}${eda}\n日付: ${document.getElementById("v-date").value}\n出場先: ${document.getElementById("v-dest").value}\n担当スタッフ: Ｄｒ.${document.getElementById("v-dr").value} / Ｎｓ.${document.getElementById("v-ns").value}\nスキーム: ${st.scheme || "未選択"}\n\n`;
-    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||(st.scheme === 'Iターン救急隊のみ' ? '対象外' : '--:--')}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター算定時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  SpO2算定: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
+    let s = `【基本情報】\n要請番号: ${id}${eda}\n日付: ${document.getElementById("v-date").value}\n出場先: ${document.getElementById("v-dest").value}\n担当スタッフ: Ｄｒ.${document.getElementById("v-dr").value} / Ｎｓ.${document.getElementById("v-ns").value}\nスキーム選択: ${st.scheme || "未選択"}\n\n`;
+    s += `【タイムライン ＆ 算定】\n接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||(st.scheme === 'Iターン救急隊のみ' ? '対象外' : '--:--')}  終了: ${st.times['終了']||'--:--'}\n往診料: ${st.calc.oshin?"◯ 算定":"-"}  搬送料: ${st.calc.hansho?"◯ 算定":"-"}  長時間加算: ${st.calc.long?"◯ 算定":"-"}\nモニター算定時間: ${st.calc.monitor ? st.calc.mTime : "OFF"}  経皮的酸素飽和度: ${st.calc.spo2?"◯ 算定":"-"}\n\n`;
     s += `【実施処置】\n`; let procs = [];
     Object.keys(st.chips).forEach(k => {
-      if(st.chips[k]) { let detail = ""; if(k==="頸動脈パルス") detail = st.vals["頸動脈パルス詳細"] ? `(${st.vals["頸動脈パルス詳細"]})` : ""; else if(k==="気管挿管") detail = `(サイズ:${st.vals["気管挿管サイズ"]||"未指定"} / カフ:${st.vals["カフ有無"]||"未指定"})`; else if(k==="除細動") detail = `(${st.vals["除細動パッド"]||"未指定"})`; else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) detail = `(${st.vals[k+"本数"]||"1本"})`; else if(st.vals[k+"詳細"]) detail = `(所見:${st.vals[k+"詳細"]})`; procs.push(" ・ " + k + " " + detail); }
+      if(st.chips[k]) { let detail = ""; if(k==="頸動脈パルス") detail = st.vals["頸動脈パルス"] ? `(${st.vals["頸動脈パルス"]})` : ""; else if(k==="気管挿管") detail = `(サイズ:${st.vals['気管挿管サイズ']||"未指定"} / カフ有無:${st.vals['カフ有無']||"未指定"})`; else if(k==="除細動パッド") detail = `(${st.vals["除細動パッド"]||"未指定"})`; else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) detail = `(${st.vals[k]||"1本"})`; else if(st.vals[k]) detail = `(所見:${st.vals[k]})`; procs.push(" ・ " + k + " " + detail); }
     });
-    s += procs.length > 0 ? procs.join("\n") + "\n\n" : " ・ なし\n\n";
-    s += `【動的資機材】\n`; let hasDyn = false;
+    s += procs.length > 0 ? procs.join("\n") + "\n\n" : " ・ なし\n\n"; s += `【動的資機材】\n`; let hasDyn = false;
     ["酸素","圧迫","呼吸器"].forEach(type => {
       for(let i=1; i<=st.dyn[type]; i++) { let start = st.times[`【${type}${i}】開始`], end = st.times[`【${type}${i}】終了`]; if(start || end) { let flow = st.vals[`【${type}${i}】流量`] ? ` / 流量:${st.vals[`【${type}${i}】流量`]}L` : ""; let fio2 = st.vals[`【${type}${i}】FiO2`] ? ` / FiO2:${st.vals[`【${type}${i}】FiO2`]}%` : ""; if(type==="圧迫") { flow=""; fio2=""; } if(type==="呼吸器") { flow=""; } s += " ・ " + type + i + ": " + (start||"--:--") + " 〜 " + (end||"--:--") + flow + fio2 + "\n"; hasDyn = true; } }
     });
-    if(!hasDyn) s += ` ・ なし\n`;
-    const biko = st.vals['備考'] || ""; if(biko) s += `\n【備考欄】\n${biko}\n`;
-    document.getElementById("preview-box").textContent = s;
+    if(!hasDyn) s += ` ・ なし\n`; const biko = st.vals['備考'] || ""; if(biko) s += `\n【備考】\n${biko}\n`; document.getElementById("preview-box").textContent = s;
   }
-
   async function submitData() {
     if(validateTimes().length > 0) return alert("時間入力にエラーがあります。赤字の警告内容を修正してください。");
     const id = document.getElementById("v-id").value.trim(); if(!id) return alert("要請番号を入力してください。");
     const eda = document.getElementById("chk-edaban").checked ? "-" + document.getElementById("v-edaban").value.trim() : "";
-
     const payload = {
       "要請番号": id + eda, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value,
       "フライトドクター": document.getElementById("v-dr").value, "フライトナース": document.getElementById("v-ns").value, "スキーム選択": st.scheme,
       "接触": st.times["接触"]||"", "病着": st.times["病着"]||"", "終了": st.times["終了"]||"",
       "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"",
       "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"",
-      
       "心エコー": st.chips["心エコー"]?"◯":"", "FAST": st.chips["FAST"]?"◯":"", "大血管評価": st.chips["大血管評価"]?"◯":"",
-      "頸動脈パルス": st.chips["頸動脈パルス"]?st.vals["頸動脈パルス詳細"]||"◯":"",
-      "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"",
-      "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", 
-      "その他エコー": st.chips["その他エコー"]?st.vals["その他エコー詳細"]||"◯":"",
-      
-      "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"",
-      "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"",
+      "頸動脈パルス": st.chips["頸動脈パルス"]?st.vals["頸動脈パルス"]||"◯":"", "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"",
+      "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", "その他エコー": st.chips["その他エコー"]?st.vals["その他エコー"]||"◯":"",
+      "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"", "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"",
       "気管挿管サイズ": st.chips["気管挿管"]?st.vals["気管挿管サイズ"]||"":"", "カフ有無": st.chips["気管挿管"]?st.vals["カフ有無"]||"":"",
-      "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"",
-      "除細動パッド": st.chips["除細動"]?st.vals["除細動パッド"]||"◯":"",
-      "その他処置": st.chips["その他処置"]?st.vals["その他処置詳細"]||"◯":"",
-      
-      "20G": st.chips["20G"]?st.vals["20G本数"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G本数"]||"1本":"", 
-      "22G": st.chips["22G"]?st.vals["22G本数"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G本数"]||"1本":"", 
-      "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":""
+      "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"", "除細動パッド": st.chips["除細動パッド"]?st.vals["除細動パッド"]||"◯":"", "その他処置": st.chips["その他処置"]?st.vals["その他処置"]||"◯":"",
+      "20G": st.chips["20G"]?st.vals["20G"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針"]||"1本":""
     };
-
-    // 🌟【最重要修正】隅付き括弧【】の位置をスプレッドシートへの抽出用キーと寸分違わず完全一致させました
-    for(let i=1; i<=5; i++) { 
-      payload["酸素" + i + "開始"] = st.times["【酸素" + i + "】開始"] || ""; 
-      payload["酸素" + i + "終了"] = st.times["【酸素" + i + "】終了"] || ""; 
-      payload["酸素" + i + "流量"] = st.vals["【酸素" + i + "】流量"] || ""; 
-      payload["酸素" + i + "FiO2"] = st.vals["【酸素" + i + "】FiO2"] || ""; 
-    }
-    for(let i=1; i<=5; i++) { 
-      payload["圧迫" + i + "開始"] = st.times["【圧迫" + i + "】開始"] || ""; 
-      payload["圧迫" + i + "終了"] = st.times["【圧迫" + i + "】終了"] || ""; 
-    }
-    for(let i=1; i<=5; i++) { 
-      payload["呼吸器" + i + "開始"] = st.times["【呼吸器" + i + "】開始"] || ""; 
-      payload["呼吸器" + i + "終了"] = st.times["【呼吸器" + i + "】終了"] || ""; 
-      payload["呼吸器" + i + "FiO2"] = st.vals["【呼吸器" + i + "】FiO2"] || ""; 
-    }
+    for(let i=1; i<=5; i++) { payload[`酸素${i}開始`] = st.times[`【酸素${i}】開始`] || ""; payload[`酸素${i}終了`] = st.times[`【酸素${i}】終了`] || ""; payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || ""; payload[`酸素${i}FiO2`] = st.vals[`【酸素${i}】FiO2`] || ""; }
+    for(let i=1; i<=5; i++) { payload[`圧迫${i}開始`] = st.times[`【圧迫${i}】開始`] || ""; payload[`圧迫${i}終了`] = st.times[`【圧迫${i}】終了`] || ""; }
+    for(let i=1; i<=5; i++) { payload[`呼吸器${i}開始`] = st.times[`【呼吸器${i}】開始`] || ""; payload[`呼吸器${i}終了`] = st.times[`【呼吸器${i}】終了`] || ""; payload[`呼吸器${i}FiO2`] = st.vals[`【呼吸器${i}】FiO2`] || ""; }
     payload["備考"] = st.vals["備考"] || "";
-
     alert("データベースへ送信し、関係各所へ共有メールを一斉送信しています...🚁");
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", body:JSON.stringify({action:"submit", password:PIN_CODE, data:payload}) });
