@@ -24,7 +24,7 @@
     .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
     .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 17px; color: var(--ink); flex: 1; font-weight: 500; }
-    select, input[type="number"], input[type="text"], input[type="date"] { text-align: right; font-size: 17px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 500; }
+    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"] { text-align: right; font-size: 17px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 500; }
     textarea { width: 100%; border: none; font-size: 16px; background: transparent; outline: none; resize: none; color: var(--ink); }
     .scheme-picker { display: grid; gap: 6px; padding: 4px; background: rgba(118,118,128,0.12); border-radius: var(--radius-md); }
     .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -100,14 +100,23 @@
     .pv-sub { color: var(--sub); font-size: 13px; padding-left: 14px; margin-top: 2px; }
     .pv-sub-item { position: relative; padding-left: 12px; }
     .pv-sub-item::before { content: '└'; position: absolute; left: 0; color: #c4c4c6; }
+    
+    /* 🌟 ローディングスピナー */
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(211,47,47,0.2); border-top: 4px solid var(--brand); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
+<div id="global-loader" style="position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+  <div class="spinner"></div>
+  <div style="margin-top:16px; font-weight:bold; color:var(--ink);">🚁 システム準備中...</div>
+</div>
+
 <div id="app">
   <header>
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
-    <div style="text-align:center;">AW109 EMS<span class="version-tag">現場用 v8.0</span></div>
+    <div style="text-align:center;">AW109 EMS<span class="version-tag">現場用 v8.1</span></div>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
   </header>
 
@@ -176,7 +185,16 @@
     
     <div id="tab-send" class="tab-content">
       <div class="card">
-        <div class="card-section"><div class="section-label">送信プレビュー確認</div><div id="error-msg" class="error-msg"></div><div id="preview-box" class="preview-box-container"></div>
+        <div class="card-section"><div class="section-label">送信プレビュー確認</div><div id="error-msg" class="error-msg"></div><div id="preview-box" class="preview-box-container"></div></div>
+        
+        <div class="card-section" style="background:#f2f2f7;">
+          <div class="section-label">✉️ メール送信先オプション</div>
+          <p style="font-size:12px; color:var(--sub); margin-bottom:12px;">※管理用MLへは自動送信されます。追加で送りたい宛先を選択・入力してください。</p>
+          <div id="mail-options-box" style="margin-bottom:8px; display:flex; flex-direction:column; gap:8px;"></div>
+          <input type="email" id="custom-email" placeholder="その他のアドレス手入力 (カンマ区切りで複数可)" style="width:100%; border:1px solid #ccc; background:#fff; text-align:left; border-radius:6px; padding:8px; font-size:14px; margin-left:0;">
+        </div>
+
+        <div class="card-section">
           <button class="submit-btn" id="btnSubmit" onclick="confirmSubmit()">確認して送信する ✉️</button>
         </div>
       </div>
@@ -201,15 +219,14 @@
 </div>
 
 <div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')"><div class="modal-box"><h3 style="margin-bottom:12px; color:var(--ink);">📖 取扱説明書</h3><div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub); max-height:60vh; overflow-y:auto;"><p style="text-align:center;">読込中...</p></div><button class="modal-close" onclick="closeModal('manual')">閉じる</button></div></div>
-<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')"><div class="modal-box"><h3 style="margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; padding-right:8px; border-bottom:1px solid var(--line);"><p style="text-align:center;">読込中...</p></div><div class="qa-form"><div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--ink);">💡 開発者へ直接、質問・要望を送る</div><textarea id="qa-input" rows="3" placeholder="「〜の機能が欲しい」「ここが使いにくい」など" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:14px; margin-bottom:8px;"></textarea><button onclick="submitQA(event)" style="width:100%; padding:10px; background:var(--brand); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">送信する ✉️</button></div><button class="modal-close" onclick="closeModal('qa')">閉じる</button></div></div>
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')"><div class="modal-box"><h3 style="margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; padding-right:8px; border-bottom:1px solid var(--line);"><p style="text-align:center;">読込中...</p></div><div class="qa-form"><div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--ink);">💡 開発チームへシステム改善の要望を送る</div><textarea id="qa-input" rows="3" placeholder="「〜の機能が欲しい」「ここが使いにくい」など" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:14px; margin-bottom:8px;"></textarea><button onclick="submitQA(event)" style="width:100%; padding:10px; background:var(--brand); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">送信する ✉️</button></div><button class="modal-close" onclick="closeModal('qa')">閉じる</button></div></div>
 <div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)"><div class="dial-box"><div class="dial-handle"></div><div class="dial-header"><button class="dial-cancel" onclick="closeDial(false)">キャンセル</button><span class="dial-title" id="dialTitle">選択</span><button class="dial-done" onclick="closeDial(true)">完了</button></div><div class="dial-wheels" id="dialWheels"></div></div></div>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   
-  // 🌟 マスタデータは起動時に取得するため、初期値は空
-  let MASTERS = { dest: [], dr: [], ns: [] };
+  let MASTERS = { dest: [], dr: [], ns: [], mailOptions: [] };
   
   const STRUCT = {
     echo: [{k:"心エコー"},{k:"FAST"},{k:"大血管評価"},{k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},{k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}],
@@ -232,7 +249,6 @@
   };
   
   function fillSel(id, arr) { 
-    // 配列の最後に強制的に「その他」を追加
     const list = [...arr, "その他"];
     document.getElementById(id).innerHTML = `<option value="">選択...</option>` + list.map(v=>`<option value="${v}">${v}</option>`).join(""); 
   }
@@ -444,6 +460,17 @@
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
     
+    // 🌟 送信先メールの取得
+    let ccEmails = [];
+    document.querySelectorAll('.mail-cc-check:checked').forEach(cb => ccEmails.push(cb.value));
+    const customEmail = document.getElementById("custom-email").value.trim();
+    if(customEmail) {
+      customEmail.split(",").forEach(e => {
+        const clean = e.trim();
+        if(clean) ccEmails.push(clean);
+      });
+    }
+
     const payload = {
       "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value,
       "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme,
@@ -472,7 +499,7 @@
     const btn = document.getElementById("btnSubmit"); btn.textContent = "送信中... 🚁 (そのままお待ちください)"; btn.disabled = true;
 
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, data:payload}), redirect: "follow" });
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, cc_emails: ccEmails, data:payload}), redirect: "follow" });
       const textRes = await res.text(); let jsonRes;
       try { jsonRes = JSON.parse(textRes); } catch(parseErr) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) { jsonRes = { status: "success" }; } else { throw new Error("不明なレスポンス: " + textRes); } }
       if(jsonRes.status === "success") { alert("送信が正常に完了しました！共有メールが送出されました。🚁"); location.reload(); } 
@@ -484,25 +511,38 @@
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
-      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success", qa:[], manual:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success", qa:[], manual_client:[], masters:{dest:[], dr:[], ns:[], mailOptions:[]}}; else throw err; }
       
       if(jsonRes.status === "success") {
-        // 🌟 マスタデータの反映
         if (jsonRes.masters) {
           if (jsonRes.masters.dest.length > 0) fillSel("v-dest", jsonRes.masters.dest);
           if (jsonRes.masters.dr.length > 0) fillSel("v-dr", jsonRes.masters.dr);
           if (jsonRes.masters.ns.length > 0) fillSel("v-ns", jsonRes.masters.ns);
+          
+          // 🌟 メール選択UIの生成
+          if (jsonRes.masters.mailOptions.length > 0) {
+            const mBox = document.getElementById("mail-options-box");
+            mBox.innerHTML = jsonRes.masters.mailOptions.map((opt, i) => `
+              <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
+                <input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:18px;height:18px;">
+                <span>${opt.name} <span style="color:var(--sub); font-size:12px;">(${opt.email})</span></span>
+              </label>
+            `).join("");
+          }
         }
 
         const qaBox = document.getElementById("qa-list");
-        if(jsonRes.qa && jsonRes.qa.length > 0) qaBox.innerHTML = jsonRes.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a.replace(/\\n/g, '<br>')}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid #ccc;">`).join("");
+        if(jsonRes.qa && jsonRes.qa.length > 0) qaBox.innerHTML = jsonRes.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a.replace(/\\n/g, '<br>')}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid var(--line);">`).join("");
         else qaBox.innerHTML = '<p style="text-align:center; font-size:13px;">公開されているQ&Aはありません。</p>';
         
         const mBox = document.getElementById("manual-list");
-        if(jsonRes.manual && jsonRes.manual.length > 0) mBox.innerHTML = jsonRes.manual.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("");
+        if(jsonRes.manual_client && jsonRes.manual_client.length > 0) mBox.innerHTML = jsonRes.manual_client.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid var(--line);">`).join("");
         else mBox.innerHTML = '<p style="text-align:center; font-size:13px;">マニュアルはまだありません。</p>';
+        
+        // 🌟 ローディング画面を非表示にする
+        document.getElementById("global-loader").style.display = "none";
       }
-    } catch(e) { console.log("初期データ取得エラー"); }
+    } catch(e) { console.log("初期データ取得エラー"); document.getElementById("global-loader").style.display = "none"; }
   }
 
   async function submitQA(event) {
@@ -512,7 +552,7 @@
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
       try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success"}; else throw err; }
-      if(jsonRes.status === "success") { alert("開発者へメッセージを送信しました！貴重なご意見ありがとうございます。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } 
+      if(jsonRes.status === "success") { alert("開発チームへ要望を送信しました！"); document.getElementById("qa-input").value = ""; closeModal('qa'); } 
       else { alert("エラー: " + jsonRes.message); }
     } catch(e) { alert("通信エラー: " + e.message); }
     btn.textContent = "送信する ✉️"; btn.disabled = false;
