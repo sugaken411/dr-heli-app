@@ -17,6 +17,7 @@
     body { background: var(--bg); color: var(--ink); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
     #app { display: flex; flex-direction: column; height: 100dvh; padding-top: var(--safe-top); }
     header { height: 56px; display: flex; align-items: center; justify-content: center; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); font-size: 17px; font-weight: 600; letter-spacing: -0.3px; position: relative; flex-shrink: 0; }
+    .version-tag { position: absolute; right: 16px; font-size: 11px; color: var(--sub); font-weight: bold; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; }
     main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 24px; }
     .card { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .card-section { padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
@@ -92,7 +93,7 @@
 </head>
 <body>
 <div id="app">
-  <header id="hTitle">要請・タイムライン</header>
+  <header id="hTitle">要請・タイムライン<span class="version-tag">v3.1</span></header>
   <main id="mainScroll">
     <div id="tab-input" class="tab-content active">
       <div class="card">
