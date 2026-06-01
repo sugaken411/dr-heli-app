@@ -101,8 +101,8 @@
     .pv-sub-item { position: relative; padding-left: 12px; }
     .pv-sub-item::before { content: '└'; position: absolute; left: 0; color: #c4c4c6; }
     
-    /* 🌟 ローディングスピナー */
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(211,47,47,0.2); border-top: 4px solid var(--brand); border-radius: 50%; animation: spin 1s linear infinite; }
+    /* 🌟 ローディングスピナー (色をブルーに変更) */
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
@@ -110,13 +110,13 @@
 
 <div id="global-loader" style="position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
   <div class="spinner"></div>
-  <div style="margin-top:16px; font-weight:bold; color:var(--ink);">🚁 システム準備中...</div>
+  <div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div>
 </div>
 
 <div id="app">
   <header>
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
-    <div style="text-align:center;">AW109 EMS<span class="version-tag">現場用 v8.1</span></div>
+    <div style="text-align:center;">AW109 EMS<span class="version-tag">現場用 v8.2</span></div>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
   </header>
 
@@ -460,16 +460,10 @@
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
     
-    // 🌟 送信先メールの取得
     let ccEmails = [];
     document.querySelectorAll('.mail-cc-check:checked').forEach(cb => ccEmails.push(cb.value));
     const customEmail = document.getElementById("custom-email").value.trim();
-    if(customEmail) {
-      customEmail.split(",").forEach(e => {
-        const clean = e.trim();
-        if(clean) ccEmails.push(clean);
-      });
-    }
+    if(customEmail) { customEmail.split(",").forEach(e => { const clean = e.trim(); if(clean) ccEmails.push(clean); }); }
 
     const payload = {
       "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value,
@@ -502,7 +496,7 @@
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, cc_emails: ccEmails, data:payload}), redirect: "follow" });
       const textRes = await res.text(); let jsonRes;
       try { jsonRes = JSON.parse(textRes); } catch(parseErr) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) { jsonRes = { status: "success" }; } else { throw new Error("不明なレスポンス: " + textRes); } }
-      if(jsonRes.status === "success") { alert("送信が正常に完了しました！共有メールが送出されました。🚁"); location.reload(); } 
+      if(jsonRes.status === "success") { alert("送信が正常に完了しました！共有メールが送出されました。"); location.reload(); } 
       else { alert("【エラー発生】GASが処理を停止しました：\n" + jsonRes.message); btn.textContent = "確認して送信する ✉️"; btn.disabled = false; }
     } catch(e) { alert("【通信エラー】インターネット環境、またはGASの設定に問題があります。\n詳細: " + e.message); btn.textContent = "確認して送信する ✉️"; btn.disabled = false; }
   }
@@ -519,15 +513,9 @@
           if (jsonRes.masters.dr.length > 0) fillSel("v-dr", jsonRes.masters.dr);
           if (jsonRes.masters.ns.length > 0) fillSel("v-ns", jsonRes.masters.ns);
           
-          // 🌟 メール選択UIの生成
           if (jsonRes.masters.mailOptions.length > 0) {
             const mBox = document.getElementById("mail-options-box");
-            mBox.innerHTML = jsonRes.masters.mailOptions.map((opt, i) => `
-              <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
-                <input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:18px;height:18px;">
-                <span>${opt.name} <span style="color:var(--sub); font-size:12px;">(${opt.email})</span></span>
-              </label>
-            `).join("");
+            mBox.innerHTML = jsonRes.masters.mailOptions.map((opt, i) => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;"><input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:18px;height:18px;"><span>${opt.name} <span style="color:var(--sub); font-size:12px;">(${opt.email})</span></span></label>`).join("");
           }
         }
 
@@ -539,7 +527,6 @@
         if(jsonRes.manual_client && jsonRes.manual_client.length > 0) mBox.innerHTML = jsonRes.manual_client.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid var(--line);">`).join("");
         else mBox.innerHTML = '<p style="text-align:center; font-size:13px;">マニュアルはまだありません。</p>';
         
-        // 🌟 ローディング画面を非表示にする
         document.getElementById("global-loader").style.display = "none";
       }
     } catch(e) { console.log("初期データ取得エラー"); document.getElementById("global-loader").style.display = "none"; }
