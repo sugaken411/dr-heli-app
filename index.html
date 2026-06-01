@@ -66,19 +66,17 @@
     .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: var(--radius-md); padding: 18px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 16px; transition: all 0.2s; }
     .submit-btn:disabled { background: var(--sub); cursor: not-allowed; }
     .tab-bar { height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; flex-shrink: 0; z-index: 10; }
-    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; color: var(--sub); font-size: 10px; font-weight: 500; cursor: pointer; }
-    .tab-btn.active { color: var(--brand); font-weight: 600; }
-    .tab-icon { font-size: 22px; line-height: 1; }
+    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; color: var(--sub); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .tab-btn.active { color: var(--brand); font-weight: 700; }
+    .tab-icon { font-size: 24px; line-height: 1; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    
     .dial-overlay, .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: flex-end; justify-content: center; }
     .dial-overlay.show, .modal-overlay.show { display: flex; }
     .modal-overlay { align-items: center; padding: 20px; }
     .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: var(--radius-lg); padding: 20px; max-height: 80dvh; overflow-y: auto; }
     .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; color: var(--ink); cursor: pointer; }
     .qa-form { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--line); margin-top: 16px; }
-    
     .dial-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); }
     .dial-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 10px auto 0; }
     .dial-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px 10px; }
@@ -93,15 +91,6 @@
     .dial-spacer { height: 80px; }
     .dial-opt { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: center; transition: all 0.1s; }
     .dial-sep { font-size: 24px; font-weight: 700; color: var(--ink); padding: 0 4px; }
-    
-    .search-box { padding: 12px; background: var(--bg); border-radius: var(--radius-md); margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-    .search-input { flex: 1; padding: 8px 12px; border-radius: 8px; border: 0.5px solid var(--line); font-size: 14px; outline: none; background: #fff; min-width: 120px; }
-    .search-btn { width: 100%; padding: 12px 16px; background: var(--blue); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 4px; }
-    .res-item { background: #fff; border: 0.5px solid var(--line); border-radius: var(--radius-md); padding: 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
-    .res-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 0.5px solid var(--line); padding-bottom: 6px; margin-bottom: 6px; font-size: 14px; }
-    .status-badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-
-    /* 🌟 プレビュー用の美しいパッケージングスタイル */
     .preview-box-container { font-size: 14px; line-height: 1.6; color: var(--ink); }
     .pv-section { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
     .pv-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
@@ -118,7 +107,7 @@
 <div id="app">
   <header>
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
-    <div style="text-align:center;">AW109 EMS<span class="version-tag">v6.1</span></div>
+    <div style="text-align:center;">AW109 EMS<span class="version-tag">現場用 v7.0</span></div>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
   </header>
 
@@ -128,55 +117,33 @@
         <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
           <span class="field-label" style="flex:none; width:80px;">要請番号</span>
           <input id="v-id" type="number" inputmode="numeric" placeholder="例: 19771 (未入力で仮ID)" style="flex:1; min-width:100px; text-align:left; background:var(--bg); padding:8px 12px; border-radius:8px;" oninput="renderPreview()">
-          <label style="font-size:14px; font-weight:500; display:flex; align-items:center; gap:4px; cursor:pointer;">
-            <input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;">枝番
-          </label>
+          <label style="font-size:14px; font-weight:500; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;">枝番</label>
           <input type="number" id="v-edaban" inputmode="numeric" placeholder="枝" style="display:none; width:60px; text-align:center; background:var(--bg); padding:8px; border-radius:8px;" oninput="renderPreview()">
         </div>
-        <div class="inline-field" onclick="document.getElementById('v-date').showPicker()">
-          <span class="field-label">日付</span><input type="date" id="v-date" onchange="renderPreview()">
-        </div>
+        <div class="inline-field" onclick="document.getElementById('v-date').showPicker()"><span class="field-label">日付</span><input type="date" id="v-date" onchange="renderPreview()"></div>
         <div class="inline-field"><span class="field-label">出場先</span><select id="v-dest" onchange="renderPreview()"></select></div>
-        
-        <div class="inline-field" style="flex-wrap: wrap;">
-          <span class="field-label">フライトドクター</span>
-          <select id="v-dr" onchange="toggleStaff('dr'); renderPreview()"></select>
-          <input type="text" id="v-dr-other" placeholder="カタカナ入力" style="display:none; width:100px; background:var(--bg); padding:4px 8px; border-radius:6px; margin-top:8px; margin-left:auto;" oninput="formatKatakana(this); renderPreview()">
-        </div>
-        <div class="inline-field" style="flex-wrap: wrap;">
-          <span class="field-label">フライトナース</span>
-          <select id="v-ns" onchange="toggleStaff('ns'); renderPreview()"></select>
-          <input type="text" id="v-ns-other" placeholder="カタカナ入力" style="display:none; width:100px; background:var(--bg); padding:4px 8px; border-radius:6px; margin-top:8px; margin-left:auto;" oninput="formatKatakana(this); renderPreview()">
-        </div>
+        <div class="inline-field" style="flex-wrap: wrap;"><span class="field-label">フライトドクター</span><select id="v-dr" onchange="toggleStaff('dr'); renderPreview()"></select><input type="text" id="v-dr-other" placeholder="カタカナ入力" style="display:none; width:100px; background:var(--bg); padding:4px 8px; border-radius:6px; margin-top:8px; margin-left:auto;" oninput="formatKatakana(this); renderPreview()"></div>
+        <div class="inline-field" style="flex-wrap: wrap;"><span class="field-label">フライトナース</span><select id="v-ns" onchange="toggleStaff('ns'); renderPreview()"></select><input type="text" id="v-ns-other" placeholder="カタカナ入力" style="display:none; width:100px; background:var(--bg); padding:4px 8px; border-radius:6px; margin-top:8px; margin-left:auto;" oninput="formatKatakana(this); renderPreview()"></div>
       </div>
 
       <div class="card">
         <div class="card-section"><div class="section-label">スキーム選択</div>
           <div class="scheme-picker" id="schemePicker">
-            <div class="scheme-row-top">
-              <button class="scheme-btn" onclick="setScheme(this,'Uターン')">Uターン</button>
-              <button class="scheme-btn" onclick="setScheme(this,'Jターン')">Jターン</button>
-              <button class="scheme-btn" onclick="setScheme(this,'施設間')">施設間</button>
-            </div>
-            <div class="scheme-row-bot">
-              <button class="scheme-btn" onclick="setScheme(this,'Iターン乗り込み')">Iターン乗り込み</button>
-              <button class="scheme-btn" onclick="setScheme(this,'Iターン救急隊のみ')">Iターン救急隊のみ</button>
-            </div>
+            <div class="scheme-row-top"><button class="scheme-btn" onclick="setScheme(this,'Uターン')">Uターン</button><button class="scheme-btn" onclick="setScheme(this,'Jターン')">Jターン</button><button class="scheme-btn" onclick="setScheme(this,'施設間')">施設間</button></div>
+            <div class="scheme-row-bot"><button class="scheme-btn" onclick="setScheme(this,'Iターン乗り込み')">Iターン乗り込み</button><button class="scheme-btn" onclick="setScheme(this,'Iターン救急隊のみ')">Iターン救急隊のみ</button></div>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-section">
-          <div class="section-label">メインタイムライン <button class="btn-clear" onclick="clearTimeline()">クリア</button></div>
+        <div class="card-section"><div class="section-label">メインタイムライン <button class="btn-clear" onclick="clearTimeline()">クリア</button></div>
           <div class="time-grid">
             <div class="time-cell"><div class="time-cell-label">接触</div><button class="time-box" id="t-接触" onclick="openDial('time', '接触')">--:--</button></div>
             <div class="time-cell"><div class="time-cell-label">病着</div><button class="time-box" id="t-病着" onclick="openDial('time', '病着')">--:--</button></div>
             <div class="time-cell"><div class="time-cell-label">終了</div><button class="time-box" id="t-終了" onclick="openDial('time', '終了')">--:--</button></div>
           </div>
         </div>
-        <div class="card-section">
-          <div class="section-label">自動判定 ＆ 算定フラグ (タップで切替)</div>
+        <div class="card-section"><div class="section-label">自動判定 ＆ 算定フラグ (タップで切替)</div>
           <div class="verdict-row">
             <div class="verdict-pill off" id="calc-oshin" onclick="tCalc('oshin')"><div class="v-label">往診料</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
             <div class="verdict-pill off" id="calc-hansho" onclick="tCalc('hansho')"><div class="v-label">搬送料</div><span class="v-icon">—</span><div class="v-text">なし</div></div>
@@ -190,14 +157,9 @@
       </div>
 
       <div class="card" style="padding:0;">
-        <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span>▼</span></div>
-        <div class="acc-body" id="acc-line"><div class="chip-grid" id="box-line"></div></div>
-        
-        <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span>▼</span></div>
-        <div class="acc-body" id="acc-echo"><div class="chip-grid" id="box-echo"></div></div>
-        
-        <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div>
-        <div class="acc-body" id="acc-other"><div class="chip-grid" id="box-other"></div></div>
+        <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span>▼</span></div><div class="acc-body" id="acc-line"><div class="chip-grid" id="box-line"></div></div>
+        <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span>▼</span></div><div class="acc-body" id="acc-echo"><div class="chip-grid" id="box-echo"></div></div>
+        <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div><div class="acc-body" id="acc-other"><div class="chip-grid" id="box-other"></div></div>
       </div>
 
       <div class="card">
@@ -209,46 +171,13 @@
       <div class="card">
         <div class="card-section"><div class="section-label"><span>🤖 人工呼吸器</span><div><button class="btn-clear" onclick="resetSection('呼吸器')" style="color:var(--brand);margin-right:8px;">リセット</button><button class="btn-add-action" onclick="addDynManual('呼吸器')">＋ 追加</button></div></div><div id="dyn-呼吸器"></div></div>
       </div>
-      
-      <div class="card">
-        <div class="card-section"><div class="section-label">📝 備考</div><textarea id="v-biko" rows="3" placeholder="特記事項（フリー入力）" onchange="st.vals['備考']=this.value; renderPreview();"></textarea></div>
-      </div>
+      <div class="card"><div class="card-section"><div class="section-label">📝 備考</div><textarea id="v-biko" rows="3" placeholder="特記事項（フリー入力）" onchange="st.vals['備考']=this.value; renderPreview();"></textarea></div></div>
     </div>
     
     <div id="tab-send" class="tab-content">
       <div class="card">
-        <div class="card-section">
-          <div class="section-label">送信プレビュー確認</div>
-          <div id="error-msg" class="error-msg"></div>
-          <div id="preview-box" class="preview-box-container"></div>
-          <button class="submit-btn" id="btnSubmit" onclick="submitData()">メール共有 ＆ データベース送信 ✉️</button>
-        </div>
-      </div>
-    </div>
-    
-    <div id="tab-search" class="tab-content">
-      <div class="card">
-        <div class="card-section">
-          <div class="section-label">複合検索 ＆ カルテ転記管理</div>
-          <div class="search-box">
-            <input type="text" id="s-query" class="search-input" placeholder="要請番号" style="flex:1;">
-            <input type="date" id="s-date" class="search-input" style="flex:1;">
-            <select id="s-status" class="search-input" style="flex:1;">
-              <option value="">全ステータス</option>
-              <option value="未完了">⚠️ 未完了</option>
-              <option value="代行入力完了">◯ 代行入力完了</option>
-            </select>
-            <select id="s-scheme" class="search-input" style="flex:1;">
-              <option value="">全スキーム</option>
-              <option value="Uターン">Uターン</option><option value="Jターン">Jターン</option><option value="施設間">施設間</option>
-              <option value="Iターン乗り込み">Iターン乗り込み</option><option value="Iターン救急隊のみ">Iターン救急隊のみ</option>
-            </select>
-            <select id="s-staff" class="search-input" style="flex:1 1 100%;"><option value="">全スタッフ</option></select>
-            <button class="search-btn" onclick="searchData()">この条件で検索</button>
-          </div>
-          <div id="search-results">
-            <p style="text-align:center; color:var(--sub); padding:20px; font-size:14px;">条件を指定して検索ボタンを押してください。</p>
-          </div>
+        <div class="card-section"><div class="section-label">送信プレビュー確認</div><div id="error-msg" class="error-msg"></div><div id="preview-box" class="preview-box-container"></div>
+          <button class="submit-btn" id="btnSubmit" onclick="confirmSubmit()">確認して送信する ✉️</button>
         </div>
       </div>
     </div>
@@ -257,105 +186,62 @@
   <nav class="tab-bar">
     <button class="tab-btn active" id="tb-input" onclick="switchTab('input')"><span class="tab-icon">📝</span><span>入力</span></button>
     <button class="tab-btn" id="tb-send" onclick="switchTab('send'); renderPreview();"><span class="tab-icon">✉️</span><span>送信</span></button>
-    <button class="tab-btn" id="tb-search" onclick="switchTab('search')"><span class="tab-icon">🔍</span><span>検索</span></button>
   </nav>
 </div>
 
-<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
-  <div class="modal-box">
-    <h3 style="margin-bottom:12px; color:var(--ink);">📖 取扱説明書</h3>
-    <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub); max-height:60vh; overflow-y:auto;">
-      <p style="text-align:center;">スプレッドシートからマニュアルを読込中...</p>
+<!-- 通信確認モーダル -->
+<div class="modal-overlay" id="modal-confirm" onclick="if(event.target===this)closeModal('confirm')">
+  <div class="modal-box" style="text-align:center;">
+    <h3 style="margin-bottom:12px; color:var(--ink);">🚁 通信環境の確認</h3>
+    <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">機内や山間部など、電波の弱い場所にいませんか？<br>アンテナ（電波）が立っていることを確認してから送信してください。</p>
+    <div style="display:flex; gap:12px;">
+      <button style="flex:1; padding:12px; border:none; border-radius:8px; background:#e5e5ea; color:var(--ink); font-weight:600; cursor:pointer;" onclick="closeModal('confirm')">キャンセル</button>
+      <button style="flex:1; padding:12px; border:none; border-radius:8px; background:var(--brand); color:#fff; font-weight:600; cursor:pointer;" onclick="closeModal('confirm'); submitData();">✈️ 送信する</button>
     </div>
-    <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
-  <div class="modal-box">
-    <h3 style="margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; padding-right:8px; border-bottom:1px solid var(--line);">
-      <p style="text-align:center;">読込中...</p>
-    </div>
-    <div class="qa-form">
-      <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--ink);">💡 開発者へ直接、質問・要望を送る</div>
-      <textarea id="qa-input" rows="3" placeholder="「〜の機能が欲しい」「ここが使いにくい」など" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:14px; margin-bottom:8px;"></textarea>
-      <button onclick="submitQA(event)" style="width:100%; padding:10px; background:var(--brand); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">送信する ✉️</button>
-    </div>
-    <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
-  </div>
-</div>
-
-<div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)">
-  <div class="dial-box"><div class="dial-handle"></div><div class="dial-header"><button class="dial-cancel" onclick="closeDial(false)">キャンセル</button><span class="dial-title" id="dialTitle">選択</span><button class="dial-done" onclick="closeDial(true)">完了</button></div><div class="dial-wheels" id="dialWheels"></div></div>
-</div>
+<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')"><div class="modal-box"><h3 style="margin-bottom:12px; color:var(--ink);">📖 取扱説明書</h3><div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub); max-height:60vh; overflow-y:auto;"><p style="text-align:center;">読込中...</p></div><button class="modal-close" onclick="closeModal('manual')">閉じる</button></div></div>
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')"><div class="modal-box"><h3 style="margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; padding-right:8px; border-bottom:1px solid var(--line);"><p style="text-align:center;">読込中...</p></div><div class="qa-form"><div style="font-size:13px; font-weight:600; margin-bottom:8px; color:var(--ink);">💡 開発者へ直接、質問・要望を送る</div><textarea id="qa-input" rows="3" placeholder="「〜の機能が欲しい」「ここが使いにくい」など" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:14px; margin-bottom:8px;"></textarea><button onclick="submitQA(event)" style="width:100%; padding:10px; background:var(--brand); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">送信する ✉️</button></div><button class="modal-close" onclick="closeModal('qa')">閉じる</button></div></div>
+<div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)"><div class="dial-box"><div class="dial-handle"></div><div class="dial-header"><button class="dial-cancel" onclick="closeDial(false)">キャンセル</button><span class="dial-title" id="dialTitle">選択</span><button class="dial-done" onclick="closeDial(true)">完了</button></div><div class="dial-wheels" id="dialWheels"></div></div></div>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-
   const MASTERS = {
     dest: ["鹿児島市","姶良市","阿久根市","伊佐市","出水市","いちき串木野市","指宿市","大崎町","鹿屋市","肝付町","さつま町","薩摩川内市","志布志市","曽於市","垂水市","長島町","中種子町","西之表市","日置市","東串良町","霧島市","錦江町","枕崎市","南大隅町","南九州市","南さつま市","南種子町","屋久島町","湧水町","えびの市","都城市","宮崎市","黒島","薩摩硫黄島","竹島","口永良部島","口之島","中之島","平島","諏訪之瀬島","悪石島","小宝島","宝島","熊本市","宇城市","甑島","名瀬","馬毛島"],
     dr: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","その他"],
     ns: ["伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部","その他"]
   };
-  
   const STRUCT = {
-    echo: [
-      {k:"心エコー"},{k:"FAST"},{k:"大血管評価"},
-      {k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},
-      {k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}
-    ],
-    other: [
-      {k:"12誘導心電図"}, {k:"血糖測定"},
-      {k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]},
+    echo: [{k:"心エコー"},{k:"FAST"},{k:"大血管評価"},{k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},{k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}],
+    other: [{k:"12誘導心電図"}, {k:"血糖測定"},{k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]},
       {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"},
       {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"},
       {k:"胸腔ドレナージ", sub:"drainage"},
       {k:"心嚢穿刺・心嚢ドレナージ", sub:"radio", opts:["心嚢ドレナージキット","V1","V2","V3"], skey:"心嚢穿刺・心嚢ドレナージ詳細"}, 
-      {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"},
-      {k:"その他処置", sub:"text"}
+      {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"}, {k:"その他処置", sub:"text"}
     ],
     line: ["20G","18G","22G","24G","ベニューラ","骨髄針"]
   };
   const st = { scheme: "", times: {}, vals: {}, chips: {}, dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" } };
   
   window.onload = () => {
-    const d = new Date(); 
-    document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
-    
-    buildLines(STRUCT.line, "box-line");
-    buildProc(STRUCT.echo, "box-echo"); 
-    buildProc(STRUCT.other, "box-other"); 
-    
-    // 気管挿管のカフを初期値「あり」にする
+    buildLines(STRUCT.line, "box-line"); buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); 
     st.vals['カフ有無'] = 'あり';
-    
-    const allStaff = [...new Set([...MASTERS.dr, ...MASTERS.ns])].filter(s => s !== "その他");
-    document.getElementById("s-staff").innerHTML = '<option value="">全スタッフ</option>' + allStaff.map(s => `<option value="${s}">${s}</option>`).join("");
-    
     fetchInit(); 
   };
   
   function fillSel(id, arr) { document.getElementById(id).innerHTML = `<option value="">選択...</option>` + arr.map(v=>`<option>${v}</option>`).join(""); }
-  function switchTab(tabId) { ["input","send","search"].forEach(k => { document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId); document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId); }); }
+  function switchTab(tabId) { ["input","send"].forEach(k => { document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId); document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId); }); }
   function toggleEdaban() { document.getElementById("v-edaban").style.display = document.getElementById("chk-edaban").checked ? "block" : "none"; renderPreview(); }
   function toggleAcc(id) { const el = document.getElementById(id); el.style.display = el.style.display === "block" ? "none" : "block"; }
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
-  
-  function toggleStaff(type) {
-    const sel = document.getElementById(`v-${type}`);
-    const other = document.getElementById(`v-${type}-other`);
-    if(sel.value === "その他") { other.style.display = "block"; } 
-    else { other.style.display = "none"; other.value = ""; }
-  }
-  function formatKatakana(input) {
-    let val = input.value;
-    val = val.replace(/[\u3041-\u3096]/g, function(match) { return String.fromCharCode(match.charCodeAt(0) + 0x60); });
-    input.value = val.replace(/[^ァ-ンヴー]/g, '');
-  }
+  function toggleStaff(type) { const sel = document.getElementById(`v-${type}`); const other = document.getElementById(`v-${type}-other`); if(sel.value === "その他") { other.style.display = "block"; } else { other.style.display = "none"; other.value = ""; } }
+  function formatKatakana(input) { let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(match) { return String.fromCharCode(match.charCodeAt(0) + 0x60); }); input.value = val.replace(/[^ァ-ンヴー]/g, ''); }
   
   function buildProc(arr, boxId) {
     let html = "";
@@ -370,62 +256,28 @@
         html += `<div class="sub-panel" id="s-${o.k}"><div class="input-row"><span class="input-label">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; renderPreview();">${opts}</select></div><div class="input-row" style="border-bottom:0.5px solid var(--line);"><span class="input-label">カフ有無</span><div class="radio-group" style="width:50%;"><div class="radio-btn on" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div><div class="input-row" style="border-bottom:none; padding-top:8px;"><input type="text" placeholder="フリー入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['気管挿管詳細']=this.value; renderPreview();"></div></div>`;
       }
       else if(o.sub==="drainage") {
-        html += `<div class="sub-panel" id="s-${o.k}">
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            ${["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].map(item => `
-              <div style="display:flex; align-items:center; gap:8px;">
-                <div class="chip" id="c-${item}" onclick="tChip('${item}')" style="flex:1;">${item}</div>
-                <div class="radio-group" id="rg-${item}" style="display:none; flex:1;">
-                  <div class="radio-btn" id="r-${item}本数-1本" onclick="sRad('${item}本数','1本')">1本</div>
-                  <div class="radio-btn" id="r-${item}本数-2本" onclick="sRad('${item}本数','2本')">2本</div>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        </div>`;
+        html += `<div class="sub-panel" id="s-${o.k}"><div style="display:flex; flex-direction:column; gap:8px;">${["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].map(item => `<div style="display:flex; align-items:center; gap:8px;"><div class="chip" id="c-${item}" onclick="tChip('${item}')" style="flex:1;">${item}</div><div class="radio-group" id="rg-${item}" style="display:none; flex:1;"><div class="radio-btn" id="r-${item}本数-1本" onclick="sRad('${item}本数','1本')">1本</div><div class="radio-btn" id="r-${item}本数-2本" onclick="sRad('${item}本数','2本')">2本</div></div></div>`).join("")}</div></div>`;
       }
       html += `</div>`;
-    });
-    document.getElementById(boxId).innerHTML = html;
+    }); document.getElementById(boxId).innerHTML = html;
   }
   
   function buildLines(arr, boxId) { 
-    document.getElementById(boxId).innerHTML = arr.map(k=> `
-      <div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>
-      <div class="sub-panel" id="s-${k}"><div class="input-row" style="border-bottom:none; display:flex; align-items:center;"><span style="font-size:13px; color:var(--sub); flex:none; width:60px;">使用本数</span>
-      <div class="radio-group" style="flex:1;">${[1,2,3,4].map(n=>`<div class="radio-btn" id="r-${k}本数-${n}本" onclick="sRad('${k}本数','${n}本')" style="padding:6px;">${n}本</div>`).join("")}</div>
-      </div></div></div>`).join(""); 
+    document.getElementById(boxId).innerHTML = arr.map(k=> `<div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div><div class="sub-panel" id="s-${k}"><div class="input-row" style="border-bottom:none; display:flex; align-items:center;"><span style="font-size:13px; color:var(--sub); flex:none; width:60px;">使用本数</span><div class="radio-group" style="flex:1;">${[1,2,3,4].map(n=>`<div class="radio-btn" id="r-${k}本数-${n}本" onclick="sRad('${k}本数','${n}本')" style="padding:6px;">${n}本</div>`).join("")}</div></div></div></div>`).join(""); 
   }
   
   function tChip(k) { 
     st.chips[k] = !st.chips[k]; document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]); 
     const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display = st.chips[k] ? 'block' : 'none'; 
-    
-    const rg = document.getElementById(`rg-${k}`);
-    if(rg) rg.style.display = st.chips[k] ? 'flex' : 'none';
-    
+    const rg = document.getElementById(`rg-${k}`); if(rg) rg.style.display = st.chips[k] ? 'flex' : 'none';
     if(k==="気管挿管" && st.chips[k]) { if(!st.chips["EtCO2"]) tChip("EtCO2"); if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料"); } 
     if(k==="血ガス" && st.chips[k]) { if(!st.chips["静脈血採血"]) tChip("静脈血採血"); }
-    
-    if(k==="胸腔ドレナージ" && !st.chips[k]) { 
-      ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].forEach(item => { if(st.chips[item]) tChip(item); });
-    }
-    
-    if(["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(k) && st.chips[k]) {
-      if(!st.vals[`${k}本数`]) sRad(`${k}本数`, '1本');
-    }
+    if(k==="胸腔ドレナージ" && !st.chips[k]) { ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].forEach(item => { if(st.chips[item]) tChip(item); }); }
+    if(["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(k) && st.chips[k]) { if(!st.vals[`${k}本数`]) sRad(`${k}本数`, '1本'); }
     renderPreview(); 
   }
   function sRad(key, val) { st.vals[key] = val; document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => el.classList.remove('on')); document.getElementById(`r-${key}-${val}`).classList.add('on'); renderPreview(); }
-  
-  function setScheme(btn, s) { 
-    st.scheme = s; document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); 
-    const arrivalBox = document.getElementById("t-病着"); 
-    if (s === "Iターン救急隊のみ") { st.times["病着"] = ""; arrivalBox.textContent = "対象外"; arrivalBox.classList.remove("set"); arrivalBox.classList.add("disabled"); } 
-    else { arrivalBox.classList.remove("disabled"); if(arrivalBox.textContent === "対象外") arrivalBox.textContent = "--:--"; } 
-    recalcAuto(); 
-  }
-  
+  function setScheme(btn, s) { st.scheme = s; document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); const arrivalBox = document.getElementById("t-病着"); if (s === "Iターン救急隊のみ") { st.times["病着"] = ""; arrivalBox.textContent = "対象外"; arrivalBox.classList.remove("set"); arrivalBox.classList.add("disabled"); } else { arrivalBox.classList.remove("disabled"); if(arrivalBox.textContent === "対象外") arrivalBox.textContent = "--:--"; } recalcAuto(); }
   function clearTimeline() { ["接触","病着","終了"].forEach(k => { st.times[k] = ""; document.getElementById(`t-${k}`).textContent = "--:--"; document.getElementById(`t-${k}`).classList.remove("set"); }); const arrivalBox = document.getElementById("t-病着"); if(st.scheme === "Iターン救急隊のみ") { arrivalBox.textContent = "対象外"; arrivalBox.classList.add("disabled"); } recalcAuto(); }
   function tCalc(key) { st.calc[key] = !st.calc[key]; document.getElementById(`calc-${key}`).classList.toggle('on', st.calc[key]); if(key==='spo2') document.getElementById("lbl-spo2").textContent = st.calc.spo2 ? "✓ 経皮的酸素飽和度 ON" : "— 経皮的酸素飽和度 OFF"; renderPreview(); }
   
@@ -441,7 +293,6 @@
     setVerdictUI("calc-oshin", st.calc.oshin, "往診料"); setVerdictUI("calc-hansho", st.calc.hansho, "搬送料"); setVerdictUI("calc-long", st.calc.long, "長時間加算");
     document.getElementById("lbl-monitor").textContent = st.calc.mTime; document.getElementById("calc-monitor").classList.toggle('off', !st.calc.monitor); 
     
-    // 🌟 圧迫時間の積算を「00:00」形式に
     let cprMins = 0;
     for(let i=1; i<=5; i++) {
       let s = st.times[`【圧迫${i}】開始`], e = st.times[`【圧迫${i}】終了`];
@@ -469,26 +320,12 @@
   
   function addDynManual(type) { 
     if(st.dyn[type] >= 5) return; 
-    const isFirst = st.dyn[type] === 0;
-    const preIdx = st.dyn[type]; 
-    const preEndVal = preIdx > 0 ? (st.times[`【${type}${preIdx}】終了`] || "") : ""; 
-    addDynRaw(type); 
-    const nextIdx = st.dyn[type]; 
-    const nextKey = `【${type}${nextIdx}】開始`;
-    
-    // 🌟 追加した瞬間に、1つ目は接触時間を、2つ目以降は前回の終了時間を初期値として自動セット
-    if(isFirst && st.times["接触"]) {
-      st.times[nextKey] = st.times["接触"]; 
-      const el = document.getElementById(`t-${nextKey}`); 
-      if(el) { el.textContent = st.times["接触"]; el.classList.add("set"); } 
-    } else if(preEndVal) { 
-      st.times[nextKey] = preEndVal; 
-      const el = document.getElementById(`t-${nextKey}`); 
-      if(el) { el.textContent = preEndVal; el.classList.add("set"); } 
-    } 
+    const isFirst = st.dyn[type] === 0; const preIdx = st.dyn[type]; const preEndVal = preIdx > 0 ? (st.times[`【${type}${preIdx}】終了`] || "") : ""; 
+    addDynRaw(type); const nextIdx = st.dyn[type]; const nextKey = `【${type}${nextIdx}】開始`;
+    if(isFirst && st.times["接触"]) { st.times[nextKey] = st.times["接触"]; const el = document.getElementById(`t-${nextKey}`); if(el) { el.textContent = st.times["接触"]; el.classList.add("set"); } } 
+    else if(preEndVal) { st.times[nextKey] = preEndVal; const el = document.getElementById(`t-${nextKey}`); if(el) { el.textContent = preEndVal; el.classList.add("set"); } } 
     renderPreview(); 
   }
-  
   function resetSection(type) { document.getElementById(`dyn-${type}`).innerHTML = ""; for(let i=1; i<=5; i++) { delete st.times[`【${type}${i}】開始`]; delete st.times[`【${type}${i}】終了`]; delete st.vals[`【${type}${i}】流量`]; delete st.vals[`【${type}${i}】FiO2`]; } st.dyn[type] = 0; renderPreview(); }
   
   let dialMode = "", dialKey = "", dialTargetId = "";
@@ -506,9 +343,7 @@
     else if(mode === 'fio2') { wh.innerHTML = mk(80, 21, "%"); setTimeout(() => { document.getElementById("dW1").scrollTop = (parseInt(st.vals[key]||100)-21)*40; hls('dW1'); }, 10); }
     document.getElementById("dialView").classList.add("show");
   }
-  
   function hls(id) { const w = document.getElementById(id); if(!w) return; const idx = Math.round(w.scrollTop/40); w.querySelectorAll('.dial-opt').forEach((el,i)=>{ const sel = i === idx; el.style.fontWeight=sel?"700":"400"; el.style.color=sel?"var(--ink)":"var(--sub)"; el.style.fontSize=sel?"22px":"18px"; }); }
-  
   function closeDial(ok) {
     if(ok) {
       if(dialMode === 'time') {
@@ -516,8 +351,7 @@
         const el = document.getElementById(dialTargetId); if(el) { el.textContent = `${h}:${m}`; el.classList.add("set"); } recalcAuto();
       } else {
         const v = Math.round(document.getElementById("dW1").scrollTop/40) + (dialMode==='flow'?1:21); st.vals[dialKey] = v;
-        let vText = v + (dialMode==='flow'?"L":"%");
-        const el = document.getElementById(dialTargetId); if(el) { el.textContent = vText; el.classList.add("set"); } renderPreview();
+        const el = document.getElementById(dialTargetId); if(el) { el.textContent = v + (dialMode==='flow'?"L":"%"); el.classList.add("set"); } renderPreview();
       }
     }
     document.getElementById("dialView").classList.remove("show");
@@ -530,17 +364,11 @@
         let s = st.times[`【${type}${i}】開始`], e = st.times[`【${type}${i}】終了`]; 
         if(s && !e) errs.push(`⚠️ 時間入力処置: ${type}${i} の「終了時間」が抜けています。`); 
         if(!s && e) errs.push(`⚠️ 時間入力処置: ${type}${i} の「開始時間」が抜けています。`); 
-        if(s && e) { 
-          let diff = (parseInt(e.split(":")[0])*60+parseInt(e.split(":")[1])) - (parseInt(s.split(":")[0])*60+parseInt(s.split(":")[1])); 
-          if(diff < 0) diff += 1440; 
-          if(diff > 720) errs.push(`⚠️ 時間逆転: ${type}${i} の終了時間が開始より早くなっています (${s}〜${e})。`); 
-        } 
+        if(s && e) { let diff = (parseInt(e.split(":")[0])*60+parseInt(e.split(":")[1])) - (parseInt(s.split(":")[0])*60+parseInt(s.split(":")[1])); if(diff < 0) diff += 1440; if(diff > 720) errs.push(`⚠️ 時間逆転: ${type}${i} の終了時間が開始より早くなっています (${s}〜${e})。`); } 
       }
-    });
-    return errs;
+    }); return errs;
   }
 
-  // 🌟 プレビューの美しいパッケージング
   function renderPreview() {
     const errBox = document.getElementById("error-msg"); const errs = validateTimes();
     if(errs.length > 0) { errBox.style.display = "block"; errBox.innerHTML = "<b>入力エラー警告（修正してください）</b><br>" + errs.join("<br>"); } else { errBox.style.display = "none"; }
@@ -548,53 +376,27 @@
     let id = document.getElementById("v-id").value.trim(); 
     const eda = document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value ? "-" + document.getElementById("v-edaban").value.trim() : "";
     let displayId = id + eda;
-    
-    // 🌟 要請番号がない場合の仮ID自動生成表示
-    if(!id) {
-      const dateStr = document.getElementById("v-date").value.replace(/-/g, "").slice(2);
-      const timeStr = (st.times["接触"] || "未接触").replace(":", "");
-      displayId = `(仮)${dateStr}-${timeStr}`;
-    }
+    if(!id) { const dateStr = document.getElementById("v-date").value.replace(/-/g, "").slice(2); const timeStr = (st.times["接触"] || "未接触").replace(":", ""); displayId = `(仮)${dateStr}-${timeStr}`; }
     
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
 
-    let s = ``;
-    s += `<div class="pv-section"><div class="pv-title">基本情報</div>`;
-    s += `<div><b>要請番号:</b> ${displayId}</div><div><b>日付:</b> ${document.getElementById("v-date").value}</div><div><b>出場先:</b> ${document.getElementById("v-dest").value}</div><div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div><div><b>スキーム:</b> ${st.scheme || "未選択"}</div></div>`;
-    
-    s += `<div class="pv-section"><div class="pv-title">タイムライン ＆ 算定</div>`;
-    s += `<div><b>接触:</b> ${st.times['接触']||'--:--'}　<b>病着:</b> ${st.times['病着']||(st.scheme === 'Iターン救急隊のみ' ? '対象外' : '--:--')}　<b>終了:</b> ${st.times['終了']||'--:--'}</div>`;
-    s += `<div style="margin-top:4px;"><b>往診料:</b> ${st.calc.oshin?"◯":"-"}　<b>搬送料:</b> ${st.calc.hansho?"◯":"-"}　<b>長時間加算:</b> ${st.calc.long?"◯":"-"}</div>`;
-    s += `<div style="margin-top:4px;"><b>モニター時間:</b> ${st.calc.monitor ? st.calc.mTime : "OFF"}　<b>SpO2:</b> ${st.calc.spo2?"◯":"-"}</div></div>`;
-    
+    let s = `<div class="pv-section"><div class="pv-title">基本情報</div><div><b>要請番号:</b> ${displayId}</div><div><b>日付:</b> ${document.getElementById("v-date").value}</div><div><b>出場先:</b> ${document.getElementById("v-dest").value}</div><div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div><div><b>スキーム:</b> ${st.scheme || "未選択"}</div></div>`;
+    s += `<div class="pv-section"><div class="pv-title">タイムライン ＆ 算定</div><div><b>接触:</b> ${st.times['接触']||'--:--'}　<b>病着:</b> ${st.times['病着']||(st.scheme === 'Iターン救急隊のみ' ? '対象外' : '--:--')}　<b>終了:</b> ${st.times['終了']||'--:--'}</div><div style="margin-top:4px;"><b>往診料:</b> ${st.calc.oshin?"◯":"-"}　<b>搬送料:</b> ${st.calc.hansho?"◯":"-"}　<b>長時間加算:</b> ${st.calc.long?"◯":"-"}</div><div style="margin-top:4px;"><b>モニター時間:</b> ${st.calc.monitor ? st.calc.mTime : "OFF"}　<b>SpO2:</b> ${st.calc.spo2?"◯":"-"}</div></div>`;
     s += `<div class="pv-section"><div class="pv-title">実施処置</div><ul class="pv-ul">`;
     let previewProcs = { "確保ライン": [], "超音波検査": [], "その他処置": [] };
     
     Object.keys(st.chips).forEach(k => {
       if(st.chips[k]) { 
-        if(["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(k)) return; // 親項目にまとめるためスキップ
-        
+        if(["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(k)) return; 
         let txt = ``;
-        if(k==="気管挿管") {
-          let size = st.vals['気管挿管サイズ']||"未指定";
-          let cuff = st.vals['カフ有無']||"未指定";
-          let detail = st.vals['気管挿管詳細'] ? ` / ${st.vals['気管挿管詳細']}` : "";
-          txt = `気管挿管<div class="pv-sub-item">サイズ:${size} / カフ:${cuff}${detail}</div>`;
-        }
-        else if(k==="胸腔ドレナージ") {
-          let subItems = [];
-          if(st.chips["1%カルボカイン10ml使用"]) subItems.push(`1%カルボカイン10ml使用 (${st.vals["1%カルボカイン10ml使用本数"]||"1本"})`);
-          if(st.chips["28Frトロッカー"]) subItems.push(`28Frトロッカー (${st.vals["28Frトロッカー本数"]||"1本"})`);
-          if(st.chips["20Frトロッカー"]) subItems.push(`20Frトロッカー (${st.vals["20Frトロッカー本数"]||"1本"})`);
-          txt = `胸腔ドレナージ` + (subItems.length>0 ? `<div class="pv-sub-item">` + subItems.join(`</div><div class="pv-sub-item">`) + `</div>` : "");
-        }
+        if(k==="気管挿管") { let size = st.vals['気管挿管サイズ']||"未指定"; let cuff = st.vals['カフ有無']||"未指定"; let detail = st.vals['気管挿管詳細'] ? ` / ${st.vals['気管挿管詳細']}` : ""; txt = `気管挿管<div class="pv-sub-item">サイズ:${size} / カフ:${cuff}${detail}</div>`; }
+        else if(k==="胸腔ドレナージ") { let subItems = []; if(st.chips["1%カルボカイン10ml使用"]) subItems.push(`1%カルボカイン10ml使用 (${st.vals["1%カルボカイン10ml使用本数"]||"1本"})`); if(st.chips["28Frトロッカー"]) subItems.push(`28Frトロッカー (${st.vals["28Frトロッカー本数"]||"1本"})`); if(st.chips["20Frトロッカー"]) subItems.push(`20Frトロッカー (${st.vals["20Frトロッカー本数"]||"1本"})`); txt = `胸腔ドレナージ` + (subItems.length>0 ? `<div class="pv-sub-item">` + subItems.join(`</div><div class="pv-sub-item">`) + `</div>` : ""); }
         else if(k==="心嚢穿刺・心嚢ドレナージ") txt = `心嚢穿刺・心嚢ドレナージ<div class="pv-sub-item">${st.vals["心嚢穿刺・心嚢ドレナージ詳細"]||"未指定"}</div>`;
         else if(k==="除細動パッド") txt = `除細動パッド<div class="pv-sub-item">${st.vals["除細動パッド"]||"未指定"}</div>`;
         else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) txt = `${k} (${st.vals[k+"本数"]||"1本"})`;
         else if(k==="頸動脈パルス") txt = `頸動脈パルス (${st.vals["頸動脈パルス"]||"未指定"})`;
-        else if(st.vals[k]) txt = `${k} (${st.vals[k]})`;
-        else txt = k;
+        else if(st.vals[k]) txt = `${k} (${st.vals[k]})`; else txt = k;
         
         if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) previewProcs["確保ライン"].push(txt);
         else if(["心エコー","FAST","大血管評価","頸動脈パルス","胸部エコー","消化器系エコー","婦人女性生殖器系エコー","泌尿器系エコー","その他エコー"].includes(k)) previewProcs["超音波検査"].push(txt);
@@ -606,52 +408,36 @@
     if(previewProcs["確保ライン"].length > 0) { s += `<li class="pv-li"><b>確保ライン</b><div class="pv-sub">${previewProcs["確保ライン"].join("<br>")}</div></li>`; hasProc = true; }
     if(previewProcs["超音波検査"].length > 0) { s += `<li class="pv-li"><b>超音波検査</b><div class="pv-sub">${previewProcs["超音波検査"].join("<br>")}</div></li>`; hasProc = true; }
     if(previewProcs["その他処置"].length > 0) { s += `<li class="pv-li"><b>その他処置</b><div class="pv-sub">${previewProcs["その他処置"].join("<br>")}</div></li>`; hasProc = true; }
-    if(!hasProc) s += "<li class="pv-li">なし</li>";
-    s += "</ul></div>";
+    if(!hasProc) s += `<li class="pv-li">なし</li>`; s += "</ul></div>";
 
-    s += `<div class="pv-section"><div class="pv-title">時間入力処置</div><ul class="pv-ul">`;
-    let hasDyn = false;
+    s += `<div class="pv-section"><div class="pv-title">時間入力処置</div><ul class="pv-ul">`; let hasDyn = false;
     ["酸素","圧迫","呼吸器"].forEach(type => {
       for(let i=1; i<=st.dyn[type]; i++) { 
         let start = st.times[`【${type}${i}】開始`], end = st.times[`【${type}${i}】終了`]; 
         if(start || end) { 
-          let flow = st.vals[`【${type}${i}】流量`] ? `流量:${st.vals[`【${type}${i}】流量`]}L` : ""; 
-          let fio2 = st.vals[`【${type}${i}】FiO2`] ? `FiO2:${st.vals[`【${type}${i}】FiO2`]}%` : ""; 
+          let flow = st.vals[`【${type}${i}】流量`] ? `流量:${st.vals[`【${type}${i}】流量`]}L` : ""; let fio2 = st.vals[`【${type}${i}】FiO2`] ? `FiO2:${st.vals[`【${type}${i}】FiO2`]}%` : ""; 
           if(type==="圧迫") { flow=""; fio2=""; } if(type==="呼吸器") { flow=""; } 
           let params = [flow, fio2].filter(x=>x).join(" / ");
-          s += `<li class="pv-li">${type}${i} (${start||'--:--'} 〜 ${end||'--:--'})${params ? `<div class="pv-sub-item">${params}</div>` : ""}</li>`; 
-          hasDyn = true; 
+          s += `<li class="pv-li">${type}${i} (${start||'--:--'} 〜 ${end||'--:--'})${params ? `<div class="pv-sub-item">${params}</div>` : ""}</li>`; hasDyn = true; 
         } 
       }
     });
     if(st.dyn["圧迫"] > 0) s += `<li class="pv-li" style="color:var(--brand); font-weight:bold;">胸骨圧迫 積算時間: ${document.getElementById("cpr-total").textContent}</li>`;
-    if(!hasDyn) s += `<li class="pv-li">なし</li>`; 
-    s += "</ul></div>";
+    if(!hasDyn) s += `<li class="pv-li">なし</li>`; s += "</ul></div>";
     
-    const biko = st.vals['備考'] || ""; 
-    if(biko) s += `<div class="pv-section"><div class="pv-title">備考</div><div>${biko.replace(/\n/g, '<br>')}</div></div>`; 
-    
+    const biko = st.vals['備考'] || ""; if(biko) s += `<div class="pv-section"><div class="pv-title">備考</div><div>${biko.replace(/\n/g, '<br>')}</div></div>`; 
     document.getElementById("preview-box").innerHTML = s; 
   }
 
-  // 🌟 エラー自動報告
-  async function sendErrorLog(errMsg, payload) {
-    try { await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"error_log", password:PIN_CODE, error_message: errMsg, app_state: JSON.stringify(payload, null, 2)}), redirect:"follow" }); } catch(e) {}
-  }
+  function confirmSubmit() { document.getElementById("modal-confirm").classList.add("show"); }
 
-  // 🌟 通信エラー（リダイレクト問題）を完全に回避し、仮IDも送信する処理
   async function submitData() {
     if(validateTimes().length > 0) return alert("時間入力にエラーがあります。赤字の警告内容を修正してください。");
     
     let id = document.getElementById("v-id").value.trim(); 
     const eda = document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value ? "-" + document.getElementById("v-edaban").value.trim() : "";
     let displayId = id + eda;
-    
-    if(!id) {
-      const dateStr = document.getElementById("v-date").value.replace(/-/g, "").slice(2);
-      const timeStr = (st.times["接触"] || "未接触").replace(":", "");
-      displayId = `(仮)${dateStr}-${timeStr}`;
-    }
+    if(!id) { const dateStr = document.getElementById("v-date").value.replace(/-/g, "").slice(2); const timeStr = (st.times["接触"] || "未接触").replace(":", ""); displayId = `(仮)${dateStr}-${timeStr}`; }
     
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
@@ -664,25 +450,14 @@
       "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"",
       
       "心エコー": st.chips["心エコー"]?"◯":"", "FAST": st.chips["FAST"]?"◯":"", "大血管評価": st.chips["大血管評価"]?"◯":"",
-      "頸動脈パルス": st.chips["頸動脈パルス"]? (st.vals["頸動脈パルス"] ? "◯ " + st.vals["頸動脈パルス"] : "◯") : "", 
-      "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"",
-      "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", 
-      "その他エコー": st.chips["その他エコー"] ? (st.vals["その他エコー"] ? "◯ " + st.vals["その他エコー"] : "◯") : "",
-      
+      "頸動脈パルス": st.chips["頸動脈パルス"]? (st.vals["頸動脈パルス"] ? "◯ " + st.vals["頸動脈パルス"] : "◯") : "", "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"",
+      "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", "その他エコー": st.chips["その他エコー"] ? (st.vals["その他エコー"] ? "◯ " + st.vals["その他エコー"] : "◯") : "",
       "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"", "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"",
       "気管挿管サイズ": st.chips["気管挿管"] ? (st.vals["気管挿管サイズ"]||"未指定") + (st.vals["気管挿管詳細"] ? " " + st.vals["気管挿管詳細"] : "") : "", "カフ有無": st.chips["気管挿管"]?st.vals["カフ有無"]||"":"",
-      "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"", 
-      "除細動パッド": st.chips["除細動パッド"] ? (st.vals["除細動パッド"] ? "◯ " + st.vals["除細動パッド"] : "◯") : "",
+      "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"", "除細動パッド": st.chips["除細動パッド"] ? (st.vals["除細動パッド"] ? "◯ " + st.vals["除細動パッド"] : "◯") : "",
       
-      "胸腔ドレナージ": st.chips["胸腔ドレナージ"]?"◯":"", 
-      "1%カルボカイン10ml使用": st.chips["1%カルボカイン10ml使用"] ? "◯ " + (st.vals["1%カルボカイン10ml使用本数"]||"1本") : "", 
-      "28Frトロッカー": st.chips["28Frトロッカー"] ? "◯ " + (st.vals["28Frトロッカー本数"]||"1本") : "", 
-      "20Frトロッカー": st.chips["20Frトロッカー"] ? "◯ " + (st.vals["20Frトロッカー本数"]||"1本") : "",
-      "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"] ? (st.vals["心嚢穿刺・心嚢ドレナージ詳細"] ? "◯ " + st.vals["心嚢穿刺・心嚢ドレナージ詳細"] : "◯") : "", 
-      "開胸心マッサージ": st.chips["開胸心マッサージ"] ? (st.vals["開胸心マッサージ"] ? "◯ " + st.vals["開胸心マッサージ"] : "◯") : "", 
-      "心膜開窓": st.chips["心膜開窓"] ? (st.vals["心膜開窓"] ? "◯ " + st.vals["心膜開窓"] : "◯") : "",
-      "その他処置": st.chips["その他処置"] ? (st.vals["その他処置"] ? "◯ " + st.vals["その他処置"] : "◯") : "",
-      
+      "胸腔ドレナージ": st.chips["胸腔ドレナージ"]?"◯":"", "1%カルボカイン10ml使用": st.chips["1%カルボカイン10ml使用"] ? "◯ " + (st.vals["1%カルボカイン10ml使用本数"]||"1本") : "", "28Frトロッカー": st.chips["28Frトロッカー"] ? "◯ " + (st.vals["28Frトロッカー本数"]||"1本") : "", "20Frトロッカー": st.chips["20Frトロッカー"] ? "◯ " + (st.vals["20Frトロッカー本数"]||"1本") : "",
+      "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"] ? (st.vals["心嚢穿刺・心嚢ドレナージ詳細"] ? "◯ " + st.vals["心嚢穿刺・心嚢ドレナージ詳細"] : "◯") : "", "開胸心マッサージ": st.chips["開胸心マッサージ"] ? (st.vals["開胸心マッサージ"] ? "◯ " + st.vals["開胸心マッサージ"] : "◯") : "", "心膜開窓": st.chips["心膜開窓"] ? (st.vals["心膜開窓"] ? "◯ " + st.vals["心膜開窓"] : "◯") : "", "その他処置": st.chips["その他処置"] ? (st.vals["その他処置"] ? "◯ " + st.vals["その他処置"] : "◯") : "",
       "20G": st.chips["20G"]?st.vals["20G本数"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G本数"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G本数"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G本数"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":""
     };
 
@@ -691,59 +466,26 @@
     for(let i=1; i<=5; i++) { payload[`呼吸器${i}開始`] = st.times[`【呼吸器${i}】開始`] || ""; payload[`呼吸器${i}終了`] = st.times[`【呼吸器${i}】終了`] || ""; payload[`呼吸器${i}FiO2`] = st.vals[`【呼吸器${i}】FiO2`] || ""; }
     payload["備考"] = st.vals["備考"] || "";
 
-    const btn = document.getElementById("btnSubmit");
-    btn.textContent = "送信中... 🚁 (そのままお待ちください)";
-    btn.disabled = true;
+    const btn = document.getElementById("btnSubmit"); btn.textContent = "送信中... 🚁 (そのままお待ちください)"; btn.disabled = true;
 
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({action:"submit", password:PIN_CODE, data:payload}),
-        redirect: "follow" 
-      });
-      const textRes = await res.text();
-      let jsonRes;
-      try {
-        jsonRes = JSON.parse(textRes);
-      } catch(parseErr) {
-        // ★ これが Googleの「成功なのにエラー文字を返す罠」を回避する最終奥義
-        if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) {
-          jsonRes = { status: "success" };
-        } else {
-          throw new Error("不明なレスポンス: " + textRes);
-        }
-      }
-      
-      if(jsonRes.status === "success") { 
-        alert("送信が正常に完了しました！共有メールが送出されました。🚁"); 
-        location.reload(); 
-      } else {
-        alert("【エラー発生】GASが処理を停止しました：\n" + jsonRes.message);
-        sendErrorLog("GASエラー: " + jsonRes.message, payload);
-        btn.textContent = "メール共有 ＆ データベース送信 ✉️";
-        btn.disabled = false;
-      }
-    } catch(e) { 
-      alert("【通信エラー】インターネット環境、またはGASの設定に問題があります。\n詳細: " + e.message); 
-      sendErrorLog("通信・パースエラー: " + e.message, payload);
-      btn.textContent = "メール共有 ＆ データベース送信 ✉️";
-      btn.disabled = false;
-    }
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, data:payload}), redirect: "follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(parseErr) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) { jsonRes = { status: "success" }; } else { throw new Error("不明なレスポンス: " + textRes); } }
+      if(jsonRes.status === "success") { alert("送信が正常に完了しました！共有メールが送出されました。🚁"); location.reload(); } 
+      else { alert("【エラー発生】GASが処理を停止しました：\n" + jsonRes.message); btn.textContent = "確認して送信する ✉️"; btn.disabled = false; }
+    } catch(e) { alert("【通信エラー】インターネット環境、またはGASの設定に問題があります。\n詳細: " + e.message); btn.textContent = "確認して送信する ✉️"; btn.disabled = false; }
   }
 
-  // 🌟 Q&Aと取説の初期読み込み
   async function fetchInit() {
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
       try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success", qa:[], manual:[]}; else throw err; }
-      
       if(jsonRes.status === "success") {
         const qaBox = document.getElementById("qa-list");
         if(jsonRes.qa && jsonRes.qa.length > 0) qaBox.innerHTML = jsonRes.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a.replace(/\\n/g, '<br>')}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid var(--line);">`).join("");
         else qaBox.innerHTML = '<p style="text-align:center; font-size:13px;">公開されているQ&Aはありません。</p>';
-        
         const mBox = document.getElementById("manual-list");
         if(jsonRes.manual && jsonRes.manual.length > 0) mBox.innerHTML = jsonRes.manual.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid var(--line);">`).join("");
         else mBox.innerHTML = '<p style="text-align:center; font-size:13px;">マニュアルはまだありません。</p>';
@@ -752,73 +494,16 @@
   }
 
   async function submitQA(event) {
-    const q = document.getElementById("qa-input").value.trim();
-    if(!q) return alert("質問や要望を入力してください。");
+    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("質問や要望を入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
       try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success"}; else throw err; }
-      if(jsonRes.status === "success") {
-        alert("開発者へメッセージを送信しました！貴重なご意見ありがとうございます。");
-        document.getElementById("qa-input").value = ""; closeModal('qa');
-      } else { alert("エラー: " + jsonRes.message); }
+      if(jsonRes.status === "success") { alert("開発者へメッセージを送信しました！貴重なご意見ありがとうございます。"); document.getElementById("qa-input").value = ""; closeModal('qa'); } 
+      else { alert("エラー: " + jsonRes.message); }
     } catch(e) { alert("通信エラー: " + e.message); }
     btn.textContent = "送信する ✉️"; btn.disabled = false;
-  }
-
-  async function searchData() {
-    const q = document.getElementById("s-query").value.trim();
-    const d = document.getElementById("s-date").value;
-    const stVal = document.getElementById("s-status").value;
-    const scVal = document.getElementById("s-scheme").value;
-    const sfVal = document.getElementById("s-staff").value;
-
-    const box = document.getElementById("search-results");
-    box.innerHTML = '<p style="text-align:center; color:var(--sub); padding:20px;">データベースから検索中...🔍</p>';
-    
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"fetch_all", password:PIN_CODE}), redirect:"follow" });
-      const textRes = await res.text(); let json;
-      try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) json={status:"success", data:[]}; else throw err; }
-      
-      if(json.status === "success") {
-        const filtered = json.data.filter(row => {
-          let match = true;
-          if (q && row["要請番号"] && String(row["要請番号"]).indexOf(q) === -1) match = false;
-          if (d && row["日付"] && String(row["日付"]).indexOf(d) === -1) match = false;
-          if (stVal && row["ステータス"] && String(row["ステータス"]).indexOf(stVal) === -1) match = false;
-          if (scVal && row["スキーム選択"] && String(row["スキーム選択"]).indexOf(scVal) === -1) match = false;
-          if (sfVal) {
-            const isDr = row["フライトドクター"] && String(row["フライトドクター"]).indexOf(sfVal) !== -1;
-            const isNs = row["フライトナース"] && String(row["フライトナース"]).indexOf(sfVal) !== -1;
-            if (!isDr && !isNs) match = false;
-          }
-          return match;
-        });
-
-        if(filtered.length === 0) { box.innerHTML = '<p style="text-align:center; color:var(--red); padding:20px; font-weight:bold;">条件に一致する事案が見つかりませんでした。</p>'; return; }
-
-        box.innerHTML = filtered.map(row => {
-          const statusText = row["ステータス"] || "⚠️ 未完了"; 
-          const isDone = statusText.indexOf("代行入力完了") !== -1;
-          const badgeBg = isDone ? "#d1fae5" : "#ffebeb";
-          const badgeColor = isDone ? "#065f46" : "#d32f2f";
-          
-          return `
-            <div class="res-item">
-              <div class="res-header">
-                <span>No.${row["要請番号"]} (${row["日付"] || "日付不明"})</span>
-                <span class="status-badge" style="background:${badgeBg}; color:${badgeColor};">${isDone ? "◯ 代行入力完了" : "⚠️ 未完了"}</span>
-              </div>
-              <div><b>出場先:</b> ${row["出場先"] || "未設定"} | <b>スキーム:</b> ${row["スキーム選択"] || "未設定"}</div>
-              <div><b>Ｄｒ:</b> ${row["フライトドクター"] || "未設定"} / <b>Ｎｓ:</b> ${row["フライトナース"] || "未設定"}</div>
-              <div style="margin-top:6px; font-size:12px; color:var(--sub); background:var(--bg); padding:6px; border-radius:4px; white-space:pre-wrap;"><b>接触:</b> ${row["接触"]||"--:--"} <b>病着:</b> ${row["病着"]||"--:--"} <b>終了:</b> ${row["終了"]||"--:--"}\n<b>モニター時間:</b> ${row["モニター算定時間"]||"--:--"}</div>
-            </div>
-          `;
-        }).join("");
-      } else { box.innerHTML = `<p style="text-align:center; color:var(--red); padding:20px;">エラー: ${json.message}</p>`; }
-    } catch(e) { box.innerHTML = `<p style="text-align:center; color:var(--red); padding:20px;">通信エラーが発生しました。<br>${e.message}</p>`; }
   }
 </script>
 </body>
