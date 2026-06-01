@@ -30,9 +30,9 @@
     
     #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
     
-    /* 🌟 ローディングスピナー */
+    /* 🌟 ローディングスピナー (色をブルーに変更) */
     #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; display:none; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(211,47,47,0.2); border-top: 4px solid var(--brand); border-radius: 50%; animation: spin 1s linear infinite; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     @media print {
@@ -57,7 +57,7 @@
 
   <div id="global-loader">
     <div class="spinner"></div>
-    <div style="margin-top:16px; font-weight:bold; color:var(--ink);">🚁 システム準備中...</div>
+    <div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div>
   </div>
 
   <header>
@@ -65,7 +65,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:bold;">AW109 検索・管理コンソール <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px; vertical-align:middle;">v4.1</span></div>
+    <div style="font-weight:bold;">AW109 検索・管理コンソール <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px; vertical-align:middle;">v4.2</span></div>
     <button class="hdr-btn" onclick="location.reload()" style="color:var(--sub);">🔒 ロック</button>
   </header>
 
@@ -161,7 +161,7 @@
 
   <div class="modal" id="modal-manual" onclick="if(event.target===this)closeModal('modal-manual')">
     <div class="modal-box">
-      <h3 style="margin-top:0; color:var(--ink);">📖 取扱説明書 (現場同期)</h3>
+      <h3 style="margin-top:0; color:var(--ink);">📖 取扱説明書 (検索用)</h3>
       <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
       <button class="modal-close" onclick="closeModal('modal-manual')">閉じる</button>
     </div>
@@ -191,7 +191,7 @@
     const input = document.getElementById("login-pin").value;
     if(input === PIN_CODE) {
       document.getElementById("login-overlay").style.display = "none";
-      document.getElementById("global-loader").style.display = "flex"; // 🌟 ロード画面表示
+      document.getElementById("global-loader").style.display = "flex"; 
       fetchInit(); 
     } else {
       document.getElementById("login-err").style.display = "block";
@@ -372,7 +372,7 @@
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes;
-      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual_admin:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK") || textRes.includes("要請番号が指定されていません")) jsonRes={status:"success", qa:[], manual_admin:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
       
       if(jsonRes.status === "success") {
         if (jsonRes.masters) {
