@@ -5,22 +5,31 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AW109 管理コンソール</title>
   <style>
-    :root { --bg:#f2f2f7; --brand:#d32f2f; --ink:#1c1c1e; --sub:#8e8e93; }
-    body { font-family:-apple-system,sans-serif; background:var(--bg); color:var(--ink); padding:20px; }
+    :root { --bg:#f2f2f7; --brand:#d32f2f; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; }
+    body { font-family:-apple-system,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:0; height:100vh; display:flex; flex-direction:column; }
+    header { background:#fff; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; flex-shrink:0; }
+    .hdr-btn { background:none; border:none; color:var(--blue); font-weight:bold; cursor:pointer; font-size:14px; }
+    main { padding:20px; flex:1; overflow-y:auto; }
     .card { background:#fff; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-    input, select, button { padding:10px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
-    button { background:var(--brand); color:#fff; border:none; cursor:pointer; font-weight:bold; }
-    .filter-btn { background:#e5e5ea; color:var(--ink); margin-right:8px; }
-    .res-item { background:#fff; border:1px solid #ccc; border-radius:8px; padding:16px; margin-bottom:12px; cursor:pointer; }
+    input, select, button { padding:10px; border-radius:6px; border:1px solid #ccc; font-size:14px; box-sizing:border-box; }
+    button { background:var(--brand); color:#fff; border:none; cursor:pointer; font-weight:bold; transition:opacity 0.2s; }
+    button:hover { opacity:0.8; }
+    .filter-btn { background:#e5e5ea; color:var(--ink); margin-right:8px; margin-bottom:8px; }
+    .res-item { background:#fff; border:1px solid #ccc; border-radius:8px; padding:16px; margin-bottom:12px; cursor:pointer; transition:border-color 0.2s; }
+    .res-item:hover { border-color:var(--brand); }
     .badge { padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; }
     
-    /* モーダル */
-    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; padding:20px; }
+    /* モーダル用 */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; padding:20px; z-index:9000; }
     .modal.show { display:flex; }
     .modal-box { background:#fff; width:100%; max-width:600px; max-height:85vh; overflow-y:auto; border-radius:12px; padding:20px; position:relative; }
+    .modal-close { display:block; width:100%; padding:12px; margin-top:16px; background:#e5e5ea; border:none; border-radius:8px; font-weight:600; font-size:15px; color:var(--ink); cursor:pointer; }
     .form-group { margin-bottom:12px; }
     .form-group label { display:block; font-weight:bold; font-size:12px; margin-bottom:4px; color:var(--sub); }
-    .form-group input { width:100%; box-sizing:border-box; }
+    .form-group input, .form-group textarea { width:100%; }
+    
+    /* ログイン用オーバーレイ */
+    #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
     
     @media print {
       body * { visibility: hidden; }
@@ -31,72 +40,195 @@
   </style>
 </head>
 <body>
-  <h2>AW109 検索・管理コンソール <span style="font-size:12px; background:var(--brand); color:#fff; padding:4px 8px; border-radius:4px;">v1.0</span></h2>
-  
-  <div class="card no-print">
-    <h3>🔍 絞り込みフィルター</h3>
-    <div style="margin-bottom:16px;">
-      <button class="filter-btn" onclick="quickFilter('未完了')">⚠️ 未完了のみ</button>
-      <button class="filter-btn" onclick="quickFilter('本日')">🚁 今日の出動</button>
-      <button class="filter-btn" onclick="quickFilter('')">🔄 全て表示</button>
-    </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <input type="text" id="q-id" placeholder="要請番号 (仮ID含む)">
-      <input type="date" id="q-date">
-      <button onclick="fetchData()">検索実行</button>
+
+  <div id="login-overlay">
+    <div class="card" style="width:100%; max-width:320px; text-align:center;">
+      <h2 style="margin-top:0; color:var(--ink);">管理コンソール</h2>
+      <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力してください</p>
+      <input type="password" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px;" placeholder="****">
+      <button onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
+      <p id="login-err" style="color:var(--red); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
     </div>
   </div>
 
-  <div id="results" class="no-print">
-    <p style="text-align:center; color:var(--sub);">検索実行を押してください。</p>
-  </div>
+  <header>
+    <div style="display:flex; gap:16px;">
+      <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
+      <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+    </div>
+    <div style="font-weight:bold;">AW109 検索・管理コンソール <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px; vertical-align:middle;">v2.0</span></div>
+    <button class="hdr-btn" onclick="location.reload()" style="color:var(--sub);">🔒 ロック</button>
+  </header>
 
-  <!-- 詳細・編集モーダル -->
-  <div class="modal" id="detail-modal" onclick="if(event.target===this)closeModal()">
-    <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:16px;">
-        <h3 style="margin:0;">事案詳細・修正</h3>
-        <button class="no-print" onclick="window.print()" style="background:#007aff;">🖨️ PDF保存/印刷</button>
+  <main>
+    <div class="card no-print">
+      <h3 style="margin-top:0;">🔍 複合検索 ＆ 絞り込み</h3>
+      <div style="margin-bottom:16px;">
+        <button class="filter-btn" onclick="quickFilter('未完了')">⚠️ 未完了のみ</button>
+        <button class="filter-btn" onclick="quickFilter('本日')">🚁 今日の出動</button>
+        <button class="filter-btn" onclick="quickFilter('')">🔄 全てクリア</button>
       </div>
       
-      <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px;">
-        <b>📦 消費資機材 補充リスト</b><br>
-        <span id="supply-list"></span>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:12px; color:var(--sub); font-weight:bold;">要請番号</label>
+          <input type="text" id="q-id" placeholder="IDを入力" style="width:100%;">
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--sub); font-weight:bold;">ステータス</label>
+          <select id="q-status" style="width:100%;">
+            <option value="">全て</option><option value="未完了">⚠️ 未完了</option><option value="代行入力完了">◯ 完了</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--sub); font-weight:bold;">出場先</label>
+          <select id="q-dest" style="width:100%;"></select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--sub); font-weight:bold;">スタッフ (Dr / Ns)</label>
+          <select id="q-staff" style="width:100%;"></select>
+        </div>
+      </div>
+      
+      <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <div style="flex:1; min-width:250px;">
+          <label style="font-size:12px; color:var(--sub); font-weight:bold;">期間</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="date" id="q-date-start" style="flex:1;"> <span style="color:var(--sub);">〜</span> <input type="date" id="q-date-end" style="flex:1;">
+          </div>
+        </div>
+        <button onclick="fetchData()" style="padding:12px 24px; min-width:120px;">検索実行 🔍</button>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
+      <div id="result-count" style="font-weight:bold; color:var(--ink);">検索結果: 0 件</div>
+      <button onclick="exportCSV()" style="background:#34a853;">📊 CSV出力</button>
+    </div>
+
+    <div id="results" class="no-print">
+      <p style="text-align:center; color:var(--sub); padding:40px; background:#fff; border-radius:12px;">条件を指定して「検索実行」を押してください。</p>
+    </div>
+  </main>
+
+  <div class="modal" id="detail-modal" onclick="if(event.target===this)closeModal('detail-modal')">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:16px;">
+        <h3 style="margin:0; color:var(--ink);">事案詳細・データ修正</h3>
+        <button class="no-print" onclick="window.print()" style="background:var(--blue); padding:8px 16px;">🖨️ PDF印刷</button>
+      </div>
+      
+      <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; border:1px solid #bbdefb;">
+        <b style="color:#0d47a1;">📦 消費資機材 補充ピックアップ</b><br>
+        <div id="supply-list" style="margin-top:6px; color:#1565c0; line-height:1.5;"></div>
       </div>
 
       <input type="hidden" id="edit-old-id">
+      
       <div style="display:flex; gap:12px;">
         <div class="form-group" style="flex:1;"><label>要請番号 (修正可)</label><input type="text" id="edit-id"></div>
-        <div class="form-group" style="flex:1;"><label>日付</label><input type="date" id="edit-date"></div>
+        <div class="form-group" style="flex:1;"><label>日付 (修正可)</label><input type="date" id="edit-date"></div>
       </div>
       
-      <div class="form-group"><label>更新履歴 (自動記録)</label><textarea id="edit-history" rows="4" readonly style="width:100%; background:#f2f2f7; border:none; padding:8px;"></textarea></div>
+      <div class="form-group"><label>更新・操作履歴 (自動記録)</label><textarea id="edit-history" rows="4" readonly style="width:100%; background:var(--bg); border:none; padding:8px; border-radius:6px; color:var(--sub); outline:none; resize:none;"></textarea></div>
       
-      <div class="no-print" style="margin-top:20px; border-top:1px solid #ccc; padding-top:16px;">
-        <p style="font-size:12px; font-weight:bold; color:var(--brand);">※データを修正して上書き保存する場合は、担当者名を入力してください。</p>
-        <input type="text" id="edit-person" placeholder="担当者名 (必須)" style="width:100%; margin-bottom:8px;">
+      <div class="no-print" style="margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
+        <p style="font-size:12px; font-weight:bold; color:var(--brand); margin-top:0;">※データを修正して上書き保存する場合は、担当者名を入力してください。</p>
+        <input type="text" id="edit-person" placeholder="修正者の名前を入力 (必須)" style="width:100%; margin-bottom:12px;">
         <div style="display:flex; gap:12px;">
-          <button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal()">キャンセル</button>
+          <button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal('detail-modal')">キャンセル</button>
           <button style="flex:1;" onclick="saveRecord()">💾 上書き保存</button>
         </div>
       </div>
     </div>
   </div>
 
-<script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
-  let allData = [];
+  <div class="modal" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
+    <div class="modal-box">
+      <h3 style="margin-top:0; color:var(--ink);">📖 取扱説明書 (現場同期)</h3>
+      <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
+      <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
+    </div>
+  </div>
 
-  function quickFilter(type) {
-    if(type==='未完了') { document.getElementById('q-id').value=''; document.getElementById('q-date').value=''; fetchData('未完了'); }
-    else if(type==='本日') { const d=new Date(); document.getElementById('q-date').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; document.getElementById('q-id').value=''; fetchData(); }
-    else { document.getElementById('q-id').value=''; document.getElementById('q-date').value=''; fetchData(); }
+  <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+    <div class="modal-box">
+      <h3 style="margin-top:0; color:var(--ink);">❓ Q&A ＆ 要望BOX (現場同期)</h3>
+      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div>
+      <div style="background:var(--bg); padding:12px; border-radius:8px;">
+        <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 管理側から要望やメモを残す</div>
+        <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
+        <button onclick="submitQA(event)" style="width:100%; padding:10px;">送信する ✉️</button>
+      </div>
+      <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
+    </div>
+  </div>
+
+<script>
+  // ── 設定 ──
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  const PIN_CODE = "5740"; // 🔐 ログイン用パスワード
+  
+  let allData = [];
+  let filteredData = [];
+
+  // マスターデータ（検索プルダウン用）
+  const MASTERS = {
+    dest: ["鹿児島市","姶良市","阿久根市","伊佐市","出水市","いちき串木野市","指宿市","大崎町","鹿屋市","肝付町","さつま町","薩摩川内市","志布志市","曽於市","垂水市","長島町","中種子町","西之表市","日置市","東串良町","霧島市","錦江町","枕崎市","南大隅町","南九州市","南さつま市","南種子町","屋久島町","湧水町","えびの市","都城市","宮崎市","黒島","薩摩硫黄島","竹島","口永良部島","口之島","中之島","平島","諏訪之瀬島","悪石島","小宝島","宝島","熊本市","宇城市","甑島","名瀬","馬毛島"],
+    staff: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部"]
+  };
+
+  window.onload = () => {
+    // プルダウン生成
+    document.getElementById("q-dest").innerHTML = '<option value="">全出場先</option>' + MASTERS.dest.map(v=>`<option value="${v}">${v}</option>`).join("");
+    document.getElementById("q-staff").innerHTML = '<option value="">全スタッフ</option>' + MASTERS.staff.map(v=>`<option value="${v}">${v}</option>`).join("");
+  };
+
+  // 🔐 ログイン処理
+  function checkLogin() {
+    const input = document.getElementById("login-pin").value;
+    if(input === PIN_CODE) {
+      document.getElementById("login-overlay").style.display = "none";
+      fetchInit(); // ログイン成功後に取説を読み込む
+    } else {
+      document.getElementById("login-err").style.display = "block";
+      document.getElementById("login-pin").value = "";
+    }
   }
 
-  async function fetchData(forceStatus = null) {
-    document.getElementById("results").innerHTML = '<p style="text-align:center;">読込中...</p>';
-    const qId = document.getElementById("q-id").value; const qDate = document.getElementById("q-date").value;
+  // 共通モーダル操作
+  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id || 'detail-modal').classList.remove('show'); }
+
+  // 💡 クイックフィルター
+  function quickFilter(type) {
+    document.getElementById("q-id").value = "";
+    document.getElementById("q-date-start").value = "";
+    document.getElementById("q-date-end").value = "";
+    document.getElementById("q-status").value = "";
+    document.getElementById("q-dest").value = "";
+    document.getElementById("q-staff").value = "";
+
+    if(type === '未完了') document.getElementById("q-status").value = "未完了";
+    else if(type === '本日') {
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      document.getElementById("q-date-start").value = today;
+      document.getElementById("q-date-end").value = today;
+    }
+    fetchData();
+  }
+
+  // 🔍 検索実行
+  async function fetchData() {
+    document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">データベースから検索中...🔍</p>';
+    
+    const qId = document.getElementById("q-id").value.trim();
+    const dStart = document.getElementById("q-date-start").value;
+    const dEnd = document.getElementById("q-date-end").value;
+    const stVal = document.getElementById("q-status").value;
+    const destVal = document.getElementById("q-dest").value;
+    const staffVal = document.getElementById("q-staff").value;
     
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_all", password:PIN_CODE}), redirect:"follow" });
@@ -105,58 +237,72 @@
       
       if(json.status==="success") {
         allData = json.data;
-        const filtered = allData.filter(r => {
+        filteredData = allData.filter(r => {
           let m = true;
-          if(forceStatus && r["ステータス"] && !r["ステータス"].includes(forceStatus)) m = false;
           if(qId && r["要請番号"] && !String(r["要請番号"]).includes(qId)) m = false;
-          if(qDate && r["日付"] && !String(r["日付"]).includes(qDate)) m = false;
+          if(stVal && r["ステータス"] && !String(r["ステータス"]).includes(stVal)) m = false;
+          if(destVal && r["出場先"] && !String(r["出場先"]).includes(destVal)) m = false;
+          if(dStart || dEnd) {
+            const rowDate = new Date(r["日付"]);
+            if (dStart && rowDate < new Date(dStart)) m = false;
+            if (dEnd && rowDate > new Date(dEnd)) m = false;
+          }
+          if(staffVal) {
+            const isDr = r["フライトドクター"] && String(r["フライトドクター"]).includes(staffVal);
+            const isNs = r["フライトナース"] && String(r["フライトナース"]).includes(staffVal);
+            if(!isDr && !isNs) m = false;
+          }
           return m;
         });
         
-        if(filtered.length===0) { document.getElementById("results").innerHTML = '<p style="text-align:center; color:red;">データが見つかりません。</p>'; return; }
+        document.getElementById("result-count").innerText = `検索結果: ${filteredData.length} 件`;
+
+        if(filteredData.length===0) { document.getElementById("results").innerHTML = '<p style="text-align:center; color:var(--red); padding:40px; background:#fff; border-radius:12px;">データが見つかりません。</p>'; return; }
         
-        document.getElementById("results").innerHTML = `<div style="margin-bottom:8px; font-weight:bold;">該当: ${filtered.length} 件</div>` + filtered.map((r, i) => {
+        document.getElementById("results").innerHTML = filteredData.map(r => {
           const isDone = (r["ステータス"]||"").includes("完了") && !(r["ステータス"]||"").includes("未完了");
           return `<div class="res-item" onclick='openDetail(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-              <b>No.${r["要請番号"]} (${r["日付"]})</b>
+              <b style="font-size:15px;">No.${r["要請番号"]} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${r["日付"]||"日付不明"})</span></b>
               <span class="badge" style="background:${isDone?'#d1fae5':'#ffebeb'}; color:${isDone?'#065f46':'#d32f2f'}">${r["ステータス"]||"未完了"}</span>
             </div>
-            <div style="font-size:12px; color:var(--sub);">出場先: ${r["出場先"]||"-"} | Dr: ${r["フライトドクター"]||"-"} / Ns: ${r["フライトナース"]||"-"}</div>
+            <div style="font-size:12px; color:var(--sub);"><b>出場先:</b> ${r["出場先"]||"-"} ｜ <b>Dr:</b> ${r["フライトドクター"]||"-"} / <b>Ns:</b> ${r["フライトナース"]||"-"}</div>
+            <div style="font-size:12px; color:var(--sub); margin-top:4px;"><b>接触:</b> ${r["接触"]||"--:--"} ｜ <b>病着:</b> ${r["病着"]||"--:--"} ｜ <b>終了:</b> ${r["終了"]||"--:--"}</div>
           </div>`;
         }).join("");
       }
-    } catch(e) { document.getElementById("results").innerHTML = `<p style="color:red;">通信エラー: ${e.message}</p>`; }
+    } catch(e) { document.getElementById("results").innerHTML = `<p style="text-align:center; color:var(--red);">通信エラー: ${e.message}</p>`; }
   }
 
+  // 📝 詳細モーダル＆補充リスト生成
   function openDetail(row) {
     document.getElementById("edit-old-id").value = row["要請番号"];
     document.getElementById("edit-id").value = row["要請番号"];
     document.getElementById("edit-date").value = row["日付"] ? row["日付"].split("T")[0] : "";
     document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
     
-    // 補充リストの自動生成
+    // 📦 賢者提案：消費資機材リスト自動生成
     let supply = [];
     ["20G","18G","22G","24G","ベニューラ","骨髄針","1%カルボカイン10ml使用","28Frトロッカー","20Frトロッカー"].forEach(k => {
-      let v = String(row[k]||""); if(v.includes("◯")) { let num = v.match(/\d+本/); supply.push(`${k}: ${num?num[0]:"1本"}`); }
+      let v = String(row[k]||""); if(v.includes("◯")) { let num = v.match(/\d+本/); supply.push(`・${k}: <b>${num?num[0]:"1本"}</b>`); }
     });
-    if(String(row["除細動パッド"]||"").includes("◯")) supply.push("除細動パッド: 使用");
-    if(String(row["心嚢穿刺・心嚢ドレナージ"]||"").includes("心嚢ドレナージキット")) supply.push("心嚢ドレナージキット: 使用");
+    if(String(row["除細動パッド"]||"").includes("◯")) supply.push("・除細動パッド: <b>使用</b>");
+    if(String(row["心嚢穿刺・心嚢ドレナージ"]||"").includes("キット")) supply.push("・心嚢ドレナージキット: <b>使用</b>");
     
-    document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "特になし";
-    document.getElementById("detail-modal").classList.add("show");
+    document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "<span style='color:var(--sub);'>消費した主な資機材はありません</span>";
+    openModal("detail-modal");
   }
-  function closeModal() { document.getElementById("detail-modal").classList.remove("show"); }
 
+  // 💾 上書き保存処理
   async function saveRecord() {
     const editor = document.getElementById("edit-person").value.trim();
-    if(!editor) return alert("上書き保存するには担当者名を入力してください。");
+    if(!editor) return alert("データを上書き保存するには「修正者の名前」を入力してください。");
     
     const oldId = document.getElementById("edit-old-id").value;
     const newId = document.getElementById("edit-id").value.trim();
     const newDate = document.getElementById("edit-date").value;
     
-    if(!confirm(`要請番号 ${oldId} のデータを更新しますか？`)) return;
+    if(!confirm(`事案番号 [ ${oldId} ] のデータを上書きしてよろしいですか？`)) return;
     
     const btn = event.target; btn.innerText = "保存中..."; btn.disabled = true;
     
@@ -165,10 +311,66 @@
       const textRes = await res.text(); let json;
       try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw e; }
       
-      if(json.status==="success") { alert("データを更新しました。"); closeModal(); fetchData(); }
+      if(json.status==="success") { alert("データの修正・上書き保存が完了しました。"); closeModal('detail-modal'); document.getElementById("edit-person").value = ""; fetchData(); }
       else { alert("エラー: " + json.message); }
     } catch(e) { alert("通信エラー: " + e.message); }
     btn.innerText = "💾 上書き保存"; btn.disabled = false;
+  }
+
+  // 📊 賢者提案：CSVエクスポート機能
+  function exportCSV() {
+    if(filteredData.length === 0) return alert("出力するデータがありません。先に検索を行ってください。");
+    
+    const headers = Object.keys(filteredData[0]);
+    let csvContent = headers.join(",") + "\n";
+    
+    filteredData.forEach(row => {
+      let rowArray = headers.map(header => {
+        let val = String(row[header] || "").replace(/"/g, '""');
+        return `"${val}"`;
+      });
+      csvContent += rowArray.join(",") + "\n";
+    });
+
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" }); // BOM付きで文字化け防止
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `AW109_事案データ_${new Date().getTime()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // 📖 取説とQ&Aの同期取得
+  async function fetchInit() {
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual:[]}; else throw err; }
+      
+      if(jsonRes.status === "success") {
+        const qaBox = document.getElementById("qa-list");
+        if(jsonRes.qa && jsonRes.qa.length > 0) qaBox.innerHTML = jsonRes.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a.replace(/\\n/g, '<br>')}</span></p><hr style="margin:8px 0; border:none; border-top:1px solid #ccc;">`).join("");
+        else qaBox.innerHTML = '<p style="text-align:center; font-size:13px;">公開されているQ&Aはありません。</p>';
+        
+        const mBox = document.getElementById("manual-list");
+        if(jsonRes.manual && jsonRes.manual.length > 0) mBox.innerHTML = jsonRes.manual.map(item => `<p style="margin-bottom:8px; color:var(--ink);"><b>■ ${item.title}</b><br><span style="color:var(--sub); font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("");
+        else mBox.innerHTML = '<p style="text-align:center; font-size:13px;">マニュアルはまだありません。</p>';
+      }
+    } catch(e) { console.log("初期データ取得エラー"); }
+  }
+
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("質問や要望を入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes;
+      try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success"}; else throw err; }
+      if(jsonRes.status === "success") { alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); } 
+      else { alert("エラー: " + jsonRes.message); }
+    } catch(e) { alert("通信エラー: " + e.message); }
+    btn.textContent = "送信する ✉️"; btn.disabled = false;
   }
 </script>
 </body>
