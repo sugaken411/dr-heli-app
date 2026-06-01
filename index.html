@@ -24,7 +24,7 @@
     .input-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); }
     .input-row:last-child { border-bottom: none; }
     .input-label { font-size: 15px; font-weight: 600; }
-    select, input[type="number"], input[type="date"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; }
+    select, input[type="number"], input[type="text"], input[type="date"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; }
     
     /* Scheme Buttons */
     .scheme-grid { display: grid; gap: 8px; margin-top: 8px; }
@@ -33,7 +33,7 @@
     .btn-scheme { padding: 12px 4px; border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--bg); font-size: 13px; font-weight: 600; color: var(--sub); transition: 0.2s; }
     .btn-scheme.on { background: var(--brand); color: #fff; border-color: var(--brand); }
 
-    /* Timeline */
+    /* Timeline & Dynamics */
     .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
     .time-box { background: var(--bg); border-radius: var(--radius-md); padding: 14px 8px; text-align: center; font-size: 20px; font-weight: 700; color: var(--sub); cursor: pointer; }
     .time-box.set { background: #e3f2fd; color: var(--blue); border: 1px solid #90caf9; }
@@ -41,23 +41,29 @@
     
     /* Accordion & Chips */
     .acc-header { padding: 14px; background: var(--bg); border-radius: var(--radius-md); font-weight: 600; font-size: 15px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; }
-    .acc-body { display: none; padding: 10px; background: #fff; border: 1px dashed #ccc; border-radius: var(--radius-md); margin-bottom: 12px; }
+    .acc-body { display: none; padding: 10px; background: #fff; border: 1px dashed #ccc; border-radius: var(--radius-md); margin-bottom: 12px; animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(-5px);} to{opacity:1; transform:translateY(0);} }
     .chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { padding: 10px 14px; border-radius: 20px; border: 1px solid var(--line); background: var(--bg); font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; }
+    .chip { padding: 10px 14px; border-radius: 20px; border: 1px solid var(--line); background: var(--bg); font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; transition: 0.2s; }
     .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
+    
+    .sub-panel { background: #fafafa; border-radius: var(--radius-md); padding: 12px; margin-top: 8px; border: 1px dashed #ccc; display: none; width: 100%; }
+    .radio-group { display: flex; gap: 10px; width:100%; }
+    .radio-btn { flex: 1; text-align: center; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 13px; font-weight: 600; color: var(--sub); cursor:pointer;}
+    .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
 
     /* Buttons */
     .btn-clear { background: #f2f2f7; color: var(--red); border: none; font-size: 12px; font-weight: bold; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
-    .btn-submit { width: 100%; background: var(--brand); color: #fff; font-size: 18px; font-weight: 700; padding: 18px; border-radius: var(--radius-md); border: none; margin-top: 20px; }
+    .btn-submit { width: 100%; background: var(--brand); color: #fff; font-size: 18px; font-weight: 700; padding: 18px; border-radius: var(--radius-md); border: none; margin-top: 20px; cursor: pointer; }
     
     /* Tab Bar */
     .tab-bar { height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: #fff; border-top: 1px solid var(--line); display: flex; z-index: 10; }
-    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--sub); font-weight: 600; background: none; border: none; }
+    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--sub); font-weight: 600; background: none; border: none; cursor:pointer;}
     .tab-btn.on { color: var(--brand); }
     .tab-content { display: none; }
     .tab-content.on { display: block; }
 
-    /* Dial Picker Overlay */
+    /* Dial Picker */
     .dial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: flex-end; z-index: 10000; }
     .dial-box { background: #fff; width: 100%; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); }
     .dial-header { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--line); font-weight: 600; }
@@ -121,19 +127,13 @@
       <div class="card-title">処置・資機材入力</div>
       
       <div class="acc-header" onclick="toggleAcc('acc-echo')">📡 エコー <span>▼</span></div>
-      <div class="acc-body" id="acc-echo">
-        <div class="chip-wrap" id="box-echo"></div>
-      </div>
+      <div class="acc-body" id="acc-echo"><div class="chip-wrap" id="box-echo"></div></div>
 
       <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div>
-      <div class="acc-body" id="acc-other">
-        <div class="chip-wrap" id="box-other"></div>
-      </div>
+      <div class="acc-body" id="acc-other"><div class="chip-wrap" id="box-other"></div></div>
 
       <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span>▼</span></div>
-      <div class="acc-body" id="acc-line">
-        <div class="chip-wrap" id="box-line"></div>
-      </div>
+      <div class="acc-body" id="acc-line"><div class="chip-wrap" id="box-line"></div></div>
     </div>
 
     <div class="card">
@@ -153,19 +153,17 @@
   <div id="tab-2" class="tab-content">
     <div class="card">
       <div class="card-title">送信プレビュー</div>
-      <div id="preview-box" style="font-size:13px; line-height:1.6; white-space:pre-wrap; background:#f9f9f9; padding:10px; border-radius:8px;"></div>
-      <button class="btn-submit" onclick="submitData()">メール共有 ＆ データベース送信 ✉️</button>
+      <div id="preview-box" style="font-size:14px; line-height:1.8; white-space:pre-wrap; background:#f9f9f9; padding:12px; border-radius:8px; border:1px solid #ddd;"></div>
+      <button class="btn-submit" onclick="submitData()">メール共有＆データベース送信 ✉️</button>
     </div>
   </div>
 
   <div id="tab-3" class="tab-content">
     <div class="card">
       <div class="card-title">事案検索コックピット</div>
-      <p style="font-size:12px; color:var(--sub);">※ 事案の検索と同期はここで行います。</p>
-      <button class="btn-clear" style="width:100%; padding:12px; font-size:14px; margin-top:10px;">データベースと同期 (未実装)</button>
+      <p style="font-size:12px; color:var(--sub);">※ 事案の検索と同期はここで行います。(バックエンド連携後に有効化)</p>
     </div>
   </div>
-
 </main>
 
 <nav class="tab-bar">
@@ -182,15 +180,27 @@
 </div>
 
 <script>
-  // -- マスタ --
+  // ── マスタ完全復元 ──
   const MASTERS = {
-    dest: ["鹿児島市","姶良市","阿久根市","霧島市","(他略)"],
-    dr: ["吉原","野口","山根木","平田","(他略)"],
-    ns: ["伊東","梅下","壽賀野","柳田","(他略)"]
+    dest: ["鹿児島市","姶良市","阿久根市","伊佐市","出水市","いちき串木野市","指宿市","大崎町","鹿屋市","肝付町","さつま町","薩摩川内市","志布志市","曽於市","垂水市","長島町","中種子町","西之表市","日置市","東串良町","霧島市","錦江町","枕崎市","南大隅町","南九州市","南さつま市","南種子町","屋久島町","湧水町","えびの市","都城市","宮崎市","黒島","薩摩硫黄島","竹島","口永良部島","口之島","中之島","平島","諏訪之瀬島","悪石島","小宝島","宝島","熊本市","宇城市","甑島","名瀬","馬毛島"],
+    dr: ["吉原","野口","山根木","平田","森","覚本","改田","大平","濱","町田","板谷","徳重","高間","江口","野間口","山端","神保","下野","伊福","勝江","その他"],
+    ns: ["伊東","梅下","壽賀野","柳田","前田","太良木","上園","有村","山田","柳瀬","永田","阿部","その他"]
   };
-  const CHIPS = {
-    echo: ["心エコー","FAST","大血管評価","頸動脈パルス","胸部エコー"],
-    other: ["12誘導心電図","血糖測定","気管挿管","EtCO2","人工呼吸器管理料"],
+
+  // ── 処置の構造定義完全復元（アコーディオン内の連動UI） ──
+  const STRUCT = {
+    echo: [
+      {k:"心エコー"},{k:"FAST"},{k:"大血管評価"},
+      {k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス詳細"},
+      {k:"胸部エコー", sub:"text"}, {k:"消化器系エコー", sub:"text"},
+      {k:"婦人女性生殖器系エコー", sub:"text"}, {k:"泌尿器系エコー", sub:"text"}, {k:"その他エコー", sub:"text"}
+    ],
+    other: [
+      {k:"12誘導心電図"}, {k:"血糖測定"},
+      {k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]},
+      {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"},
+      {k:"除細動", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"}
+    ],
     line: ["20G","18G","22G","24G","ベニューラ","骨髄針"]
   };
 
@@ -199,7 +209,12 @@
   window.onload = () => {
     const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     fillSel("v-dest", MASTERS.dest); fillSel("v-dr", MASTERS.dr); fillSel("v-ns", MASTERS.ns);
-    buildChips(CHIPS.echo, "box-echo"); buildChips(CHIPS.other, "box-other"); buildChips(CHIPS.line, "box-line");
+    
+    // 構造に基づいてUIを動的生成
+    buildProc(STRUCT.echo, "box-echo");
+    buildProc(STRUCT.other, "box-other");
+    buildLines(STRUCT.line, "box-line");
+    
     addDyn('酸素'); addDyn('圧迫'); addDyn('呼吸器');
   };
 
@@ -220,12 +235,52 @@
     el.style.display = el.style.display === "block" ? "none" : "block";
   }
 
-  function buildChips(arr, boxId) {
-    document.getElementById(boxId).innerHTML = arr.map(k=> `<div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>`).join("");
+  // ── アコーディオンとサブ項目の生成 ──
+  function buildProc(arr, boxId) {
+    let html = "";
+    arr.forEach(o => {
+      html += `<div style="width:100%;"><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
+      if(o.sub==="radio") {
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r=> `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`;
+      } else if(o.sub==="text") {
+        html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="所見・詳細を入力" style="width:100%;text-align:left;background:#fff;padding:8px;border:1px solid #ccc;border-radius:4px;" onchange="st.vals['${o.k}詳細']=this.value"></div>`;
+      } else if(o.sub==="checks") {
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-wrap">` + o.opts.map(c=> `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`;
+      } else if(o.sub==="intubation") {
+        let opts = `<option value="">サイズ選択</option>`; for(let i=2.0; i<=8.5; i+=0.5) opts+=`<option>${i.toFixed(1)}</option>`;
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="input-row"><span class="input-label">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value">${opts}</select></div><div class="input-row"><span class="input-label">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div></div>`;
+      }
+      html += `</div>`;
+    });
+    document.getElementById(boxId).innerHTML = html;
   }
+
+  function buildLines(arr, boxId) {
+    document.getElementById(boxId).innerHTML = arr.map(k=> `
+      <div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div>
+      <div class="sub-panel" id="s-${k}"><div class="input-row"><span class="input-label">使用本数</span><select onchange="st.vals['${k}本数']=this.value">`+ [1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}本</option>`).join("") +`</select></div></div></div>
+    `).join("");
+  }
+
+  // チップのトグルと自動連動ロジック
   function tChip(k) {
     st.chips[k] = !st.chips[k];
     document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]);
+    const sub = document.getElementById(`s-${k}`);
+    if(sub) sub.style.display = st.chips[k] ? 'block' : 'none';
+    
+    // 【気管挿管】選択時、自動でEtCO2と人工呼吸器をONにする
+    if(k==="気管挿管" && st.chips[k]) {
+      if(!st.chips["EtCO2"]) tChip("EtCO2");
+      if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料");
+    }
+    // 【血ガス】選択時、自動で下部のパネルを開く
+  }
+
+  function sRad(key, val) {
+    st.vals[key] = val;
+    document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => el.classList.remove('on'));
+    document.getElementById(`r-${key}-${val}`).classList.add('on');
   }
 
   function setScheme(s) {
@@ -251,7 +306,7 @@
     if(type==="酸素" || type==="呼吸器") {
       h += `<div><div class="time-label">流量(L)</div><div class="time-box" style="font-size:16px; padding:16px 4px;" id="v-${type}${i}流量" onclick="openDial('flow', '${type}${i}流量')">選択</div>`;
       h += `<div class="time-label" style="margin-top:6px;">FiO2(%)</div><div class="time-box" style="font-size:16px; padding:8px 4px;" id="v-${type}${i}FiO2" onclick="openDial('fio2', '${type}${i}FiO2')">21%</div></div>`;
-      st.vals[`${type}${i}FiO2`] = "21"; // default
+      st.vals[`${type}${i}FiO2`] = "21"; 
     }
     h += `</div></div>`;
     document.getElementById(`dyn-${type}`).insertAdjacentHTML('beforeend', h);
@@ -273,11 +328,11 @@
       document.getElementById("dW2").scrollTop = parseInt(v.split(":")[1])*40;
     } 
     else if(mode === 'flow') {
-      wh.innerHTML = mk(20, 1, " L"); // 1〜20L
+      wh.innerHTML = mk(20, 1, " L"); 
       document.getElementById("dW1").scrollTop = (parseInt(st.vals[key]||1)-1)*40;
     }
     else if(mode === 'fio2') {
-      wh.innerHTML = mk(80, 21, "%"); // 21〜100%
+      wh.innerHTML = mk(80, 21, "%"); 
       document.getElementById("dW1").scrollTop = (parseInt(st.vals[key]||21)-21)*40;
     }
     
@@ -299,6 +354,20 @@
         st.times[dialKey] = `${h}:${m}`;
         document.getElementById(`t-${dialKey}`).textContent = `${h}:${m}`;
         document.getElementById(`t-${dialKey}`).classList.add("set");
+
+        // 自動引継ぎ：終了時間が入力されたら、次の開始時間にコピー
+        const match = dialKey.match(/【(酸素|圧迫|呼吸器)(\d+)】終了/);
+        if(match) {
+          const type = match[1], next = parseInt(match[2])+1;
+          if(next <= st.dyn[type]) {
+            const nextKey = `【${type}${next}】開始`;
+            if(!st.times[nextKey]) {
+              st.times[nextKey] = `${h}:${m}`;
+              document.getElementById(`t-${nextKey}`).textContent = `${h}:${m}`;
+              document.getElementById(`t-${nextKey}`).classList.add("set");
+            }
+          }
+        }
       } else {
         const v = Math.round(document.getElementById("dW1").scrollTop/40) + (dialMode==='flow'?1:21);
         st.vals[dialKey] = v;
@@ -309,14 +378,56 @@
     document.getElementById("dialView").style.display="none";
   }
 
+  // ── プレビューの完璧な描画ロジック ──
   function renderPreview() {
     const id = document.getElementById("v-id").value;
     const eda = document.getElementById("chk-edaban").checked ? "-" + document.getElementById("v-edaban").value : "";
-    let s = `要請番号: ${id}${eda}\nスキーム: ${st.scheme}\n接触: ${st.times['接触']||'--'}\n病着: ${st.times['病着']||'--'}\n終了: ${st.times['終了']||'--'}\n`;
+    
+    let s = `【基本情報】\n`;
+    s += `要請番号: ${id}${eda}\n日付: ${document.getElementById("v-date").value}\n`;
+    s += `出場先: ${document.getElementById("v-dest").value}\n`;
+    s += `Ｄｒ: ${document.getElementById("v-dr").value} / Ｎｓ: ${document.getElementById("v-ns").value}\n`;
+    s += `スキーム: ${st.scheme || "未選択"}\n\n`;
+    
+    s += `【タイムライン】\n`;
+    s += `接触: ${st.times['接触']||'--:--'}  病着: ${st.times['病着']||'--:--'}  終了: ${st.times['終了']||'--:--'}\n\n`;
+
+    s += `【実施処置】\n`;
+    let procs = [];
+    Object.keys(st.chips).forEach(k => {
+      if(st.chips[k]) {
+        let detail = "";
+        if(k==="頸動脈パルス") detail = st.vals["頸動脈パルス詳細"] ? `(${st.vals["頸動脈パルス詳細"]})` : "";
+        else if(k==="気管挿管") detail = `(サイズ:${st.vals["気管挿管サイズ"]||"未選択"} / カフ:${st.vals["カフ有無"]||"未選択"})`;
+        else if(k==="除細動") detail = `(${st.vals["除細動パッド"]||"未選択"})`;
+        else if(["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) detail = `(${st.vals[k+"本数"]||"1本"})`;
+        else if(st.vals[k+"詳細"]) detail = `(${st.vals[k+"詳細"]})`; // フリー入力の拾い上げ
+        procs.push(`・${k} ${detail}`);
+      }
+    });
+    s += procs.length > 0 ? procs.join("\n") + "\n\n" : "なし\n\n";
+
+    s += `【動的資機材】\n`;
+    ["酸素","圧迫","呼吸器"].forEach(type => {
+      for(let i=1; i<=st.dyn[type]; i++) {
+        let start = st.times[`【${type}${i}】開始`] || "--:--";
+        let end = st.times[`【${type}${i}】終了`] || "--:--";
+        if(start!=="--:--" || end!=="--:--") {
+          let flow = st.vals[`${type}${i}流量`] ? ` / ${st.vals[`${type}${i}流量`]}L` : "";
+          let fio2 = st.vals[`${type}${i}FiO2`] ? ` / FiO2 ${st.vals[`${type}${i}FiO2`]}%` : "";
+          if(type==="圧迫") { flow=""; fio2=""; }
+          if(type==="呼吸器") { flow=""; }
+          s += `・${type}${i}: ${start} 〜 ${end}${flow}${fio2}\n`;
+        }
+      }
+    });
+
     document.getElementById("preview-box").textContent = s;
   }
 
-  function submitData() { alert("【テスト送信】\nGAS側コードの更新が必要です。"); }
+  function submitData() { 
+    alert("【プレビュー画面に表示されている内容】が、すべてスプレッドシート（データベース）へ送信される準備が整いました。\n\n次は「バックエンド（GAS）のコード更新」を行います！"); 
+  }
 </script>
 </body>
 </html>
