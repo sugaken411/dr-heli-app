@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>AW109 管理コンソール</title>
+  <title>AW109 システム管理</title>
   <style>
     :root { --bg:#f2f2f7; --brand:#d32f2f; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; }
     body { font-family:-apple-system,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:0; height:100vh; display:flex; flex-direction:column; }
@@ -25,7 +25,7 @@
 
   <div id="login-overlay">
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
-      <h2 style="margin-top:0; color:var(--ink);">システム管理コンソール</h2>
+      <h2 style="margin-top:0; color:var(--ink);">システム管理</h2>
       <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
       <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px;" placeholder="****">
       <button onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
@@ -39,7 +39,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.0</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -58,7 +58,10 @@
     </div>
 
     <div class="card">
-      <h3 style="margin-top:0;">❓ Q&A 未回答リスト</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin-top:0;">❓ Q&A 未回答リスト</h3>
+        <span style="font-size:12px; color:var(--sub);">※削除はスプレッドシートから直接行ってください</span>
+      </div>
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub);">読込中...</div>
     </div>
   </main>
@@ -89,11 +92,13 @@
         const qaBox = document.getElementById("qa-list");
         const unanswered = jsonRes.qa.filter(q => q.status !== "◯");
         if(unanswered.length > 0) {
+          // 🌟 日時と送信元を表示する
           qaBox.innerHTML = unanswered.map((item, i) => `
-            <div style="background:var(--bg); padding:10px; border-radius:8px; margin-bottom:8px;">
-              <b>Q. ${item.q}</b>
-              <textarea id="ans-${i}" rows="2" placeholder="回答を入力..." style="width:100%; border:1px solid #ccc; border-radius:4px; padding:6px; margin:6px 0; font-size:13px;"></textarea>
-              <button onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="padding:6px; font-size:12px;">回答を送信・公開</button>
+            <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue);">
+              <div style="font-size:11px; color:var(--sub); margin-bottom:4px;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
+              <b style="color:var(--ink); font-size:14px;">Q. ${item.q}</b>
+              <textarea id="ans-${i}" rows="2" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:4px; padding:8px; margin:8px 0; font-size:13px;"></textarea>
+              <button onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="padding:8px; font-size:13px; width:100%;">回答を送信・公開</button>
             </div>`).join("");
         } else qaBox.innerHTML = '<p style="text-align:center;">未回答の質問はありません。</p>';
         document.getElementById("global-loader").style.display = "none";
