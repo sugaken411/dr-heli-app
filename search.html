@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AW109 事案検索コンソール</title>
+  <style>
+    :root { --bg:#f2f2f7; --brand:#d32f2f; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; }
+    body { font-family:-apple-system,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:0; height:100vh; display:flex; flex-direction:column; }
+    header { background:#fff; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; flex-shrink:0; }
+    .hdr-btn { background:none; border:none; color:var(--blue); font-weight:bold; cursor:pointer; font-size:14px; }
+    .timer-badge { background:#e5e5ea; padding:4px 10px; border-radius:12px; font-family:monospace; font-weight:bold; font-size:14px; color:var(--ink); }
+    main { padding:20px; flex:1; overflow-y:auto; }
+    .card { background:#fff; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+    input, select, button { padding:10px; border-radius:6px; border:1px solid #ccc; font-size:14px; box-sizing:border-box; }
+    button { background:var(--blue); color:#fff; border:none; cursor:pointer; font-weight:bold; transition:opacity 0.2s; } button:hover { opacity:0.8; }
+    .filter-btn { background:#e5e5ea; color:var(--ink); margin-right:8px; margin-bottom:8px; }
+    .res-item { background:#fff; border:1px solid #ccc; border-radius:8px; padding:16px; margin-bottom:12px; cursor:pointer; transition:border-color 0.2s; } .res-item:hover { border-color:var(--blue); }
+    .badge { padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; padding:20px; z-index:9000; } .modal.show { display:flex; }
+    .modal-box { background:#fff; width:100%; max-width:600px; max-height:85vh; overflow-y:auto; border-radius:12px; padding:20px; position:relative; }
+    .modal-close { display:block; width:100%; padding:12px; margin-top:16px; background:#e5e5ea; color:var(--ink); border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+    .form-group { margin-bottom:12px; } .form-group label { display:block; font-weight:bold; font-size:12px; margin-bottom:4px; color:var(--sub); } .form-group input, .form-group textarea, .form-group select { width:100%; }
+    #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
+    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; display:none; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @media print { body * { visibility: hidden; } .modal-box, .modal-box * { visibility: visible; } .modal-box { position: absolute; left: 0; top: 0; width: 100%; max-height:none; overflow:visible; box-shadow:none; } .no-print { display: none !important; } }
+  </style>
+</head>
+<body>
+
+  <div id="login-overlay">
+    <div class="card" style="width:100%; max-width:320px; text-align:center;">
+      <h2 style="margin-top:0; color:var(--ink);">事案検索コンソール</h2>
+      <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px;" placeholder="****">
+      <button onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
+      <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
+    </div>
+  </div>
+
+  <div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button><button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button><button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.0</span></div>
+    <div style="display:flex; gap:12px; align-items:center;"><span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span><button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button></div>
+  </header>
+
+  <main>
+    <div class="card no-print">
+      <h3 style="margin-top:0;">🔍 事案の検索</h3>
+      <div style="margin-bottom:16px;"><button class="filter-btn" onclick="quickFilter('未完了')">⚠️ 未完了のみ</button><button class="filter-btn" onclick="quickFilter('本日')">🚁 今日の出動</button><button class="filter-btn" onclick="quickFilter('')">🔄 全てクリア</button></div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:16px;">
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">要請番号</label><input type="text" id="q-id" placeholder="IDを入力" style="width:100%;"></div>
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">ステータス</label><select id="q-status" style="width:100%;"><option value="">全て</option><option value="未完了">⚠️ 未完了</option><option value="すべての完了">✅ 完了 (すべて)</option><option value="完了 (本人)">👤 完了 (本人入力)</option><option value="完了 (代行)">💻 完了 (代行入力)</option></select></div>
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">出場先</label><select id="q-dest" style="width:100%;"><option value="">読込中...</option></select></div>
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">フライトDr</label><select id="q-dr" style="width:100%;"><option value="">読込中...</option></select></div>
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">フライトNs</label><select id="q-ns" style="width:100%;"><option value="">読込中...</option></select></div>
+      </div>
+      <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <div style="flex:1; min-width:250px;"><label style="font-size:12px; color:var(--sub); font-weight:bold;">期間</label><div style="display:flex; align-items:center; gap:8px;"><input type="date" id="q-date-start" style="flex:1;"> <span style="color:var(--sub);">〜</span> <input type="date" id="q-date-end" style="flex:1;"></div></div>
+        <button onclick="fetchData()" style="padding:12px 24px; min-width:120px;">検索実行 🔍</button>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print"><div id="result-count" style="font-weight:bold; color:var(--ink);">検索結果: 0 件</div><button onclick="exportCSV()" style="background:#34a853;">📊 CSV出力</button></div>
+    <div id="results" class="no-print"><p style="text-align:center; color:var(--sub); padding:40px; background:#fff; border-radius:12px;">条件を指定して「検索実行」を押してください。</p></div>
+  </main>
+
+  <div class="modal" id="detail-modal" onclick="if(event.target===this)closeModal('detail-modal')">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:16px;"><h3 style="margin:0;">事案詳細・修正</h3><button class="no-print" onclick="window.print()" style="background:#e5e5ea; color:var(--ink); padding:8px 16px;">🖨️ 印刷</button></div>
+      <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; border:1px solid #bbdefb;"><b style="color:#0d47a1;">📦 消費資機材</b><div id="supply-list" style="margin-top:6px; color:#1565c0; line-height:1.5;"></div></div>
+      <input type="hidden" id="edit-old-id">
+      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>要請番号</label><input type="text" id="edit-id"></div><div class="form-group" style="flex:1;"><label>日付</label><input type="date" id="edit-date"></div></div>
+      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>出場先</label><select id="edit-dest"></select></div><div class="form-group" style="flex:1;"><label>スキーム</label><select id="edit-scheme"><option value="Uターン">Uターン</option><option value="Jターン">Jターン</option><option value="施設間">施設間</option><option value="Iターン乗り込み">Iターン乗り込み</option><option value="Iターン救急隊のみ">Iターン救急隊のみ</option></select></div></div>
+      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>Dr</label><select id="edit-dr"></select></div><div class="form-group" style="flex:1;"><label>Ns</label><select id="edit-ns"></select></div></div>
+      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>接触時間</label><input type="time" id="edit-contact"></div><div class="form-group" style="flex:1;"><label>病着時間</label><input type="time" id="edit-arrival"></div><div class="form-group" style="flex:1;"><label>終了時間</label><input type="time" id="edit-end"></div></div>
+      <div class="form-group" style="margin-top:12px;"><label>更新履歴</label><textarea id="edit-history" rows="4" readonly style="width:100%; background:var(--bg); border:none; padding:8px; border-radius:6px; color:var(--sub); outline:none; resize:none;"></textarea></div>
+      <div class="no-print" style="margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
+        <p style="font-size:12px; font-weight:bold; color:var(--brand); margin:0 0 8px 0;">※修正・完了にする場合は、担当者名(カナ)を入力してください。</p>
+        <input type="text" id="edit-person" placeholder="担当者名(カナ) 必須" style="width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
+        <div style="display:flex; gap:8px;"><button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal('detail-modal')">キャンセル</button><button style="flex:1;" onclick="saveRecord()">💾 上書き</button><button style="flex:1; background:#34c759;" id="btn-complete" onclick="markComplete()">✅ カルテ完了</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-manual" onclick="if(event.target===this)closeModal('modal-manual')"><div class="modal-box"><h3 style="margin-top:0;">📖 取扱説明書 (検索用)</h3><div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div><button class="modal-close" onclick="closeModal('modal-manual')">閉じる</button></div></div>
+  <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')"><div class="modal-box"><h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div><div style="background:var(--bg); padding:12px; border-radius:8px;"><div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 システム改善の要望を送る</div><textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea><button onclick="submitQA(event)" style="width:100%; padding:10px;">送信する ✉️</button></div><button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button></div></div>
+
+<script>
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  let activePin = ""; let allData = []; let filteredData = [];
+  
+  let lockTime = 600; let timerInterval;
+  function resetTimer() { lockTime = 600; updateTimerDisplay(); }
+  function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
+  function startTimer() { updateTimerDisplay(); timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); }
+
+  function formatKatakana(input) { let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); input.value = val.replace(/[^ァ-ンヴー]/g, ''); }
+
+  function checkLogin() {
+    const input = document.getElementById("login-pin").value;
+    if(input === "5740") {
+      activePin = input; document.getElementById("login-overlay").style.display = "none"; document.getElementById("global-loader").style.display = "flex"; startTimer(); fetchInit(); 
+    } else { document.getElementById("login-err").style.display = "block"; document.getElementById("login-pin").value = ""; }
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('show'); resetTimer(); }
+  function closeModal(id) { document.getElementById(id || 'detail-modal').classList.remove('show'); resetTimer(); }
+
+  function quickFilter(type) {
+    ["q-id","q-date-start","q-date-end","q-status","q-dest","q-dr","q-ns"].forEach(id => document.getElementById(id).value = "");
+    if(type === '未完了') document.getElementById("q-status").value = "未完了";
+    else if(type === '本日') { const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; document.getElementById("q-date-start").value = today; document.getElementById("q-date-end").value = today; }
+    fetchData();
+  }
+
+  async function fetchData() {
+    document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">検索中...🔍</p>';
+    const qId = document.getElementById("q-id").value.trim(); const dStart = document.getElementById("q-date-start").value; const dEnd = document.getElementById("q-date-end").value; const stVal = document.getElementById("q-status").value; const destVal = document.getElementById("q-dest").value; const drVal = document.getElementById("q-dr").value; const nsVal = document.getElementById("q-ns").value;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_all", password:activePin}) });
+      const textRes = await res.text(); let json; try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success",data:[]}; else throw e; }
+      if(json.status==="success") {
+        allData = json.data;
+        filteredData = allData.filter(r => {
+          let m = true;
+          if(qId && !String(r["要請番号"]||"").includes(qId)) m = false;
+          if(destVal && !String(r["出場先"]||"").includes(destVal)) m = false;
+          if(drVal && !String(r["フライトドクター"]||"").includes(drVal)) m = false;
+          if(nsVal && !String(r["フライトナース"]||"").includes(nsVal)) m = false;
+          if(stVal) {
+            const rowSt = String(r["ステータス"]||"");
+            if(stVal === "未完了" && !rowSt.includes("未完了")) m = false;
+            else if(stVal === "すべての完了" && (!rowSt.includes("完了") || rowSt.includes("未完了"))) m = false;
+            else if(stVal === "完了 (本人)" && !rowSt.includes("本人")) m = false;
+            else if(stVal === "完了 (代行)" && !rowSt.includes("代行")) m = false;
+          }
+          if(dStart || dEnd) { let dStr = r["日付"] ? String(r["日付"]).replace(/\//g, "-") : ""; if (dStart && dStr < dStart) m = false; if (dEnd && dStr > dEnd) m = false; }
+          return m;
+        });
+        document.getElementById("result-count").innerText = `検索結果: ${filteredData.length} 件`;
+        if(filteredData.length===0) { document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">データが見つかりません。</p>'; return; }
+        document.getElementById("results").innerHTML = filteredData.map(r => {
+          const isDone = (r["ステータス"]||"").includes("完了") && !(r["ステータス"]||"").includes("未完了");
+          return `<div class="res-item" onclick='openDetail(${JSON.stringify(r).replace(/'/g, "&apos;")})'><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><b style="font-size:15px;">No.${r["要請番号"]} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${r["日付"]||"日付不明"})</span></b><span class="badge" style="background:${isDone?'#d1fae5':'#ffebeb'}; color:${isDone?'#065f46':'#d32f2f'}">${r["ステータス"]||"未完了"}</span></div><div style="font-size:12px; color:var(--sub);"><b>出場先:</b> ${r["出場先"]||"-"} ｜ <b>Dr:</b> ${r["フライトドクター"]||"-"} / <b>Ns:</b> ${r["フライトナース"]||"-"}</div><div style="font-size:12px; color:var(--sub); margin-top:4px;"><b>接触:</b> ${r["接触"]||"--:--"} ｜ <b>病着:</b> ${r["病着"]||"--:--"} ｜ <b>終了:</b> ${r["終了"]||"--:--"}</div></div>`;
+        }).join("");
+      }
+    } catch(e) { document.getElementById("results").innerHTML = `<p style="text-align:center;">通信エラー</p>`; }
+  }
+
+  function openDetail(row) {
+    document.getElementById("edit-old-id").value = row["要請番号"]; document.getElementById("edit-id").value = row["要請番号"];
+    document.getElementById("edit-date").value = (row["日付"] || "").replace(/\//g, "-");
+    document.getElementById("edit-dest").value = row["出場先"] || ""; document.getElementById("edit-scheme").value = row["スキーム選択"] || "";
+    document.getElementById("edit-dr").value = row["フライトドクター"] || ""; document.getElementById("edit-ns").value = row["フライトナース"] || "";
+    const fmtTime = (t) => t ? String(t).substring(0,5) : "";
+    document.getElementById("edit-contact").value = fmtTime(row["接触"]); document.getElementById("edit-arrival").value = fmtTime(row["病着"]); document.getElementById("edit-end").value = fmtTime(row["終了"]);
+    document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
+    
+    let supply = []; ["20G","18G","22G","24G","ベニューラ","骨髄針","1%カルボカイン10ml使用","28Frトロッカー","20Frトロッカー"].forEach(k => { let v = String(row[k]||""); if(v.includes("◯")) { let num = v.match(/\d+本/); supply.push(`・${k}: <b>${num?num[0]:"1本"}</b>`); } });
+    if(String(row["除細動パッド"]||"").includes("◯")) supply.push("・除細動パッド: <b>使用</b>"); if(String(row["心嚢穿刺・心嚢ドレナージ"]||"").includes("キット")) supply.push("・心嚢ドレナージキット: <b>使用</b>");
+    document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "<span style='color:var(--sub);'>消費資機材なし</span>";
+    
+    const isDone = (row["ステータス"]||"").includes("完了") && !(row["ステータス"]||"").includes("未完了");
+    document.getElementById("btn-complete").style.display = isDone ? "none" : "block";
+    openModal("detail-modal");
+  }
+
+  async function markComplete() {
+    const editor = document.getElementById("edit-person").value.trim(); if(!editor) return alert("「担当者名(カナ)」を入力してください。");
+    const id = document.getElementById("edit-old-id").value; if(!confirm(`事案 [ ${id} ] を完了にしますか？`)) return;
+    const btn = document.getElementById("btn-complete"); btn.innerText = "処理中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_status", password:activePin, id:id, who:"代行(管理): "+editor}) });
+      const textRes = await res.text(); let json; try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw e; }
+      if(json.status==="success") { alert("完了しました！"); closeModal('detail-modal'); document.getElementById("edit-person").value = ""; fetchData(); } else alert("エラー: " + json.message);
+    } catch(e) { alert("通信エラー"); }
+    btn.innerText = "✅ カルテ完了"; btn.disabled = false;
+  }
+
+  async function saveRecord() {
+    const editor = document.getElementById("edit-person").value.trim(); if(!editor) return alert("「担当者名(カナ)」を入力してください。");
+    const oldId = document.getElementById("edit-old-id").value; const newId = document.getElementById("edit-id").value.trim();
+    if(!confirm(`データを上書きしてよろしいですか？`)) return;
+    const btn = event.target; btn.innerText = "保存中..."; btn.disabled = true;
+    try {
+      const payload = { "要請番号": newId, "日付": document.getElementById("edit-date").value, "出場先": document.getElementById("edit-dest").value, "スキーム選択": document.getElementById("edit-scheme").value, "フライトドクター": document.getElementById("edit-dr").value, "フライトナース": document.getElementById("edit-ns").value, "接触": document.getElementById("edit-contact").value, "病着": document.getElementById("edit-arrival").value, "終了": document.getElementById("edit-end").value };
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_record", password:activePin, old_id:oldId, editor:editor, data:payload}) });
+      const textRes = await res.text(); let json; try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw e; }
+      if(json.status==="success") { alert("上書き保存しました。"); closeModal('detail-modal'); document.getElementById("edit-person").value = ""; fetchData(); } else alert("エラー: " + json.message);
+    } catch(e) { alert("通信エラー"); }
+    btn.innerText = "💾 上書き"; btn.disabled = false;
+  }
+
+  function exportCSV() {
+    if(filteredData.length === 0) return alert("データがありません。");
+    const headers = Object.keys(filteredData[0]); let csvContent = headers.join(",") + "\n";
+    filteredData.forEach(row => { csvContent += headers.map(h => `"${String(row[h] || "").replace(/"/g, '""')}"`).join(",") + "\n"; });
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" }); 
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `AW109_Data_${new Date().getTime()}.csv`; a.click();
+  }
+
+  async function fetchInit() {
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:activePin}) });
+      const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual_admin:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
+      if(jsonRes.status === "success") {
+        if (jsonRes.masters) {
+          const destOpts = '<option value="">全出場先</option>' + jsonRes.masters.dest.map(v=>`<option value="${v}">${v}</option>`).join("");
+          document.getElementById("q-dest").innerHTML = destOpts; document.getElementById("edit-dest").innerHTML = destOpts.replace("全出場先","選択...");
+          document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + jsonRes.masters.dr.map(v=>`<option value="${v}">${v}</option>`).join("");
+          document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + jsonRes.masters.ns.map(v=>`<option value="${v}">${v}</option>`).join("");
+          const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...jsonRes.masters.dr, ...jsonRes.masters.ns])].map(v=>`<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
+          document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
+        }
+        document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
+        document.getElementById("manual-list").innerHTML = jsonRes.manual_admin.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>マニュアルはありません。</p>';
+        document.getElementById("global-loader").style.display = "none";
+      }
+    } catch(e) { document.getElementById("global-loader").style.display = "none"; }
+  }
+
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:activePin, question:q}) });
+      const textRes = await res.text(); let jsonRes; try{jsonRes=JSON.parse(textRes);}catch(err){if(textRes.includes("Redirect OK"))jsonRes={status:"success"};else throw err;}
+      if(jsonRes.status==="success"){ alert("送信しました。"); document.getElementById("qa-input").value=""; closeModal('modal-qa'); } else alert("エラー: "+jsonRes.message);
+    } catch(e) { alert("通信エラー"); }
+    btn.textContent = "送信する ✉️"; btn.disabled = false;
+  }
+</script>
+</body>
+</html>
