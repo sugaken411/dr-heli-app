@@ -19,10 +19,6 @@
     .icon { font-size: 36px; margin-bottom: 12px; }
     .title { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
     .desc { font-size: 13px; color: var(--sub); line-height: 1.5; flex: 1; }
-    .status-badge { display: inline-block; padding: 4px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; margin-bottom: 16px; align-self: flex-start; }
-    .status-active { background: #ffebeb; color: #d32f2f; }
-    .status-admin { background: #e3f2fd; color: #007aff; }
-    .status-wip { background: #e5e5ea; color: #8e8e93; }
   </style>
 </head>
 <body>
@@ -32,28 +28,29 @@
   </div>
   <div class="grid-container">
     <a href="index.html" class="portal-card card-red">
-      <span class="status-badge status-active">一般 (フライトスタッフ)</span>
       <div class="icon">🚁</div>
       <div class="title">現場記録アプリ</div>
       <div class="desc">現場からの事案記録を行います。現場端末は、このリンク先を「ホーム画面に追加」してください。</div>
     </a>
-    <a href="admin.html" class="portal-card card-blue">
-      <span class="status-badge status-admin">管理メンバー・通常管理者</span>
-      <div class="icon">💻</div>
-      <div class="title">検索・管理コンソール</div>
-      <div class="desc">事案の検索、データの修正、カルテ完了処理、マスタデータの追加(通常管理者のみ)を行います。</div>
+    <a href="search.html" class="portal-card card-blue">
+      <div class="icon">🔍</div>
+      <div class="title">事案検索コンソール</div>
+      <div class="desc">事案の検索、データの修正、カルテ完了処理を行います。</div>
+    </a>
+    <a href="admin.html" class="portal-card" style="border-top-color:#d48806;">
+      <div class="icon">⚙️</div>
+      <div class="title">システム管理コンソール</div>
+      <div class="desc">マスタデータの追加、Q&Aへの回答公開など、システムの裏側を管理します。</div>
     </a>
     <a href="#" class="portal-card card-gray">
-      <span class="status-badge status-wip">準備中 (上級管理者領域)</span>
       <div class="icon">📊</div>
       <div class="title">データ・ダッシュボード</div>
-      <div class="desc">出動件数や滞在時間などの統計データを視覚化します。</div>
+      <div class="desc">出動件数や滞在時間などの統計データを視覚化します。（準備中）</div>
     </a>
     <a href="#" class="portal-card card-gray">
-      <span class="status-badge status-wip">準備中</span>
       <div class="icon">📚</div>
       <div class="title">教育・運用ライブラリ</div>
-      <div class="desc">デブリーフィング、点検簿、マニュアル等を統合します。</div>
+      <div class="desc">デブリーフィング、点検簿、マニュアル等を統合します。（準備中）</div>
     </a>
   </div>
 </body>
