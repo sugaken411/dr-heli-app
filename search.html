@@ -21,9 +21,12 @@
     .modal-box { background:#fff; width:100%; max-width:600px; max-height:85vh; overflow-y:auto; border-radius:12px; padding:20px; position:relative; }
     .modal-close { display:block; width:100%; padding:12px; margin-top:16px; background:#e5e5ea; color:var(--ink); border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
     .form-group { margin-bottom:12px; } .form-group label { display:block; font-weight:bold; font-size:12px; margin-bottom:4px; color:var(--sub); } .form-group input, .form-group textarea, .form-group select { width:100%; }
+    
     #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
-    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; display:none; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; flex-direction:column; align-items:center; justify-content:center; display:none; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } 
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
     @media print { body * { visibility: hidden; } .modal-box, .modal-box * { visibility: visible; } .modal-box { position: absolute; left: 0; top: 0; width: 100%; max-height:none; overflow:visible; box-shadow:none; } .no-print { display: none !important; } }
   </style>
 </head>
@@ -33,19 +36,22 @@
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">事案検索コンソール</h2>
       <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
-      <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px;" placeholder="****">
-      <button onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
+      <input type="text" id="login-pin" inputmode="numeric" pattern="[0-9]*" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '')" onkeydown="if(event.key==='Enter')checkLogin()">
+      <button id="btn-login" onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
       <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
     </div>
   </div>
 
-  <div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div></div>
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div id="loader-msg" style="margin-top:16px; font-weight:bold; color:var(--ink);">システム通信中...</div>
+  </div>
 
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
-      <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button>
+      <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
     <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
@@ -96,11 +102,341 @@
         <h3 style="margin:0;">事案詳細・修正</h3>
         <button class="no-print" onclick="window.print()" style="background:#e5e5ea; color:var(--ink); padding:8px 16px;">🖨️ 印刷</button>
       </div>
-      <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; border:1px solid #bbdefb;"><b style="color:#0d47a1;">📦 消費資機材</b><div id="supply-list" style="margin-top:6px; color:#1565c0; line-height:1.5;"></div></div>
+      
+      <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; border:1px solid #bbdefb;">
+        <b style="color:#0d47a1;">📦 消費資機材</b>
+        <div id="supply-list" style="margin-top:6px; color:#1565c0; line-height:1.5;"></div>
+      </div>
+      
       <input type="hidden" id="edit-old-id">
       
-      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>要請番号</label><input type="text" id="edit-id"></div><div class="form-group" style="flex:1;"><label>日付</label><input type="date" id="edit-date"></div></div>
-      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>出場先</label><select id="edit-dest"></select></div><div class="form-group" style="flex:1;"><label>スキーム</label><select id="edit-scheme"><option value="Uターン">Uターン</option><option value="Jターン">Jターン</option><option value="施設間">施設間</option><option value="Iターン乗り込み">Iターン乗り込み</option><option value="Iターン救急隊のみ">Iターン救急隊のみ</option></select></div></div>
-      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>Dr</label><select id="edit-dr"></select></div><div class="form-group" style="flex:1;"><label>Ns</label><select id="edit-ns"></select></div></div>
-      <div style="display:flex; gap:12px;"><div class="form-group" style="flex:1;"><label>接触時間</label><input type="time" id="edit-contact"></div><div class="form-group" style="flex:1;"><label>病着時間</label><input type="time" id="edit-arrival"></div><div class="form-group" style="flex:1;"><label>終了時間</label><input type="time" id="edit-end"></div></div>
-      <div class="form-group" style="margin-top:12px;"><label>更新履歴</label><textarea id="edit-history" rows="4" readonly style="width:100%; background:var(--bg); border:none; padding:8px; border-radius:6px; color
+      <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;"><label>要請番号</label><input type="text" id="edit-id"></div>
+        <div class="form-group" style="flex:1;"><label>日付</label><input type="date" id="edit-date"></div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;"><label>出場先</label><select id="edit-dest"></select></div>
+        <div class="form-group" style="flex:1;"><label>スキーム</label>
+          <select id="edit-scheme">
+            <option value="Uターン">Uターン</option>
+            <option value="Jターン">Jターン</option>
+            <option value="施設間">施設間</option>
+            <option value="Iターン乗り込み">Iターン乗り込み</option>
+            <option value="Iターン救急隊のみ">Iターン救急隊のみ</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;"><label>Dr</label><select id="edit-dr"></select></div>
+        <div class="form-group" style="flex:1;"><label>Ns</label><select id="edit-ns"></select></div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;"><label>接触時間</label><input type="time" id="edit-contact"></div>
+        <div class="form-group" style="flex:1;"><label>病着時間</label><input type="time" id="edit-arrival"></div>
+        <div class="form-group" style="flex:1;"><label>終了時間</label><input type="time" id="edit-end"></div>
+      </div>
+      <div class="form-group" style="margin-top:12px;">
+        <label>更新履歴</label>
+        <textarea id="edit-history" rows="4" readonly style="width:100%; background:var(--bg); border:none; padding:8px; border-radius:6px; color:var(--sub); font-size:12px; outline:none; resize:none;"></textarea>
+      </div>
+      
+      <div class="no-print" style="margin-top:20px; display:flex; gap:12px;">
+        <button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal('detail-modal')">キャンセル</button>
+        <button style="flex:1; background:var(--blue);" onclick="saveEdit()">上書き保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-manual" onclick="if(event.target===this)closeModal('modal-manual')">
+    <div class="modal-box">
+      <h3 style="margin-top:0;">📖 取扱説明書</h3>
+      <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
+      <button class="modal-close" onclick="closeModal('modal-manual')">閉じる</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
+    <div class="modal-box">
+      <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+      <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+      <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
+      <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:bold;">送信</button>
+      <button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
+    </div>
+  </div>
+
+<script>
+  const GAS_API_URL = "[https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec](https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec)";
+  const LOCK_MINUTES = 10;
+  let allData = [];
+  let currentPass = "";
+  let lockTimer = null;
+  let remainSeconds = LOCK_MINUTES * 60;
+
+  function showLoader(msg = "システム通信中...") {
+    document.getElementById("loader-msg").innerText = msg;
+    document.getElementById("global-loader").style.display = "flex";
+  }
+  function hideLoader() {
+    document.getElementById("global-loader").style.display = "none";
+  }
+
+  function resetTimer() {
+    remainSeconds = LOCK_MINUTES * 60;
+    if (lockTimer) clearInterval(lockTimer);
+    lockTimer = setInterval(() => {
+      remainSeconds--;
+      const m = Math.floor(remainSeconds / 60);
+      const s = remainSeconds % 60;
+      document.getElementById("lock-timer").innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      if (remainSeconds <= 0) location.reload();
+    }, 1000);
+  }
+
+  window.addEventListener('mousemove', () => { if(currentPass) resetTimer(); });
+  window.addEventListener('keydown', () => { if(currentPass) resetTimer(); });
+  window.addEventListener('touchstart', () => { if(currentPass) resetTimer(); });
+
+  async function checkLogin() {
+    const pin = document.getElementById("login-pin").value;
+    const btn = document.getElementById("btn-login");
+    document.getElementById("login-err").style.display = "none";
+    if(!pin) return;
+    
+    showLoader("マスタデータ同期中...");
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "fetch_init", password: pin })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        currentPass = pin;
+        document.getElementById("login-overlay").style.display = "none";
+        resetTimer();
+        fillSelects(data.masters);
+        document.getElementById("manual-list").innerHTML = data.manual_admin.map(m => `<p style="margin-bottom:8px;"><b>■ ${m.title}</b><br><span style="font-size:13px;">${m.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "マニュアルなし";
+        document.getElementById("qa-list").innerHTML = data.qa.filter(q=>q.status==="◯").map(q => `<p style="margin-bottom:8px;"><b>Q. ${q.q}</b><br><span style="color:var(--ink);">A. ${q.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "公開Q&Aなし";
+      } else {
+        document.getElementById("login-err").style.display = "block";
+      }
+    } catch(e) {
+      alert("通信エラーが発生しました");
+    }
+    hideLoader();
+  }
+
+  function fillSelects(masters) {
+    const mkOpt = arr => `<option value="">全て</option>` + arr.map(v => `<option value="${v}">${v}</option>`).join("");
+    document.getElementById("q-dest").innerHTML = mkOpt(masters.dest);
+    document.getElementById("q-dr").innerHTML = mkOpt(masters.dr);
+    document.getElementById("q-ns").innerHTML = mkOpt(masters.ns);
+    const mkOptEdit = arr => arr.map(v => `<option value="${v}">${v}</option>`).join("");
+    document.getElementById("edit-dest").innerHTML = mkOptEdit(masters.dest);
+    document.getElementById("edit-dr").innerHTML = mkOptEdit(masters.dr);
+    document.getElementById("edit-ns").innerHTML = mkOptEdit(masters.ns);
+  }
+
+  function quickFilter(type) {
+    document.getElementById("q-id").value = "";
+    document.getElementById("q-status").value = "";
+    document.getElementById("q-dest").value = "";
+    document.getElementById("q-dr").value = "";
+    document.getElementById("q-ns").value = "";
+    document.getElementById("q-date-start").value = "";
+    document.getElementById("q-date-end").value = "";
+
+    if (type === '未完了') document.getElementById("q-status").value = "未完了";
+    if (type === '本日') {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("q-date-start").value = today;
+      document.getElementById("q-date-end").value = today;
+    }
+    fetchData();
+  }
+
+  async function fetchData() {
+    showLoader("事案データを検索中...");
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "fetch_all", password: currentPass })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        allData = data.data;
+        renderResults();
+      } else {
+        alert(data.message);
+      }
+    } catch(e) {
+      alert("取得失敗");
+    }
+    hideLoader();
+  }
+
+  function renderResults() {
+    const qId = document.getElementById("q-id").value.trim();
+    const qStatus = document.getElementById("q-status").value;
+    const qDest = document.getElementById("q-dest").value;
+    const qDr = document.getElementById("q-dr").value;
+    const qNs = document.getElementById("q-ns").value;
+    const qStart = document.getElementById("q-date-start").value;
+    const qEnd = document.getElementById("q-date-end").value;
+
+    let filtered = allData.filter(d => {
+      if (qId && d["要請番号"] !== qId) return false;
+      if (qDest && d["出場先"] !== qDest) return false;
+      if (qDr && d["フライトドクター"] !== qDr) return false;
+      if (qNs && d["フライトナース"] !== qNs) return false;
+      if (qStart && d["日付"] < qStart) return false;
+      if (qEnd && d["日付"] > qEnd) return false;
+      
+      const st = d["ステータス"] || "";
+      if (qStatus === "未完了" && st.includes("◯")) return false;
+      if (qStatus === "すべての完了" && !st.includes("◯")) return false;
+      if (qStatus === "完了 (本人)" && (!st.includes("◯") || st.includes("代行"))) return false;
+      if (qStatus === "完了 (代行)" && (!st.includes("◯") || !st.includes("代行"))) return false;
+      return true;
+    });
+
+    filtered.sort((a,b) => new Date(b["日付"]||"1970/01/01") - new Date(a["日付"]||"1970/01/01"));
+    document.getElementById("result-count").innerText = `検索結果: ${filtered.length} 件`;
+
+    const box = document.getElementById("results");
+    if (filtered.length === 0) {
+      box.innerHTML = `<p style="text-align:center; color:var(--sub); padding:40px; background:#fff; border-radius:12px;">該当データなし</p>`;
+      return;
+    }
+
+    box.innerHTML = filtered.map((d, i) => {
+      const st = d["ステータス"] || "⚠️ 未完了";
+      const isOk = st.includes("◯");
+      const badgeStyle = isOk ? "background:#d1fae5; color:#065f46;" : "background:#ffebee; color:#c62828;";
+      
+      return `
+        <div class="res-item" onclick="openDetail(${i})">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-weight:900; font-size:16px;">No.${d["要請番号"]}</span>
+            <span class="badge" style="${badgeStyle}">${st}</span>
+          </div>
+          <div style="font-size:13px; color:var(--sub); display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+            <div>📅 ${d["日付"]}</div><div>🏥 ${d["出場先"]}</div>
+            <div>👨‍⚕️ ${d["フライトドクター"]}</div><div>👩‍⚕️ ${d["フライトナース"]}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  let editIndex = -1;
+  function openDetail(idx) {
+    editIndex = idx;
+    const qId = document.getElementById("q-id").value.trim();
+    const qStatus = document.getElementById("q-status").value;
+    const qDest = document.getElementById("q-dest").value;
+    const qDr = document.getElementById("q-dr").value;
+    const qNs = document.getElementById("q-ns").value;
+    const qStart = document.getElementById("q-date-start").value;
+    const qEnd = document.getElementById("q-date-end").value;
+    
+    let filtered = allData.filter(d => {
+      if (qId && d["要請番号"] !== qId) return false;
+      if (qDest && d["出場先"] !== qDest) return false;
+      if (qDr && d["フライトドクター"] !== qDr) return false;
+      if (qNs && d["フライトナース"] !== qNs) return false;
+      if (qStart && d["日付"] < qStart) return false;
+      if (qEnd && d["日付"] > qEnd) return false;
+      const st = d["ステータス"] || "";
+      if (qStatus === "未完了" && st.includes("◯")) return false;
+      if (qStatus === "すべての完了" && !st.includes("◯")) return false;
+      if (qStatus === "完了 (本人)" && (!st.includes("◯") || st.includes("代行"))) return false;
+      if (qStatus === "完了 (代行)" && (!st.includes("◯") || !st.includes("代行"))) return false;
+      return true;
+    });
+    filtered.sort((a,b) => new Date(b["日付"]||"1970/01/01") - new Date(a["日付"]||"1970/01/01"));
+    const d = filtered[idx];
+
+    document.getElementById("edit-old-id").value = d["要請番号"];
+    document.getElementById("edit-id").value = d["要請番号"];
+    document.getElementById("edit-date").value = d["日付"].replace(/\//g, "-");
+    document.getElementById("edit-dest").value = d["出場先"];
+    document.getElementById("edit-scheme").value = d["スキーム選択"];
+    document.getElementById("edit-dr").value = d["フライトドクター"];
+    document.getElementById("edit-ns").value = d["フライトナース"];
+    document.getElementById("edit-contact").value = d["接触"];
+    document.getElementById("edit-arrival").value = d["病着"];
+    document.getElementById("edit-end").value = d["終了"];
+    document.getElementById("edit-history").value = d["更新履歴"] || "";
+
+    const skipKeys = ["要請番号","日付","出場先","フライトドクター","フライトナース","スキーム選択","接触","病着","終了","往診料","搬送料","搬送料（長時間）","モニター算定時間","経皮的酸素飽和度","備考","ステータス","更新履歴"];
+    let supplies = [];
+    Object.keys(d).forEach(k => { if(!skipKeys.includes(k) && d[k] && String(d[k]).trim() !== "") supplies.push(`・${k}: ${d[k]}`); });
+    document.getElementById("supply-list").innerHTML = supplies.join("<br>") || "消費資機材なし";
+
+    document.getElementById("detail-modal").classList.add("show");
+  }
+
+  function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+
+  async function saveEdit() {
+    showLoader("修正データを保存中...");
+    const payload = {
+      "要請番号": document.getElementById("edit-id").value,
+      "日付": document.getElementById("edit-date").value.replace(/-/g, "/"),
+      "出場先": document.getElementById("edit-dest").value,
+      "スキーム選択": document.getElementById("edit-scheme").value,
+      "フライトドクター": document.getElementById("edit-dr").value,
+      "フライトナース": document.getElementById("edit-ns").value,
+      "接触": document.getElementById("edit-contact").value,
+      "病着": document.getElementById("edit-arrival").value,
+      "終了": document.getElementById("edit-end").value
+    };
+
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "update_record", password: currentPass, old_id: document.getElementById("edit-old-id").value, editor: "検索コンソール", data: payload })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        alert("修正を保存しました");
+        closeModal('detail-modal');
+        fetchData();
+      } else {
+        alert(data.message);
+      }
+    } catch(e) { alert("保存失敗"); }
+    hideLoader();
+  }
+
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim();
+    if (!q) return alert("入力してください。");
+    const btn = event.target;
+    btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:currentPass, question:q, source:"検索コンソール"}) });
+      const json = await res.json();
+      if (json.status==="success") { alert("送信しました。"); document.getElementById("qa-input").value=""; closeModal('modal-qa'); }
+      else alert("エラー: " + json.message);
+    } catch(e) { alert("通信エラー"); }
+    btn.textContent = "送信"; btn.disabled = false;
+  }
+
+  function exportCSV() {
+    if (allData.length === 0) return alert("データがありません");
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const headers = Object.keys(allData[0]);
+    let csv = headers.join(",") + "\n";
+    allData.forEach(row => { csv += headers.map(h => `"${String(row[h]).replace(/"/g, '""')}"`).join(",") + "\n"; });
+    const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `dr_heli_data_${new Date().getTime()}.csv`; link.click();
+  }
+</script>
+</body>
+</html>
