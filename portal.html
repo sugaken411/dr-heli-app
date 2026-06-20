@@ -6,26 +6,60 @@
   <title>AW109 EMS Portal</title>
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand-red: #d32f2f; --brand-blue: #007aff; }
-    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-    .header-title { text-align: center; margin-bottom: 30px; margin-top: 20px; }
-    .header-title h1 { margin: 0; font-size: 26px; color: var(--ink); letter-spacing: 1.5px; font-weight: 800; }
-    .header-title p { margin: 4px 0 0 0; font-size: 13px; color: var(--brand-blue); text-transform: uppercase; font-weight: 600; }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
+    .header-title { text-align: center; margin-bottom: 24px; margin-top: 10px; }
+    .header-title h1 { margin: 0; font-size: 26px; color: var(--ink); letter-spacing: 1.5px; font-weight: 900; }
+    .header-title p { margin: 4px 0 0 0; font-size: 12px; color: var(--brand-blue); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+    
+    /* お知らせエリア */
+    .news-container { width: 100%; max-width: 800px; background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(60,60,67,0.1); }
+    .news-header { font-size: 14px; font-weight: 800; color: var(--ink); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .news-list { display: flex; flex-direction: column; gap: 10px; max-height: 140px; overflow-y: auto; padding-right: 4px; }
+    .news-item { font-size: 13px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
+    .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .news-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .news-date { font-family: monospace; color: var(--sub); font-size: 11px; }
+    .news-badge { background: #e3f2fd; color: #1565c0; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+    .news-title { font-weight: 700; color: var(--ink); }
+    .news-text { color: var(--sub); font-size: 12px; margin-top: 2px; }
+
+    /* アプリグリッド */
     .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; max-width: 800px; }
-    .portal-card { background: var(--card); border-radius: 16px; padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; border-top: 6px solid #ccc; }
+    .portal-card { background: var(--card); border-radius: 16px; padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; border-top: 6px solid #ccc; position: relative; overflow: hidden; }
     .portal-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
     .card-red { border-top-color: var(--brand-red); }
     .card-blue { border-top-color: var(--brand-blue); }
-    .card-gray { border-top-color: var(--sub); opacity: 0.8; pointer-events: none; }
+    .card-green { border-top-color: #34c759; }
+    .card-orange { border-top-color: #f59e0b; }
     .icon { font-size: 36px; margin-bottom: 12px; }
-    .title { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
+    .title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
     .desc { font-size: 13px; color: var(--sub); line-height: 1.5; flex: 1; }
+    
+    /* ローダー */
+    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .spinner { width: 30px; height: 30px; border: 3px solid rgba(0,122,255,0.2); border-top: 3px solid var(--brand-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div style="margin-top:12px; font-weight:700; font-size:12px; color:var(--ink);">システム情報を取得中...</div>
+  </div>
+
   <div class="header-title">
     <h1>AW109 EMS PORTAL</h1>
-    <p>Pre-hospital Information Hub</p>
+    <p>Pre-hospital Information Hub v3.0</p>
   </div>
+
+  <div class="news-container">
+    <div class="news-header">📢 システムからのお知らせ・アップデート</div>
+    <div class="news-list" id="news-list-box">
+      <div style="text-align:center; color:var(--sub); font-size:12px; padding:10px;">読み込み中...</div>
+    </div>
+  </div>
+
   <div class="grid-container">
     <a href="index.html" class="portal-card card-red">
       <div class="icon">🚁</div>
@@ -37,16 +71,49 @@
       <div class="title">事案検索コンソール</div>
       <div class="desc">事案の検索、データの修正、カルテ完了処理を行います。</div>
     </a>
-    <a href="admin.html" class="portal-card" style="border-top-color:#d48806;">
-      <div class="icon">⚙️</div>
-      <div class="title">システム管理コンソール</div>
-      <div class="desc">各種マスタデータ、Q&Aの回答、システムのメンテナンスを行います。</div>
-    </a>
-    <a href="report.html" class="portal-card" style="border-top-color:#34c759;">
+    <a href="report.html" class="portal-card card-green">
       <div class="icon">📅</div>
       <div class="title">業務日報コンソール</div>
       <div class="desc">日々の活動タイムラインの作成と管理、事案データベースとの自動連動を行います。</div>
     </a>
+    <a href="admin.html" class="portal-card card-orange">
+      <div class="icon">⚙️</div>
+      <div class="title">システム管理コンソール</div>
+      <div class="desc">各種マスタデータ、お知らせの配信、Q&Aの回答を行います。</div>
+    </a>
   </div>
+
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+    
+    window.onload = async () => {
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "fetch_init", password: "" }) // パスワードなしで公開情報のみ取得する想定
+        });
+        const data = await res.json();
+        if (data.status === "success" && data.news && data.news.length > 0) {
+          document.getElementById("news-list-box").innerHTML = data.news.map(n => `
+            <div class="news-item">
+              <div class="news-meta">
+                <span class="news-date">${n.date}</span>
+                <span class="news-badge">${n.category}</span>
+              </div>
+              <div class="news-title">${n.title}</div>
+              <div class="news-text">${n.content}</div>
+            </div>
+          `).join("");
+        } else {
+          document.getElementById("news-list-box").innerHTML = `<div style="text-align:center; color:var(--sub); font-size:12px; padding:10px;">現在お知らせはありません。</div>`;
+        }
+      } catch(e) {
+        document.getElementById("news-list-box").innerHTML = `<div style="text-align:center; color:var(--sub); font-size:12px; padding:10px;">オフラインモード（お知らせは取得できませんでした）</div>`;
+      } finally {
+        document.getElementById("global-loader").style.display = "none";
+      }
+    };
+  </script>
 </body>
 </html>
