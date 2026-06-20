@@ -5,17 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ドクターヘリ業務日報コンソール</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & ReactDOM (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-    
-    <!-- Babel (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin="anonymous"></script>
-
-    <!-- SunCalc -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 
     <style>
@@ -27,11 +20,16 @@
         
         .hidden { display: none !important; }
         
-        /* ログイン・ローダー用 */
         #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
         #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; flex-direction:column; align-items:center; justify-content:center; display:none; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* サジェストボタン用 */
+        .sg-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; scrollbar-width: none; }
+        .sg-wrap::-webkit-scrollbar { display: none; }
+        .sg-btn { flex: none; background: #e3f2fd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; color: #1565c0; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .sg-btn:active { background: #bbdefb; }
 
         @media print {
             @page { size: landscape; margin: 5mm; }
@@ -91,7 +89,8 @@
             Moon: (props) => <Icon {...props} path={<><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></>} />,
             Clock: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
             Save: (props) => <Icon {...props} path={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />,
-            Lock: (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />
+            Lock: (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />,
+            Refresh: (props) => <Icon {...props} path={<><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></>} />
         };
 
         const DailyTimelineApp = () => {
@@ -112,7 +111,6 @@
 
             const REASON_OPTIONS = ["風向き", "天候不良", "強風", "機体トラブル"];
 
-            // State
             const [isLoggedIn, setIsLoggedIn] = useState(false);
             const [password, setPassword] = useState('');
             const [loginError, setLoginError] = useState('');
@@ -141,43 +139,25 @@
             const endRef = useRef(null);
             const descRef = useRef(null);
 
-            // ログイン処理
-            const handleLogin = async () => {
-                if(!password) return;
-                setLoginError('');
-                setLoadingMsg('システム連携中...');
-                setIsLoading(true);
-                try {
-                    const res = await fetch(GAS_API_URL, {
-                        method: "POST",
-                        headers: {"Content-Type": "text/plain;charset=utf-8"},
-                        body: JSON.stringify({action: "fetch_init", password: password})
-                    });
-                    const json = await res.json();
-                    if (json.status === "success") {
-                        setIsLoggedIn(true);
-                        setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
-                        setManuals(json.manual_admin || []); // コンソール用マニュアルを表示
-                        setQas(json.qa.filter(q => q.status === "◯") || []);
-                        fetchDailyData(reportInfo.date, password); // データ取得開始
-                    } else {
-                        setLoginError(json.message || 'パスワードが違います');
+            useEffect(() => {
+                const initFetch = async () => {
+                    try {
+                        const res = await fetch(GAS_API_URL, {
+                            method: "POST",
+                            headers: {"Content-Type": "text/plain;charset=utf-8"},
+                            body: JSON.stringify({action: "fetch_init", password: PIN_CODE, app_name: "日報"})
+                        });
+                        const json = await res.json();
+                        if (json.status === "success") {
+                            setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
+                        }
+                    } catch (e) {
+                        console.warn("マスタ取得エラー", e);
                     }
-                } catch (e) {
-                    setLoginError('通信エラーが発生しました');
-                } finally {
-                    setIsLoading(false);
-                }
-            };
+                };
+                initFetch();
+            }, []);
 
-            // パスワード入力時の全角半角変換
-            const handlePasswordChange = (e) => {
-                let val = e.target.value;
-                val = val.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '');
-                setPassword(val);
-            };
-
-            // 日付変更時
             useEffect(() => {
                 if (!reportInfo.date) return;
                 try {
@@ -193,19 +173,51 @@
                     }
                 } catch(e) {}
                 
-                if (isLoggedIn) {
-                    fetchDailyData(reportInfo.date, password);
-                }
+                if (isLoggedIn) fetchDailyData(reportInfo.date, password, false);
             }, [reportInfo.date]);
 
-            const fetchDailyData = async (targetDate, pass) => {
-                setLoadingMsg('事案データを連携中...');
+            const handleLogin = async () => {
+                if(!password) return;
+                setLoginError('');
+                setLoadingMsg('システム連携中...');
                 setIsLoading(true);
                 try {
                     const res = await fetch(GAS_API_URL, {
                         method: "POST",
                         headers: {"Content-Type": "text/plain;charset=utf-8"},
-                        body: JSON.stringify({action: "fetch_daily_report", password: pass, date: targetDate})
+                        body: JSON.stringify({action: "fetch_init", password: password, app_name: "日報"})
+                    });
+                    const json = await res.json();
+                    if (json.status === "success") {
+                        setIsLoggedIn(true);
+                        setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
+                        setManuals(json.manuals || []); 
+                        setQas(json.qa || []);
+                        fetchDailyData(reportInfo.date, password, false);
+                    } else {
+                        setLoginError(json.message || 'パスワードが違います');
+                    }
+                } catch (e) {
+                    setLoginError('通信エラーが発生しました');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const handlePasswordChange = (e) => {
+                let val = e.target.value;
+                val = val.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '');
+                setPassword(val);
+            };
+
+            const fetchDailyData = async (targetDate, pass, forceSync = false) => {
+                setLoadingMsg(forceSync ? '事案データを強制再同期中...' : '事案データを連携中...');
+                setIsLoading(true);
+                try {
+                    const res = await fetch(GAS_API_URL, {
+                        method: "POST",
+                        headers: {"Content-Type": "text/plain;charset=utf-8"},
+                        body: JSON.stringify({action: "fetch_daily_report", password: pass, date: targetDate, force_sync: forceSync})
                     });
                     const json = await res.json();
                     if (json.status === "success" && json.data) {
@@ -217,6 +229,7 @@
                             hamamachiReason: d.hamamachiReason || ''
                         }));
                         setEvents(d.events || []);
+                        if (forceSync) alert("事案の最新時間を同期しました。");
                     }
                 } catch (e) {
                     alert("データの取得に失敗しました。");
@@ -277,6 +290,15 @@
                     const combined = [...prev.selectedReasons];
                     if(val) combined.push(val);
                     return { ...prev, otherReason: val, hamamachiReason: combined.join('、') };
+                });
+            };
+            
+            const addSuggestReason = (text) => {
+                setReportInfo(prev => {
+                    const currentOther = prev.otherReason ? prev.otherReason + "\n" + text : text;
+                    const combined = [...prev.selectedReasons];
+                    if(currentOther) combined.push(currentOther);
+                    return { ...prev, otherReason: currentOther, hamamachiReason: combined.join('、') };
                 });
             };
 
@@ -404,7 +426,7 @@
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 no-print flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <Icons.ClipboardList className="w-5 h-5 text-blue-600 print:text-black" />
-                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.2</span></h1>
+                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.3</span></h1>
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
                             <a href="portal.html" className="h-10 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors text-xs font-bold"><Icons.Lock className="w-3.5 h-3.5"/> ポータルへ戻る</a>
@@ -459,7 +481,10 @@
                             <div className="print:flex print:gap-4 items-center print-header-compact">
                                 <div className="print-header-item">
                                     <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">日付</label>
-                                    <div className="print:hidden"><input type="date" name="date" value={reportInfo.date} onChange={handleReportInfoChange} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold" /></div>
+                                    <div className="flex gap-2 print:hidden items-center">
+                                        <input type="date" name="date" value={reportInfo.date} onChange={handleReportInfoChange} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold" />
+                                        <button onClick={() => fetchDailyData(reportInfo.date, password, true)} className="bg-slate-100 border border-slate-300 text-slate-600 px-2 py-2 rounded-md hover:bg-slate-200 text-xs font-bold whitespace-nowrap" title="事案DBの最新時刻を上書きで引っ張ります"><Icons.Refresh className="w-4 h-4 inline mr-1"/>事案を再同期</button>
+                                    </div>
                                     <div className="hidden print:block"><span className="font-bold mr-1">日付:</span> {reportInfo.date}</div>
                                 </div>
                                 <div className="print-header-item hidden print:block border-l border-slate-300 pl-3 ml-3">
@@ -511,7 +536,12 @@
                                     </label>
                                 ))}
                             </div>
-                            <input type="text" name="otherReason" value={reportInfo.otherReason} onChange={handleOtherReason} placeholder="その他・特記事項 (フリーコメント)" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border print:hidden outline-none" />
+                            <div className="sg-wrap no-print">
+                                <button type="button" className="sg-btn" onClick={() => addSuggestReason('機体清掃実施。')}>機体清掃</button>
+                                <button type="button" className="sg-btn" onClick={() => addSuggestReason('Dr・Ns引継ぎ完了。')}>引継ぎ完了</button>
+                                <button type="button" className="sg-btn" onClick={() => addSuggestReason('天候不良のため終日待機。')}>天候不良待機</button>
+                            </div>
+                            <textarea name="otherReason" rows="3" value={reportInfo.otherReason} onChange={handleOtherReason} placeholder="その他・特記事項 (フリーコメント)" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border print:hidden outline-none resize-none" />
                             <div className="hidden print:block print-reason-box">
                                 <span className="font-bold mr-2">待機理由/備考:</span>
                                 {reportInfo.hamamachiReason || '特になし'}
