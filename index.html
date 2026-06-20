@@ -24,7 +24,7 @@
     .section-label { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); } .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 16px; font-weight: 600; flex: 1; }
-    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
+    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="tel"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
     textarea { width: 100%; border: none; font-size: 15px; background: transparent; outline: none; resize: none; color: var(--ink); line-height: 1.5; }
     .scheme-picker { display: grid; gap: 8px; background: var(--bg); padding: 6px; border-radius: 12px; } .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .scheme-row-bot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 5%; }
     .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; transition: 0.2s; } .scheme-btn.active { background: var(--card); color: var(--brand); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
@@ -44,8 +44,7 @@
     .dial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: flex-end; justify-content: center; } .dial-overlay.show { display: flex; } .dial-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); } .dial-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 10px auto 0; } .dial-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px 10px; font-weight: 700; } .dial-cancel { color: var(--sub); border: none; background: none; font-size: 16px; } .dial-done { color: var(--blue); border: none; background: none; font-size: 16px; }
     .dial-wheels { display: flex; justify-content: center; align-items: center; gap: 4px; height: 200px; padding: 0 20px; position: relative; } .dial-wheels::before { content: ''; position: absolute; top: 50%; transform: translateY(-50%); left: 20px; right: 20px; height: 40px; background: rgba(118,118,128,0.08); border-radius: 8px; pointer-events: none; } .dial-wheel { flex: 1; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; } .dial-wheel::-webkit-scrollbar { display: none; } .dial-spacer { height: 80px; } .dial-opt { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: center; transition: 0.1s; }
     
-    /* ローダーの視覚的改善 */
-    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.95); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.95); z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .pv-section { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; } .pv-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: 4px; } .pv-ul { list-style: none; padding: 0; margin: 0; } .pv-li { margin-bottom: 4px; position: relative; padding-left: 14px; } .pv-li::before { content: '・'; position: absolute; left: 0; color: var(--sub); font-weight: bold; } .pv-sub-item { position: relative; padding-left: 12px; font-size: 13px; color: var(--sub); } .pv-sub-item::before { content: '└'; position: absolute; left: 0; color: #c4c4c6; }
@@ -60,7 +59,7 @@
 
 <header>
   <div class="hdr-group"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.3</span></div>
+  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.4</span></div>
   <div class="hdr-group"><button class="hdr-btn" onclick="openModal('manual')">📖 取扱説明書</button><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
 </header>
 
@@ -69,9 +68,9 @@
     <div class="card">
       <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span class="field-label" style="flex:none; width:80px;">要請番号</span>
-        <input id="v-id" type="tel" inputmode="numeric" placeholder="未入力で自動仮ID" style="flex:1; min-width:100px; text-align:left; background:var(--bg); padding:8px 12px; border-radius:8px;" oninput="saveState()">
+        <input id="v-id" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="未入力で自動仮ID" style="flex:1; min-width:100px; text-align:left; background:var(--bg); padding:8px 12px; border-radius:8px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); saveState()">
         <label style="font-size:14px; font-weight:500; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;">枝番</label>
-        <input type="tel" id="v-edaban" inputmode="numeric" placeholder="枝" style="display:none; width:60px; text-align:center; background:var(--bg); padding:8px; border-radius:8px;" oninput="saveState()">
+        <input type="tel" id="v-edaban" inputmode="numeric" pattern="[0-9]*" placeholder="枝" style="display:none; width:60px; text-align:center; background:var(--bg); padding:8px; border-radius:8px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); saveState()">
       </div>
       <div class="inline-field" onclick="document.getElementById('v-date').showPicker()"><span class="field-label">日付</span><input type="date" id="v-date" onchange="saveState()"></div>
       <div class="inline-field"><span class="field-label">出場先</span><select id="v-dest" onchange="saveState()"><option value="">読込中...</option></select></div>
@@ -289,34 +288,57 @@
     payload["備考"] = st.vals["備考"] || "";
 
     const btn = document.getElementById("btnSubmit"); btn.textContent = "送信中... 🚁"; btn.disabled = true;
+    showLoader("事案を送信中...");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, cc_emails: ccEmails, data:payload}), redirect: "follow" });
       const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes = { status: "success" }; else throw err; }
       if(jsonRes.status === "success") { alert("送信が完了しました！"); localStorage.removeItem("aw109_draft"); location.reload(); } 
       else { alert("エラー: " + jsonRes.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
-    } catch(e) { alert("通信エラー\n※不一致時はフライトナースへ。\n" + e.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
+    } catch(e) { alert("通信エラー\n※エラー時はフライトナースへ。\n" + e.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
+    finally { hideLoader(); }
   }
 
   async function fetchInit() {
-    showLoader("マスタデータ同期中...");
+    const cached = localStorage.getItem("aw109_masters");
+    if (cached) {
+      try {
+        const cData = JSON.parse(cached);
+        fillSelects("v-dest", cData.dest, document.getElementById("v-dest").value);
+        fillSelects("v-dr", cData.dr, document.getElementById("v-dr").value);
+        fillSelects("v-ns", cData.ns, document.getElementById("v-ns").value);
+        renderOptions(cData);
+      } catch(e) {}
+    } else {
+        showLoader("マスタデータを初期同期中...");
+    }
+
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual_client:[], masters:{dest:[], dr:[], ns:[], mailOptions:[]}}; else throw err; }
       if(jsonRes.status === "success") {
-        const curDest = document.getElementById("v-dest").value; fillSel("v-dest", jsonRes.masters.dest, curDest);
-        const curDr = document.getElementById("v-dr").value; fillSel("v-dr", jsonRes.masters.dr, curDr);
-        const curNs = document.getElementById("v-ns").value; fillSel("v-ns", jsonRes.masters.ns, curNs);
-        if (jsonRes.masters.mailOptions.length > 0) document.getElementById("mail-options-box").innerHTML = jsonRes.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:20px;height:20px;"><span>${opt.name}</span></label>`).join("");
-        document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
-        document.getElementById("manual-list").innerHTML = jsonRes.manual_client.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>取扱説明書はありません。</p>';
-      } else {
-        alert("マスタデータの取得に失敗しました: " + jsonRes.message);
+        localStorage.setItem("aw109_masters", JSON.stringify(jsonRes.masters));
+        fillSelects("v-dest", jsonRes.masters.dest, document.getElementById("v-dest").value);
+        fillSelects("v-dr", jsonRes.masters.dr, document.getElementById("v-dr").value);
+        fillSelects("v-ns", jsonRes.masters.ns, document.getElementById("v-ns").value);
+        renderOptions(jsonRes);
       }
     } catch(e) { 
-      alert("通信エラーが発生しました。"); 
+      console.warn("バックグラウンド通信エラー", e);
     } finally {
       hideLoader();
     }
+  }
+
+  function fillSelects(id, arr, currentVal) {
+      if(!arr) return;
+      const list = [...arr, "その他"]; 
+      document.getElementById(id).innerHTML = `<option value="">選択...</option>` + list.map(v=>`<option value="${v}" ${v===currentVal?'selected':''}>${v}</option>`).join(""); 
+  }
+
+  function renderOptions(data) {
+      if (data.masters && data.masters.mailOptions && data.masters.mailOptions.length > 0) document.getElementById("mail-options-box").innerHTML = data.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:20px;height:20px;"><span>${opt.name}</span></label>`).join("");
+      if (data.qa) document.getElementById("qa-list").innerHTML = data.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
+      if (data.manual_client) document.getElementById("manual-list").innerHTML = data.manual_client.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>取扱説明書はありません。</p>';
   }
 
   async function submitQA(event) {
@@ -328,8 +350,7 @@
       const textRes = await res.text(); let jsonRes; try{jsonRes=JSON.parse(textRes);}catch(err){if(textRes.includes("Redirect OK"))jsonRes={status:"success"};else throw err;}
       if(jsonRes.status==="success"){ alert("送信しました。"); document.getElementById("qa-input").value=""; closeModal('qa'); } else alert("エラー: "+jsonRes.message);
     } catch(e) { alert("通信エラー"); }
-    hideLoader();
-    btn.textContent = "送信"; btn.disabled = false;
+    finally { hideLoader(); btn.textContent = "送信"; btn.disabled = false; }
   }
 </script>
 </body>
