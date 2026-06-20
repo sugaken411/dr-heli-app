@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>AW109 システム管理</title>
   <style>
     :root { --bg:#f2f2f7; --brand:#d32f2f; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; }
@@ -12,34 +12,42 @@
     .timer-badge { background:#e5e5ea; padding:4px 10px; border-radius:12px; font-family:monospace; font-weight:bold; font-size:14px; color:var(--ink); }
     main { padding:20px; flex:1; overflow-y:auto; }
     .card { background:#fff; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-    input, select, button { padding:10px; border-radius:6px; border:1px solid #ccc; font-size:14px; box-sizing:border-box; }
+    input, select, button, textarea { padding:10px; border-radius:6px; border:1px solid #ccc; font-size:14px; box-sizing:border-box; outline:none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); }
     button { background:var(--blue); color:#fff; border:none; cursor:pointer; font-weight:bold; transition:opacity 0.2s; }
     button:hover { opacity:0.8; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    
     #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
-    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; display:none; }
+    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; flex-direction:column; align-items:center; justify-content:center; display:none; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
+  <!-- ログイン画面 -->
   <div id="login-overlay">
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">システム管理</h2>
       <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
-      <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px;" placeholder="****">
-      <button onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
+      <input type="tel" id="login-pin" inputmode="numeric" pattern="[0-9]*" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '')" onkeydown="if(event.key==='Enter')checkLogin()">
+      <button id="btn-login" onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
       <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
     </div>
   </div>
 
-  <div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div></div>
+  <!-- ローダー -->
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div id="loader-msg" style="margin-top:16px; font-weight:bold; color:var(--ink);">システム通信中...</div>
+  </div>
 
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v2.0</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -50,19 +58,33 @@
     <div class="card" style="border:2px solid #ffcc00; background:#fffdf0;">
       <h3 style="margin-top:0; color:#d48806;">👑 マスタデータ追加</h3>
       <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
-        <div><label style="font-size:12px; font-weight:bold;">種類</label><select id="add-type"><option value="dest">出場先</option><option value="dr">フライトドクター</option><option value="ns">フライトナース</option><option value="mail">メール送信先(選択肢)</option></select></div>
-        <div style="flex:1;"><label style="font-size:12px; font-weight:bold;">値1 (名前等)</label><input type="text" id="add-val1" placeholder="名前や出場先を入力"></div>
-        <div style="flex:1;" id="box-val2"><label style="font-size:12px; font-weight:bold;">値2 (メアド ※メール時のみ)</label><input type="email" id="add-val2" placeholder="example@gmail.com"></div>
-        <button onclick="addMaster()" style="background:#d48806;">＋ マスタに追加</button>
+        <div>
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">種類</label>
+          <select id="add-type">
+            <option value="dest">出場先</option>
+            <option value="dr">フライトドクター</option>
+            <option value="ns">フライトナース</option>
+            <option value="mail">メール送信先(CC)</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">値1 (名前等)</label>
+          <input type="text" id="add-val1" placeholder="名前や出場先を入力" style="width:100%;">
+        </div>
+        <div style="flex:1;" id="box-val2">
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">値2 (メアド ※メール時のみ)</label>
+          <input type="email" id="add-val2" placeholder="example@gmail.com" style="width:100%;">
+        </div>
+        <button id="btn-add-master" onclick="addMaster()" style="background:#d48806; padding:12px 20px;">＋ 追加</button>
       </div>
     </div>
 
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin-top:0;">❓ Q&A 未回答リスト</h3>
-        <span style="font-size:12px; color:var(--sub);">※削除はスプレッドシートから直接行ってください</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="margin:0;">❓ Q&A 未回答リスト</h3>
+        <span style="font-size:12px; color:var(--sub); font-weight:bold;">※削除はスプレッドシートから直接行ってください</span>
       </div>
-      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub);">読込中...</div>
+      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub);"></div>
     </div>
   </main>
 
@@ -71,63 +93,129 @@
   const PIN_ADMIN = "9999"; 
   
   let lockTime = 600; let timerInterval;
+  
+  function showLoader(msg = "システム通信中...") {
+    document.getElementById("loader-msg").innerText = msg;
+    document.getElementById("global-loader").style.display = "flex";
+  }
+  function hideLoader() {
+    document.getElementById("global-loader").style.display = "none";
+  }
+
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
   function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
   function startTimer() { updateTimerDisplay(); timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); }
 
-  function checkLogin() {
+  async function checkLogin() {
     const input = document.getElementById("login-pin").value;
-    if(input === PIN_ADMIN) {
-      document.getElementById("login-overlay").style.display = "none";
-      document.getElementById("global-loader").style.display = "flex"; 
-      startTimer(); fetchInit(); 
-    } else { document.getElementById("login-err").style.display = "block"; document.getElementById("login-pin").value = ""; }
-  }
-
-  async function fetchInit() {
+    const btn = document.getElementById("btn-login");
+    document.getElementById("login-err").style.display = "none";
+    
+    if(input !== PIN_ADMIN) {
+        document.getElementById("login-err").style.display = "block";
+        document.getElementById("login-pin").value = "";
+        return;
+    }
+    
+    showLoader("システム情報を取得中...");
+    btn.disabled = true;
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN}) });
-      const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[]}; else throw err; }
+      const jsonRes = await res.json();
       if(jsonRes.status === "success") {
-        const qaBox = document.getElementById("qa-list");
-        const unanswered = jsonRes.qa.filter(q => q.status !== "◯");
-        if(unanswered.length > 0) {
-          // 🌟 日時と送信元を表示する
-          qaBox.innerHTML = unanswered.map((item, i) => `
-            <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue);">
-              <div style="font-size:11px; color:var(--sub); margin-bottom:4px;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
-              <b style="color:var(--ink); font-size:14px;">Q. ${item.q}</b>
-              <textarea id="ans-${i}" rows="2" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:4px; padding:8px; margin:8px 0; font-size:13px;"></textarea>
-              <button onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="padding:8px; font-size:13px; width:100%;">回答を送信・公開</button>
-            </div>`).join("");
-        } else qaBox.innerHTML = '<p style="text-align:center;">未回答の質問はありません。</p>';
-        document.getElementById("global-loader").style.display = "none";
+        document.getElementById("login-overlay").style.display = "none";
+        startTimer(); 
+        renderQA(jsonRes.qa);
+      } else {
+          alert("エラー: " + jsonRes.message);
       }
-    } catch(e) { document.getElementById("global-loader").style.display = "none"; }
+    } catch(e) {
+        alert("通信エラーが発生しました");
+    } finally {
+        btn.disabled = false;
+        hideLoader();
+    }
   }
 
-  async function answerQA(qText, textareaId) {
-    const ans = document.getElementById(textareaId).value.trim(); if(!ans) return alert("回答を入力してください");
+  function renderQA(qaData) {
+    const qaBox = document.getElementById("qa-list");
+    const unanswered = qaData.filter(q => q.status !== "◯");
+    if(unanswered.length > 0) {
+      qaBox.innerHTML = unanswered.map((item, i) => `
+        <div style="background:var(--bg); padding:16px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue);">
+          <div style="font-size:11px; color:var(--sub); margin-bottom:8px; font-weight:bold;">🕒 ${item.date} ｜ 📱 送信元: ${item.source}</div>
+          <b style="color:var(--ink); font-size:14px; display:block; margin-bottom:8px;">Q. ${item.q}</b>
+          <textarea id="ans-${i}" rows="2" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px; margin-bottom:8px; font-size:13px; font-family:inherit;"></textarea>
+          <button id="btn-ans-${i}" onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}', 'btn-ans-${i}')" style="padding:10px; font-size:13px; width:100%;">回答を送信・公開</button>
+        </div>`).join("");
+    } else {
+        qaBox.innerHTML = '<p style="text-align:center; padding:20px; font-weight:bold;">未回答の質問はありません 🎉</p>';
+    }
+  }
+
+  async function answerQA(qText, textareaId, btnId) {
+    const ans = document.getElementById(textareaId).value.trim(); 
+    if(!ans) return alert("回答を入力してください");
+    
+    const btn = document.getElementById(btnId);
+    btn.disabled = true;
+    btn.innerText = "送信中...";
+    showLoader("回答を保存中...");
+    
     try {
-      document.getElementById("global-loader").style.display = "flex";
-      await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"answer_question", password:PIN_ADMIN, q:qText, a:ans}) });
-      fetchInit();
-    } catch(e) { alert("通信エラー"); document.getElementById("global-loader").style.display = "none"; }
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"answer_question", password:PIN_ADMIN, q:qText, a:ans}) });
+      const json = await res.json();
+      if(json.status === "success") {
+          alert("回答を公開しました！");
+          // 再取得してリスト更新
+          const res2 = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN}) });
+          const json2 = await res2.json();
+          renderQA(json2.qa);
+      } else {
+          alert("エラー: " + json.message);
+      }
+    } catch(e) { 
+        alert("通信エラーが発生しました"); 
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "回答を送信・公開";
+        hideLoader();
+    }
   }
 
   async function addMaster() {
-    const type = document.getElementById("add-type").value; const val1 = document.getElementById("add-val1").value.trim(); const val2 = document.getElementById("add-val2").value.trim();
-    if(!val1) return alert("追加する値を入力してください。");
+    const type = document.getElementById("add-type").value; 
+    const val1 = document.getElementById("add-val1").value.trim(); 
+    const val2 = document.getElementById("add-val2").value.trim();
+    if(!val1) return alert("追加する値（名前等）を入力してください。");
+    
+    const btn = document.getElementById("btn-add-master");
+    btn.disabled = true; 
+    btn.innerText = "追加中...";
+    showLoader("マスタデータに追加中...");
+    
     try {
-      const btn = event.target; btn.disabled=true; btn.innerText="追加中...";
       const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"add_master", password:PIN_ADMIN, type:type, val1:val1, val2:val2}) });
       const json = await res.json();
-      if(json.status==="success") { alert("マスタに追加しました。"); document.getElementById("add-val1").value=""; document.getElementById("add-val2").value=""; fetchInit(); } else alert("エラー: "+json.message);
-      btn.disabled=false; btn.innerText="＋ マスタに追加";
-    } catch(e) { alert("通信エラー"); }
+      if(json.status==="success") { 
+          alert("マスタに追加しました！"); 
+          document.getElementById("add-val1").value=""; 
+          document.getElementById("add-val2").value=""; 
+      } else {
+          alert("エラー: " + json.message);
+      }
+    } catch(e) { 
+        alert("通信エラーが発生しました"); 
+    } finally {
+        btn.disabled = false; 
+        btn.innerText = "＋ 追加";
+        hideLoader();
+    }
   }
   
-  document.getElementById("add-type").addEventListener('change', (e) => { document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; });
+  document.getElementById("add-type").addEventListener('change', (e) => { 
+      document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; 
+  });
   document.getElementById("box-val2").style.display = 'none';
 </script>
 </body>
