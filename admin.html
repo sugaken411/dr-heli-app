@@ -26,18 +26,16 @@
 </head>
 <body>
 
-  <!-- ログイン画面 -->
   <div id="login-overlay">
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">システム管理</h2>
       <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
-      <input type="tel" id="login-pin" inputmode="numeric" pattern="[0-9]*" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '')" onkeydown="if(event.key==='Enter')checkLogin()">
+      <input type="tel" id="login-pin" inputmode="numeric" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '')" onkeydown="if(event.key==='Enter')checkLogin()">
       <button id="btn-login" onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
       <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
     </div>
   </div>
 
-  <!-- ローダー -->
   <div id="global-loader">
     <div class="spinner"></div>
     <div id="loader-msg" style="margin-top:16px; font-weight:bold; color:var(--ink);">システム通信中...</div>
@@ -47,7 +45,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v2.0</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v2.1</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -82,7 +80,7 @@
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="margin:0;">❓ Q&A 未回答リスト</h3>
-        <span style="font-size:12px; color:var(--sub); font-weight:bold;">※削除はスプレッドシートから直接行ってください</span>
+        <span style="font-size:12px; color:var(--sub); font-weight:bold;">※削除はスプレッドシートから行ってください</span>
       </div>
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub);"></div>
     </div>
@@ -120,7 +118,7 @@
     showLoader("システム情報を取得中...");
     btn.disabled = true;
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN}) });
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN, app_name:"管理"}) });
       const jsonRes = await res.json();
       if(jsonRes.status === "success") {
         document.getElementById("login-overlay").style.display = "none";
@@ -167,8 +165,7 @@
       const json = await res.json();
       if(json.status === "success") {
           alert("回答を公開しました！");
-          // 再取得してリスト更新
-          const res2 = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN}) });
+          const res2 = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN, app_name:"管理"}) });
           const json2 = await res2.json();
           renderQA(json2.qa);
       } else {
