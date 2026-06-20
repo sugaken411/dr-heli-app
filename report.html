@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ドクターヘリ業務日報コンソール</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js](https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js)"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f2f2f7; color: #1c1c1e; }
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .hidden { display: none !important; }
+        @media print {
+            @page { size: landscape; margin: 5mm; }
+            body { background: white; transform: scale(0.85); transform-origin: top left; width: 117%; height: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; }
+            .no-print, #input-form-area, #btn-area-header { display: none !important; }
+            .print-header-compact { display: flex !important; flex-wrap: wrap; gap: 16px; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 4px; font-size: 11pt; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6 pb-32">
+
+    <div id="global-loader" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center font-bold text-white text-sm hidden">
+        <div class="bg-slate-800 px-6 py-3 rounded-xl shadow-lg animate-pulse">データを読み込み中...</div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 flex justify-between items-center no-print">
+        <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-slate-800">📅 業務日報コンソール</h1>
+        </div>
+        <div class="flex gap-2" id="btn-area-header">
+            <button onclick="saveToSheet()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-sm">💾 シートに保存</button>
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm font-bold hover:bg-slate-800">🖨️ 印刷/PDF</button>
+            <button onclick="exportCSV()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700">📊 CSV出力</button>
+            <a href="portal.html" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50">🏠 ポータルへ</a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">日付 (選択すると事案が自動連携されます)</label>
+                    <input type="date" id="info-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none font-bold" onchange="fetchDailyReport()">
+                </div>
+                <div id="sun-display" class="flex gap-3 text-xs bg-amber-50 px-3 py-2 rounded-lg border border-amber-100 text-amber-800 font-medium"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">フライトナース</label>
+                        <select id="info-nurse" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">担当医師</label>
+                        <select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-500 mb-2">浜町待機理由 / 特記事項</label>
+                <div class="flex flex-wrap gap-2 mb-3" id="reason-checkboxes"></div>
+                <textarea id="info-remarks" rows="3" placeholder="特記事項・申し送り事項（自由入力）" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:border-blue-500 outline-none resize-none"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="input-form-area" class="bg-blue-50 rounded-xl shadow-sm border border-blue-200 mb-6 overflow-hidden no-print">
+        <div class="px-6 py-3 border-b border-blue-200 flex justify-between items-center bg-blue-100/50">
+            <h2 id="form-title" class="text-sm font-bold text-blue-900">➕ タイムライン項目の追加・微調整</h2>
+            <button id="btn-cancel-edit" onclick="cancelEdit()" class="hidden text-xs bg-white border border-slate-300 px-3 py-1 rounded-md text-slate-600 font-bold">編集キャンセル</button>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div class="md:col-span-3">
+                <label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label>
+                <select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
+                    <option value="mission">🚁 ヘリ活動 (実施)</option>
+                    <option value="cancel">⚠️ ヘリ活動 (キャンセル)</option>
+                    <option value="inspection">⚙️ 始業点検・整備</option>
+                    <option value="assistant">🏃 補助者業務</option>
+                    <option value="management">📁 管理業務</option>
+                    <option value="group">👥 グループ業務/会議</option>
+                    <option value="other">💼 その他活動</option>
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-500 mb-1">事案No.</label>
+                <input type="text" id="event-no" placeholder="12345" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label>
+                <input type="time" id="event-start" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-500 mb-1">終了時間</label>
+                <input type="time" id="event-end" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
+            </div>
+            <div class="md:col-span-2 flex items-center h-10 px-2 bg-white rounded-lg border border-slate-300 mb-[1px]">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer w-full justify-center">
+                    <input type="checkbox" id="event-continuous" class="w-4 h-4 text-blue-600"> 連続出動
+                </label>
+            </div>
+            <div class="md:col-span-12 mt-2">
+                <label class="block text-xs font-bold text-slate-500 mb-1">内容・備考</label>
+                <div class="flex gap-4">
+                    <input type="text" id="event-desc" placeholder="活動内容を入力..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
+                    <button id="btn-save" onclick="saveEvent()" class="bg-blue-600 text-white font-bold px-8 py-2.5 rounded-lg whitespace-nowrap hover:bg-blue-700">追加する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md border border-slate-200 mb-6 overflow-hidden">
+        <div class="px-4 py-2 border-b border-slate-100 bg-slate-50 flex gap-4 text-xs font-bold text-slate-600 flex-wrap" id="legend-box"></div>
+        <div class="overflow-x-auto relative min-h-[160px]" style="padding-bottom: 20px;">
+            <div class="min-w-[1000px] relative h-32 mx-4 mt-8" id="chart-area">
+                <div id="chart-grid" class="absolute inset-0 pointer-events-none"></div>
+                <div id="chart-bars" class="absolute inset-0 top-1/2 -translate-y-1/2 h-16"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 font-bold text-slate-700 text-sm">📋 登録済みデータリスト</div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-100 text-slate-500 text-xs">
+                    <tr>
+                        <th class="px-4 py-3 w-32">種別</th>
+                        <th class="px-4 py-3 w-24">No.</th>
+                        <th class="px-4 py-3 w-32">時間</th>
+                        <th class="px-4 py-3 w-20">活動(分)</th>
+                        <th class="px-4 py-3 w-16 text-center">連続</th>
+                        <th class="px-4 py-3 min-w-[200px] max-w-md">内容</th>
+                        <th class="px-4 py-3 w-24 text-center no-print">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="list-body" class="divide-y divide-slate-200"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const GAS_API_URL = "[https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec](https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec)";
+        const PIN_CODE = "5740";
+
+        const START_HOUR = 8, END_HOUR = 19;
+        const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60;
+
+        const CATS = {
+            mission: { label: 'ヘリ活動(実施)', color: 'bg-blue-600', prep: 10, rec: 'auto' },
+            cancel: { label: 'ヘリ活動(キャンセル)', color: 'bg-gray-400', prep: 10, rec: 10 },
+            inspection: { label: '始業点検', color: 'bg-orange-400', prep: 0, rec: 0 },
+            assistant: { label: '補助者業務', color: 'bg-rose-400', prep: 0, rec: 0 },
+            management: { label: '管理業務', color: 'bg-slate-500', prep: 0, rec: 0 },
+            group: { label: 'グループ業務', color: 'bg-teal-500', prep: 0, rec: 0 },
+            other: { label: 'その他', color: 'bg-purple-500', prep: 0, rec: 0 }
+        };
+
+        let events = [];
+        let editingId = null;
+
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('info-date').value = today;
+            
+            const reasons = ["風向き", "天候不良", "強風", "機体トラブル"];
+            document.getElementById("reason-checkboxes").innerHTML = reasons.map(r => `<label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-100"><input type="checkbox" name="reason" value="${r}"> ${r}</label>`).join("");
+
+            drawGrid();
+            drawLegend();
+            
+            // マスタ取得後に本日の日報を取得
+            fetchMasters().then(() => fetchDailyReport());
+        };
+
+        async function fetchMasters() {
+            try {
+                const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
+                const json = await res.json();
+                if(json.status === "success") {
+                    const mkOpt = (arr) => `<option value="">-- 選択 --</option>` + arr.map(v=>`<option value="${v}">${v}</option>`).join("") + `<option value="その他">その他</option>`;
+                    document.getElementById("info-doctor").innerHTML = mkOpt(json.masters.dr);
+                    document.getElementById("info-nurse").innerHTML = mkOpt(json.masters.ns);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function fetchDailyReport() {
+            const dateStr = document.getElementById("info-date").value;
+            if(!dateStr) return;
+            
+            calculateSun();
+            const loader = document.getElementById("global-loader");
+            loader.classList.remove("hidden");
+            
+            try {
+                const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_daily_report", password:PIN_CODE, date:dateStr}), redirect:"follow" });
+                const json = await res.json();
+                if(json.status === "success") {
+                    const d = json.data;
+                    document.getElementById("info-doctor").value = d.doctor || "";
+                    document.getElementById("info-nurse").value = d.recorder || "";
+                    document.getElementById("info-remarks").value = d.hamamachiReason || "";
+                    events = d.events || [];
+                    render();
+                }
+            } catch(e) { alert("通信エラーによりデータが取得できませんでした。"); }
+            loader.classList.add("hidden");
+        }
+
+        async function saveToSheet() {
+            const dateStr = document.getElementById("info-date").value;
+            if(!dateStr) return alert("日付が未入力です。");
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerText = "保存中..."; btn.disabled = true;
+            
+            let reasons = [];
+            document.querySelectorAll('input[name="reason"]:checked').forEach(cb => reasons.push(cb.value));
+            const otherR = document.getElementById('info-remarks').value.trim();
+            if(otherR) reasons.push(otherR);
+            const reasonStr = reasons.join("、");
+
+            const payload = {
+                action: "save_daily_report",
+                password: PIN_CODE,
+                date: dateStr,
+                recorder: document.getElementById("info-nurse").value,
+                doctor: document.getElementById("info-doctor").value,
+                hamamachiReason: reasonStr,
+                events: events
+            };
+
+            try {
+                const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload), redirect:"follow" });
+                const json = await res.json();
+                if(json.status === "success") {
+                    alert("スプレッドシート（浜町日誌）に保存しました！");
+                } else {
+                    alert("エラー: " + json.message);
+                }
+            } catch(e) { alert("通信エラーにより保存できませんでした。"); }
+            
+            btn.innerHTML = originalText; btn.disabled = false;
+        }
+
+        function calculateSun() {
+            const dateStr = document.getElementById('info-date').value;
+            if (!dateStr || typeof SunCalc === 'undefined') return;
+            const date = new Date(dateStr);
+            const times = SunCalc.getTimes(date, 31.5602, 130.558);
+            const fmt = d => d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            const limit = new Date(date); limit.setHours(17, 30, 0);
+            const standby = (times.sunset.getTime() - 60*60*1000 < limit.getTime()) ? new Date(times.sunset.getTime() - 60*60*1000) : limit;
+            document.getElementById('sun-display').innerHTML = `<span>🌅 日出: ${fmt(times.sunrise)}</span><span>🌇 日没: ${fmt(times.sunset)}</span><span class="font-bold border-l border-amber-200 pl-3 ml-1">⏱️ 待機終了: ${fmt(standby)}</span>`;
+        }
+
+        function drawGrid() {
+            const grid = document.getElementById('chart-grid');
+            let html = '';
+            for (let i = 0; i <= (END_HOUR - START_HOUR); i++) {
+                const left = (i / (END_HOUR - START_HOUR)) * 100;
+                html += `<div class="absolute -translate-x-1/2 -top-6 text-xs font-bold text-slate-400" style="left: ${left}%;">${START_HOUR + i}:00</div>`;
+                html += `<div class="absolute top-0 bottom-0 w-px bg-slate-200 -translate-x-1/2" style="left: ${left}%;"></div>`;
+                if (i < END_HOUR - START_HOUR) html += `<div class="absolute top-0 bottom-0 w-px border-l border-slate-300 border-dashed opacity-50 -translate-x-1/2" style="left: ${left + (50 / (END_HOUR - START_HOUR))}%;"></div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function drawLegend() {
+            const box = document.getElementById('legend-box');
+            let html = '';
+            for(let k in CATS) html += `<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full ${CATS[k].color}"></div>${CATS[k].label}</span>`;
+            box.innerHTML = html;
+        }
+
+        function timeToMins(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return (h - START_HOUR) * 60 + m; }
+
+        function render() {
+            events.sort((a, b) => timeToMins(a.start) - timeToMins(b.start));
+            const bars = document.getElementById('chart-bars');
+            const tbody = document.getElementById('list-body');
+            let barsHtml = '', listHtml = '';
+
+            events.forEach((ev, idx) => {
+                const s = timeToMins(ev.start); const e = timeToMins(ev.end); const dur = e - s; const cat = CATS[ev.category];
+                let prep = cat.prep; if (idx > 0 && events[idx-1].isContinuous) prep = 0;
+                let rec = 0; if (!ev.isContinuous) { if (cat.rec === 'auto') rec = (dur < 60) ? 30 : 45; else rec = cat.rec; }
+
+                const getPct = (mins) => (mins / TOTAL_MINUTES) * 100;
+                const pLeft = getPct(s - prep); const pWidth = getPct(prep);
+                const mLeft = getPct(s); const mWidth = getPct(dur);
+                const rLeft = getPct(e); const rWidth = getPct(rec);
+
+                barsHtml += `<div class="absolute h-full w-full top-0">`;
+                if (prep > 0) barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-10 bg-yellow-300 opacity-60 rounded-l-md border-y border-l border-yellow-500" style="left: ${pLeft}%; width: ${pWidth}%;" title="準備(${prep}分)"></div>`;
+                barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-14 ${cat.color} rounded-md shadow flex items-center justify-center text-white text-[10px] font-bold cursor-pointer hover:brightness-110 border-b-4 border-black/20 group" style="left: ${mLeft}%; width: ${mWidth}%;" onclick="editEvent('${ev.id}')">
+                    <span class="truncate px-1">${ev.no ? '#'+ev.no : ''}</span>
+                    <div class="hidden group-hover:block absolute bottom-full mb-2 w-64 bg-slate-800 text-white text-xs rounded p-3 shadow-xl z-50 left-1/2 -translate-x-1/2 pointer-events-none">
+                        <div class="font-bold text-yellow-400 mb-1">${ev.no ? '#'+ev.no : cat.label}</div>
+                        <div class="mb-2 text-slate-300 font-mono border-b border-slate-600 pb-1">${ev.start} - ${ev.end} (${dur}分)</div>
+                        <div class="whitespace-normal">${ev.desc}</div>
+                    </div>
+                </div>`;
+                if (rec > 0) barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-10 bg-green-100 opacity-80 rounded-r-md border-y border-r border-green-300" style="left: ${rLeft}%; width: ${rWidth}%;" title="復帰(${rec}分)"></div>`;
+                barsHtml += `</div>`;
+
+                listHtml += `<tr class="hover:bg-slate-50 ${editingId === ev.id ? 'bg-amber-50' : ''}">
+                    <td class="px-4 py-2"><span class="inline-block px-2 py-1 rounded text-xs font-bold text-white ${cat.color}">${cat.label.replace('ヘリ活動', '')}</span></td>
+                    <td class="px-4 py-2 font-mono font-bold text-slate-700">${ev.no || '-'}</td>
+                    <td class="px-4 py-2 font-mono text-slate-600">${ev.start} - ${ev.end}</td>
+                    <td class="px-4 py-2 text-slate-600">${dur}分</td>
+                    <td class="px-4 py-2 text-center text-blue-600 font-bold">${ev.isContinuous ? '✓' : ''}</td>
+                    <td class="px-4 py-2 text-slate-600 truncate max-w-[200px]" title="${ev.desc}">${ev.desc}</td>
+                    <td class="px-4 py-2 text-center"><button onclick="editEvent('${ev.id}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs mr-2">修正</button><button onclick="deleteEvent('${ev.id}')" class="text-red-600 hover:text-red-800 font-bold text-xs">削除</button></td>
+                </tr>`;
+            });
+            bars.innerHTML = barsHtml; tbody.innerHTML = listHtml;
+        }
+
+        function saveEvent() {
+            const cat = document.getElementById('event-cat').value;
+            const no = document.getElementById('event-no').value.trim();
+            const start = document.getElementById('event-start').value;
+            const end = document.getElementById('event-end').value;
+            const desc = document.getElementById('event-desc').value.trim();
+            const cont = document.getElementById('event-continuous').checked;
+
+            if (!start || !end) return alert("開始時間と終了時間を入力してください。");
+            if (timeToMins(start) >= timeToMins(end)) return alert("終了時間は開始時間より後にしてください。");
+
+            const newEv = { id: editingId ? editingId : "manual-" + Date.now().toString(), category: cat, no: no, start: start, end: end, desc: desc, isContinuous: cont };
+            if (editingId) events = events.map(e => e.id === editingId ? newEv : e); else events.push(newEv);
+            cancelEdit(); render();
+        }
+
+        function editEvent(id) {
+            const ev = events.find(e => e.id === id); if (!ev) return;
+            editingId = id;
+            document.getElementById('event-cat').value = ev.category;
+            document.getElementById('event-no').value = ev.no;
+            document.getElementById('event-start').value = ev.start;
+            document.getElementById('event-end').value = ev.end;
+            document.getElementById('event-desc').value = ev.desc;
+            document.getElementById('event-continuous').checked = ev.isContinuous;
+            
+            const area = document.getElementById('input-form-area');
+            area.classList.replace('bg-blue-50', 'bg-amber-50'); area.classList.replace('border-blue-200', 'border-amber-400');
+            document.getElementById('form-title').innerText = "✏️ タイムライン項目の修正";
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            const btn = document.getElementById('btn-save'); btn.innerText = "更新する"; btn.classList.replace('bg-blue-600', 'bg-amber-500'); btn.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
+            window.scrollTo({ top: 0, behavior: 'smooth' }); render();
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            document.getElementById('event-no').value = ''; document.getElementById('event-start').value = ''; document.getElementById('event-end').value = ''; document.getElementById('event-desc').value = ''; document.getElementById('event-continuous').checked = false;
+            const area = document.getElementById('input-form-area');
+            area.classList.replace('bg-amber-50', 'bg-blue-50'); area.classList.replace('border-amber-400', 'border-blue-200');
+            document.getElementById('form-title').innerText = "➕ タイムライン項目の追加";
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            const btn = document.getElementById('btn-save'); btn.innerText = "追加する"; btn.classList.replace('bg-amber-500', 'bg-blue-600'); btn.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
+            render();
+        }
+
+        function deleteEvent(id) { if(confirm("削除しますか？")) { events = events.filter(e => e.id !== id); if (editingId === id) cancelEdit(); render(); } }
+
+    </script>
+</body>
+</html>
