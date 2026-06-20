@@ -36,7 +36,7 @@
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">事案検索コンソール</h2>
       <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
-      <input type="text" id="login-pin" inputmode="numeric" pattern="[0-9]*" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '')" onkeydown="if(event.key==='Enter')checkLogin()">
+      <input type="tel" id="login-pin" inputmode="numeric" pattern="[0-9]*" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[^0-9０-９]/g, '').replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });" onkeydown="if(event.key==='Enter')checkLogin()">
       <button id="btn-login" onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
       <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
     </div>
@@ -50,7 +50,7 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-      <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
+      <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取扱説明書</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
     <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
@@ -85,7 +85,7 @@
       </div>
       <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
         <div style="flex:1; min-width:250px;"><label style="font-size:12px; color:var(--sub); font-weight:bold;">期間</label><div style="display:flex; align-items:center; gap:8px;"><input type="date" id="q-date-start" style="flex:1;"> <span style="color:var(--sub);">〜</span> <input type="date" id="q-date-end" style="flex:1;"></div></div>
-        <button onclick="fetchData()" style="padding:12px 24px; min-width:120px;">検索実行 🔍</button>
+        <button id="btn-search" onclick="fetchData()" style="padding:12px 24px; min-width:120px;">検索実行 🔍</button>
       </div>
     </div>
 
@@ -142,7 +142,7 @@
       
       <div class="no-print" style="margin-top:20px; display:flex; gap:12px;">
         <button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal('detail-modal')">キャンセル</button>
-        <button style="flex:1; background:var(--blue);" onclick="saveEdit()">上書き保存</button>
+        <button id="btn-save" style="flex:1; background:var(--blue);" onclick="saveEdit()">上書き保存</button>
       </div>
     </div>
   </div>
@@ -167,7 +167,7 @@
   </div>
 
 <script>
-  const GAS_API_URL = "[https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec](https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec)";
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const LOCK_MINUTES = 10;
   let allData = [];
   let currentPass = "";
@@ -175,8 +175,9 @@
   let remainSeconds = LOCK_MINUTES * 60;
 
   function showLoader(msg = "システム通信中...") {
+    const el = document.getElementById("global-loader");
     document.getElementById("loader-msg").innerText = msg;
-    document.getElementById("global-loader").style.display = "flex";
+    el.style.display = "flex";
   }
   function hideLoader() {
     document.getElementById("global-loader").style.display = "none";
@@ -200,9 +201,14 @@
 
   async function checkLogin() {
     const pin = document.getElementById("login-pin").value;
-    const btn = document.getElementById("btn-login");
     document.getElementById("login-err").style.display = "none";
     if(!pin) return;
+
+    // フロントエンドでの簡易パスワードチェック
+    if(pin !== "5740" && pin !== "9999") {
+        document.getElementById("login-err").style.display = "block";
+        return;
+    }
     
     showLoader("マスタデータ同期中...");
     try {
@@ -217,15 +223,17 @@
         document.getElementById("login-overlay").style.display = "none";
         resetTimer();
         fillSelects(data.masters);
-        document.getElementById("manual-list").innerHTML = data.manual_admin.map(m => `<p style="margin-bottom:8px;"><b>■ ${m.title}</b><br><span style="font-size:13px;">${m.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "マニュアルなし";
+        document.getElementById("manual-list").innerHTML = data.manual_admin.map(m => `<p style="margin-bottom:8px;"><b>■ ${m.title}</b><br><span style="font-size:13px;">${m.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "取扱説明書はありません";
         document.getElementById("qa-list").innerHTML = data.qa.filter(q=>q.status==="◯").map(q => `<p style="margin-bottom:8px;"><b>Q. ${q.q}</b><br><span style="color:var(--ink);">A. ${q.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "公開Q&Aなし";
       } else {
+        document.getElementById("login-err").innerText = "エラー: " + data.message;
         document.getElementById("login-err").style.display = "block";
       }
     } catch(e) {
       alert("通信エラーが発生しました");
+    } finally {
+      hideLoader();
     }
-    hideLoader();
   }
 
   function fillSelects(masters) {
@@ -259,6 +267,8 @@
 
   async function fetchData() {
     showLoader("事案データを検索中...");
+    const btn = document.getElementById("btn-search");
+    btn.disabled = true;
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST",
@@ -274,8 +284,10 @@
       }
     } catch(e) {
       alert("取得失敗");
+    } finally {
+      btn.disabled = false;
+      hideLoader();
     }
-    hideLoader();
   }
 
   function renderResults() {
@@ -372,7 +384,7 @@
     document.getElementById("edit-end").value = d["終了"];
     document.getElementById("edit-history").value = d["更新履歴"] || "";
 
-    const skipKeys = ["要請番号","日付","出場先","フライトドクター","フライトナース","スキーム選択","接触","病着","終了","往診料","搬送料","搬送料（長時間）","モニター算定時間","経皮的酸素飽和度","備考","ステータス","更新履歴"];
+    const skipKeys = ["要請番号","日付","出場先","フライトドクター","フライトナース","スキーム選択","要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間","接触","病着","終了","往診料","搬送料","搬送料（長時間）","モニター算定時間","経皮的酸素飽和度","備考","ステータス","更新履歴"];
     let supplies = [];
     Object.keys(d).forEach(k => { if(!skipKeys.includes(k) && d[k] && String(d[k]).trim() !== "") supplies.push(`・${k}: ${d[k]}`); });
     document.getElementById("supply-list").innerHTML = supplies.join("<br>") || "消費資機材なし";
@@ -384,6 +396,8 @@
 
   async function saveEdit() {
     showLoader("修正データを保存中...");
+    const btn = document.getElementById("btn-save");
+    btn.disabled = true;
     const payload = {
       "要請番号": document.getElementById("edit-id").value,
       "日付": document.getElementById("edit-date").value.replace(/-/g, "/"),
@@ -408,10 +422,13 @@
         closeModal('detail-modal');
         fetchData();
       } else {
-        alert(data.message);
+        alert("エラー: " + data.message);
       }
     } catch(e) { alert("保存失敗"); }
-    hideLoader();
+    finally {
+      btn.disabled = false;
+      hideLoader();
+    }
   }
 
   async function submitQA(event) {
@@ -419,13 +436,17 @@
     if (!q) return alert("入力してください。");
     const btn = event.target;
     btn.textContent = "送信中..."; btn.disabled = true;
+    showLoader("Q&A送信中...");
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:currentPass, question:q, source:"検索コンソール"}) });
       const json = await res.json();
       if (json.status==="success") { alert("送信しました。"); document.getElementById("qa-input").value=""; closeModal('modal-qa'); }
       else alert("エラー: " + json.message);
     } catch(e) { alert("通信エラー"); }
-    btn.textContent = "送信"; btn.disabled = false;
+    finally {
+        btn.textContent = "送信"; btn.disabled = false;
+        hideLoader();
+    }
   }
 
   function exportCSV() {
