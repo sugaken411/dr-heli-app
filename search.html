@@ -36,7 +36,7 @@
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">事案検索コンソール</h2>
       <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
-      <input type="tel" id="login-pin" inputmode="numeric" pattern="[0-9]*" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[^0-9０-９]/g, '').replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });" onkeydown="if(event.key==='Enter')checkLogin()">
+      <input type="tel" id="login-pin" inputmode="numeric" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; font-family:monospace;" placeholder="****" oninput="this.value = this.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '')" onkeydown="if(event.key==='Enter')checkLogin()">
       <button id="btn-login" onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
       <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
     </div>
@@ -53,7 +53,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取扱説明書</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.3</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -131,6 +131,11 @@
         <div class="form-group" style="flex:1;"><label>Ns</label><select id="edit-ns"></select></div>
       </div>
       <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;"><label>要請/依頼</label><input type="time" id="edit-req"></div>
+        <div class="form-group" style="flex:1;"><label>初期離陸</label><input type="time" id="edit-takeoff"></div>
+        <div class="form-group" style="flex:1;"><label>最終着陸</label><input type="time" id="edit-landing"></div>
+      </div>
+      <div style="display:flex; gap:12px;">
         <div class="form-group" style="flex:1;"><label>接触時間</label><input type="time" id="edit-contact"></div>
         <div class="form-group" style="flex:1;"><label>病着時間</label><input type="time" id="edit-arrival"></div>
         <div class="form-group" style="flex:1;"><label>終了時間</label><input type="time" id="edit-end"></div>
@@ -161,7 +166,7 @@
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
       <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
       <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
-      <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:bold;">送信</button>
+      <button id="btn-qa" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:bold;">送信</button>
       <button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
     </div>
   </div>
@@ -175,9 +180,8 @@
   let remainSeconds = LOCK_MINUTES * 60;
 
   function showLoader(msg = "システム通信中...") {
-    const el = document.getElementById("global-loader");
     document.getElementById("loader-msg").innerText = msg;
-    el.style.display = "flex";
+    document.getElementById("global-loader").style.display = "flex";
   }
   function hideLoader() {
     document.getElementById("global-loader").style.display = "none";
@@ -201,16 +205,18 @@
 
   async function checkLogin() {
     const pin = document.getElementById("login-pin").value;
+    const btn = document.getElementById("btn-login");
     document.getElementById("login-err").style.display = "none";
     if(!pin) return;
 
-    // フロントエンドでの簡易パスワードチェック
     if(pin !== "5740" && pin !== "9999") {
+        document.getElementById("login-err").innerText = "パスワードが違います";
         document.getElementById("login-err").style.display = "block";
         return;
     }
     
     showLoader("マスタデータ同期中...");
+    btn.disabled = true;
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST",
@@ -232,6 +238,7 @@
     } catch(e) {
       alert("通信エラーが発生しました");
     } finally {
+      btn.disabled = false;
       hideLoader();
     }
   }
@@ -379,6 +386,9 @@
     document.getElementById("edit-scheme").value = d["スキーム選択"];
     document.getElementById("edit-dr").value = d["フライトドクター"];
     document.getElementById("edit-ns").value = d["フライトナース"];
+    document.getElementById("edit-req").value = d["要請時刻・施設間搬送依頼時刻"] || "";
+    document.getElementById("edit-takeoff").value = d["初期離陸時間"] || "";
+    document.getElementById("edit-landing").value = d["最終着陸時間"] || "";
     document.getElementById("edit-contact").value = d["接触"];
     document.getElementById("edit-arrival").value = d["病着"];
     document.getElementById("edit-end").value = d["終了"];
@@ -405,6 +415,9 @@
       "スキーム選択": document.getElementById("edit-scheme").value,
       "フライトドクター": document.getElementById("edit-dr").value,
       "フライトナース": document.getElementById("edit-ns").value,
+      "要請時刻・施設間搬送依頼時刻": document.getElementById("edit-req").value,
+      "初期離陸時間": document.getElementById("edit-takeoff").value,
+      "最終着陸時間": document.getElementById("edit-landing").value,
       "接触": document.getElementById("edit-contact").value,
       "病着": document.getElementById("edit-arrival").value,
       "終了": document.getElementById("edit-end").value
@@ -434,7 +447,7 @@
   async function submitQA(event) {
     const q = document.getElementById("qa-input").value.trim();
     if (!q) return alert("入力してください。");
-    const btn = event.target;
+    const btn = document.getElementById("btn-qa");
     btn.textContent = "送信中..."; btn.disabled = true;
     showLoader("Q&A送信中...");
     try {
