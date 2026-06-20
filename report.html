@@ -2,16 +2,37 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>業務日報（浜町日誌）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ドクターヘリ業務日報コンソール</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Babel (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin="anonymous"></script>
+
+    <!-- SunCalc -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 
     <style>
+        :root { --bg:#f2f2f7; --card:#ffffff; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; --brand:#d32f2f; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--ink); }
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .hidden { display: none !important; }
+        
+        /* ログイン・ローダー用 */
+        #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
+        #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; flex-direction:column; align-items:center; justify-content:center; display:none; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } 
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media print {
             @page { size: landscape; margin: 5mm; }
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; transform: scale(0.75); transform-origin: top left; width: 133%; height: 100%; overflow: visible; margin: 0; padding: 0; }
@@ -33,13 +54,6 @@
             .print-wrap-text { white-space: pre-wrap !important; word-break: break-all !important; font-size: 8.5pt !important; }
             .print-footer { position: fixed; bottom: 0; right: 0; width: 100%; text-align: right; font-size: 8pt; color: #888; padding-top: 2px; border-top: 1px solid #eee; background: white; }
         }
-        ::-webkit-scrollbar { height: 8px; width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans">
@@ -49,12 +63,11 @@
         const { useState, useEffect, useRef } = React;
 
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-        const PIN_CODE = "5740";
-
+        
+        // --- アイコン ---
         const Icon = ({ path, className = "w-4 h-4" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
         );
-
         const Icons = {
             ClipboardList: (props) => <Icon {...props} path={<><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 12h.01"/><path d="M13 12h5"/><path d="M9 16h.01"/><path d="M13 16h5"/><path d="M9 8h.01"/><path d="M13 8h5"/></>} />,
             Plus: (props) => <Icon {...props} path={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />,
@@ -77,7 +90,8 @@
             Sun: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>} />,
             Moon: (props) => <Icon {...props} path={<><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></>} />,
             Clock: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
-            Save: (props) => <Icon {...props} path={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />
+            Save: (props) => <Icon {...props} path={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />,
+            Lock: (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />
         };
 
         const DailyTimelineApp = () => {
@@ -98,14 +112,12 @@
 
             const REASON_OPTIONS = ["風向き", "天候不良", "強風", "機体トラブル"];
 
-            const [reportInfo, setReportInfo] = useState({ 
-                date: new Date().toISOString().split('T')[0], 
-                recorder: '', 
-                doctor: '', 
-                hamamachiReason: '',
-                selectedReasons: [],
-                otherReason: ''
-            });
+            // State
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [password, setPassword] = useState('');
+            const [loginError, setLoginError] = useState('');
+            
+            const [reportInfo, setReportInfo] = useState({ date: new Date().toISOString().split('T')[0], recorder: '', doctor: '', hamamachiReason: '', selectedReasons: [], otherReason: '' });
             const [events, setEvents] = useState([]);
             const [formData, setFormData] = useState({ category: 'mission', no: '', start: '', end: '', desc: '', isContinuous: false });
             const [editingId, setEditingId] = useState(null);
@@ -119,7 +131,6 @@
             
             const [sunTimes, setSunTimes] = useState({ sunrise: '--:--', sunset: '--:--', standbyEnd: '--:--' });
             
-            // マスタデータ
             const [masters, setMasters] = useState({ dr: [], ns: [] });
             const [isLoading, setIsLoading] = useState(false);
             const [loadingMsg, setLoadingMsg] = useState('');
@@ -130,36 +141,45 @@
             const endRef = useRef(null);
             const descRef = useRef(null);
 
-            // 初回マウント時
-            useEffect(() => {
-                const initFetch = async () => {
-                    setIsLoading(true);
-                    setLoadingMsg('システム連携中...');
-                    try {
-                        const res = await fetch(GAS_API_URL, {
-                            method: "POST",
-                            headers: {"Content-Type": "text/plain;charset=utf-8"},
-                            body: JSON.stringify({action: "fetch_init", password: PIN_CODE})
-                        });
-                        const json = await res.json();
-                        if (json.status === "success") {
-                            setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
-                            setManuals(json.manual_client || []);
-                            setQas(json.qa.filter(q => q.status === "◯") || []);
-                        }
-                    } catch (e) {
-                        alert("マスタデータの取得に失敗しました。オフラインモードで起動します。");
-                    } finally {
-                        setIsLoading(false);
+            // ログイン処理
+            const handleLogin = async () => {
+                if(!password) return;
+                setLoginError('');
+                setLoadingMsg('システム連携中...');
+                setIsLoading(true);
+                try {
+                    const res = await fetch(GAS_API_URL, {
+                        method: "POST",
+                        headers: {"Content-Type": "text/plain;charset=utf-8"},
+                        body: JSON.stringify({action: "fetch_init", password: password})
+                    });
+                    const json = await res.json();
+                    if (json.status === "success") {
+                        setIsLoggedIn(true);
+                        setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
+                        setManuals(json.manual_admin || []); // コンソール用マニュアルを表示
+                        setQas(json.qa.filter(q => q.status === "◯") || []);
+                        fetchDailyData(reportInfo.date, password); // データ取得開始
+                    } else {
+                        setLoginError(json.message || 'パスワードが違います');
                     }
-                };
-                initFetch();
-            }, []);
+                } catch (e) {
+                    setLoginError('通信エラーが発生しました');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            // パスワード入力時の全角半角変換
+            const handlePasswordChange = (e) => {
+                let val = e.target.value;
+                val = val.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '');
+                setPassword(val);
+            };
 
             // 日付変更時
             useEffect(() => {
                 if (!reportInfo.date) return;
-                
                 try {
                     const date = new Date(reportInfo.date);
                     if (window.SunCalc) {
@@ -172,35 +192,38 @@
                         setSunTimes({ sunrise: formatTime(times.sunrise), sunset: formatTime(times.sunset), standbyEnd: formatTime(standbyEnd) });
                     }
                 } catch(e) {}
-
-                const fetchData = async () => {
-                    setLoadingMsg('事案データを連携中...');
-                    setIsLoading(true);
-                    try {
-                        const res = await fetch(GAS_API_URL, {
-                            method: "POST",
-                            headers: {"Content-Type": "text/plain;charset=utf-8"},
-                            body: JSON.stringify({action: "fetch_daily_report", password: PIN_CODE, date: reportInfo.date})
-                        });
-                        const json = await res.json();
-                        if (json.status === "success" && json.data) {
-                            const d = json.data;
-                            setReportInfo(prev => ({
-                                ...prev,
-                                recorder: d.recorder || prev.recorder,
-                                doctor: d.doctor || prev.doctor,
-                                hamamachiReason: d.hamamachiReason || ''
-                            }));
-                            setEvents(d.events || []);
-                        }
-                    } catch (e) {
-                        alert("データの取得に失敗しました。");
-                    } finally {
-                        setIsLoading(false);
-                    }
-                };
-                fetchData();
+                
+                if (isLoggedIn) {
+                    fetchDailyData(reportInfo.date, password);
+                }
             }, [reportInfo.date]);
+
+            const fetchDailyData = async (targetDate, pass) => {
+                setLoadingMsg('事案データを連携中...');
+                setIsLoading(true);
+                try {
+                    const res = await fetch(GAS_API_URL, {
+                        method: "POST",
+                        headers: {"Content-Type": "text/plain;charset=utf-8"},
+                        body: JSON.stringify({action: "fetch_daily_report", password: pass, date: targetDate})
+                    });
+                    const json = await res.json();
+                    if (json.status === "success" && json.data) {
+                        const d = json.data;
+                        setReportInfo(prev => ({
+                            ...prev,
+                            recorder: d.recorder || prev.recorder,
+                            doctor: d.doctor || prev.doctor,
+                            hamamachiReason: d.hamamachiReason || ''
+                        }));
+                        setEvents(d.events || []);
+                    }
+                } catch (e) {
+                    alert("データの取得に失敗しました。");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
 
             const timeToMinutes = (timeStr) => {
                 if (!timeStr) return 0;
@@ -316,7 +339,7 @@
                 try {
                     const payload = {
                         action: "save_daily_report",
-                        password: PIN_CODE,
+                        password: password,
                         date: reportInfo.date,
                         recorder: reportInfo.recorder,
                         doctor: reportInfo.doctor,
@@ -340,7 +363,7 @@
                 setLoadingMsg('Q&Aを送信中...');
                 setIsLoading(true);
                 try {
-                    const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"日報アプリ"}) });
+                    const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:password, question:q, source:"日報コンソール"}) });
                     const json = await res.json();
                     if(json.status === "success"){ alert("送信しました。"); setQaText(""); setShowQa(false); }
                     else alert("エラー: "+json.message);
@@ -351,13 +374,29 @@
             const sortedEvents = [...events].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
             const printDateStr = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
+            if (!isLoggedIn) {
+                return (
+                    <div id="login-overlay">
+                        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center">
+                            <h2 className="mt-0 text-slate-800 font-bold text-xl mb-2">業務日報コンソール</h2>
+                            <p className="text-slate-500 text-sm mb-6">アクセスコードを入力</p>
+                            <input type="tel" inputMode="numeric" value={password} onChange={handlePasswordChange} onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }} className="w-full mb-6 text-center text-2xl tracking-[0.5em] font-mono border-b-2 border-slate-300 focus:border-blue-500 outline-none pb-2" placeholder="****" />
+                            <button onClick={handleLogin} disabled={isLoading} className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                                {isLoading ? '通信中...' : 'ログイン 🔓'}
+                            </button>
+                            {loginError && <p className="text-red-600 text-xs mt-3 font-bold">{loginError}</p>}
+                        </div>
+                    </div>
+                );
+            }
+
             return (
                 <div className="p-4 max-w-full mx-auto min-h-screen font-sans print:bg-white print:p-0">
                     {/* ローダー */}
                     {isLoading && (
-                        <div className="fixed inset-0 bg-black/40 z-50 flex flex-col items-center justify-center font-bold text-white text-sm no-print">
+                        <div id="global-loader" style={{display: 'flex'}}>
                             <div className="spinner mb-4"></div>
-                            <div className="bg-slate-800 px-6 py-3 rounded-xl shadow-lg">{loadingMsg}</div>
+                            <div className="bg-slate-800 text-white font-bold px-6 py-3 rounded-xl shadow-lg text-sm">{loadingMsg}</div>
                         </div>
                     )}
 
@@ -365,16 +404,16 @@
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 no-print flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <Icons.ClipboardList className="w-5 h-5 text-blue-600 print:text-black" />
-                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.1</span></h1>
+                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.2</span></h1>
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                            <a href="portal.html" className="h-10 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors text-xs font-bold">🏠 ポータルへ</a>
+                            <a href="portal.html" className="h-10 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors text-xs font-bold"><Icons.Lock className="w-3.5 h-3.5"/> ポータルへ戻る</a>
                             <button onClick={() => setShowManual(true)} className="h-10 px-3 rounded border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-1 transition-colors text-xs font-bold" title="取扱説明書"><Icons.BookOpen className="w-3.5 h-3.5"/> 取扱説明書</button>
                             <button onClick={() => setShowQa(true)} className="h-10 px-3 rounded border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-1 transition-colors text-xs font-bold" title="Q&A">❓ Q&A</button>
-                            <div className="h-6 w-px bg-slate-300 mx-1"></div>
+                            <div className="h-6 w-px bg-slate-300 mx-1 hidden md:block"></div>
                             <button onClick={handleReset} className="h-10 px-3 rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center gap-1 transition-colors font-bold text-xs"><Icons.RotateCcw className="w-3 h-3"/> クリア</button>
                             <button onClick={handleSaveToSheet} className="h-10 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 transition-colors font-bold text-xs shadow-sm"><Icons.Save className="w-3.5 h-3.5"/> シートに保存</button>
-                            <button onClick={() => window.print()} className="h-10 px-3 rounded bg-slate-700 hover:bg-slate-800 text-white flex items-center gap-1 transition-colors font-bold text-xs"><Icons.Printer className="w-3.5 h-3.5"/> 印刷/PDF</button>
+                            <button onClick={() => window.print()} className="h-10 px-3 rounded bg-slate-700 hover:bg-slate-800 text-white flex items-center gap-1 transition-colors font-bold text-xs"><Icons.Printer className="w-3.5 h-3.5"/> 印刷</button>
                         </div>
                     </div>
 
@@ -387,10 +426,10 @@
                                     <button onClick={() => setShowManual(false)} className="text-slate-400 hover:text-slate-600"><Icons.X className="w-5 h-5"/></button>
                                 </div>
                                 <div className="prose prose-sm text-slate-700">
-                                    {manuals.length > 0 ? manuals.map((m, i) => <div key={i}><h3 className="font-bold text-blue-700 mb-2 border-l-4 border-blue-600 pl-2">{m.title}</h3><p className="whitespace-pre-wrap">{m.text}</p></div>) : <p>取扱説明書はありません。</p>}
+                                    {manuals.length > 0 ? manuals.map((m, i) => <div key={i}><h3 className="font-bold text-blue-700 mb-2 border-l-4 border-blue-600 pl-2 mt-4">{m.title}</h3><p className="whitespace-pre-wrap">{m.text}</p></div>) : <p>取扱説明書はありません。</p>}
                                 </div>
                                 <div className="mt-6 text-right">
-                                    <button onClick={() => setShowManual(false)} className="bg-blue-600 text-white font-bold px-8 py-2.5 rounded-lg hover:bg-blue-700">閉じる</button>
+                                    <button onClick={() => setShowManual(false)} className="bg-slate-800 text-white font-bold px-8 py-2.5 rounded-lg hover:bg-slate-900">閉じる</button>
                                 </div>
                             </div>
                         </div>
@@ -408,8 +447,8 @@
                                     {qas.length > 0 ? qas.map((q, i) => <div key={i} className="mb-2"><b>Q. {q.q}</b><br/>A. {q.a}</div>) : <p>公開Q&Aはありません。</p>}
                                 </div>
                                 <div className="text-sm font-bold mb-2">💡 開発チームへ要望を送る</div>
-                                <textarea rows="3" className="w-full border border-slate-300 rounded-lg p-2 mb-2 text-sm bg-slate-50" value={qaText} onChange={e => setQaText(e.target.value)}></textarea>
-                                <button onClick={submitQA} className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 mb-2">送信する</button>
+                                <textarea rows="3" className="w-full border border-slate-300 rounded-lg p-2 mb-2 text-sm bg-slate-50 outline-none" value={qaText} onChange={e => setQaText(e.target.value)}></textarea>
+                                <button onClick={submitQA} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 mb-2 shadow-sm">送信する</button>
                                 <button onClick={() => setShowQa(false)} className="w-full bg-slate-200 text-slate-700 font-bold py-2 rounded-lg hover:bg-slate-300">閉じる</button>
                             </div>
                         </div>
@@ -441,7 +480,7 @@
                                     <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">フライトナース</label>
                                     <div className="relative print:hidden">
                                         <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
-                                        <select name="recorder" value={reportInfo.recorder} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none">
+                                        <select name="recorder" value={reportInfo.recorder} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none font-bold text-slate-700">
                                             <option value="">-- 選択 --</option>
                                             {masters.ns.map(n => <option key={n} value={n}>{n}</option>)}
                                         </select>
@@ -452,7 +491,7 @@
                                     <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">担当医師</label>
                                     <div className="relative print:hidden">
                                         <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
-                                        <select name="doctor" value={reportInfo.doctor} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none">
+                                        <select name="doctor" value={reportInfo.doctor} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none font-bold text-slate-700">
                                             <option value="">-- 選択 --</option>
                                             {masters.dr.map(d => <option key={d} value={d}>{d}</option>)}
                                         </select>
@@ -466,8 +505,8 @@
                             <label className="block text-xs font-bold text-slate-500 mb-2 print:hidden">浜町待機理由 / 特記事項</label>
                             <div className="print:hidden mb-2 flex flex-wrap gap-3">
                                 {REASON_OPTIONS.map(reason => (
-                                    <label key={reason} className="flex items-center gap-1.5 cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 text-sm hover:bg-slate-50">
-                                        <input type="checkbox" checked={reportInfo.selectedReasons.includes(reason)} onChange={() => handleReasonCheck(reason)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                                    <label key={reason} className="flex items-center gap-1.5 cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 text-sm hover:bg-slate-50 font-medium text-slate-600">
+                                        <input type="checkbox" checked={reportInfo.selectedReasons.includes(reason)} onChange={() => handleReasonCheck(reason)} className="rounded border-slate-300 text-blue-600" />
                                         {reason}
                                     </label>
                                 ))}
@@ -495,7 +534,7 @@
                         <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                             <div className="md:col-span-4">
                                 <label className="block text-xs font-bold text-slate-500 mb-1">業務種別</label>
-                                <select ref={categoryRef} name="category" value={formData.category} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, noRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none">
+                                <select ref={categoryRef} name="category" value={formData.category} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, noRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold text-slate-700">
                                     {Object.values(CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                                 </select>
                             </div>
@@ -505,11 +544,11 @@
                             </div>
                             <div className="md:col-span-3">
                                 <label className="block text-xs font-bold text-slate-500 mb-1">開始時間</label>
-                                <input ref={startRef} type="time" name="start" value={formData.start} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, endRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                                <input ref={startRef} type="time" name="start" value={formData.start} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, endRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-mono font-bold" />
                             </div>
                             <div className="md:col-span-3">
                                 <label className="block text-xs font-bold text-slate-500 mb-1">終了時間</label>
-                                <input ref={endRef} type="time" name="end" value={formData.end} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, descRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                                <input ref={endRef} type="time" name="end" value={formData.end} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, descRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-mono font-bold" />
                             </div>
 
                             <div className="md:col-span-8">
@@ -517,8 +556,8 @@
                                 <input ref={descRef} type="text" name="desc" value={formData.desc} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, null)} placeholder="活動内容を入力..." className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
                             </div>
                              <div className="md:col-span-2 flex items-center justify-center h-10 bg-slate-50 rounded border border-slate-200 mb-[1px]">
-                                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none font-bold">
-                                    <input type="checkbox" name="isContinuous" checked={formData.isContinuous} onChange={handleInputChange} className="rounded border-slate-300 text-blue-600" />
+                                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none font-bold">
+                                    <input type="checkbox" name="isContinuous" checked={formData.isContinuous} onChange={handleInputChange} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
                                     <span>連続出動</span>
                                 </label>
                             </div>
@@ -609,7 +648,7 @@
                                             >
                                                 <div className="flex items-center gap-1 text-white font-bold text-xs px-1">
                                                     {IconComponent && <IconComponent className="w-4 h-4 print:w-3 print:h-3 print:text-white print-icon-size" />}
-                                                    <span className="hidden print:inline print-bar-text truncate">{event.no ? '#'+event.no : categoryConfig.label.replace('ヘリ活動', '')}</span>
+                                                    <span className="hidden print:inline print-bar-text truncate font-bold">{event.no ? '#'+event.no : categoryConfig.label.replace('ヘリ活動', '')}</span>
                                                 </div>
                                                 {isHovered && !isEditing && (
                                                     <div className="absolute bottom-full mb-2 w-64 bg-slate-800 text-white text-xs rounded p-3 shadow-xl z-50 pointer-events-none left-1/2 -translate-x-1/2 no-print">
@@ -672,7 +711,7 @@
                                                 <td className="px-4 py-3 font-mono font-bold print:py-tight">{event.no || '-'}</td>
                                                 <td className="px-4 py-3 font-mono whitespace-nowrap print:py-tight">{event.start} - {event.end}</td>
                                                 <td className="px-4 py-3 text-slate-600 print:py-tight">{endMins - startMins}分</td>
-                                                <td className="px-4 py-3 text-slate-600 print:max-w-none print-wrap-text truncate max-w-xs" title={event.desc}>{event.desc}</td>
+                                                <td className="px-4 py-3 text-slate-600 print:max-w-none print-wrap-text truncate max-w-xs font-medium" title={event.desc}>{event.desc}</td>
                                                 <td className="px-4 py-3 text-center flex justify-center gap-2 no-print">
                                                     <button onClick={() => handleEditClick(event)} className={`transition-colors ${isEditing ? 'text-amber-600' : 'text-slate-400 hover:text-blue-600'}`} title="修正"><Icons.Edit3 className="w-4 h-4" /></button>
                                                     <button onClick={() => handleDelete(event.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="削除"><Icons.Trash2 className="w-4 h-4" /></button>
