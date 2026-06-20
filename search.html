@@ -221,7 +221,7 @@
       const res = await fetch(GAS_API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_init", password: pin })
+        body: JSON.stringify({ action: "fetch_init", password: pin, app_name: "検索" })
       });
       const data = await res.json();
       if (data.status === "success") {
@@ -229,8 +229,8 @@
         document.getElementById("login-overlay").style.display = "none";
         resetTimer();
         fillSelects(data.masters);
-        document.getElementById("manual-list").innerHTML = data.manual_admin.map(m => `<p style="margin-bottom:8px;"><b>■ ${m.title}</b><br><span style="font-size:13px;">${m.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "取扱説明書はありません";
-        document.getElementById("qa-list").innerHTML = data.qa.filter(q=>q.status==="◯").map(q => `<p style="margin-bottom:8px;"><b>Q. ${q.q}</b><br><span style="color:var(--ink);">A. ${q.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "公開Q&Aなし";
+        document.getElementById("manual-list").innerHTML = data.manuals.map(m => `<p style="margin-bottom:8px;"><b>■ ${m.title}</b><br><span style="font-size:13px;">${m.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "取扱説明書はありません";
+        document.getElementById("qa-list").innerHTML = data.qa.map(q => `<p style="margin-bottom:8px;"><b>Q. ${q.q}</b><br><span style="color:var(--ink);">A. ${q.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "公開Q&Aなし";
       } else {
         document.getElementById("login-err").innerText = "エラー: " + data.message;
         document.getElementById("login-err").style.display = "block";
