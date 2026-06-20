@@ -3,370 +3,712 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ドクターヘリ業務日報コンソール</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js](https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js)"></script>
+    <title>ドクターヘリ業務日報・活動タイムライン</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f2f2f7; color: #1c1c1e; }
+        @media print {
+            @page { 
+                size: landscape; 
+                margin: 5mm; 
+            }
+            body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                background: white;
+                /* A4に収めるためさらに縮小 */
+                transform: scale(0.75);
+                transform-origin: top left;
+                width: 133%;
+                height: 100%;
+                overflow: visible;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .no-print, #input-form-area { display: none !important; }
+            .print-full-width { width: 100% !important; min-width: 0 !important; }
+            .print-break-avoid { page-break-inside: avoid; }
+            
+            /* --- ヘッダー --- */
+            .print-header-compact { display: flex !important; flex-wrap: wrap; gap: 16px; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 4px; font-size: 11pt; }
+            .print-header-item { display: flex; align-items: center; white-space: nowrap; }
+            .print-reason-box { font-size: 10pt; border: 1px solid #ddd; padding: 2px 4px; margin-bottom: 4px; min-height: auto !important; }
+
+            /* --- チャートエリア (高さを大幅に縮小) --- */
+            .print-chart-container { 
+                height: 80px !important;
+                min-height: 80px !important;
+                margin-bottom: 4px !important;
+                border: 1px solid #ddd !important;
+                overflow: hidden !important; 
+                position: relative !important;
+                background-color: white !important;
+            }
+            
+            .print-time-label { top: 0 !important; font-size: 9pt !important; line-height: 1.5 !important; height: 16px !important; }
+            .print-grid-line { top: 16px !important; bottom: 0 !important; height: auto !important; }
+            
+            /* イベントバー (高さを半分程度に細く) */
+            .print-chart-bar-wrapper { top: 24px !important; transform: none !important; }
+            .print-chart-bar { height: 24px !important; min-height: 24px !important; flex-direction: row !important; } 
+            .print-icon-size { width: 12px !important; height: 12px !important; margin-right: 4px; }
+            .print-bar-text { font-size: 9px !important; }
+
+            /* --- リストエリア (余白を詰める) --- */
+            .print-list-header th { padding: 1px 4px !important; font-size: 9pt !important; background-color: #f3f4f6 !important; border-bottom: 1px solid #ccc !important; }
+            .print-list-row td { padding: 1px 4px !important; font-size: 9pt !important; line-height: 1.1 !important; border-bottom: 1px solid #eee !important; }
+            .print-wrap-text { white-space: pre-wrap !important; word-break: break-all !important; font-size: 8.5pt !important; }
+
+            /* --- フッター --- */
+            .print-footer { position: fixed; bottom: 0; right: 0; width: 100%; text-align: right; font-size: 8pt; color: #888; padding-top: 2px; border-top: 1px solid #eee; background: white; }
+        }
+        
         ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .hidden { display: none !important; }
-        @media print {
-            @page { size: landscape; margin: 5mm; }
-            body { background: white; transform: scale(0.85); transform-origin: top left; width: 117%; height: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; }
-            .no-print, #input-form-area, #btn-area-header { display: none !important; }
-            .print-header-compact { display: flex !important; flex-wrap: wrap; gap: 16px; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 4px; font-size: 11pt; }
-        }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="p-4 md:p-6 pb-32">
+<body class="bg-slate-100 text-slate-800 font-sans">
+    <div id="root"></div>
 
-    <div id="global-loader" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center font-bold text-white text-sm hidden">
-        <div class="bg-slate-800 px-6 py-3 rounded-xl shadow-lg animate-pulse">データを読み込み中...</div>
-    </div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 flex justify-between items-center no-print">
-        <div class="flex items-center gap-2">
-            <h1 class="text-xl font-bold text-slate-800">📅 業務日報コンソール</h1>
-        </div>
-        <div class="flex gap-2" id="btn-area-header">
-            <button onclick="saveToSheet()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-sm">💾 シートに保存</button>
-            <button onclick="window.print()" class="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm font-bold hover:bg-slate-800">🖨️ 印刷/PDF</button>
-            <button onclick="exportCSV()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700">📊 CSV出力</button>
-            <a href="portal.html" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50">🏠 ポータルへ</a>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">日付 (選択すると事案が自動連携されます)</label>
-                    <input type="date" id="info-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none font-bold" onchange="fetchDailyReport()">
-                </div>
-                <div id="sun-display" class="flex gap-3 text-xs bg-amber-50 px-3 py-2 rounded-lg border border-amber-100 text-amber-800 font-medium"></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">フライトナース</label>
-                        <select id="info-nurse" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">担当医師</label>
-                        <select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none"></select>
-                    </div>
-                </div>
-            </div>
-            <div class="md:col-span-2">
-                <label class="block text-xs font-bold text-slate-500 mb-2">浜町待機理由 / 特記事項</label>
-                <div class="flex flex-wrap gap-2 mb-3" id="reason-checkboxes"></div>
-                <textarea id="info-remarks" rows="3" placeholder="特記事項・申し送り事項（自由入力）" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm focus:border-blue-500 outline-none resize-none"></textarea>
-            </div>
-        </div>
-    </div>
-
-    <div id="input-form-area" class="bg-blue-50 rounded-xl shadow-sm border border-blue-200 mb-6 overflow-hidden no-print">
-        <div class="px-6 py-3 border-b border-blue-200 flex justify-between items-center bg-blue-100/50">
-            <h2 id="form-title" class="text-sm font-bold text-blue-900">➕ タイムライン項目の追加・微調整</h2>
-            <button id="btn-cancel-edit" onclick="cancelEdit()" class="hidden text-xs bg-white border border-slate-300 px-3 py-1 rounded-md text-slate-600 font-bold">編集キャンセル</button>
-        </div>
-        <div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-            <div class="md:col-span-3">
-                <label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label>
-                <select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
-                    <option value="mission">🚁 ヘリ活動 (実施)</option>
-                    <option value="cancel">⚠️ ヘリ活動 (キャンセル)</option>
-                    <option value="inspection">⚙️ 始業点検・整備</option>
-                    <option value="assistant">🏃 補助者業務</option>
-                    <option value="management">📁 管理業務</option>
-                    <option value="group">👥 グループ業務/会議</option>
-                    <option value="other">💼 その他活動</option>
-                </select>
-            </div>
-            <div class="md:col-span-2">
-                <label class="block text-xs font-bold text-slate-500 mb-1">事案No.</label>
-                <input type="text" id="event-no" placeholder="12345" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
-            </div>
-            <div class="md:col-span-2">
-                <label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label>
-                <input type="time" id="event-start" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
-            </div>
-            <div class="md:col-span-2">
-                <label class="block text-xs font-bold text-slate-500 mb-1">終了時間</label>
-                <input type="time" id="event-end" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
-            </div>
-            <div class="md:col-span-2 flex items-center h-10 px-2 bg-white rounded-lg border border-slate-300 mb-[1px]">
-                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer w-full justify-center">
-                    <input type="checkbox" id="event-continuous" class="w-4 h-4 text-blue-600"> 連続出動
-                </label>
-            </div>
-            <div class="md:col-span-12 mt-2">
-                <label class="block text-xs font-bold text-slate-500 mb-1">内容・備考</label>
-                <div class="flex gap-4">
-                    <input type="text" id="event-desc" placeholder="活動内容を入力..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none">
-                    <button id="btn-save" onclick="saveEvent()" class="bg-blue-600 text-white font-bold px-8 py-2.5 rounded-lg whitespace-nowrap hover:bg-blue-700">追加する</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-md border border-slate-200 mb-6 overflow-hidden">
-        <div class="px-4 py-2 border-b border-slate-100 bg-slate-50 flex gap-4 text-xs font-bold text-slate-600 flex-wrap" id="legend-box"></div>
-        <div class="overflow-x-auto relative min-h-[160px]" style="padding-bottom: 20px;">
-            <div class="min-w-[1000px] relative h-32 mx-4 mt-8" id="chart-area">
-                <div id="chart-grid" class="absolute inset-0 pointer-events-none"></div>
-                <div id="chart-bars" class="absolute inset-0 top-1/2 -translate-y-1/2 h-16"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 font-bold text-slate-700 text-sm">📋 登録済みデータリスト</div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead class="bg-slate-100 text-slate-500 text-xs">
-                    <tr>
-                        <th class="px-4 py-3 w-32">種別</th>
-                        <th class="px-4 py-3 w-24">No.</th>
-                        <th class="px-4 py-3 w-32">時間</th>
-                        <th class="px-4 py-3 w-20">活動(分)</th>
-                        <th class="px-4 py-3 w-16 text-center">連続</th>
-                        <th class="px-4 py-3 min-w-[200px] max-w-md">内容</th>
-                        <th class="px-4 py-3 w-24 text-center no-print">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="list-body" class="divide-y divide-slate-200"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <script>
-        const GAS_API_URL = "[https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec](https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec)";
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
         const PIN_CODE = "5740";
 
-        const START_HOUR = 8, END_HOUR = 19;
-        const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60;
+        // --- アイコン ---
+        const Icon = ({ path, className = "w-4 h-4" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {path}
+            </svg>
+        );
 
-        const CATS = {
-            mission: { label: 'ヘリ活動(実施)', color: 'bg-blue-600', prep: 10, rec: 'auto' },
-            cancel: { label: 'ヘリ活動(キャンセル)', color: 'bg-gray-400', prep: 10, rec: 10 },
-            inspection: { label: '始業点検', color: 'bg-orange-400', prep: 0, rec: 0 },
-            assistant: { label: '補助者業務', color: 'bg-rose-400', prep: 0, rec: 0 },
-            management: { label: '管理業務', color: 'bg-slate-500', prep: 0, rec: 0 },
-            group: { label: 'グループ業務', color: 'bg-teal-500', prep: 0, rec: 0 },
-            other: { label: 'その他', color: 'bg-purple-500', prep: 0, rec: 0 }
+        const Icons = {
+            ClipboardList: (props) => <Icon {...props} path={<><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 12h.01"/><path d="M13 12h5"/><path d="M9 16h.01"/><path d="M13 16h5"/><path d="M9 8h.01"/><path d="M13 8h5"/></>} />,
+            Plus: (props) => <Icon {...props} path={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />,
+            Trash2: (props) => <Icon {...props} path={<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>} />,
+            RotateCcw: (props) => <Icon {...props} path={<><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></>} />,
+            Briefcase: (props) => <Icon {...props} path={<><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></>} />,
+            Users: (props) => <Icon {...props} path={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />,
+            Settings: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></>} />,
+            FileSpreadsheet: (props) => <Icon {...props} path={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M10 9v8"/></>} />,
+            User: (props) => <Icon {...props} path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>} />,
+            Edit3: (props) => <Icon {...props} path={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></>} />,
+            X: (props) => <Icon {...props} path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />,
+            Printer: (props) => <Icon {...props} path={<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>} />,
+            BookOpen: (props) => <Icon {...props} path={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>} />,
+            AlertCircle: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>} />,
+            CheckCircle: (props) => <Icon {...props} path={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} />,
+            Activity: (props) => <Icon {...props} path={<><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>} />,
+            Folder: (props) => <Icon {...props} path={<><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></>} />,
+            Mail: (props) => <Icon {...props} path={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>} />,
+            Sun: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>} />,
+            Moon: (props) => <Icon {...props} path={<><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></>} />,
+            Clock: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
+            Save: (props) => <Icon {...props} path={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />
         };
 
-        let events = [];
-        let editingId = null;
+        const DailyTimelineApp = () => {
+            const START_HOUR = 8;
+            const END_HOUR = 19;
+            const TOTAL_HOURS = END_HOUR - START_HOUR;
+            const TOTAL_MINUTES = TOTAL_HOURS * 60;
 
-        window.onload = () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('info-date').value = today;
-            
-            const reasons = ["風向き", "天候不良", "強風", "機体トラブル"];
-            document.getElementById("reason-checkboxes").innerHTML = reasons.map(r => `<label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-sm hover:bg-slate-100"><input type="checkbox" name="reason" value="${r}"> ${r}</label>`).join("");
-
-            drawGrid();
-            drawLegend();
-            
-            // マスタ取得後に本日の日報を取得
-            fetchMasters().then(() => fetchDailyReport());
-        };
-
-        async function fetchMasters() {
-            try {
-                const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
-                const json = await res.json();
-                if(json.status === "success") {
-                    const mkOpt = (arr) => `<option value="">-- 選択 --</option>` + arr.map(v=>`<option value="${v}">${v}</option>`).join("") + `<option value="その他">その他</option>`;
-                    document.getElementById("info-doctor").innerHTML = mkOpt(json.masters.dr);
-                    document.getElementById("info-nurse").innerHTML = mkOpt(json.masters.ns);
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        async function fetchDailyReport() {
-            const dateStr = document.getElementById("info-date").value;
-            if(!dateStr) return;
-            
-            calculateSun();
-            const loader = document.getElementById("global-loader");
-            loader.classList.remove("hidden");
-            
-            try {
-                const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_daily_report", password:PIN_CODE, date:dateStr}), redirect:"follow" });
-                const json = await res.json();
-                if(json.status === "success") {
-                    const d = json.data;
-                    document.getElementById("info-doctor").value = d.doctor || "";
-                    document.getElementById("info-nurse").value = d.recorder || "";
-                    document.getElementById("info-remarks").value = d.hamamachiReason || "";
-                    events = d.events || [];
-                    render();
-                }
-            } catch(e) { alert("通信エラーによりデータが取得できませんでした。"); }
-            loader.classList.add("hidden");
-        }
-
-        async function saveToSheet() {
-            const dateStr = document.getElementById("info-date").value;
-            if(!dateStr) return alert("日付が未入力です。");
-            
-            const btn = event.target;
-            const originalText = btn.innerHTML;
-            btn.innerText = "保存中..."; btn.disabled = true;
-            
-            let reasons = [];
-            document.querySelectorAll('input[name="reason"]:checked').forEach(cb => reasons.push(cb.value));
-            const otherR = document.getElementById('info-remarks').value.trim();
-            if(otherR) reasons.push(otherR);
-            const reasonStr = reasons.join("、");
-
-            const payload = {
-                action: "save_daily_report",
-                password: PIN_CODE,
-                date: dateStr,
-                recorder: document.getElementById("info-nurse").value,
-                doctor: document.getElementById("info-doctor").value,
-                hamamachiReason: reasonStr,
-                events: events
+            const CATEGORIES = {
+                MISSION: { id: 'mission', label: 'ヘリ活動 (実施)', color: 'bg-blue-600 border-blue-700', icon: Icons.CheckCircle, hasPrep: true, hasRecovery: true },
+                CANCEL: { id: 'cancel', label: 'ヘリ活動 (キャンセル)', color: 'bg-gray-400 border-gray-500', icon: Icons.AlertCircle, hasPrep: true, hasRecovery: true },
+                INSPECTION: { id: 'inspection', label: '始業点検・整備', color: 'bg-orange-400 border-orange-500', icon: Icons.Settings, hasPrep: false, hasRecovery: false },
+                ASSISTANT: { id: 'assistant', label: '補助者業務', color: 'bg-rose-400 border-rose-500', icon: Icons.Activity, hasPrep: false, hasRecovery: false },
+                MANAGEMENT: { id: 'management', label: '管理業務', color: 'bg-slate-500 border-slate-600', icon: Icons.Folder, hasPrep: false, hasRecovery: false },
+                GROUP: { id: 'group', label: 'グループ業務/会議', color: 'bg-teal-500 border-teal-600', icon: Icons.Users, hasPrep: false, hasRecovery: false },
+                OTHER: { id: 'other', label: 'その他活動', color: 'bg-purple-500 border-purple-600', icon: Icons.Briefcase, hasPrep: false, hasRecovery: false },
             };
 
-            try {
-                const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload), redirect:"follow" });
-                const json = await res.json();
-                if(json.status === "success") {
-                    alert("スプレッドシート（浜町日誌）に保存しました！");
-                } else {
-                    alert("エラー: " + json.message);
-                }
-            } catch(e) { alert("通信エラーにより保存できませんでした。"); }
-            
-            btn.innerHTML = originalText; btn.disabled = false;
-        }
+            const REASON_OPTIONS = ["風向き", "天候不良", "強風", "機体トラブル"];
 
-        function calculateSun() {
-            const dateStr = document.getElementById('info-date').value;
-            if (!dateStr || typeof SunCalc === 'undefined') return;
-            const date = new Date(dateStr);
-            const times = SunCalc.getTimes(date, 31.5602, 130.558);
-            const fmt = d => d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-            const limit = new Date(date); limit.setHours(17, 30, 0);
-            const standby = (times.sunset.getTime() - 60*60*1000 < limit.getTime()) ? new Date(times.sunset.getTime() - 60*60*1000) : limit;
-            document.getElementById('sun-display').innerHTML = `<span>🌅 日出: ${fmt(times.sunrise)}</span><span>🌇 日没: ${fmt(times.sunset)}</span><span class="font-bold border-l border-amber-200 pl-3 ml-1">⏱️ 待機終了: ${fmt(standby)}</span>`;
-        }
-
-        function drawGrid() {
-            const grid = document.getElementById('chart-grid');
-            let html = '';
-            for (let i = 0; i <= (END_HOUR - START_HOUR); i++) {
-                const left = (i / (END_HOUR - START_HOUR)) * 100;
-                html += `<div class="absolute -translate-x-1/2 -top-6 text-xs font-bold text-slate-400" style="left: ${left}%;">${START_HOUR + i}:00</div>`;
-                html += `<div class="absolute top-0 bottom-0 w-px bg-slate-200 -translate-x-1/2" style="left: ${left}%;"></div>`;
-                if (i < END_HOUR - START_HOUR) html += `<div class="absolute top-0 bottom-0 w-px border-l border-slate-300 border-dashed opacity-50 -translate-x-1/2" style="left: ${left + (50 / (END_HOUR - START_HOUR))}%;"></div>`;
-            }
-            grid.innerHTML = html;
-        }
-
-        function drawLegend() {
-            const box = document.getElementById('legend-box');
-            let html = '';
-            for(let k in CATS) html += `<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full ${CATS[k].color}"></div>${CATS[k].label}</span>`;
-            box.innerHTML = html;
-        }
-
-        function timeToMins(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return (h - START_HOUR) * 60 + m; }
-
-        function render() {
-            events.sort((a, b) => timeToMins(a.start) - timeToMins(b.start));
-            const bars = document.getElementById('chart-bars');
-            const tbody = document.getElementById('list-body');
-            let barsHtml = '', listHtml = '';
-
-            events.forEach((ev, idx) => {
-                const s = timeToMins(ev.start); const e = timeToMins(ev.end); const dur = e - s; const cat = CATS[ev.category];
-                let prep = cat.prep; if (idx > 0 && events[idx-1].isContinuous) prep = 0;
-                let rec = 0; if (!ev.isContinuous) { if (cat.rec === 'auto') rec = (dur < 60) ? 30 : 45; else rec = cat.rec; }
-
-                const getPct = (mins) => (mins / TOTAL_MINUTES) * 100;
-                const pLeft = getPct(s - prep); const pWidth = getPct(prep);
-                const mLeft = getPct(s); const mWidth = getPct(dur);
-                const rLeft = getPct(e); const rWidth = getPct(rec);
-
-                barsHtml += `<div class="absolute h-full w-full top-0">`;
-                if (prep > 0) barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-10 bg-yellow-300 opacity-60 rounded-l-md border-y border-l border-yellow-500" style="left: ${pLeft}%; width: ${pWidth}%;" title="準備(${prep}分)"></div>`;
-                barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-14 ${cat.color} rounded-md shadow flex items-center justify-center text-white text-[10px] font-bold cursor-pointer hover:brightness-110 border-b-4 border-black/20 group" style="left: ${mLeft}%; width: ${mWidth}%;" onclick="editEvent('${ev.id}')">
-                    <span class="truncate px-1">${ev.no ? '#'+ev.no : ''}</span>
-                    <div class="hidden group-hover:block absolute bottom-full mb-2 w-64 bg-slate-800 text-white text-xs rounded p-3 shadow-xl z-50 left-1/2 -translate-x-1/2 pointer-events-none">
-                        <div class="font-bold text-yellow-400 mb-1">${ev.no ? '#'+ev.no : cat.label}</div>
-                        <div class="mb-2 text-slate-300 font-mono border-b border-slate-600 pb-1">${ev.start} - ${ev.end} (${dur}分)</div>
-                        <div class="whitespace-normal">${ev.desc}</div>
-                    </div>
-                </div>`;
-                if (rec > 0) barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-10 bg-green-100 opacity-80 rounded-r-md border-y border-r border-green-300" style="left: ${rLeft}%; width: ${rWidth}%;" title="復帰(${rec}分)"></div>`;
-                barsHtml += `</div>`;
-
-                listHtml += `<tr class="hover:bg-slate-50 ${editingId === ev.id ? 'bg-amber-50' : ''}">
-                    <td class="px-4 py-2"><span class="inline-block px-2 py-1 rounded text-xs font-bold text-white ${cat.color}">${cat.label.replace('ヘリ活動', '')}</span></td>
-                    <td class="px-4 py-2 font-mono font-bold text-slate-700">${ev.no || '-'}</td>
-                    <td class="px-4 py-2 font-mono text-slate-600">${ev.start} - ${ev.end}</td>
-                    <td class="px-4 py-2 text-slate-600">${dur}分</td>
-                    <td class="px-4 py-2 text-center text-blue-600 font-bold">${ev.isContinuous ? '✓' : ''}</td>
-                    <td class="px-4 py-2 text-slate-600 truncate max-w-[200px]" title="${ev.desc}">${ev.desc}</td>
-                    <td class="px-4 py-2 text-center"><button onclick="editEvent('${ev.id}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs mr-2">修正</button><button onclick="deleteEvent('${ev.id}')" class="text-red-600 hover:text-red-800 font-bold text-xs">削除</button></td>
-                </tr>`;
+            const [reportInfo, setReportInfo] = useState({ 
+                date: new Date().toISOString().split('T')[0], 
+                recorder: '', 
+                doctor: '', 
+                hamamachiReason: '',
+                selectedReasons: [],
+                otherReason: ''
             });
-            bars.innerHTML = barsHtml; tbody.innerHTML = listHtml;
-        }
-
-        function saveEvent() {
-            const cat = document.getElementById('event-cat').value;
-            const no = document.getElementById('event-no').value.trim();
-            const start = document.getElementById('event-start').value;
-            const end = document.getElementById('event-end').value;
-            const desc = document.getElementById('event-desc').value.trim();
-            const cont = document.getElementById('event-continuous').checked;
-
-            if (!start || !end) return alert("開始時間と終了時間を入力してください。");
-            if (timeToMins(start) >= timeToMins(end)) return alert("終了時間は開始時間より後にしてください。");
-
-            const newEv = { id: editingId ? editingId : "manual-" + Date.now().toString(), category: cat, no: no, start: start, end: end, desc: desc, isContinuous: cont };
-            if (editingId) events = events.map(e => e.id === editingId ? newEv : e); else events.push(newEv);
-            cancelEdit(); render();
-        }
-
-        function editEvent(id) {
-            const ev = events.find(e => e.id === id); if (!ev) return;
-            editingId = id;
-            document.getElementById('event-cat').value = ev.category;
-            document.getElementById('event-no').value = ev.no;
-            document.getElementById('event-start').value = ev.start;
-            document.getElementById('event-end').value = ev.end;
-            document.getElementById('event-desc').value = ev.desc;
-            document.getElementById('event-continuous').checked = ev.isContinuous;
+            const [events, setEvents] = useState([]);
+            const [formData, setFormData] = useState({ category: 'mission', no: '', start: '', end: '', desc: '', isContinuous: false });
+            const [editingId, setEditingId] = useState(null);
+            const [hoveredId, setHoveredId] = useState(null);
+            const [showManual, setShowManual] = useState(false);
+            const [sunTimes, setSunTimes] = useState({ sunrise: '--:--', sunset: '--:--', standbyEnd: '--:--' });
             
-            const area = document.getElementById('input-form-area');
-            area.classList.replace('bg-blue-50', 'bg-amber-50'); area.classList.replace('border-blue-200', 'border-amber-400');
-            document.getElementById('form-title').innerText = "✏️ タイムライン項目の修正";
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            const btn = document.getElementById('btn-save'); btn.innerText = "更新する"; btn.classList.replace('bg-blue-600', 'bg-amber-500'); btn.classList.replace('hover:bg-blue-700', 'hover:bg-amber-600');
-            window.scrollTo({ top: 0, behavior: 'smooth' }); render();
-        }
+            // マスタデータ
+            const [masters, setMasters] = useState({ dr: [], ns: [] });
+            const [isLoading, setIsLoading] = useState(false);
+            const [loadingMsg, setLoadingMsg] = useState('');
 
-        function cancelEdit() {
-            editingId = null;
-            document.getElementById('event-no').value = ''; document.getElementById('event-start').value = ''; document.getElementById('event-end').value = ''; document.getElementById('event-desc').value = ''; document.getElementById('event-continuous').checked = false;
-            const area = document.getElementById('input-form-area');
-            area.classList.replace('bg-amber-50', 'bg-blue-50'); area.classList.replace('border-amber-400', 'border-blue-200');
-            document.getElementById('form-title').innerText = "➕ タイムライン項目の追加";
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-            const btn = document.getElementById('btn-save'); btn.innerText = "追加する"; btn.classList.replace('bg-amber-500', 'bg-blue-600'); btn.classList.replace('hover:bg-amber-600', 'hover:bg-blue-700');
-            render();
-        }
+            const categoryRef = useRef(null);
+            const noRef = useRef(null);
+            const startRef = useRef(null);
+            const endRef = useRef(null);
+            const descRef = useRef(null);
 
-        function deleteEvent(id) { if(confirm("削除しますか？")) { events = events.filter(e => e.id !== id); if (editingId === id) cancelEdit(); render(); } }
+            // 1. 初回マウント時にマスタデータを取得
+            useEffect(() => {
+                const initFetch = async () => {
+                    try {
+                        const res = await fetch(GAS_API_URL, {
+                            method: "POST",
+                            headers: {"Content-Type": "text/plain;charset=utf-8"},
+                            body: JSON.stringify({action: "fetch_init", password: PIN_CODE})
+                        });
+                        const json = await res.json();
+                        if (json.status === "success") {
+                            setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
+                        }
+                    } catch (e) {
+                        console.warn("マスタデータの取得に失敗しました。オフラインモードで起動します。", e);
+                    }
+                };
+                initFetch();
+            }, []);
 
+            // 2. 日付変更時に日報データ＆事案データを取得
+            useEffect(() => {
+                if (!reportInfo.date) return;
+                
+                // 日没計算
+                try {
+                    const date = new Date(reportInfo.date);
+                    if (window.SunCalc) {
+                        const times = SunCalc.getTimes(date, 31.5602, 130.558); // 鹿児島
+                        const formatTime = (dateObj) => dateObj.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                        const sunsetTime = times.sunset;
+                        const sunsetMinus1h = new Date(sunsetTime.getTime() - 60 * 60 * 1000);
+                        const fixed1730 = new Date(date); fixed1730.setHours(17, 30, 0);
+                        const standbyEnd = (sunsetMinus1h < fixed1730) ? sunsetMinus1h : fixed1730;
+                        setSunTimes({ sunrise: formatTime(times.sunrise), sunset: formatTime(times.sunset), standbyEnd: formatTime(standbyEnd) });
+                    }
+                } catch(e) {}
+
+                // GASからデータ取得
+                const fetchData = async () => {
+                    setLoadingMsg('データを読み込み中...');
+                    setIsLoading(true);
+                    try {
+                        const res = await fetch(GAS_API_URL, {
+                            method: "POST",
+                            headers: {"Content-Type": "text/plain;charset=utf-8"},
+                            body: JSON.stringify({action: "fetch_daily_report", password: PIN_CODE, date: reportInfo.date})
+                        });
+                        const json = await res.json();
+                        if (json.status === "success" && json.data) {
+                            const d = json.data;
+                            setReportInfo(prev => ({
+                                ...prev,
+                                recorder: d.recorder || prev.recorder,
+                                doctor: d.doctor || prev.doctor,
+                                hamamachiReason: d.hamamachiReason || ''
+                            }));
+                            setEvents(d.events || []);
+                        }
+                    } catch (e) {
+                        console.warn("データの取得に失敗しました。オフラインモードです。", e);
+                    }
+                    setIsLoading(false);
+                };
+                fetchData();
+            }, [reportInfo.date]);
+
+            // --- ヘルパー関数 ---
+            const timeToMinutes = (timeStr) => {
+                if (!timeStr) return 0;
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return (hours - START_HOUR) * 60 + minutes;
+            };
+
+            const getRecoveryDuration = (event) => {
+                const cat = Object.values(CATEGORIES).find(c => c.id === event.category);
+                if (!cat || !cat.hasRecovery) return 0;
+                if (event.isContinuous) return 0;
+                const duration = timeToMinutes(event.end) - timeToMinutes(event.start);
+                if (event.category === 'cancel') return 10;
+                if (duration < 60) return 30;
+                return 45;
+            };
+
+            const getBasePrepDuration = (event) => {
+                const cat = Object.values(CATEGORIES).find(c => c.id === event.category);
+                if (!cat || !cat.hasPrep) return 0;
+                return 10;
+            };
+
+            const getPosition = (startMins, duration) => {
+                const left = (startMins / TOTAL_MINUTES) * 100;
+                const width = (duration / TOTAL_MINUTES) * 100;
+                return { left: `${left}%`, width: `${width}%` };
+            };
+
+            const handleReportInfoChange = (e) => {
+                const { name, value } = e.target;
+                setReportInfo(prev => ({ ...prev, [name]: value }));
+            };
+
+            const handleReasonCheck = (reason) => {
+                setReportInfo(prev => {
+                    const currentReasons = prev.selectedReasons || [];
+                    let newReasons;
+                    if (currentReasons.includes(reason)) newReasons = currentReasons.filter(r => r !== reason);
+                    else newReasons = [...currentReasons, reason];
+                    
+                    const combined = [...newReasons];
+                    if (prev.otherReason) combined.push(prev.otherReason);
+                    return { ...prev, selectedReasons: newReasons, hamamachiReason: combined.join('、') };
+                });
+            };
+
+            const handleOtherReason = (e) => {
+                const val = e.target.value;
+                setReportInfo(prev => {
+                    const combined = [...prev.selectedReasons];
+                    if(val) combined.push(val);
+                    return { ...prev, otherReason: val, hamamachiReason: combined.join('、') };
+                });
+            };
+
+            const handleInputChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+
+            const handleKeyDown = (e, nextRef) => {
+                if (e.nativeEvent.isComposing) return;
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (nextRef && nextRef.current) nextRef.current.focus();
+                    else handleAddOrUpdate();
+                }
+            };
+
+            const handleEditClick = (event) => {
+                setEditingId(event.id);
+                setFormData({ category: event.category, no: event.no || '', start: event.start, end: event.end, desc: event.desc, isContinuous: event.isContinuous });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const handleCancelEdit = () => {
+                setEditingId(null);
+                setFormData({ category: 'mission', no: '', start: '', end: '', desc: '', isContinuous: false });
+            };
+
+            const handleAddOrUpdate = () => {
+                if (!formData.start || !formData.end) { alert('開始時間と終了時間は必須です。'); return; }
+                
+                if (editingId) {
+                    const updatedEvents = events.map(ev => ev.id === editingId ? { ...formData, id: editingId } : ev).sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+                    setEvents(updatedEvents);
+                    setEditingId(null);
+                } else {
+                    const newEvent = { ...formData, id: Date.now().toString() };
+                    setEvents([...events, newEvent].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start)));
+                }
+                setFormData(prev => ({ category: prev.category, no: '', start: '', end: '', desc: '', isContinuous: false }));
+                if (categoryRef.current) categoryRef.current.focus();
+            };
+
+            const handleDelete = (id) => {
+                if (window.confirm('この項目を削除しますか？')) {
+                    setEvents(events.filter(e => e.id !== id));
+                    if (editingId === id) handleCancelEdit();
+                }
+            };
+
+            const handleReset = () => {
+                if(window.confirm('入力内容を全てクリアしますか？')) {
+                    setEvents([]);
+                    setEditingId(null);
+                    setReportInfo({ date: new Date().toISOString().split('T')[0], recorder: '', doctor: '', hamamachiReason: '', selectedReasons: [], otherReason: '' });
+                }
+            };
+
+            // GASへ保存
+            const handleSaveToSheet = async () => {
+                if (!reportInfo.date) return alert("日付が未入力です。");
+                setLoadingMsg('スプレッドシートへ保存中...');
+                setIsLoading(true);
+                try {
+                    const payload = {
+                        action: "save_daily_report",
+                        password: PIN_CODE,
+                        date: reportInfo.date,
+                        recorder: reportInfo.recorder,
+                        doctor: reportInfo.doctor,
+                        hamamachiReason: reportInfo.hamamachiReason,
+                        events: events
+                    };
+                    const res = await fetch(GAS_API_URL, { method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) });
+                    const json = await res.json();
+                    if(json.status === "success") alert("日報をスプレッドシートに保存しました！");
+                    else alert("エラー: " + json.message);
+                } catch(e) {
+                    alert("通信エラーが発生しました。");
+                }
+                setIsLoading(false);
+            };
+
+            const sortedEvents = [...events].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+            const printDateStr = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+            return (
+                <div className="p-4 max-w-full mx-auto min-h-screen font-sans print:bg-white print:p-0">
+                    {/* ローダー */}
+                    {isLoading && (
+                        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center font-bold text-white text-sm no-print">
+                            <div className="bg-slate-800 px-6 py-3 rounded-xl shadow-lg flex items-center gap-3"><Icons.Activity className="w-5 h-5 animate-pulse" /> {loadingMsg}</div>
+                        </div>
+                    )}
+
+                    {/* Header */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 overflow-hidden print:border-0 print:shadow-none print:mb-2 print-break-avoid">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:bg-white print:border-b-2 print:border-slate-800 print:px-0">
+                            <div className="flex items-center gap-2">
+                                <Icons.ClipboardList className="w-5 h-5 text-blue-600 print:text-black" />
+                                <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.0</span></h1>
+                            </div>
+                            <div className="flex gap-2 no-print items-center h-10">
+                                <button onClick={() => setShowManual(true)} className="h-10 px-3 rounded border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-1 transition-colors text-xs" title="マニュアルを表示"><Icons.BookOpen className="w-3.5 h-3.5"/> 説明書</button>
+                                <div className="h-6 w-px bg-slate-300 mx-1"></div>
+                                <button onClick={handleReset} className="h-10 px-3 rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center gap-1 transition-colors font-bold text-xs"><Icons.RotateCcw className="w-3 h-3"/> クリア</button>
+                                <div className="h-6 w-px bg-slate-300 mx-1"></div>
+                                <button onClick={handleSaveToSheet} className="h-10 px-3 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 transition-colors font-medium text-xs shadow-sm"><Icons.Save className="w-3.5 h-3.5"/> シートに保存</button>
+                                <button onClick={() => window.print()} className="h-10 px-3 rounded bg-slate-700 hover:bg-slate-800 text-white flex items-center gap-1 transition-colors font-medium text-xs"><Icons.Printer className="w-3.5 h-3.5"/> 印刷/PDF</button>
+                            </div>
+                        </div>
+
+                        {/* Manual Modal */}
+                        {showManual && (
+                            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 no-print" onClick={() => setShowManual(false)}>
+                                <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                                    <div className="flex justify-between items-center mb-4 border-b pb-2">
+                                        <h2 className="text-lg font-bold flex items-center gap-2"><Icons.BookOpen className="w-5 h-5 text-blue-600"/> 運用マニュアル・定義書</h2>
+                                        <button onClick={() => setShowManual(false)} className="text-slate-400 hover:text-slate-600"><Icons.X className="w-5 h-5"/></button>
+                                    </div>
+                                    <div className="prose prose-sm text-slate-700">
+                                        <h3 className="font-bold text-slate-900 mb-2">1. 業務種別の定義</h3>
+                                        <ul className="list-disc pl-5 mb-4 space-y-1">
+                                            <li><span className="font-bold text-blue-700">ヘリ活動 (実施):</span> 通常の患者搬送等のミッション完了。</li>
+                                            <li><span className="font-bold text-gray-600">ヘリ活動 (キャンセル):</span> 現場や上空でのキャンセル。</li>
+                                            <li><span className="font-bold text-orange-600">始業点検・整備:</span> 始業前点検、定時点検など。</li>
+                                            <li><span className="font-bold text-teal-600">グループ業務/会議:</span> ブリーフィング、カンファレンスなど。</li>
+                                        </ul>
+                                        <h3 className="font-bold text-slate-900 mb-2">2. 時間の自動計算ルール</h3>
+                                        <div className="bg-slate-50 p-3 rounded mb-4 border border-slate-200">
+                                            <p className="font-bold mb-1">離陸スタンバイ (10分)</p>
+                                            <p className="text-xs mb-2">「ヘリ活動」の開始10分前を自動的にスタンバイ時間として表示します。ただし、前の事案が「連続出動」の場合は表示されません。</p>
+                                            <p className="font-bold mb-1">復帰時間</p>
+                                            <ul className="list-disc pl-5 text-xs">
+                                                <li>キャンセル: <strong>+10分</strong></li>
+                                                <li>活動1時間未満: <strong>+30分</strong></li>
+                                                <li>活動1時間以上: <strong>+45分</strong></li>
+                                                <li>連続出動: <strong>0分</strong></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 text-right">
+                                        <button onClick={() => setShowManual(false)} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">閉じる</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 print:p-0 print:gap-4 print:mt-4">
+                            <div className="space-y-4 print:space-y-2">
+                                <div className="print:flex print:gap-4 items-center print-header-compact">
+                                    <div className="print-header-item">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">日付</label>
+                                        <div className="print:hidden"><input type="date" name="date" value={reportInfo.date} onChange={handleReportInfoChange} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold" /></div>
+                                        <div className="hidden print:block"><span className="font-bold mr-1">日付:</span> {reportInfo.date}</div>
+                                    </div>
+                                    <div className="print-header-item hidden print:block border-l border-slate-300 pl-3 ml-3">
+                                        <div className="flex gap-2 text-[9px] text-slate-600">
+                                            <div className="flex items-center gap-1"><Icons.Sun className="w-3 h-3"/> <span>{sunTimes.sunrise}</span></div>
+                                            <div className="flex items-center gap-1"><Icons.Moon className="w-3 h-3"/> <span>{sunTimes.sunset}</span></div>
+                                            <div className="flex items-center gap-1 font-bold ml-1"><Icons.Clock className="w-3 h-3"/> <span>待機終了: {sunTimes.standbyEnd}</span></div>
+                                        </div>
+                                    </div>
+                                    <div className="ml-4 flex gap-3 text-[10px] bg-amber-50 px-2 py-1 rounded border border-amber-100 text-amber-800 print:hidden">
+                                        <div className="flex items-center gap-1"><Icons.Sun className="w-3 h-3"/> <span>{sunTimes.sunrise}</span></div>
+                                        <div className="flex items-center gap-1"><Icons.Moon className="w-3 h-3"/> <span>{sunTimes.sunset}</span></div>
+                                        <div className="flex items-center gap-1 border-l border-amber-200 pl-2 font-bold"><Icons.Clock className="w-3 h-3"/> <span>待機終了: {sunTimes.standbyEnd}</span></div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 print:flex print:gap-4 print-header-compact" style={{border: 'none'}}>
+                                    <div className="print-header-item">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">記載者 (フライトナース)</label>
+                                        <div className="relative print:hidden">
+                                            <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
+                                            <select name="recorder" value={reportInfo.recorder} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none">
+                                                <option value="">-- 選択 --</option>
+                                                {masters.ns.map(n => <option key={n} value={n}>{n}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="hidden print:block"><span className="font-bold mr-1">記載者:</span> {reportInfo.recorder || '(未入力)'}</div>
+                                    </div>
+                                    <div className="print-header-item">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">担当医師</label>
+                                        <div className="relative print:hidden">
+                                            <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
+                                            <select name="doctor" value={reportInfo.doctor} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none">
+                                                <option value="">-- 選択 --</option>
+                                                {masters.dr.map(d => <option key={d} value={d}>{d}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="hidden print:block"><span className="font-bold mr-1">担当医師:</span> {reportInfo.doctor || '(未入力)'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="md:col-span-2 print:mt-0">
+                                <label className="block text-xs font-bold text-slate-500 mb-2 print:hidden">浜町待機理由 / 特記事項</label>
+                                <div className="print:hidden mb-2 flex flex-wrap gap-3">
+                                    {REASON_OPTIONS.map(reason => (
+                                        <label key={reason} className="flex items-center gap-1.5 cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 text-sm hover:bg-slate-50">
+                                            <input type="checkbox" checked={reportInfo.selectedReasons.includes(reason)} onChange={() => handleReasonCheck(reason)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                                            {reason}
+                                        </label>
+                                    ))}
+                                </div>
+                                <input type="text" name="otherReason" value={reportInfo.otherReason} onChange={handleOtherReason} placeholder="その他・特記事項 (フリーコメント)" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border print:hidden" />
+                                <div className="hidden print:block print-reason-box">
+                                    <span className="font-bold mr-2">待機理由/備考:</span>
+                                    {reportInfo.hamamachiReason || '特になし'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Input Form Area */}
+                    <div id="input-form-area" className={`bg-white rounded-xl shadow-sm border mb-6 overflow-hidden transition-all no-print print:hidden ${editingId ? 'border-amber-400 ring-2 ring-amber-100' : 'border-slate-200'}`}>
+                        <div className={`px-6 py-3 border-b flex items-center justify-between ${editingId ? 'bg-amber-50 border-amber-200' : 'bg-blue-50/50 border-blue-100'}`}>
+                            <div className="flex items-center gap-2">
+                                {editingId ? <Icons.Edit3 className="w-4 h-4 text-amber-600" /> : <Icons.Plus className="w-4 h-4 text-blue-500" />}
+                                <span className={`text-sm font-bold ${editingId ? 'text-amber-800' : 'text-blue-900'}`}>{editingId ? 'タイムライン項目の修正' : 'タイムライン項目の追加'}</span>
+                            </div>
+                            {editingId && (
+                                <button onClick={handleCancelEdit} className="text-xs flex items-center gap-1 text-slate-500 hover:text-slate-700 bg-white px-2 py-1 rounded border border-slate-200"><Icons.X className="w-3 h-3" /> 編集キャンセル</button>
+                            )}
+                        </div>
+                        
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                            <div className="md:col-span-4">
+                                <label className="block text-xs font-bold text-slate-500 mb-1">業務種別</label>
+                                <select ref={categoryRef} name="category" value={formData.category} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, noRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none">
+                                    {Object.values(CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                                </select>
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-bold text-slate-500 mb-1">事案No.</label>
+                                <input ref={noRef} type="text" name="no" value={formData.no} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, startRef)} placeholder="12345" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                            </div>
+                            <div className="md:col-span-3">
+                                <label className="block text-xs font-bold text-slate-500 mb-1">開始時間</label>
+                                <input ref={startRef} type="time" name="start" value={formData.start} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, endRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                            </div>
+                            <div className="md:col-span-3">
+                                <label className="block text-xs font-bold text-slate-500 mb-1">終了時間</label>
+                                <input ref={endRef} type="time" name="end" value={formData.end} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, descRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                            </div>
+
+                            <div className="md:col-span-8">
+                                <label className="block text-xs font-bold text-slate-500 mb-1">内容・備考</label>
+                                <input ref={descRef} type="text" name="desc" value={formData.desc} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, null)} placeholder="活動内容を入力..." className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                            </div>
+                             <div className="md:col-span-2 flex items-center justify-center h-10 bg-slate-50 rounded border border-slate-200 mb-[1px]">
+                                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                                    <input type="checkbox" name="isContinuous" checked={formData.isContinuous} onChange={handleInputChange} className="rounded border-slate-300 text-blue-600" />
+                                    <span>連続出動</span>
+                                </label>
+                            </div>
+                            <div className="md:col-span-2">
+                                <button type="button" onClick={handleAddOrUpdate} className={`w-full text-white font-medium h-10 rounded-md shadow-sm flex justify-center items-center gap-1 transition-colors ${editingId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                                    {editingId ? <><Icons.CheckCircle className="w-4 h-4" /> 更新</> : <><Icons.Plus className="w-4 h-4" /> 追加</>}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex flex-wrap gap-3 mb-4 px-2 print:mb-2 print-break-avoid">
+                        {Object.values(CATEGORIES).map(c => {
+                            const IconComp = c.icon;
+                            return (
+                                <div key={c.id} className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:shadow-none print:py-tight print:mb-1">
+                                    <div className={`w-3 h-3 rounded-full ${c.color.split(' ')[0]} print-color-adjust`}></div>
+                                    <span className="text-slate-500 print:text-black hidden print:inline">{IconComp && <IconComp className="w-3 h-3" />}</span>
+                                    <span className="text-slate-700">{c.label}</span>
+                                </div>
+                            );
+                        })}
+                        <div className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:py-tight print:mb-1">
+                            <div className="w-3 h-3 bg-yellow-400 opacity-50 striped-bg print-color-adjust"></div>
+                            <span className="text-slate-500">離陸スタンバイ</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:py-tight print:mb-1">
+                            <div className="w-3 h-3 bg-green-100 border border-green-200 print-color-adjust"></div>
+                            <span className="text-slate-500">復帰作業</span>
+                        </div>
+                    </div>
+
+                    {/* Timeline */}
+                    <div className="relative bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden min-h-[180px] mb-8 print:shadow-none print:border print:mb-2 print-break-avoid print-chart-container">
+                        <div className="overflow-x-auto pb-4 pt-4 relative min-w-[1200px] print-full-width print-chart-inner">
+                            <div className="absolute top-4 left-4 right-4 h-6 pointer-events-none select-none z-20 print-time-label">
+                                {Array.from({ length: Math.floor(TOTAL_HOURS) + 1 }).map((_, i) => (
+                                    <div key={i} className="absolute transform -translate-x-1/2" style={{ left: `${(i / TOTAL_HOURS) * 100}%` }}>
+                                        <span className="text-xs font-bold text-slate-400 print:text-slate-600 print-text-xs">{START_HOUR + i}:00</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="absolute top-10 left-4 right-4 bottom-4 pointer-events-none select-none z-0 print-grid-line">
+                                {Array.from({ length: Math.floor(TOTAL_HOURS) + 1 }).map((_, i) => (
+                                    <div key={`line-${i}`} className="absolute top-0 bottom-0 w-px bg-slate-100 print:bg-slate-200 transform -translate-x-1/2" style={{ left: `${(i / TOTAL_HOURS) * 100}%` }}></div>
+                                ))}
+                                {Array.from({ length: Math.floor(TOTAL_HOURS) }).map((_, i) => (
+                                    <div key={`dash-${i}`} className="absolute top-0 bottom-0 w-px border-l border-slate-200 border-dashed opacity-60 print:opacity-40 transform -translate-x-1/2" style={{ left: `${((i + 0.5) / TOTAL_HOURS) * 100}%` }}></div>
+                                ))}
+                            </div>
+                            
+                            <div className="relative h-24 mt-10 mx-4 z-10 print-chart-height">
+                                <div className="absolute top-1/2 left-0 w-full h-px bg-slate-200 print:bg-slate-300 -z-10"></div>
+                                {sortedEvents.length === 0 && <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-300 font-bold text-lg pointer-events-none">データがありません。</div>}
+                                {sortedEvents.map((event, index) => {
+                                    const startMins = timeToMinutes(event.start);
+                                    const endMins = timeToMinutes(event.end);
+                                    const duration = endMins - startMins;
+                                    const recoveryDuration = getRecoveryDuration(event);
+                                    let prepDuration = getBasePrepDuration(event);
+                                    if (index > 0 && sortedEvents[index - 1].isContinuous) prepDuration = 0;
+                                    const prepStartMins = startMins - prepDuration;
+                                    
+                                    const mainPos = getPosition(startMins, duration);
+                                    const prepPos = getPosition(prepStartMins, prepDuration);
+                                    const recoveryPos = getPosition(endMins, recoveryDuration);
+
+                                    const categoryConfig = Object.values(CATEGORIES).find(c => c.id === event.category) || CATEGORIES.OTHER;
+                                    const isHovered = hoveredId === event.id;
+                                    const isEditing = editingId === event.id;
+                                    const IconComponent = categoryConfig.icon;
+                                    
+                                    return (
+                                        <div key={event.id} className="absolute h-full pointer-events-none" style={{ width: '100%', top: 0, zIndex: 20 }}>
+                                            {/* 離陸スタンバイ */}
+                                            {prepDuration > 0 && (
+                                                <div className="absolute transform -translate-y-1/2 h-10 bg-yellow-400/30 border-l border-t border-b border-yellow-400/50 rounded-l-md pointer-events-auto transition-all print-color-adjust print-chart-bar-wrapper"
+                                                    style={{ top: '50%', left: prepPos.left, width: prepPos.width, backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,.3) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.3) 50%, rgba(255,255,255,.3) 75%, transparent 75%, transparent)', backgroundSize: '10px 10px' }}
+                                                    title="離陸スタンバイ (10分)" />
+                                            )}
+                                            {/* メイン活動バー */}
+                                            <div className={`absolute transform -translate-y-1/2 transition-all duration-300 pointer-events-auto group rounded-md border-b-4 shadow-sm flex flex-col justify-center items-center cursor-pointer overflow-hidden ${categoryConfig.color} ${isHovered || isEditing ? 'scale-105 shadow-md brightness-110 z-30' : ''} ${isEditing ? 'ring-2 ring-amber-400' : ''} print-color-adjust print-chart-bar-wrapper print-chart-bar`}
+                                                style={{ top: '50%', left: mainPos.left, width: mainPos.width, height: '64px' }}
+                                                onClick={() => handleEditClick(event)}
+                                                onMouseEnter={() => setHoveredId(event.id)}
+                                                onMouseLeave={() => setHoveredId(null)}
+                                            >
+                                                <div className="flex items-center gap-1 text-white font-bold text-xs px-1">
+                                                    {IconComponent && <IconComponent className="w-4 h-4 print:w-3 print:h-3 print:text-white print-icon-size" />}
+                                                    <span className="hidden print:inline print-bar-text truncate">{event.no ? '#'+event.no : categoryConfig.label.replace('ヘリ活動', '')}</span>
+                                                </div>
+                                                {isHovered && !isEditing && (
+                                                    <div className="absolute bottom-full mb-2 w-64 bg-slate-800 text-white text-xs rounded p-3 shadow-xl z-50 pointer-events-none left-1/2 -translate-x-1/2 no-print">
+                                                        <div className="font-bold text-yellow-400 mb-1 flex items-center justify-between"><span>{event.no ? `#${event.no}` : categoryConfig.label}</span><span className="text-[10px] bg-white/20 px-1 rounded">{event.category}</span></div>
+                                                        <div className="mb-2 text-slate-300 font-mono border-b border-slate-600 pb-1">{event.start} - {event.end} ({duration}分){prepDuration === 0 && <span className="ml-2 text-green-300 font-bold">(直行)</span>}</div>
+                                                        <div className="leading-relaxed">{event.desc}</div>
+                                                        <div className="mt-2 pt-1 text-center text-amber-400 text-[10px]">クリックで修正</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* 復帰作業バー */}
+                                            {recoveryDuration > 0 && (
+                                                <div className="absolute transform -translate-y-1/2 h-10 bg-green-50 border border-green-200 border-l-0 rounded-r-md pointer-events-auto flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity print-color-adjust print-chart-bar-wrapper"
+                                                    style={{ top: '50%', left: recoveryPos.left, width: recoveryPos.width }}
+                                                    title={`復帰作業・記録・整備 (${recoveryDuration}分)`}>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* List */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border print-break-avoid">
+                        <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 font-semibold text-slate-700 flex items-center gap-2 text-sm print:bg-white print:border-b-2 print:border-slate-800 print:py-tight">
+                            <Icons.ClipboardList className="w-4 h-4" /> 登録済みデータリスト
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm print-text-xs">
+                                <thead className="bg-slate-50 text-slate-500 text-xs uppercase print:bg-white print:text-black print:border-b">
+                                    <tr className="print-list-header">
+                                        <th className="px-4 py-3 w-16 print:py-tight">種別</th>
+                                        <th className="px-4 py-3 w-24 print:py-tight">No/ID</th>
+                                        <th className="px-4 py-3 w-32 print:py-tight">時間</th>
+                                        <th className="px-4 py-3 w-24 print:py-tight">所要時間</th>
+                                        <th className="px-4 py-3 print:py-tight">内容</th>
+                                        <th className="px-4 py-3 w-24 text-center no-print">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 print:divide-slate-200">
+                                    {sortedEvents.map((event) => {
+                                        const startMins = timeToMinutes(event.start);
+                                        const endMins = timeToMinutes(event.end);
+                                        const cat = Object.values(CATEGORIES).find(c => c.id === event.category) || CATEGORIES.OTHER;
+                                        const IconComponent = cat.icon;
+                                        const isHovered = hoveredId === event.id;
+                                        const isEditing = editingId === event.id;
+                                        return (
+                                            <tr key={event.id} className={`transition-colors print-list-row ${isEditing ? 'bg-amber-50' : isHovered ? 'bg-yellow-50' : 'hover:bg-slate-50'} print:bg-white`} onMouseEnter={() => setHoveredId(event.id)} onMouseLeave={() => setHoveredId(null)}>
+                                                <td className="px-4 py-3 print:py-tight">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-3 h-3 rounded-full ${cat.color.split(' ')[0]} print-color-adjust`} title={cat.label}></div>
+                                                        <span className="hidden print:inline-block text-black print-color-adjust">
+                                                            {IconComponent && <IconComponent className="w-3 h-3" />}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 font-mono font-bold print:py-tight">{event.no || '-'}</td>
+                                                <td className="px-4 py-3 font-mono whitespace-nowrap print:py-tight">{event.start} - {event.end}</td>
+                                                <td className="px-4 py-3 text-slate-600 print:py-tight">{endMins - startMins}分</td>
+                                                <td className="px-4 py-3 text-slate-600 print:max-w-none print-wrap-text truncate max-w-xs" title={event.desc}>{event.desc}</td>
+                                                <td className="px-4 py-3 text-center flex justify-center gap-2 no-print">
+                                                    <button onClick={() => handleEditClick(event)} className={`transition-colors ${isEditing ? 'text-amber-600' : 'text-slate-400 hover:text-blue-600'}`} title="修正"><Icons.Edit3 className="w-4 h-4" /></button>
+                                                    <button onClick={() => handleDelete(event.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="削除"><Icons.Trash2 className="w-4 h-4" /></button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Print Footer */}
+                    <div className="hidden print:block print-footer">
+                        ドクターヘリ業務日報 | 出力日: {printDateStr}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DailyTimelineApp />);
     </script>
 </body>
 </html>
