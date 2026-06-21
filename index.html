@@ -19,7 +19,12 @@
     body.dark header { background: rgba(28,28,30,0.92); }
     .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; transition: background-color 0.3s; }
     body.dark .tab-bar { background: rgba(28,28,30,0.94); }
-    main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; }
+    main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; transition: margin-top 0.3s; }
+    
+    /* オフラインバッジ */
+    .offline-bar { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; background: #ff453a; color: #fff; padding: 10px 16px; display: none; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; z-index: 99; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .offline-btn { background: #fff; color: #ff453a; border: none; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
     .hdr-group { display: flex; gap: 12px; align-items: center; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
@@ -66,12 +71,17 @@
 
 <div id="global-loader"><div class="spinner"></div><div id="loader-msg" style="margin-top:16px; font-weight:800; color:var(--ink);">システム準備中...</div></div>
 
+<div class="offline-bar" id="offline-bar">
+  <span>📶 未送信データが <span id="offline-count">1</span> 件あります</span>
+  <button class="offline-btn" onclick="retryOfflineQueue()">再送信</button>
+</div>
+
 <header>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <button class="hdr-btn" onclick="toggleDark()" id="btn-dark" style="font-size:18px; margin-left:8px;">🌙</button>
+    <button class="hdr-btn" onclick="toggleDark()" id="btn-dark" style="font-size:18px; margin-left:8px;" title="ダークモード切替">🌙</button>
   </div>
-  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.4</span></div>
+  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.5</span></div>
   <div class="hdr-group"><button class="hdr-btn" onclick="openModal('manual')">📖 取説</button><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
 </header>
 
@@ -145,12 +155,7 @@
     <div class="card">
       <div class="card-section">
         <div class="section-label">📝 備考</div>
-        <div class="sg-wrap">
-          <button type="button" class="sg-btn" onclick="addBiko('Dr引継ぎ完了。')">Dr引継完了</button>
-          <button type="button" class="sg-btn" onclick="addBiko('天候不良のため上空Uターン。')">天候不良Uターン</button>
-          <button type="button" class="sg-btn" onclick="addBiko('現場救急隊の処置により不搬送。')">不搬送</button>
-          <button type="button" class="sg-btn" onclick="addBiko('着陸困難のためホイスト救助。')">ホイスト</button>
-        </div>
+        <div class="sg-wrap" id="phrase-box"></div>
         <textarea id="v-biko" rows="3" placeholder="特記事項（フリー入力）" onchange="st.vals['備考']=this.value; saveState();"></textarea>
       </div>
     </div>
@@ -180,7 +185,7 @@
     <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">アンテナ（電波）が立っていることを確認してください。<br>※エラー時はフライトナースへ連絡</p>
     <div style="display:flex; gap:12px;">
       <button style="flex:1; padding:14px; border:none; border-radius:8px; background:#e5e5ea; color:var(--ink); font-weight:700;" onclick="closeModal('confirm')">キャンセル</button>
-      <button style="flex:1; padding:14px; border:none; border-radius:8px; background:var(--blue); color:#fff; font-weight:700;" onclick="closeModal('confirm'); submitData();">送信する</button>
+      <button style="flex:1; padding:14px; border:none; border-radius:8px; background:var(--brand); color:#fff; font-weight:700;" onclick="closeModal('confirm'); submitData();">送信する</button>
     </div>
   </div>
 </div>
@@ -194,14 +199,12 @@
   const STRUCT = { echo: [{k:"心エコー"},{k:"FAST"},{k:"大血管評価"},{k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},{k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}], other: [{k:"12誘導心電図"}, {k:"血糖測定"},{k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]}, {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"}, {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"}, {k:"胸腔ドレナージ", sub:"drainage"}, {k:"心嚢穿刺・心嚢ドレナージ", sub:"radio", opts:["キット","V1","V2","V3"], skey:"心嚢穿刺・心嚢ドレナージ詳細"}, {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"}, {k:"その他処置", sub:"text"}], line: ["20G","18G","22G","24G","ベニューラ","骨髄針"] };
   let st = { scheme: "", times: {}, vals: {'カフ有無':'あり'}, chips: {}, dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" } };
   
-  // 🌟 追加: ダークモード切替
   function toggleDark() {
       const isDark = document.body.classList.toggle('dark');
       document.getElementById('btn-dark').textContent = isDark ? "☀️" : "🌙";
       localStorage.setItem('aw109_theme', isDark ? 'dark' : 'light');
   }
   
-  // 🌟 追加: 定型文サジェスト挿入
   function addBiko(text) {
       const el = document.getElementById("v-biko");
       el.value = el.value ? el.value + "\n" + text : text;
@@ -219,8 +222,54 @@
     if(localStorage.getItem('aw109_theme') === 'dark') toggleDark();
     buildLines(STRUCT.line, "box-line"); buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); 
     const restored = restoreState(); if(!restored) { const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; } 
+    checkOfflineQueue();
     fetchInit(); 
   };
+  
+  function checkOfflineQueue() {
+      let queue = JSON.parse(localStorage.getItem("aw109_offline_queue") || "[]");
+      const bar = document.getElementById("offline-bar");
+      if(queue.length > 0) {
+          bar.style.display = "flex";
+          document.getElementById("offline-count").innerText = queue.length;
+          document.getElementById("mainScroll").style.marginTop = "calc(56px + 40px + var(--safe-top))";
+      } else {
+          bar.style.display = "none";
+          document.getElementById("mainScroll").style.marginTop = "calc(56px + var(--safe-top))";
+      }
+  }
+
+  async function retryOfflineQueue() {
+      let queue = JSON.parse(localStorage.getItem("aw109_offline_queue") || "[]");
+      if(queue.length === 0) return;
+      
+      showLoader("未送信データを送信中...");
+      let successCount = 0;
+      let newQueue = [];
+      
+      for(let i=0; i<queue.length; i++) {
+          try {
+              const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, cc_emails: queue[i].ccEmails, data:queue[i].payload}), redirect: "follow" });
+              const textRes = await res.text();
+              let jsonRes; 
+              try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes = { status: "success" }; else throw err; }
+              
+              if(jsonRes.status === "success") {
+                  successCount++;
+              } else {
+                  newQueue.push(queue[i]);
+              }
+          } catch(e) {
+              newQueue.push(queue[i]);
+          }
+      }
+      
+      localStorage.setItem("aw109_offline_queue", JSON.stringify(newQueue));
+      hideLoader();
+      alert(`${successCount}件の送信が完了しました。` + (newQueue.length > 0 ? `\n残り${newQueue.length}件は通信エラーにより再保管されました。` : ""));
+      checkOfflineQueue();
+  }
+
   function fillSel(id, arr, currentVal) { const list = [...arr, "その他"]; document.getElementById(id).innerHTML = `<option value="">選択...</option>` + list.map(v=>`<option value="${v}" ${v===currentVal?'selected':''}>${v}</option>`).join(""); }
   function switchTab(tabId) { ["input","send"].forEach(k => { document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId); document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId); }); window.scrollTo(0,0); }
   function toggleEdaban() { document.getElementById("v-edaban").style.display = document.getElementById("chk-edaban").checked ? "block" : "none"; saveState(); }
@@ -332,13 +381,31 @@
 
     const btn = document.getElementById("btnSubmit"); btn.textContent = "送信中... 🚁"; btn.disabled = true;
     showLoader("事案を送信中...");
+    
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, cc_emails: ccEmails, data:payload}), redirect: "follow" });
       const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes = { status: "success" }; else throw err; }
-      if(jsonRes.status === "success") { alert("送信が完了しました！"); localStorage.removeItem("aw109_draft"); location.reload(); } 
-      else { alert("エラー: " + jsonRes.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
-    } catch(e) { alert("通信エラー\n※エラー時はフライトナースへ。\n" + e.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
-    finally { hideLoader(); }
+      
+      if(jsonRes.status === "success") { 
+          alert("送信が完了しました！"); 
+          localStorage.removeItem("aw109_draft"); 
+          location.reload(); 
+      } else { 
+          alert("エラー: " + jsonRes.message); 
+          btn.textContent = "送信する 🚁"; btn.disabled = false; 
+      }
+    } catch(e) { 
+        // 🌟 通信エラー時はオフライン保存
+        let queue = JSON.parse(localStorage.getItem("aw109_offline_queue") || "[]");
+        queue.push({ payload, ccEmails, timestamp: new Date().getTime() });
+        localStorage.setItem("aw109_offline_queue", JSON.stringify(queue));
+        
+        alert("通信エラーが発生しました。データをオフライン保存しました。電波が良い場所で再送信してください。"); 
+        localStorage.removeItem("aw109_draft");
+        location.reload(); 
+    } finally { 
+        hideLoader(); 
+    }
   }
 
   async function fetchInit() {
@@ -346,9 +413,9 @@
     if (cached) {
       try {
         const cData = JSON.parse(cached);
-        fillSelects("v-dest", cData.dest, document.getElementById("v-dest").value);
-        fillSelects("v-dr", cData.dr, document.getElementById("v-dr").value);
-        fillSelects("v-ns", cData.ns, document.getElementById("v-ns").value);
+        fillSel("v-dest", cData.masters.dest, document.getElementById("v-dest").value);
+        fillSel("v-dr", cData.masters.dr, document.getElementById("v-dr").value);
+        fillSel("v-ns", cData.masters.ns, document.getElementById("v-ns").value);
         renderOptions(cData);
       } catch(e) {}
     } else {
@@ -357,12 +424,12 @@
 
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE, app_name:"現場"}), redirect:"follow" });
-      const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual_client:[], masters:{dest:[], dr:[], ns:[], mailOptions:[]}}; else throw err; }
+      const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manuals:[], masters:{dest:[], dr:[], ns:[], mailOptions:[], phrases:[]}}; else throw err; }
       if(jsonRes.status === "success") {
-        localStorage.setItem("aw109_masters", JSON.stringify(jsonRes.masters));
-        fillSelects("v-dest", jsonRes.masters.dest, document.getElementById("v-dest").value);
-        fillSelects("v-dr", jsonRes.masters.dr, document.getElementById("v-dr").value);
-        fillSelects("v-ns", jsonRes.masters.ns, document.getElementById("v-ns").value);
+        localStorage.setItem("aw109_masters", JSON.stringify(jsonRes));
+        fillSel("v-dest", jsonRes.masters.dest, document.getElementById("v-dest").value);
+        fillSel("v-dr", jsonRes.masters.dr, document.getElementById("v-dr").value);
+        fillSel("v-ns", jsonRes.masters.ns, document.getElementById("v-ns").value);
         renderOptions(jsonRes);
       }
     } catch(e) { 
@@ -372,16 +439,11 @@
     }
   }
 
-  function fillSelects(id, arr, currentVal) {
-      if(!arr) return;
-      const list = [...arr, "その他"]; 
-      document.getElementById(id).innerHTML = `<option value="">選択...</option>` + list.map(v=>`<option value="${v}" ${v===currentVal?'selected':''}>${v}</option>`).join(""); 
-  }
-
   function renderOptions(data) {
       if (data.masters && data.masters.mailOptions && data.masters.mailOptions.length > 0) document.getElementById("mail-options-box").innerHTML = data.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:20px;height:20px;"><span>${opt.name}</span></label>`).join("");
       if (data.qa) document.getElementById("qa-list").innerHTML = data.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
       if (data.manuals) document.getElementById("manual-list").innerHTML = data.manuals.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>取扱説明書はありません。</p>';
+      if (data.masters && data.masters.phrases && data.masters.phrases.length > 0) document.getElementById("phrase-box").innerHTML = data.masters.phrases.map(p => `<button type="button" class="sg-btn" onclick="addBiko('${p}')">${p}</button>`).join("");
   }
 
   async function submitQA(event) {
