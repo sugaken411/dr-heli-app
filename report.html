@@ -25,7 +25,6 @@
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* サジェストボタン用 */
         .sg-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; scrollbar-width: none; }
         .sg-wrap::-webkit-scrollbar { display: none; }
         .sg-btn { flex: none; background: #e3f2fd; border: 1px solid #90caf9; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; color: #1565c0; cursor: pointer; white-space: nowrap; transition: 0.2s; }
@@ -51,6 +50,9 @@
             .print-list-row td { padding: 1px 4px !important; font-size: 9pt !important; line-height: 1.1 !important; border-bottom: 1px solid #eee !important; }
             .print-wrap-text { white-space: pre-wrap !important; word-break: break-all !important; font-size: 8.5pt !important; }
             .print-footer { position: fixed; bottom: 0; right: 0; width: 100%; text-align: right; font-size: 8pt; color: #888; padding-top: 2px; border-top: 1px solid #eee; background: white; }
+            
+            /* 集計タブ印刷用スタイル */
+            .print-summary-card { border: 1px solid #ccc !important; box-shadow: none !important; margin-bottom: 8px !important; page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -58,7 +60,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
         
@@ -138,6 +140,8 @@
             // 集計用 State
             const [summaryData, setSummaryData] = useState([]);
             const [sumMonth, setSumMonth] = useState(new Date().toISOString().substring(0, 7));
+            const [sumDr, setSumDr] = useState("");
+            const [sumNs, setSumNs] = useState("");
 
             const categoryRef = useRef(null);
             const noRef = useRef(null);
@@ -235,7 +239,7 @@
                             hamamachiReason: d.hamamachiReason || ''
                         }));
                         setEvents(d.events || []);
-                        if (forceSync) alert("事案の最新時間を同期しました。");
+                        if (forceSync) alert("事案の最新時間を同期し、✅完了状態を更新しました。");
                     }
                 } catch (e) {
                     alert("データの取得に失敗しました。");
@@ -354,11 +358,11 @@
                 if (!formData.start || !formData.end) { alert('開始時間と終了時間は必須です。'); return; }
                 
                 if (editingId) {
-                    const updatedEvents = events.map(ev => ev.id === editingId ? { ...formData, id: editingId } : ev).sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+                    const updatedEvents = events.map(ev => ev.id === editingId ? { ...formData, id: editingId, isCompleted: ev.isCompleted } : ev).sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
                     setEvents(updatedEvents);
                     setEditingId(null);
                 } else {
-                    const newEvent = { ...formData, id: Date.now().toString() };
+                    const newEvent = { ...formData, id: Date.now().toString(), isCompleted: false };
                     setEvents([...events, newEvent].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start)));
                 }
                 setFormData(prev => ({ category: prev.category, no: '', start: '', end: '', desc: '', isContinuous: false }));
@@ -419,20 +423,42 @@
                 finally { setIsLoading(false); }
             };
 
+            // --- 集計用ロジック ---
+            const filteredSummary = useMemo(() => {
+                return summaryData.filter(d => {
+                    if (!d.date.startsWith(sumMonth) && !d.date.startsWith(sumMonth.replace('-','/'))) return false;
+                    if (sumDr && d.dr !== sumDr) return false;
+                    if (sumNs && d.ns !== sumNs) return false;
+                    return true;
+                }).sort((a,b) => new Date(b.date.replace(/\//g,'-')) - new Date(a.date.replace(/\//g,'-')));
+            }, [summaryData, sumMonth, sumDr, sumNs]);
+
+            const summaryStats = useMemo(() => {
+                let totalMission = 0;
+                let totalCancel = 0;
+                let totalDays = filteredSummary.length;
+                filteredSummary.forEach(row => {
+                    try {
+                        const evs = JSON.parse(row.eventsStr);
+                        totalMission += evs.filter(e => e.category === 'mission').length;
+                        totalCancel += evs.filter(e => e.category === 'cancel').length;
+                    } catch(e) {}
+                });
+                return { days: totalDays, mission: totalMission, cancel: totalCancel };
+            }, [filteredSummary]);
+
             const exportSummaryCSV = () => {
-                const filtered = summaryData.filter(d => d.date.startsWith(sumMonth));
-                if (filtered.length === 0) return alert("出力するデータがありません");
-                
+                if (filteredSummary.length === 0) return alert("出力するデータがありません");
                 const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-                let csv = "日付,フライトナース,フライトドクター,待機理由,活動件数(件),活動内容\n";
-                filtered.forEach(row => {
+                let csv = "日付,フライトナース,フライトドクター,待機理由,実施件数,キャンセル件数,活動内容詳細\n";
+                filteredSummary.forEach(row => {
                     let eventsArr = [];
                     try { eventsArr = JSON.parse(row.eventsStr); } catch(e){}
-                    const mCount = eventsArr.filter(e => e.category === 'mission' || e.category === 'cancel').length;
+                    const mCount = eventsArr.filter(e => e.category === 'mission').length;
+                    const cCount = eventsArr.filter(e => e.category === 'cancel').length;
                     const eNames = eventsArr.map(e => `[${CATEGORIES[e.category.toUpperCase()]?.label||'他'}] ${e.desc}`).join(" | ");
-                    csv += `"${row.date}","${row.ns}","${row.dr}","${row.reason}",${mCount},"${eNames.replace(/"/g, '""')}"\n`;
+                    csv += `"${row.date}","${row.ns}","${row.dr}","${row.reason}",${mCount},${cCount},"${eNames.replace(/"/g, '""')}"\n`;
                 });
-                
                 const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `report_summary_${sumMonth.replace('-','')}.csv`; link.click();
             };
@@ -469,7 +495,7 @@
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 no-print flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <Icons.ClipboardList className="w-5 h-5 text-blue-600 print:text-black" />
-                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.4</span></h1>
+                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.5</span></h1>
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
                             <a href="portal.html" className="h-10 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors text-xs font-bold"><Icons.Lock className="w-3.5 h-3.5"/> ポータルへ</a>
@@ -525,22 +551,80 @@
                         </div>
                     )}
 
-                    {/* === Tab: Summary (集計) === */}
+                    {/* === Tab: Summary (集計ダッシュボード) === */}
                     {activeTab === 'summary' && (
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 no-print">
-                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Chart className="w-5 h-5 text-green-600"/> 日報データの集計・出力</h2>
-                            <div className="flex items-end gap-4 mb-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">対象月</label>
-                                    <input type="month" value={sumMonth} onChange={e => setSumMonth(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm font-bold outline-none" />
+                        <div className="print:block">
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 print:border-none print:shadow-none print:p-0">
+                                <h2 className="text-lg font-bold mb-4 flex items-center gap-2 print:text-black"><Icons.Chart className="w-5 h-5 text-green-600 print:text-black"/> 業務日報 月間ダッシュボード</h2>
+                                <div className="flex flex-wrap items-end gap-4 mb-6 no-print bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">対象月</label>
+                                        <input type="month" value={sumMonth} onChange={e => setSumMonth(e.target.value)} className="border border-slate-300 rounded-md p-2 text-sm font-bold outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">Dr絞り込み</label>
+                                        <select value={sumDr} onChange={e => setSumDr(e.target.value)} className="border border-slate-300 rounded-md p-2 text-sm font-bold outline-none bg-white">
+                                            <option value="">全て</option>
+                                            {masters.dr.map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">Ns絞り込み</label>
+                                        <select value={sumNs} onChange={e => setSumNs(e.target.value)} className="border border-slate-300 rounded-md p-2 text-sm font-bold outline-none bg-white">
+                                            <option value="">全て</option>
+                                            {masters.ns.map(n => <option key={n} value={n}>{n}</option>)}
+                                        </select>
+                                    </div>
+                                    <button onClick={exportSummaryCSV} className="bg-green-600 text-white font-bold px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2 ml-auto shadow-sm"><Icons.FileSpreadsheet className="w-4 h-4"/> CSVダウンロード</button>
                                 </div>
-                                <button onClick={exportSummaryCSV} className="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"><Icons.FileSpreadsheet className="w-4 h-4"/> CSVダウンロード</button>
-                            </div>
-                            <div className="text-sm text-slate-600 border-t pt-4">
-                                <p className="mb-2"><b>表示中のデータ:</b> {summaryData.filter(d => d.date.startsWith(sumMonth)).length} 日分</p>
-                                <ul className="list-disc pl-5">
-                                    <li>※詳細なクロス集計や労務管理計算は、ダウンロードしたCSVファイルをExcel等で開いて行ってください。</li>
-                                </ul>
+
+                                <div className="grid grid-cols-3 gap-4 mb-6 print:mb-4">
+                                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg text-center print-summary-card">
+                                        <div className="text-xs font-bold text-blue-600 mb-1">登録日数</div>
+                                        <div className="text-2xl font-black text-blue-900">{summaryStats.days} 日</div>
+                                    </div>
+                                    <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-center print-summary-card">
+                                        <div className="text-xs font-bold text-red-600 mb-1">合計実施件数</div>
+                                        <div className="text-2xl font-black text-red-900">{summaryStats.mission} 件</div>
+                                    </div>
+                                    <div className="bg-slate-100 border border-slate-300 p-4 rounded-lg text-center print-summary-card">
+                                        <div className="text-xs font-bold text-slate-600 mb-1">キャンセル件数</div>
+                                        <div className="text-2xl font-black text-slate-800">{summaryStats.cancel} 件</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm print-text-xs border-collapse">
+                                        <thead className="bg-slate-100 text-slate-600 text-xs border-y border-slate-300">
+                                            <tr>
+                                                <th className="py-3 px-4 font-bold border-r border-slate-200">日付</th>
+                                                <th className="py-3 px-4 font-bold border-r border-slate-200">Dr</th>
+                                                <th className="py-3 px-4 font-bold border-r border-slate-200">Ns</th>
+                                                <th className="py-3 px-4 font-bold border-r border-slate-200 text-center">実施</th>
+                                                <th className="py-3 px-4 font-bold border-r border-slate-200 text-center">Cxl</th>
+                                                <th className="py-3 px-4 font-bold">待機理由 / 備考</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-200">
+                                            {filteredSummary.length === 0 ? <tr><td colSpan="6" className="text-center py-8 text-slate-500">該当するデータがありません</td></tr> : 
+                                             filteredSummary.map((row, i) => {
+                                                let evs = []; try { evs = JSON.parse(row.eventsStr); } catch(e){}
+                                                const mCount = evs.filter(e => e.category === 'mission').length;
+                                                const cCount = evs.filter(e => e.category === 'cancel').length;
+                                                return (
+                                                    <tr key={i} className="hover:bg-slate-50">
+                                                        <td className="py-2 px-4 font-mono font-bold border-r border-slate-100">{row.date}</td>
+                                                        <td className="py-2 px-4 border-r border-slate-100">{row.dr}</td>
+                                                        <td className="py-2 px-4 border-r border-slate-100">{row.ns}</td>
+                                                        <td className="py-2 px-4 text-center font-bold text-red-600 border-r border-slate-100">{mCount > 0 ? mCount : '-'}</td>
+                                                        <td className="py-2 px-4 text-center text-slate-500 border-r border-slate-100">{cCount > 0 ? cCount : '-'}</td>
+                                                        <td className="py-2 px-4 text-xs text-slate-600 truncate max-w-xs" title={row.reason}>{row.reason || '-'}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -555,7 +639,7 @@
                                             <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">日付</label>
                                             <div className="flex gap-2 print:hidden items-center">
                                                 <input type="date" name="date" value={reportInfo.date} onChange={handleReportInfoChange} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold" />
-                                                <button onClick={() => fetchDailyData(reportInfo.date, password, true)} className="bg-slate-100 border border-slate-300 text-slate-600 px-3 py-2 rounded-md hover:bg-slate-200 text-xs font-bold whitespace-nowrap shadow-sm" title="事案DBの最新時刻を上書きで引っ張ります"><Icons.Refresh className="w-4 h-4 inline mr-1"/>事案を再同期</button>
+                                                <button onClick={() => fetchDailyData(reportInfo.date, password, true)} className="bg-slate-100 border border-slate-300 text-slate-600 px-3 py-2 rounded-md hover:bg-slate-200 text-xs font-bold whitespace-nowrap shadow-sm" title="事案DBの最新時刻を上書きで引っ張り、✅完了情報を更新します"><Icons.Refresh className="w-4 h-4 inline mr-1"/>事案を再同期</button>
                                             </div>
                                             <div className="hidden print:block font-bold text-lg mr-4">日付: {reportInfo.date}</div>
                                         </div>
@@ -691,6 +775,10 @@
                                     <div className="w-3 h-3 bg-green-100 border border-green-200 print-color-adjust"></div>
                                     <span className="text-slate-500 font-bold print:font-normal">復帰作業</span>
                                 </div>
+                                <div className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:py-tight print:mb-1">
+                                    <span className="text-green-600 font-bold">✅</span>
+                                    <span className="text-slate-500 font-bold print:font-normal">カルテ完了済</span>
+                                </div>
                             </div>
 
                             {/* Timeline */}
@@ -750,11 +838,17 @@
                                                     >
                                                         <div className="flex items-center gap-1 text-white font-bold text-xs px-1">
                                                             {IconComponent && <IconComponent className="w-4 h-4 print:w-3 print:h-3 print:text-white print-icon-size" />}
-                                                            <span className="hidden print:inline print-bar-text truncate font-bold">{event.no ? '#'+event.no : categoryConfig.label.replace('ヘリ活動', '')}</span>
+                                                            <span className="hidden print:inline print-bar-text truncate font-bold">
+                                                                {event.no ? '#'+event.no : categoryConfig.label.replace('ヘリ活動', '')}
+                                                                {event.isCompleted && <span title="カルテ完了" className="ml-1 text-green-300 font-bold print-bar-text">✅</span>}
+                                                            </span>
                                                         </div>
                                                         {isHovered && !isEditing && (
                                                             <div className="absolute bottom-full mb-2 w-64 bg-slate-800 text-white text-xs rounded p-3 shadow-xl z-50 pointer-events-none left-1/2 -translate-x-1/2 no-print">
-                                                                <div className="font-bold text-yellow-400 mb-1 flex items-center justify-between"><span>{event.no ? `#${event.no}` : categoryConfig.label}</span><span className="text-[10px] bg-white/20 px-1 rounded">{event.category}</span></div>
+                                                                <div className="font-bold text-yellow-400 mb-1 flex items-center justify-between">
+                                                                    <span>{event.no ? `#${event.no}` : categoryConfig.label} {event.isCompleted && "✅完了"}</span>
+                                                                    <span className="text-[10px] bg-white/20 px-1 rounded">{event.category}</span>
+                                                                </div>
                                                                 <div className="mb-2 text-slate-300 font-mono border-b border-slate-600 pb-1">{event.start} - {event.end} ({duration}分){prepDuration === 0 && <span className="ml-2 text-green-300 font-bold">(直行)</span>}</div>
                                                                 <div className="leading-relaxed">{event.desc}</div>
                                                                 <div className="mt-2 pt-1 text-center text-amber-400 text-[10px]">クリックで修正</div>
@@ -813,7 +907,10 @@
                                                         <td className="px-4 py-3 font-mono font-bold print:py-tight">{event.no || '-'}</td>
                                                         <td className="px-4 py-3 font-mono whitespace-nowrap print:py-tight">{event.start} - {event.end}</td>
                                                         <td className="px-4 py-3 text-slate-600 print:py-tight">{endMins - startMins}分</td>
-                                                        <td className="px-4 py-3 text-slate-600 print:max-w-none print-wrap-text truncate max-w-xs font-medium" title={event.desc}>{event.desc}</td>
+                                                        <td className="px-4 py-3 text-slate-600 print:max-w-none print-wrap-text truncate max-w-xs font-medium" title={event.desc}>
+                                                            {event.isCompleted && <span title="カルテ完了済" className="mr-1 text-green-600 font-bold">✅</span>}
+                                                            {event.desc}
+                                                        </td>
                                                         <td className="px-4 py-3 text-center flex justify-center gap-2 no-print">
                                                             <button onClick={() => handleEditClick(event)} className={`transition-colors ${isEditing ? 'text-amber-600' : 'text-slate-400 hover:text-blue-600'}`} title="修正"><Icons.Edit3 className="w-4 h-4" /></button>
                                                             <button onClick={() => handleDelete(event.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="削除"><Icons.Trash2 className="w-4 h-4" /></button>
@@ -827,11 +924,6 @@
                             </div>
                         </>
                     )}
-
-                    {/* Print Footer */}
-                    <div className="hidden print:block print-footer">
-                        業務日報（浜町日誌） | 出力日: {printDateStr}
-                    </div>
                 </div>
             );
         };
