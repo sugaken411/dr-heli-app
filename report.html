@@ -62,7 +62,6 @@
 
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
         
-        // --- アイコン ---
         const Icon = ({ path, className = "w-4 h-4" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
         );
@@ -90,7 +89,8 @@
             Clock: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
             Save: (props) => <Icon {...props} path={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />,
             Lock: (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />,
-            Refresh: (props) => <Icon {...props} path={<><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></>} />
+            Refresh: (props) => <Icon {...props} path={<><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></>} />,
+            Chart: (props) => <Icon {...props} path={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></>} />
         };
 
         const DailyTimelineApp = () => {
@@ -111,6 +111,8 @@
 
             const REASON_OPTIONS = ["風向き", "天候不良", "強風", "機体トラブル"];
 
+            // State
+            const [activeTab, setActiveTab] = useState('input'); // 'input' or 'summary'
             const [isLoggedIn, setIsLoggedIn] = useState(false);
             const [password, setPassword] = useState('');
             const [loginError, setLoginError] = useState('');
@@ -129,9 +131,13 @@
             
             const [sunTimes, setSunTimes] = useState({ sunrise: '--:--', sunset: '--:--', standbyEnd: '--:--' });
             
-            const [masters, setMasters] = useState({ dr: [], ns: [] });
+            const [masters, setMasters] = useState({ dr: [], ns: [], phrases: [] });
             const [isLoading, setIsLoading] = useState(false);
             const [loadingMsg, setLoadingMsg] = useState('');
+            
+            // 集計用 State
+            const [summaryData, setSummaryData] = useState([]);
+            const [sumMonth, setSumMonth] = useState(new Date().toISOString().substring(0, 7));
 
             const categoryRef = useRef(null);
             const noRef = useRef(null);
@@ -149,7 +155,7 @@
                         });
                         const json = await res.json();
                         if (json.status === "success") {
-                            setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
+                            setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [], phrases: json.masters.phrases || [] });
                         }
                     } catch (e) {
                         console.warn("マスタ取得エラー", e);
@@ -173,8 +179,8 @@
                     }
                 } catch(e) {}
                 
-                if (isLoggedIn) fetchDailyData(reportInfo.date, password, false);
-            }, [reportInfo.date]);
+                if (isLoggedIn && activeTab === 'input') fetchDailyData(reportInfo.date, password, false);
+            }, [reportInfo.date, activeTab]);
 
             const handleLogin = async () => {
                 if(!password) return;
@@ -190,7 +196,7 @@
                     const json = await res.json();
                     if (json.status === "success") {
                         setIsLoggedIn(true);
-                        setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
+                        setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [], phrases: json.masters.phrases || [] });
                         setManuals(json.manuals || []); 
                         setQas(json.qa || []);
                         fetchDailyData(reportInfo.date, password, false);
@@ -233,6 +239,26 @@
                     }
                 } catch (e) {
                     alert("データの取得に失敗しました。");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const fetchAllReportsForSummary = async () => {
+                setLoadingMsg('日誌データを集計中...');
+                setIsLoading(true);
+                try {
+                    const res = await fetch(GAS_API_URL, {
+                        method: "POST",
+                        headers: {"Content-Type": "text/plain;charset=utf-8"},
+                        body: JSON.stringify({action: "fetch_all_reports", password: password})
+                    });
+                    const json = await res.json();
+                    if (json.status === "success" && json.data) {
+                        setSummaryData(json.data);
+                    }
+                } catch (e) {
+                    alert("集計データの取得に失敗しました。");
                 } finally {
                     setIsLoading(false);
                 }
@@ -393,6 +419,24 @@
                 finally { setIsLoading(false); }
             };
 
+            const exportSummaryCSV = () => {
+                const filtered = summaryData.filter(d => d.date.startsWith(sumMonth));
+                if (filtered.length === 0) return alert("出力するデータがありません");
+                
+                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                let csv = "日付,フライトナース,フライトドクター,待機理由,活動件数(件),活動内容\n";
+                filtered.forEach(row => {
+                    let eventsArr = [];
+                    try { eventsArr = JSON.parse(row.eventsStr); } catch(e){}
+                    const mCount = eventsArr.filter(e => e.category === 'mission' || e.category === 'cancel').length;
+                    const eNames = eventsArr.map(e => `[${CATEGORIES[e.category.toUpperCase()]?.label||'他'}] ${e.desc}`).join(" | ");
+                    csv += `"${row.date}","${row.ns}","${row.dr}","${row.reason}",${mCount},"${eNames.replace(/"/g, '""')}"\n`;
+                });
+                
+                const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `report_summary_${sumMonth.replace('-','')}.csv`; link.click();
+            };
+
             const sortedEvents = [...events].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
             const printDateStr = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
@@ -414,7 +458,6 @@
 
             return (
                 <div className="p-4 max-w-full mx-auto min-h-screen font-sans print:bg-white print:p-0">
-                    {/* ローダー */}
                     {isLoading && (
                         <div id="global-loader" style={{display: 'flex'}}>
                             <div className="spinner mb-4"></div>
@@ -426,17 +469,23 @@
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 no-print flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <Icons.ClipboardList className="w-5 h-5 text-blue-600 print:text-black" />
-                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.3</span></h1>
+                            <h1 className="text-lg font-bold text-slate-800 print:text-black print:text-xl flex items-center gap-2">業務日報データ / 活動実績チャート <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200 no-print">v2.4</span></h1>
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
-                            <a href="portal.html" className="h-10 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors text-xs font-bold"><Icons.Lock className="w-3.5 h-3.5"/> ポータルへ戻る</a>
+                            <a href="portal.html" className="h-10 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors text-xs font-bold"><Icons.Lock className="w-3.5 h-3.5"/> ポータルへ</a>
                             <button onClick={() => setShowManual(true)} className="h-10 px-3 rounded border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-1 transition-colors text-xs font-bold" title="取扱説明書"><Icons.BookOpen className="w-3.5 h-3.5"/> 取扱説明書</button>
                             <button onClick={() => setShowQa(true)} className="h-10 px-3 rounded border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-1 transition-colors text-xs font-bold" title="Q&A">❓ Q&A</button>
                             <div className="h-6 w-px bg-slate-300 mx-1 hidden md:block"></div>
-                            <button onClick={handleReset} className="h-10 px-3 rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center gap-1 transition-colors font-bold text-xs"><Icons.RotateCcw className="w-3 h-3"/> クリア</button>
-                            <button onClick={handleSaveToSheet} className="h-10 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 transition-colors font-bold text-xs shadow-sm"><Icons.Save className="w-3.5 h-3.5"/> シートに保存</button>
+                            {activeTab === 'input' && <button onClick={handleReset} className="h-10 px-3 rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 flex items-center gap-1 transition-colors font-bold text-xs"><Icons.RotateCcw className="w-3 h-3"/> クリア</button>}
+                            {activeTab === 'input' && <button onClick={handleSaveToSheet} className="h-10 px-4 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1 transition-colors font-bold text-xs shadow-sm"><Icons.Save className="w-3.5 h-3.5"/> シートに保存</button>}
                             <button onClick={() => window.print()} className="h-10 px-3 rounded bg-slate-700 hover:bg-slate-800 text-white flex items-center gap-1 transition-colors font-bold text-xs"><Icons.Printer className="w-3.5 h-3.5"/> 印刷</button>
                         </div>
+                    </div>
+
+                    {/* Tab Navigation */}
+                    <div className="flex border-b border-slate-300 mb-6 no-print">
+                        <button onClick={() => setActiveTab('input')} className={`px-6 py-3 font-bold text-sm transition-colors ${activeTab === 'input' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500 hover:bg-slate-100'}`}>📝 日報入力</button>
+                        <button onClick={() => { setActiveTab('summary'); fetchAllReportsForSummary(); }} className={`px-6 py-3 font-bold text-sm transition-colors ${activeTab === 'summary' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500 hover:bg-slate-100'}`}>📊 検索・集計</button>
                     </div>
 
                     {/* Manual Modal */}
@@ -476,283 +525,308 @@
                         </div>
                     )}
 
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-6 grid grid-cols-1 md:grid-cols-3 gap-6 print:p-0 print:gap-4 print:mt-4 print:border-none print:shadow-none">
-                        <div className="space-y-4 print:space-y-2">
-                            <div className="print:flex print:gap-4 items-center print-header-compact">
-                                <div className="print-header-item">
-                                    <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">日付</label>
-                                    <div className="flex gap-2 print:hidden items-center">
-                                        <input type="date" name="date" value={reportInfo.date} onChange={handleReportInfoChange} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold" />
-                                        <button onClick={() => fetchDailyData(reportInfo.date, password, true)} className="bg-slate-100 border border-slate-300 text-slate-600 px-2 py-2 rounded-md hover:bg-slate-200 text-xs font-bold whitespace-nowrap" title="事案DBの最新時刻を上書きで引っ張ります"><Icons.Refresh className="w-4 h-4 inline mr-1"/>事案を再同期</button>
-                                    </div>
-                                    <div className="hidden print:block"><span className="font-bold mr-1">日付:</span> {reportInfo.date}</div>
+                    {/* === Tab: Summary (集計) === */}
+                    {activeTab === 'summary' && (
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 no-print">
+                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Icons.Chart className="w-5 h-5 text-green-600"/> 日報データの集計・出力</h2>
+                            <div className="flex items-end gap-4 mb-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1">対象月</label>
+                                    <input type="month" value={sumMonth} onChange={e => setSumMonth(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm font-bold outline-none" />
                                 </div>
-                                <div className="print-header-item hidden print:block border-l border-slate-300 pl-3 ml-3">
-                                    <div className="flex gap-2 text-[9px] text-slate-600">
-                                        <div className="flex items-center gap-1"><Icons.Sun className="w-3 h-3"/> <span>{sunTimes.sunrise}</span></div>
-                                        <div className="flex items-center gap-1"><Icons.Moon className="w-3 h-3"/> <span>{sunTimes.sunset}</span></div>
-                                        <div className="flex items-center gap-1 font-bold ml-1"><Icons.Clock className="w-3 h-3"/> <span>待機終了: {sunTimes.standbyEnd}</span></div>
-                                    </div>
-                                </div>
-                                <div className="ml-4 flex gap-3 text-[10px] bg-amber-50 px-2 py-1 rounded border border-amber-100 text-amber-800 print:hidden">
-                                    <div className="flex items-center gap-1"><Icons.Sun className="w-3 h-3"/> <span>{sunTimes.sunrise}</span></div>
-                                    <div className="flex items-center gap-1"><Icons.Moon className="w-3 h-3"/> <span>{sunTimes.sunset}</span></div>
-                                    <div className="flex items-center gap-1 border-l border-amber-200 pl-2 font-bold"><Icons.Clock className="w-3 h-3"/> <span>待機終了: {sunTimes.standbyEnd}</span></div>
-                                </div>
+                                <button onClick={exportSummaryCSV} className="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"><Icons.FileSpreadsheet className="w-4 h-4"/> CSVダウンロード</button>
                             </div>
-                            <div className="grid grid-cols-2 gap-2 print:flex print:gap-4 print-header-compact" style={{border: 'none'}}>
-                                <div className="print-header-item">
-                                    <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">フライトナース</label>
-                                    <div className="relative print:hidden">
-                                        <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
-                                        <select name="recorder" value={reportInfo.recorder} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none font-bold text-slate-700">
-                                            <option value="">-- 選択 --</option>
-                                            {masters.ns.map(n => <option key={n} value={n}>{n}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="hidden print:block"><span className="font-bold mr-1">フライトナース:</span> {reportInfo.recorder || '(未入力)'}</div>
-                                </div>
-                                <div className="print-header-item">
-                                    <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">担当医師</label>
-                                    <div className="relative print:hidden">
-                                        <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
-                                        <select name="doctor" value={reportInfo.doctor} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none font-bold text-slate-700">
-                                            <option value="">-- 選択 --</option>
-                                            {masters.dr.map(d => <option key={d} value={d}>{d}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="hidden print:block"><span className="font-bold mr-1">担当医師:</span> {reportInfo.doctor || '(未入力)'}</div>
-                                </div>
+                            <div className="text-sm text-slate-600 border-t pt-4">
+                                <p className="mb-2"><b>表示中のデータ:</b> {summaryData.filter(d => d.date.startsWith(sumMonth)).length} 日分</p>
+                                <ul className="list-disc pl-5">
+                                    <li>※詳細なクロス集計や労務管理計算は、ダウンロードしたCSVファイルをExcel等で開いて行ってください。</li>
+                                </ul>
                             </div>
                         </div>
-                        
-                        <div className="md:col-span-2 print:mt-0">
-                            <label className="block text-xs font-bold text-slate-500 mb-2 print:hidden">浜町待機理由 / 特記事項</label>
-                            <div className="print:hidden mb-2 flex flex-wrap gap-3">
-                                {REASON_OPTIONS.map(reason => (
-                                    <label key={reason} className="flex items-center gap-1.5 cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 text-sm hover:bg-slate-50 font-medium text-slate-600">
-                                        <input type="checkbox" checked={reportInfo.selectedReasons.includes(reason)} onChange={() => handleReasonCheck(reason)} className="rounded border-slate-300 text-blue-600" />
-                                        {reason}
-                                    </label>
-                                ))}
-                            </div>
-                            <div className="sg-wrap no-print">
-                                <button type="button" className="sg-btn" onClick={() => addSuggestReason('機体清掃実施。')}>機体清掃</button>
-                                <button type="button" className="sg-btn" onClick={() => addSuggestReason('Dr・Ns引継ぎ完了。')}>引継ぎ完了</button>
-                                <button type="button" className="sg-btn" onClick={() => addSuggestReason('天候不良のため終日待機。')}>天候不良待機</button>
-                            </div>
-                            <textarea name="otherReason" rows="3" value={reportInfo.otherReason} onChange={handleOtherReason} placeholder="その他・特記事項 (フリーコメント)" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border print:hidden outline-none resize-none" />
-                            <div className="hidden print:block print-reason-box">
-                                <span className="font-bold mr-2">待機理由/備考:</span>
-                                {reportInfo.hamamachiReason || '特になし'}
-                            </div>
-                        </div>
-                    </div>
+                    )}
 
-                    {/* Input Form Area */}
-                    <div id="input-form-area" className={`bg-white rounded-xl shadow-sm border mb-6 overflow-hidden transition-all no-print print:hidden ${editingId ? 'border-amber-400 ring-2 ring-amber-100' : 'border-slate-200'}`}>
-                        <div className={`px-6 py-3 border-b flex items-center justify-between ${editingId ? 'bg-amber-50 border-amber-200' : 'bg-blue-50/50 border-blue-100'}`}>
-                            <div className="flex items-center gap-2">
-                                {editingId ? <Icons.Edit3 className="w-4 h-4 text-amber-600" /> : <Icons.Plus className="w-4 h-4 text-blue-500" />}
-                                <span className={`text-sm font-bold ${editingId ? 'text-amber-800' : 'text-blue-900'}`}>{editingId ? 'タイムライン項目の修正' : 'タイムライン項目の追加'}</span>
-                            </div>
-                            {editingId && (
-                                <button onClick={handleCancelEdit} className="text-xs flex items-center gap-1 text-slate-500 hover:text-slate-700 bg-white px-2 py-1 rounded border border-slate-200 font-bold"><Icons.X className="w-3 h-3" /> 編集キャンセル</button>
-                            )}
-                        </div>
-                        
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                            <div className="md:col-span-4">
-                                <label className="block text-xs font-bold text-slate-500 mb-1">業務種別</label>
-                                <select ref={categoryRef} name="category" value={formData.category} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, noRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold text-slate-700">
-                                    {Object.values(CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                                </select>
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-xs font-bold text-slate-500 mb-1">事案No.</label>
-                                <input ref={noRef} type="tel" inputMode="numeric" name="no" value={formData.no} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, startRef)} placeholder="12345" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
-                            </div>
-                            <div className="md:col-span-3">
-                                <label className="block text-xs font-bold text-slate-500 mb-1">開始時間</label>
-                                <input ref={startRef} type="time" name="start" value={formData.start} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, endRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-mono font-bold" />
-                            </div>
-                            <div className="md:col-span-3">
-                                <label className="block text-xs font-bold text-slate-500 mb-1">終了時間</label>
-                                <input ref={endRef} type="time" name="end" value={formData.end} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, descRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-mono font-bold" />
-                            </div>
-
-                            <div className="md:col-span-8">
-                                <label className="block text-xs font-bold text-slate-500 mb-1">内容・備考</label>
-                                <input ref={descRef} type="text" name="desc" value={formData.desc} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, null)} placeholder="活動内容を入力..." className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
-                            </div>
-                             <div className="md:col-span-2 flex items-center justify-center h-10 bg-slate-50 rounded border border-slate-200 mb-[1px]">
-                                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none font-bold">
-                                    <input type="checkbox" name="isContinuous" checked={formData.isContinuous} onChange={handleInputChange} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
-                                    <span>連続出動</span>
-                                </label>
-                            </div>
-                            <div className="md:col-span-2">
-                                <button type="button" onClick={handleAddOrUpdate} className={`w-full text-white font-bold h-10 rounded-md shadow-sm flex justify-center items-center gap-1 transition-colors ${editingId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                                    {editingId ? <><Icons.CheckCircle className="w-4 h-4" /> 更新</> : <><Icons.Plus className="w-4 h-4" /> 追加</>}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Legend */}
-                    <div className="flex flex-wrap gap-3 mb-4 px-2 print:mb-2 print-break-avoid">
-                        {Object.values(CATEGORIES).map(c => {
-                            const IconComp = c.icon;
-                            return (
-                                <div key={c.id} className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:shadow-none print:py-tight print:mb-1">
-                                    <div className={`w-3 h-3 rounded-full ${c.color.split(' ')[0]} print-color-adjust`}></div>
-                                    <span className="text-slate-500 print:text-black hidden print:inline">{IconComp && <IconComp className="w-3 h-3" />}</span>
-                                    <span className="text-slate-700 font-bold print:font-normal">{c.label}</span>
-                                </div>
-                            );
-                        })}
-                        <div className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:py-tight print:mb-1">
-                            <div className="w-3 h-3 bg-yellow-400 opacity-50 striped-bg print-color-adjust"></div>
-                            <span className="text-slate-500 font-bold print:font-normal">準備(10分)</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:py-tight print:mb-1">
-                            <div className="w-3 h-3 bg-green-100 border border-green-200 print-color-adjust"></div>
-                            <span className="text-slate-500 font-bold print:font-normal">復帰作業</span>
-                        </div>
-                    </div>
-
-                    {/* Timeline */}
-                    <div className="relative bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden min-h-[180px] mb-8 print:shadow-none print:border print:mb-2 print-break-avoid print-chart-container">
-                        <div className="overflow-x-auto pb-4 pt-4 relative min-w-[1200px] print-full-width print-chart-inner">
-                            <div className="absolute top-4 left-4 right-4 h-6 pointer-events-none select-none z-20 print-time-label">
-                                {Array.from({ length: Math.floor(TOTAL_HOURS) + 1 }).map((_, i) => (
-                                    <div key={i} className="absolute transform -translate-x-1/2" style={{ left: `${(i / TOTAL_HOURS) * 100}%` }}>
-                                        <span className="text-xs font-bold text-slate-400 print:text-slate-600 print-text-xs">{START_HOUR + i}:00</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="absolute top-10 left-4 right-4 bottom-4 pointer-events-none select-none z-0 print-grid-line">
-                                {Array.from({ length: Math.floor(TOTAL_HOURS) + 1 }).map((_, i) => (
-                                    <div key={`line-${i}`} className="absolute top-0 bottom-0 w-px bg-slate-100 print:bg-slate-200 transform -translate-x-1/2" style={{ left: `${(i / TOTAL_HOURS) * 100}%` }}></div>
-                                ))}
-                                {Array.from({ length: Math.floor(TOTAL_HOURS) }).map((_, i) => (
-                                    <div key={`dash-${i}`} className="absolute top-0 bottom-0 w-px border-l border-slate-200 border-dashed opacity-60 print:opacity-40 transform -translate-x-1/2" style={{ left: `${((i + 0.5) / TOTAL_HOURS) * 100}%` }}></div>
-                                ))}
-                            </div>
-                            
-                            <div className="relative h-24 mt-10 mx-4 z-10 print-chart-height">
-                                <div className="absolute top-1/2 left-0 w-full h-px bg-slate-200 print:bg-slate-300 -z-10"></div>
-                                {sortedEvents.length === 0 && <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-300 font-bold text-lg pointer-events-none">データがありません。</div>}
-                                {sortedEvents.map((event, index) => {
-                                    const startMins = timeToMinutes(event.start);
-                                    const endMins = timeToMinutes(event.end);
-                                    const duration = endMins - startMins;
-                                    const recoveryDuration = getRecoveryDuration(event);
-                                    let prepDuration = getBasePrepDuration(event);
-                                    if (index > 0 && sortedEvents[index - 1].isContinuous) prepDuration = 0;
-                                    const prepStartMins = startMins - prepDuration;
-                                    
-                                    const mainPos = getPosition(startMins, duration);
-                                    const prepPos = getPosition(prepStartMins, prepDuration);
-                                    const recoveryPos = getPosition(endMins, recoveryDuration);
-
-                                    const categoryConfig = Object.values(CATEGORIES).find(c => c.id === event.category) || CATEGORIES.OTHER;
-                                    const isHovered = hoveredId === event.id;
-                                    const isEditing = editingId === event.id;
-                                    const IconComponent = categoryConfig.icon;
-                                    
-                                    return (
-                                        <div key={event.id} className="absolute h-full pointer-events-none" style={{ width: '100%', top: 0, zIndex: 20 }}>
-                                            {/* 離陸スタンバイ */}
-                                            {prepDuration > 0 && (
-                                                <div className="absolute transform -translate-y-1/2 h-10 bg-yellow-400/30 border-l border-t border-b border-yellow-400/50 rounded-l-md pointer-events-auto transition-all print-color-adjust print-chart-bar-wrapper"
-                                                    style={{ top: '50%', left: prepPos.left, width: prepPos.width, backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,.3) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.3) 50%, rgba(255,255,255,.3) 75%, transparent 75%, transparent)', backgroundSize: '10px 10px' }}
-                                                    title="離陸スタンバイ (10分)" />
-                                            )}
-                                            {/* メイン活動バー */}
-                                            <div className={`absolute transform -translate-y-1/2 transition-all duration-300 pointer-events-auto group rounded-md border-b-4 shadow-sm flex flex-col justify-center items-center cursor-pointer overflow-hidden ${categoryConfig.color} ${isHovered || isEditing ? 'scale-105 shadow-md brightness-110 z-30' : ''} ${isEditing ? 'ring-2 ring-amber-400' : ''} print-color-adjust print-chart-bar-wrapper print-chart-bar`}
-                                                style={{ top: '50%', left: mainPos.left, width: mainPos.width, height: '64px' }}
-                                                onClick={() => handleEditClick(event)}
-                                                onMouseEnter={() => setHoveredId(event.id)}
-                                                onMouseLeave={() => setHoveredId(null)}
-                                            >
-                                                <div className="flex items-center gap-1 text-white font-bold text-xs px-1">
-                                                    {IconComponent && <IconComponent className="w-4 h-4 print:w-3 print:h-3 print:text-white print-icon-size" />}
-                                                    <span className="hidden print:inline print-bar-text truncate font-bold">{event.no ? '#'+event.no : categoryConfig.label.replace('ヘリ活動', '')}</span>
-                                                </div>
-                                                {isHovered && !isEditing && (
-                                                    <div className="absolute bottom-full mb-2 w-64 bg-slate-800 text-white text-xs rounded p-3 shadow-xl z-50 pointer-events-none left-1/2 -translate-x-1/2 no-print">
-                                                        <div className="font-bold text-yellow-400 mb-1 flex items-center justify-between"><span>{event.no ? `#${event.no}` : categoryConfig.label}</span><span className="text-[10px] bg-white/20 px-1 rounded">{event.category}</span></div>
-                                                        <div className="mb-2 text-slate-300 font-mono border-b border-slate-600 pb-1">{event.start} - {event.end} ({duration}分){prepDuration === 0 && <span className="ml-2 text-green-300 font-bold">(直行)</span>}</div>
-                                                        <div className="leading-relaxed">{event.desc}</div>
-                                                        <div className="mt-2 pt-1 text-center text-amber-400 text-[10px]">クリックで修正</div>
-                                                    </div>
-                                                )}
+                    {/* === Tab: Input (日報入力) === */}
+                    {activeTab === 'input' && (
+                        <>
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-6 print:p-0 print:border-none print:shadow-none">
+                                <div className="space-y-4 print:space-y-2 mb-6">
+                                    <div className="print:flex print:gap-4 items-center print-header-compact">
+                                        <div className="print-header-item">
+                                            <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">日付</label>
+                                            <div className="flex gap-2 print:hidden items-center">
+                                                <input type="date" name="date" value={reportInfo.date} onChange={handleReportInfoChange} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold" />
+                                                <button onClick={() => fetchDailyData(reportInfo.date, password, true)} className="bg-slate-100 border border-slate-300 text-slate-600 px-3 py-2 rounded-md hover:bg-slate-200 text-xs font-bold whitespace-nowrap shadow-sm" title="事案DBの最新時刻を上書きで引っ張ります"><Icons.Refresh className="w-4 h-4 inline mr-1"/>事案を再同期</button>
                                             </div>
-                                            {/* 復帰作業バー */}
-                                            {recoveryDuration > 0 && (
-                                                <div className="absolute transform -translate-y-1/2 h-10 bg-green-50 border border-green-200 border-l-0 rounded-r-md pointer-events-auto flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity print-color-adjust print-chart-bar-wrapper"
-                                                    style={{ top: '50%', left: recoveryPos.left, width: recoveryPos.width }}
-                                                    title={`復帰作業・記録・整備 (${recoveryDuration}分)`}>
-                                                </div>
-                                            )}
+                                            <div className="hidden print:block font-bold text-lg mr-4">日付: {reportInfo.date}</div>
+                                        </div>
+                                        <div className="print-header-item hidden print:block border-l border-slate-300 pl-3 ml-3">
+                                            <div className="flex gap-2 text-[10px] text-slate-600 font-bold">
+                                                <div className="flex items-center gap-1"><Icons.Sun className="w-3 h-3"/> <span>{sunTimes.sunrise}</span></div>
+                                                <div className="flex items-center gap-1"><Icons.Moon className="w-3 h-3"/> <span>{sunTimes.sunset}</span></div>
+                                                <div className="flex items-center gap-1 font-bold ml-1 text-black"><Icons.Clock className="w-3 h-3"/> <span>待機終了: {sunTimes.standbyEnd}</span></div>
+                                            </div>
+                                        </div>
+                                        <div className="ml-4 flex gap-3 text-[10px] bg-amber-50 px-2 py-1 rounded border border-amber-100 text-amber-800 print:hidden font-bold">
+                                            <div className="flex items-center gap-1"><Icons.Sun className="w-3 h-3"/> <span>{sunTimes.sunrise}</span></div>
+                                            <div className="flex items-center gap-1"><Icons.Moon className="w-3 h-3"/> <span>{sunTimes.sunset}</span></div>
+                                            <div className="flex items-center gap-1 border-l border-amber-200 pl-2"><Icons.Clock className="w-3 h-3"/> <span>待機終了: {sunTimes.standbyEnd}</span></div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:flex print:gap-6 print-header-compact" style={{border: 'none'}}>
+                                        <div className="print-header-item">
+                                            <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">フライトドクター</label>
+                                            <div className="relative print:hidden">
+                                                <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
+                                                <select name="doctor" value={reportInfo.doctor} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none font-bold text-slate-700">
+                                                    <option value="">-- 選択 --</option>
+                                                    {masters.dr.map(d => <option key={d} value={d}>{d}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="hidden print:block font-bold">フライトドクター: {reportInfo.doctor || '(未入力)'}</div>
+                                        </div>
+                                        <div className="print-header-item print:border-l print:border-slate-300 print:pl-6">
+                                            <label className="block text-xs font-bold text-slate-500 mb-1 print:hidden">フライトナース</label>
+                                            <div className="relative print:hidden">
+                                                <div className="absolute left-2 top-2.5"><Icons.User className="w-4 h-4 text-slate-400" /></div>
+                                                <select name="recorder" value={reportInfo.recorder} onChange={handleReportInfoChange} className="w-full pl-8 text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none appearance-none font-bold text-slate-700">
+                                                    <option value="">-- 選択 --</option>
+                                                    {masters.ns.map(n => <option key={n} value={n}>{n}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="hidden print:block font-bold">フライトナース: {reportInfo.recorder || '(未入力)'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="print:mt-2">
+                                    <label className="block text-xs font-bold text-slate-500 mb-2 print:hidden">浜町待機理由 / 特記事項</label>
+                                    <div className="print:hidden mb-2 flex flex-wrap gap-3">
+                                        {REASON_OPTIONS.map(reason => (
+                                            <label key={reason} className="flex items-center gap-1.5 cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 text-sm hover:bg-slate-50 font-medium text-slate-600">
+                                                <input type="checkbox" checked={reportInfo.selectedReasons.includes(reason)} onChange={() => handleReasonCheck(reason)} className="rounded border-slate-300 text-blue-600" />
+                                                {reason}
+                                            </label>
+                                        ))}
+                                    </div>
+                                    <div className="sg-wrap no-print">
+                                        {masters.phrases && masters.phrases.map((phrase, i) => (
+                                            <button key={i} type="button" className="sg-btn" onClick={() => addSuggestReason(phrase)}>{phrase}</button>
+                                        ))}
+                                    </div>
+                                    <textarea name="otherReason" rows="3" value={reportInfo.otherReason} onChange={handleOtherReason} placeholder="その他・特記事項 (フリーコメント)" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border print:hidden outline-none resize-none" />
+                                    <div className="hidden print:block print-reason-box mt-2">
+                                        <span className="font-bold mr-2">待機理由/備考:</span>
+                                        {reportInfo.hamamachiReason || '特になし'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Input Form Area */}
+                            <div id="input-form-area" className={`bg-white rounded-xl shadow-sm border mb-6 overflow-hidden transition-all no-print print:hidden ${editingId ? 'border-amber-400 ring-2 ring-amber-100' : 'border-slate-200'}`}>
+                                <div className={`px-6 py-3 border-b flex items-center justify-between ${editingId ? 'bg-amber-50 border-amber-200' : 'bg-blue-50/50 border-blue-100'}`}>
+                                    <div className="flex items-center gap-2">
+                                        {editingId ? <Icons.Edit3 className="w-4 h-4 text-amber-600" /> : <Icons.Plus className="w-4 h-4 text-blue-500" />}
+                                        <span className={`text-sm font-bold ${editingId ? 'text-amber-800' : 'text-blue-900'}`}>{editingId ? 'タイムライン項目の修正' : 'タイムライン項目の追加'}</span>
+                                    </div>
+                                    {editingId && (
+                                        <button onClick={handleCancelEdit} className="text-xs flex items-center gap-1 text-slate-500 hover:text-slate-700 bg-white px-2 py-1 rounded border border-slate-200 font-bold"><Icons.X className="w-3 h-3" /> 編集キャンセル</button>
+                                    )}
+                                </div>
+                                
+                                <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                                    <div className="md:col-span-4">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">業務種別</label>
+                                        <select ref={categoryRef} name="category" value={formData.category} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, noRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-bold text-slate-700">
+                                            {Object.values(CATEGORIES).map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">事案No.</label>
+                                        <input ref={noRef} type="tel" inputMode="numeric" name="no" value={formData.no} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, startRef)} placeholder="12345" className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">開始時間</label>
+                                        <input ref={startRef} type="time" name="start" value={formData.start} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, endRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-mono font-bold" />
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">終了時間</label>
+                                        <input ref={endRef} type="time" name="end" value={formData.end} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, descRef)} className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none font-mono font-bold" />
+                                    </div>
+
+                                    <div className="md:col-span-8">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1">内容・備考</label>
+                                        <input ref={descRef} type="text" name="desc" value={formData.desc} onChange={handleInputChange} onKeyDown={(e) => handleKeyDown(e, null)} placeholder="活動内容を入力..." className="w-full text-sm border-slate-300 rounded-md shadow-sm p-2 border outline-none" />
+                                    </div>
+                                     <div className="md:col-span-2 flex items-center justify-center h-10 bg-slate-50 rounded border border-slate-200 mb-[1px]">
+                                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none font-bold">
+                                            <input type="checkbox" name="isContinuous" checked={formData.isContinuous} onChange={handleInputChange} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                                            <span>連続出動</span>
+                                        </label>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <button type="button" onClick={handleAddOrUpdate} className={`w-full text-white font-bold h-10 rounded-md shadow-sm flex justify-center items-center gap-1 transition-colors ${editingId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                                            {editingId ? <><Icons.CheckCircle className="w-4 h-4" /> 更新</> : <><Icons.Plus className="w-4 h-4" /> 追加</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Legend */}
+                            <div className="flex flex-wrap gap-3 mb-4 px-2 print:mb-2 print-break-avoid">
+                                {Object.values(CATEGORIES).map(c => {
+                                    const IconComp = c.icon;
+                                    return (
+                                        <div key={c.id} className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:shadow-none print:py-tight print:mb-1">
+                                            <div className={`w-3 h-3 rounded-full ${c.color.split(' ')[0]} print-color-adjust`}></div>
+                                            <span className="text-slate-500 print:text-black hidden print:inline">{IconComp && <IconComp className="w-3 h-3" />}</span>
+                                            <span className="text-slate-700 font-bold print:font-normal">{c.label}</span>
                                         </div>
                                     );
                                 })}
+                                <div className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:py-tight print:mb-1">
+                                    <div className="w-3 h-3 bg-yellow-400 opacity-50 striped-bg print-color-adjust"></div>
+                                    <span className="text-slate-500 font-bold print:font-normal">準備(10分)</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm print:border-slate-300 print:py-tight print:mb-1">
+                                    <div className="w-3 h-3 bg-green-100 border border-green-200 print-color-adjust"></div>
+                                    <span className="text-slate-500 font-bold print:font-normal">復帰作業</span>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* List */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border print-break-avoid">
-                        <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 font-semibold text-slate-700 flex items-center gap-2 text-sm print:bg-white print:border-b-2 print:border-slate-800 print:py-tight">
-                            <Icons.ClipboardList className="w-4 h-4" /> 登録済みデータリスト
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm print-text-xs">
-                                <thead className="bg-slate-50 text-slate-500 text-xs uppercase print:bg-white print:text-black print:border-b">
-                                    <tr className="print-list-header">
-                                        <th className="px-4 py-3 w-16 print:py-tight">種別</th>
-                                        <th className="px-4 py-3 w-24 print:py-tight">No/ID</th>
-                                        <th className="px-4 py-3 w-32 print:py-tight">時間</th>
-                                        <th className="px-4 py-3 w-24 print:py-tight">所要時間</th>
-                                        <th className="px-4 py-3 print:py-tight">内容</th>
-                                        <th className="px-4 py-3 w-24 text-center no-print">操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 print:divide-slate-200">
-                                    {sortedEvents.map((event) => {
-                                        const startMins = timeToMinutes(event.start);
-                                        const endMins = timeToMinutes(event.end);
-                                        const cat = Object.values(CATEGORIES).find(c => c.id === event.category) || CATEGORIES.OTHER;
-                                        const IconComponent = cat.icon;
-                                        const isHovered = hoveredId === event.id;
-                                        const isEditing = editingId === event.id;
-                                        return (
-                                            <tr key={event.id} className={`transition-colors print-list-row ${isEditing ? 'bg-amber-50' : isHovered ? 'bg-yellow-50' : 'hover:bg-slate-50'} print:bg-white`} onMouseEnter={() => setHoveredId(event.id)} onMouseLeave={() => setHoveredId(null)}>
-                                                <td className="px-4 py-3 print:py-tight">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`w-3 h-3 rounded-full ${cat.color.split(' ')[0]} print-color-adjust`} title={cat.label}></div>
-                                                        <span className="hidden print:inline-block text-black print-color-adjust">
-                                                            {IconComponent && <IconComponent className="w-3 h-3" />}
-                                                        </span>
+                            {/* Timeline */}
+                            <div className="relative bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden min-h-[180px] mb-8 print:shadow-none print:border print:mb-2 print-break-avoid print-chart-container">
+                                <div className="overflow-x-auto pb-4 pt-4 relative min-w-[1200px] print-full-width print-chart-inner">
+                                    <div className="absolute top-4 left-4 right-4 h-6 pointer-events-none select-none z-20 print-time-label">
+                                        {Array.from({ length: Math.floor(TOTAL_HOURS) + 1 }).map((_, i) => (
+                                            <div key={i} className="absolute transform -translate-x-1/2" style={{ left: `${(i / TOTAL_HOURS) * 100}%` }}>
+                                                <span className="text-xs font-bold text-slate-400 print:text-slate-600 print-text-xs">{START_HOUR + i}:00</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="absolute top-10 left-4 right-4 bottom-4 pointer-events-none select-none z-0 print-grid-line">
+                                        {Array.from({ length: Math.floor(TOTAL_HOURS) + 1 }).map((_, i) => (
+                                            <div key={`line-${i}`} className="absolute top-0 bottom-0 w-px bg-slate-100 print:bg-slate-200 transform -translate-x-1/2" style={{ left: `${(i / TOTAL_HOURS) * 100}%` }}></div>
+                                        ))}
+                                        {Array.from({ length: Math.floor(TOTAL_HOURS) }).map((_, i) => (
+                                            <div key={`dash-${i}`} className="absolute top-0 bottom-0 w-px border-l border-slate-200 border-dashed opacity-60 print:opacity-40 transform -translate-x-1/2" style={{ left: `${((i + 0.5) / TOTAL_HOURS) * 100}%` }}></div>
+                                        ))}
+                                    </div>
+                                    
+                                    <div className="relative h-24 mt-10 mx-4 z-10 print-chart-height">
+                                        <div className="absolute top-1/2 left-0 w-full h-px bg-slate-200 print:bg-slate-300 -z-10"></div>
+                                        {sortedEvents.length === 0 && <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-300 font-bold text-lg pointer-events-none">データがありません。</div>}
+                                        {sortedEvents.map((event, index) => {
+                                            const startMins = timeToMinutes(event.start);
+                                            const endMins = timeToMinutes(event.end);
+                                            const duration = endMins - startMins;
+                                            const recoveryDuration = getRecoveryDuration(event);
+                                            let prepDuration = getBasePrepDuration(event);
+                                            if (index > 0 && sortedEvents[index - 1].isContinuous) prepDuration = 0;
+                                            const prepStartMins = startMins - prepDuration;
+                                            
+                                            const mainPos = getPosition(startMins, duration);
+                                            const prepPos = getPosition(prepStartMins, prepDuration);
+                                            const recoveryPos = getPosition(endMins, recoveryDuration);
+
+                                            const categoryConfig = Object.values(CATEGORIES).find(c => c.id === event.category) || CATEGORIES.OTHER;
+                                            const isHovered = hoveredId === event.id;
+                                            const isEditing = editingId === event.id;
+                                            const IconComponent = categoryConfig.icon;
+                                            
+                                            return (
+                                                <div key={event.id} className="absolute h-full pointer-events-none" style={{ width: '100%', top: 0, zIndex: 20 }}>
+                                                    {/* 離陸スタンバイ */}
+                                                    {prepDuration > 0 && (
+                                                        <div className="absolute transform -translate-y-1/2 h-10 bg-yellow-400/30 border-l border-t border-b border-yellow-400/50 rounded-l-md pointer-events-auto transition-all print-color-adjust print-chart-bar-wrapper"
+                                                            style={{ top: '50%', left: prepPos.left, width: prepPos.width, backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,.3) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.3) 50%, rgba(255,255,255,.3) 75%, transparent 75%, transparent)', backgroundSize: '10px 10px' }}
+                                                            title="離陸スタンバイ (10分)" />
+                                                    )}
+                                                    {/* メイン活動バー */}
+                                                    <div className={`absolute transform -translate-y-1/2 transition-all duration-300 pointer-events-auto group rounded-md border-b-4 shadow-sm flex flex-col justify-center items-center cursor-pointer overflow-hidden ${categoryConfig.color} ${isHovered || isEditing ? 'scale-105 shadow-md brightness-110 z-30' : ''} ${isEditing ? 'ring-2 ring-amber-400' : ''} print-color-adjust print-chart-bar-wrapper print-chart-bar`}
+                                                        style={{ top: '50%', left: mainPos.left, width: mainPos.width, height: '64px' }}
+                                                        onClick={() => handleEditClick(event)}
+                                                        onMouseEnter={() => setHoveredId(event.id)}
+                                                        onMouseLeave={() => setHoveredId(null)}
+                                                    >
+                                                        <div className="flex items-center gap-1 text-white font-bold text-xs px-1">
+                                                            {IconComponent && <IconComponent className="w-4 h-4 print:w-3 print:h-3 print:text-white print-icon-size" />}
+                                                            <span className="hidden print:inline print-bar-text truncate font-bold">{event.no ? '#'+event.no : categoryConfig.label.replace('ヘリ活動', '')}</span>
+                                                        </div>
+                                                        {isHovered && !isEditing && (
+                                                            <div className="absolute bottom-full mb-2 w-64 bg-slate-800 text-white text-xs rounded p-3 shadow-xl z-50 pointer-events-none left-1/2 -translate-x-1/2 no-print">
+                                                                <div className="font-bold text-yellow-400 mb-1 flex items-center justify-between"><span>{event.no ? `#${event.no}` : categoryConfig.label}</span><span className="text-[10px] bg-white/20 px-1 rounded">{event.category}</span></div>
+                                                                <div className="mb-2 text-slate-300 font-mono border-b border-slate-600 pb-1">{event.start} - {event.end} ({duration}分){prepDuration === 0 && <span className="ml-2 text-green-300 font-bold">(直行)</span>}</div>
+                                                                <div className="leading-relaxed">{event.desc}</div>
+                                                                <div className="mt-2 pt-1 text-center text-amber-400 text-[10px]">クリックで修正</div>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                </td>
-                                                <td className="px-4 py-3 font-mono font-bold print:py-tight">{event.no || '-'}</td>
-                                                <td className="px-4 py-3 font-mono whitespace-nowrap print:py-tight">{event.start} - {event.end}</td>
-                                                <td className="px-4 py-3 text-slate-600 print:py-tight">{endMins - startMins}分</td>
-                                                <td className="px-4 py-3 text-slate-600 print:max-w-none print-wrap-text truncate max-w-xs font-medium" title={event.desc}>{event.desc}</td>
-                                                <td className="px-4 py-3 text-center flex justify-center gap-2 no-print">
-                                                    <button onClick={() => handleEditClick(event)} className={`transition-colors ${isEditing ? 'text-amber-600' : 'text-slate-400 hover:text-blue-600'}`} title="修正"><Icons.Edit3 className="w-4 h-4" /></button>
-                                                    <button onClick={() => handleDelete(event.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="削除"><Icons.Trash2 className="w-4 h-4" /></button>
-                                                </td>
+                                                    {/* 復帰作業バー */}
+                                                    {recoveryDuration > 0 && (
+                                                        <div className="absolute transform -translate-y-1/2 h-10 bg-green-50 border border-green-200 border-l-0 rounded-r-md pointer-events-auto flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity print-color-adjust print-chart-bar-wrapper"
+                                                            style={{ top: '50%', left: recoveryPos.left, width: recoveryPos.width }}
+                                                            title={`復帰作業・記録・整備 (${recoveryDuration}分)`}>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* List */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border print-break-avoid">
+                                <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 font-semibold text-slate-700 flex items-center gap-2 text-sm print:bg-white print:border-b-2 print:border-slate-800 print:py-tight">
+                                    <Icons.ClipboardList className="w-4 h-4" /> 登録済みデータリスト
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm print-text-xs">
+                                        <thead className="bg-slate-50 text-slate-500 text-xs uppercase print:bg-white print:text-black print:border-b">
+                                            <tr className="print-list-header">
+                                                <th className="px-4 py-3 w-16 print:py-tight">種別</th>
+                                                <th className="px-4 py-3 w-24 print:py-tight">No/ID</th>
+                                                <th className="px-4 py-3 w-32 print:py-tight">時間</th>
+                                                <th className="px-4 py-3 w-24 print:py-tight">所要時間</th>
+                                                <th className="px-4 py-3 print:py-tight">内容</th>
+                                                <th className="px-4 py-3 w-24 text-center no-print">操作</th>
                                             </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 print:divide-slate-200">
+                                            {sortedEvents.map((event) => {
+                                                const startMins = timeToMinutes(event.start);
+                                                const endMins = timeToMinutes(event.end);
+                                                const cat = Object.values(CATEGORIES).find(c => c.id === event.category) || CATEGORIES.OTHER;
+                                                const IconComponent = cat.icon;
+                                                const isHovered = hoveredId === event.id;
+                                                const isEditing = editingId === event.id;
+                                                return (
+                                                    <tr key={event.id} className={`transition-colors print-list-row ${isEditing ? 'bg-amber-50' : isHovered ? 'bg-yellow-50' : 'hover:bg-slate-50'} print:bg-white`} onMouseEnter={() => setHoveredId(event.id)} onMouseLeave={() => setHoveredId(null)}>
+                                                        <td className="px-4 py-3 print:py-tight">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`w-3 h-3 rounded-full ${cat.color.split(' ')[0]} print-color-adjust`} title={cat.label}></div>
+                                                                <span className="hidden print:inline-block text-black print-color-adjust">
+                                                                    {IconComponent && <IconComponent className="w-3 h-3" />}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 font-mono font-bold print:py-tight">{event.no || '-'}</td>
+                                                        <td className="px-4 py-3 font-mono whitespace-nowrap print:py-tight">{event.start} - {event.end}</td>
+                                                        <td className="px-4 py-3 text-slate-600 print:py-tight">{endMins - startMins}分</td>
+                                                        <td className="px-4 py-3 text-slate-600 print:max-w-none print-wrap-text truncate max-w-xs font-medium" title={event.desc}>{event.desc}</td>
+                                                        <td className="px-4 py-3 text-center flex justify-center gap-2 no-print">
+                                                            <button onClick={() => handleEditClick(event)} className={`transition-colors ${isEditing ? 'text-amber-600' : 'text-slate-400 hover:text-blue-600'}`} title="修正"><Icons.Edit3 className="w-4 h-4" /></button>
+                                                            <button onClick={() => handleDelete(event.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="削除"><Icons.Trash2 className="w-4 h-4" /></button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     {/* Print Footer */}
                     <div className="hidden print:block print-footer">
