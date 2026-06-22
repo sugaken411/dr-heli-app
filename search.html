@@ -53,7 +53,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取扱説明書</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.3</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.4</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -165,7 +165,7 @@
       <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
       <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-      <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
+      <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg); color:var(--ink); outline:none;"></textarea>
       <button id="btn-qa" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:bold;">送信</button>
       <button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
     </div>
@@ -178,6 +178,7 @@
   let currentPass = "";
   let lockTimer = null;
   let remainSeconds = LOCK_MINUTES * 60;
+  let initFilterTriggered = false;
 
   function showLoader(msg = "システム通信中...") {
     document.getElementById("loader-msg").innerText = msg;
@@ -209,6 +210,7 @@
     document.getElementById("login-err").style.display = "none";
     if(!pin) return;
 
+    // 簡易フロントパスワードチェック
     if(pin !== "5740" && pin !== "9999") {
         document.getElementById("login-err").innerText = "パスワードが違います";
         document.getElementById("login-err").style.display = "block";
@@ -231,6 +233,14 @@
         fillSelects(data.masters);
         document.getElementById("manual-list").innerHTML = data.manuals.map(m => `<p style="margin-bottom:8px;"><b>■ ${m.title}</b><br><span style="font-size:13px;">${m.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "取扱説明書はありません";
         document.getElementById("qa-list").innerHTML = data.qa.map(q => `<p style="margin-bottom:8px;"><b>Q. ${q.q}</b><br><span style="color:var(--ink);">A. ${q.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || "公開Q&Aなし";
+        
+        // 🌟 ログイン成功後、URLパラメータに ?filter=uncompleted があれば自動検索を実行
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('filter') === 'uncompleted') {
+            document.getElementById("q-status").value = "未完了";
+            initFilterTriggered = true;
+        }
+        fetchData();
       } else {
         document.getElementById("login-err").innerText = "エラー: " + data.message;
         document.getElementById("login-err").style.display = "block";
