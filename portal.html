@@ -11,14 +11,12 @@
     .header-title h1 { margin: 0; font-size: 26px; color: var(--ink); letter-spacing: 1.5px; font-weight: 900; }
     .header-title p { margin: 4px 0 0 0; font-size: 12px; color: var(--brand-blue); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
     
-    /* アラートダッシュボード */
     #alert-container { width: 100%; max-width: 800px; display: none; flex-direction: column; gap: 8px; margin-bottom: 24px; }
     .alert-box { background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .alert-box.warning { background: #fff8e1; border-color: #ffecb3; color: #f57f17; }
     .alert-link { color: inherit; text-decoration: underline; cursor: pointer; }
     .alert-link:hover { opacity: 0.8; }
 
-    /* アプリグリッド（上部に配置） */
     .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; max-width: 800px; margin-bottom: 32px; }
     .portal-card { background: var(--card); border-radius: 16px; padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; border-top: 6px solid #ccc; position: relative; overflow: hidden; }
     .portal-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
@@ -26,12 +24,12 @@
     .card-blue { border-top-color: var(--brand-blue); }
     .card-green { border-top-color: #34c759; }
     .card-purple { border-top-color: #af52de; }
+    .card-cyan { border-top-color: #06b6d4; }
     .card-orange { border-top-color: #f59e0b; }
     .icon { font-size: 36px; margin-bottom: 12px; }
     .title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
     .desc { font-size: 13px; color: var(--sub); line-height: 1.5; flex: 1; }
 
-    /* お知らせエリア（下部に配置） */
     .news-container { width: 100%; max-width: 800px; background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(60,60,67,0.1); }
     .news-header { font-size: 14px; font-weight: 800; color: var(--ink); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
     .news-list { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
@@ -43,7 +41,6 @@
     .news-title { font-weight: 700; color: var(--ink); }
     .news-text { color: var(--sub); font-size: 12px; margin-top: 4px; line-height: 1.4; }
     
-    /* ローダー */
     #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .spinner { width: 30px; height: 30px; border: 3px solid rgba(0,122,255,0.2); border-top: 3px solid var(--brand-blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -58,7 +55,7 @@
 
   <div class="header-title">
     <h1>AW109 EMS PORTAL</h1>
-    <p>Pre-hospital Information Hub v3.2</p>
+    <p>Pre-hospital Information Hub v4.0</p>
   </div>
 
   <div id="alert-container"></div>
@@ -83,6 +80,11 @@
       <div class="icon">📊</div>
       <div class="title">月間集計ダッシュボード</div>
       <div class="desc">日報の集計・検索・印刷・CSV出力を行います。（閲覧専用）</div>
+    </a>
+    <a href="library.html" class="portal-card card-cyan">
+      <div class="icon">📚</div>
+      <div class="title">資料集・アーカイブ</div>
+      <div class="desc">各種プロトコルや手順書などのPDF資料を検索・閲覧します。（Q&A連動機能つき）</div>
     </a>
     <a href="admin.html" class="portal-card card-orange">
       <div class="icon">⚙️</div>
@@ -110,7 +112,6 @@
         });
         const data = await res.json();
         
-        // アラートの表示(リンク付きジャンプ)
         if (data.status === "success" && data.alerts && data.alerts.length > 0) {
             const alertBox = document.getElementById("alert-container");
             alertBox.style.display = "flex";
@@ -122,7 +123,6 @@
             }).join("");
         }
 
-        // お知らせの表示
         if (data.status === "success" && data.news && data.news.length > 0) {
           document.getElementById("news-list-box").innerHTML = data.news.map(n => `
             <div class="news-item">
