@@ -10,7 +10,6 @@
   <title>AW109 EMS</title>
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --med-blue-text: #1565c0; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
-    /* ダークモード定義 */
     body.dark { --bg: #000000; --card: #1c1c1e; --ink: #f2f2f7; --sub: #aeaeb2; --brand: #ff453a; --brand-light: rgba(255,69,58,0.2); --blue: #0a84ff; --med-blue: rgba(10,132,255,0.2); --med-blue-text: #6eb6ff; --line: rgba(255,255,255,0.15); }
     
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -21,7 +20,6 @@
     body.dark .tab-bar { background: rgba(28,28,30,0.94); }
     main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; transition: margin-top 0.3s; }
     
-    /* オフラインバッジ */
     .offline-bar { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; background: #ff453a; color: #fff; padding: 10px 16px; display: none; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; z-index: 99; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .offline-btn { background: #fff; color: #ff453a; border: none; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
@@ -60,7 +58,6 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .pv-section { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; } .pv-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: 4px; } .pv-ul { list-style: none; padding: 0; margin: 0; } .pv-li { margin-bottom: 4px; position: relative; padding-left: 14px; } .pv-li::before { content: '・'; position: absolute; left: 0; color: var(--sub); font-weight: bold; } .pv-sub-item { position: relative; padding-left: 12px; font-size: 13px; color: var(--sub); } .pv-sub-item::before { content: '└'; position: absolute; left: 0; color: #c4c4c6; }
     
-    /* サジェストボタン用 */
     .sg-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; scrollbar-width: none; }
     .sg-wrap::-webkit-scrollbar { display: none; }
     .sg-btn { flex: none; background: var(--bg); border: 1px solid var(--line); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; color: var(--blue); cursor: pointer; white-space: nowrap; transition: 0.2s; }
@@ -81,8 +78,8 @@
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <button class="hdr-btn" onclick="toggleDark()" id="btn-dark" style="font-size:18px; margin-left:8px;" title="ダークモード切替">🌙</button>
   </div>
-  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.5</span></div>
-  <div class="hdr-group"><button class="hdr-btn" onclick="openModal('manual')">📖 取説</button><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
+  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.6</span></div>
+  <div class="hdr-group"><button class="hdr-btn" onclick="openModal('manual')">📖 取扱説明書</button><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
 </header>
 
 <main id="mainScroll">
@@ -182,7 +179,7 @@
 <div class="modal-overlay" id="modal-confirm" onclick="if(event.target===this)closeModal('confirm')">
   <div class="modal-box" style="text-align:center;">
     <h3 style="margin-bottom:12px;">🚁 通信環境の確認</h3>
-    <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">アンテナ（電波）が立っていることを確認してください。<br>※エラー時はフライトナースへ連絡</p>
+    <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">アンテナ（電波）が立っていることを確認してください。<br>※エラー時は内部に保存されます</p>
     <div style="display:flex; gap:12px;">
       <button style="flex:1; padding:14px; border:none; border-radius:8px; background:#e5e5ea; color:var(--ink); font-weight:700;" onclick="closeModal('confirm')">キャンセル</button>
       <button style="flex:1; padding:14px; border:none; border-radius:8px; background:var(--brand); color:#fff; font-weight:700;" onclick="closeModal('confirm'); submitData();">送信する</button>
@@ -395,7 +392,6 @@
           btn.textContent = "送信する 🚁"; btn.disabled = false; 
       }
     } catch(e) { 
-        // 🌟 通信エラー時はオフライン保存
         let queue = JSON.parse(localStorage.getItem("aw109_offline_queue") || "[]");
         queue.push({ payload, ccEmails, timestamp: new Date().getTime() });
         localStorage.setItem("aw109_offline_queue", JSON.stringify(queue));
@@ -441,7 +437,7 @@
 
   function renderOptions(data) {
       if (data.masters && data.masters.mailOptions && data.masters.mailOptions.length > 0) document.getElementById("mail-options-box").innerHTML = data.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:20px;height:20px;"><span>${opt.name}</span></label>`).join("");
-      if (data.qa) document.getElementById("qa-list").innerHTML = data.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
+      if (data.qa) document.getElementById("qa-list").innerHTML = data.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
       if (data.manuals) document.getElementById("manual-list").innerHTML = data.manuals.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>取扱説明書はありません。</p>';
       if (data.masters && data.masters.phrases && data.masters.phrases.length > 0) document.getElementById("phrase-box").innerHTML = data.masters.phrases.map(p => `<button type="button" class="sg-btn" onclick="addBiko('${p}')">${p}</button>`).join("");
   }
