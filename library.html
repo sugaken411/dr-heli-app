@@ -108,7 +108,7 @@
                         method: "POST",
                         headers: {"Content-Type": "text/plain;charset=utf-8"},
                         body: JSON.stringify({action: "fetch_library", password: PIN_CODE}),
-                        redirect: "follow" // 🌟 CORSエラー対策で追加
+                        redirect: "follow"
                     });
                     const json = await res.json();
                     if (json.status === "success" && json.data) {
@@ -125,12 +125,19 @@
 
             const categories = useMemo(() => ["全て", ...new Set(docs.map(d => d.category).filter(Boolean))], [docs]);
             const domains = useMemo(() => ["全て", ...new Set(docs.map(d => d.domain).filter(Boolean))], [docs]);
+            
+            // 🌟 修正ポイント：カンマ(,), 全角カンマ(，), 読点(、) のどれでも分割できるように正規表現を使用
             const allTags = useMemo(() => {
                 const tags = new Set();
                 docs.forEach(d => {
-                    if(d.tags) d.tags.split(',').forEach(t => tags.add(t.trim()));
+                    if(d.tags) {
+                        d.tags.split(/[,、，]+/).forEach(t => {
+                            const trimmed = t.trim();
+                            if(trimmed) tags.add(trimmed);
+                        });
+                    }
                 });
-                return Array.from(tags).filter(Boolean);
+                return Array.from(tags).sort();
             }, [docs]);
 
             const toggleTag = (tag) => {
@@ -143,7 +150,8 @@
                     if (activeDomain !== "全て" && d.domain !== activeDomain) return false;
                     
                     if (selectedTags.length > 0) {
-                        const docTags = d.tags ? d.tags.split(',').map(t => t.trim()) : [];
+                        // 🌟 ここも正規表現で正しく分割して判定
+                        const docTags = d.tags ? d.tags.split(/[,、，]+/).map(t => t.trim()).filter(Boolean) : [];
                         const hasAllTags = selectedTags.every(st => docTags.includes(st));
                         if (!hasAllTags) return false;
                     }
@@ -172,7 +180,7 @@
                         method:"POST", 
                         headers:{"Content-Type":"text/plain;charset=utf-8"}, 
                         body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"資料集"}),
-                        redirect: "follow" // 🌟 CORSエラー対策で追加
+                        redirect: "follow"
                     });
                     const json = await res.json();
                     if(json.status === "success"){ 
@@ -208,7 +216,7 @@
                         <div className="flex items-center gap-2">
                             <Icons.Folder className="w-6 h-6 text-blue-500" />
                             <h1 className="text-xl font-bold flex items-center gap-2">
-                                資料・アーカイブ <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">v2.0</span>
+                                資料・アーカイブ <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">v2.1</span>
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
@@ -287,10 +295,11 @@
                                     
                                     {doc.version && <div className="text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">Ver {doc.version}</div>}
                                     
+                                    {/* 🌟 修正ポイント：タグの表示部分も正規表現で分割 */}
                                     {doc.tags && (
                                         <div className="flex flex-wrap gap-1 mt-1 mb-2">
-                                            {doc.tags.split(',').map(t => (
-                                                <span key={t} className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">#{t.trim()}</span>
+                                            {doc.tags.split(/[,、，]+/).map(t => t.trim()).filter(Boolean).map(t => (
+                                                <span key={t} className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">#{t}</span>
                                             ))}
                                         </div>
                                     )}
