@@ -20,7 +20,6 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         body.dark ::-webkit-scrollbar-thumb { background: #48484a; }
         
-        #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
         #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; flex-direction:column; align-items:center; justify-content:center; display:none; }
         body.dark #global-loader { background:rgba(0,0,0,0.85); }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } 
@@ -33,6 +32,12 @@
         .cat-tab.active { background-color: var(--blue); color: white; }
         .cat-tab.inactive { background-color: #e5e5ea; color: #8e8e93; }
         body.dark .cat-tab.inactive { background-color: #2c2c2e; color: #8e8e93; }
+
+        .tag-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
+        .tag-pill.active { background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+        body.dark .tag-pill.active { background-color: rgba(2,132,199,0.3); color: #7dd3fc; border-color: rgba(56,189,248,0.4); }
+        .tag-pill.inactive { background-color: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+        body.dark .tag-pill.inactive { background-color: #27272a; color: #a1a1aa; border-color: #3f3f46; }
 
         .doc-card { display: flex; flex-direction: column; padding: 16px; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s; }
         .doc-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -49,7 +54,7 @@
         const { useState, useEffect, useMemo } = React;
 
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-        const PIN_CODE = "5740"; // 現場用共通アクセスコード（閲覧用なので共通パスでOK）
+        const PIN_CODE = "5740"; 
 
         const Icon = ({ path, className = "w-4 h-4" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
@@ -62,7 +67,8 @@
             HelpCircle: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>} />,
             Moon: (props) => <Icon {...props} path={<><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></>} />,
             Sun: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>} />,
-            X: (props) => <Icon {...props} path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            X: (props) => <Icon {...props} path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />,
+            Hash: (props) => <Icon {...props} path={<><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></>} />
         };
 
         const LibraryApp = () => {
@@ -70,9 +76,11 @@
             const [isLoading, setIsLoading] = useState(true);
             const [isDark, setIsDark] = useState(false);
             
-            // 検索・フィルタリング用
+            // クロス検索ステート
             const [keyword, setKeyword] = useState("");
             const [activeCategory, setActiveCategory] = useState("全て");
+            const [activeDomain, setActiveDomain] = useState("全て");
+            const [selectedTags, setSelectedTags] = useState([]);
             
             // Q&Aモーダル用
             const [showQa, setShowQa] = useState(false);
@@ -108,7 +116,6 @@
                     if (json.status === "success" && json.data) {
                         setDocs(json.data);
                     } else {
-                        // GAS更新前やエラー時のダミーデータ表示用（動作検証用）
                         if(json.message) alert(json.message);
                     }
                 } catch (e) {
@@ -118,34 +125,58 @@
                 }
             };
 
-            // カテゴリの一覧を自動生成
-            const categories = useMemo(() => {
-                const cats = new Set(docs.map(d => d.category).filter(c => c));
-                return ["全て", ...Array.from(cats)];
+            // 自動抽出フィルターリスト
+            const categories = useMemo(() => ["全て", ...new Set(docs.map(d => d.category).filter(Boolean))], [docs]);
+            const domains = useMemo(() => ["全て", ...new Set(docs.map(d => d.domain).filter(Boolean))], [docs]);
+            const allTags = useMemo(() => {
+                const tags = new Set();
+                docs.forEach(d => {
+                    if(d.tags) d.tags.split(',').forEach(t => tags.add(t.trim()));
+                });
+                return Array.from(tags).filter(Boolean);
             }, [docs]);
 
-            // フィルタリング処理
+            // タグのトグル処理
+            const toggleTag = (tag) => {
+                setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+            };
+
+            // 高度なクロスフィルタリング処理
             const filteredDocs = useMemo(() => {
                 return docs.filter(d => {
+                    // 大分類
                     if (activeCategory !== "全て" && d.category !== activeCategory) return false;
+                    // 中分類（対象領域）
+                    if (activeDomain !== "全て" && d.domain !== activeDomain) return false;
+                    
+                    // タグ（選択されたすべてのタグを含んでいるか: AND検索）
+                    if (selectedTags.length > 0) {
+                        const docTags = d.tags ? d.tags.split(',').map(t => t.trim()) : [];
+                        const hasAllTags = selectedTags.every(st => docTags.includes(st));
+                        if (!hasAllTags) return false;
+                    }
+
+                    // テキスト検索
                     if (keyword) {
-                        const searchTarget = (d.title + " " + d.desc + " " + d.category).toLowerCase();
+                        const searchTarget = (d.title + " " + (d.desc||"") + " " + d.category + " " + (d.domain||"") + " " + (d.tags||"")).toLowerCase();
                         if (!searchTarget.includes(keyword.toLowerCase())) return false;
                     }
                     return true;
                 });
-            }, [docs, activeCategory, keyword]);
+            }, [docs, activeCategory, activeDomain, selectedTags, keyword]);
 
-            // Q&Aモーダルを開く
+            // QAモーダルを開く関数
             const openQaModal = (docTitle) => {
                 setQaTargetDoc(docTitle);
                 setQaText(`【${docTitle} についての質問】\n`);
                 setShowQa(true);
             };
 
+            // QAを送信する関数
             const submitQA = async () => {
                 const q = qaText.trim();
                 if(!q || q === `【${qaTargetDoc} についての質問】`) return alert("質問内容を入力してください。");
+                
                 setIsLoading(true);
                 try {
                     const res = await fetch(GAS_API_URL, { 
@@ -161,16 +192,17 @@
                     } else {
                         alert("エラー: "+json.message);
                     }
-                } catch(e) { alert("通信エラー"); }
-                finally { setIsLoading(false); }
+                } catch(e) { 
+                    alert("通信エラーが発生しました。"); 
+                } finally { 
+                    setIsLoading(false); 
+                }
             };
 
+            // リンクを開く関数
             const handleLinkClick = (url) => {
-                // preview用にURLを変換（/view や /edit を /preview に置換するとブラウザ内で綺麗に開く）
                 let previewUrl = url;
-                if(previewUrl.includes('drive.google.com')) {
-                    previewUrl = previewUrl.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
-                }
+                if(previewUrl.includes('drive.google.com')) previewUrl = previewUrl.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
                 window.open(previewUrl, '_blank', 'noopener,noreferrer');
             };
 
@@ -179,74 +211,110 @@
                     {isLoading && (
                         <div id="global-loader" style={{display: 'flex'}}>
                             <div className="spinner mb-4"></div>
-                            <div className="text-blue-600 dark:text-blue-400 font-bold px-6 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg text-sm">資料データを同期中...</div>
+                            <div className="text-blue-600 dark:text-blue-400 font-bold px-6 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg text-sm">データを同期中...</div>
                         </div>
                     )}
 
                     {/* Header */}
-                    <div className="card-dark rounded-xl shadow-sm mb-6 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="card-dark rounded-xl shadow-sm mb-4 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <Icons.Folder className="w-6 h-6 text-blue-500" />
                             <h1 className="text-xl font-bold flex items-center gap-2">
-                                資料・プロトコル集 
-                                <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">v1.0</span>
+                                資料・プロトコル集 <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">v2.0</span>
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
                             <a href="portal.html" className="h-10 px-4 rounded input-dark hover:opacity-80 flex items-center gap-2 transition-colors text-sm font-bold shadow-sm">◀ ポータル</a>
-                            <button onClick={toggleDark} className="h-10 w-10 flex items-center justify-center rounded input-dark hover:opacity-80 transition-colors shadow-sm">
+                            <button onClick={toggleDark} className="h-10 w-10 flex items-center justify-center rounded input-dark hover:opacity-80 shadow-sm">
                                 {isDark ? <Icons.Sun className="w-5 h-5 text-yellow-400"/> : <Icons.Moon className="w-5 h-5 text-slate-600"/>}
                             </button>
                         </div>
                     </div>
 
-                    {/* Search & Filter */}
+                    {/* Search & Cross Filters */}
                     <div className="card-dark rounded-xl shadow-sm mb-6 p-4">
-                        <div className="relative mb-4">
-                            <div className="absolute left-3 top-3 text-gray-400"><Icons.Search className="w-5 h-5" /></div>
-                            <input 
-                                type="text" 
-                                value={keyword} 
-                                onChange={e => setKeyword(e.target.value)} 
-                                placeholder="資料名やキーワードで検索..." 
-                                className="w-full pl-10 pr-4 py-3 rounded-lg text-sm font-bold outline-none input-dark focus:ring-2 focus:ring-blue-500"
-                            />
+                        <div className="flex flex-col md:flex-row gap-4 mb-4">
+                            {/* テキスト検索 */}
+                            <div className="relative flex-1">
+                                <div className="absolute left-3 top-3 text-gray-400"><Icons.Search className="w-5 h-5" /></div>
+                                <input 
+                                    type="text" value={keyword} onChange={e => setKeyword(e.target.value)} 
+                                    placeholder="資料名やキーワードで検索..." 
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg text-sm font-bold outline-none input-dark focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            {/* 領域絞り込み（中分類） */}
+                            <div className="md:w-64">
+                                <select 
+                                    value={activeDomain} onChange={e => setActiveDomain(e.target.value)}
+                                    className="w-full px-4 py-2.5 rounded-lg text-sm font-bold outline-none input-dark focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
+                                    style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundPosition: 'right 10px center', backgroundRepeat: 'no-repeat', backgroundSize: '16px'}}
+                                >
+                                    {domains.map(d => <option key={d} value={d}>{d === "全て" ? "🌐 全ての領域" : d}</option>)}
+                                </select>
+                            </div>
                         </div>
                         
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {/* 大分類タブ */}
+                        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide border-b border-gray-100 dark:border-gray-800 mb-3">
                             {categories.map(cat => (
-                                <button 
-                                    key={cat} 
-                                    onClick={() => setActiveCategory(cat)}
-                                    className={`cat-tab shadow-sm ${activeCategory === cat ? 'active' : 'inactive'}`}
-                                >
+                                <button key={cat} onClick={() => setActiveCategory(cat)} className={`cat-tab shadow-sm ${activeCategory === cat ? 'active' : 'inactive'}`}>
                                     {cat}
                                 </button>
                             ))}
                         </div>
+
+                        {/* タグクラウド（キーワード） */}
+                        {allTags.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                <span className="text-xs font-bold text-gray-400 flex items-center mr-1"><Icons.Hash className="w-3 h-3 mr-1"/> タグ:</span>
+                                {allTags.map(tag => (
+                                    <button 
+                                        key={tag} onClick={() => toggleTag(tag)}
+                                        className={`tag-pill ${selectedTags.includes(tag) ? 'active' : 'inactive'}`}
+                                    >
+                                        #{tag}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Document List */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {filteredDocs.length === 0 ? (
                             <div className="col-span-full text-center py-12 text-gray-500 font-bold bg-white dark:bg-[#1c1c1e] rounded-xl border border-gray-200 dark:border-gray-800">
-                                指定された条件の資料は見つかりませんでした。
+                                条件に一致する資料が見つかりません。
                             </div>
                         ) : (
                             filteredDocs.map((doc, i) => (
-                                <div key={i} className="card-dark doc-card">
-                                    <div className="flex justify-between items-start mb-2">
+                                <div key={i} className="card-dark doc-card relative overflow-hidden">
+                                    {doc.domain && <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg opacity-90">{doc.domain}</div>}
+                                    
+                                    <div className="flex items-center gap-2 mb-2 mt-1">
                                         <span className="text-[10px] font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">
                                             {doc.category}
                                         </span>
                                         <span className="text-xs font-mono text-gray-500">更新: {doc.date}</span>
                                     </div>
-                                    <h3 className="font-bold text-lg mb-1 leading-tight flex items-start gap-2">
+
+                                    <h3 className="font-bold text-lg mb-1 leading-tight flex items-start gap-2 pr-12">
                                         <Icons.FileText className="w-5 h-5 text-blue-500 mt-0.5 shrink-0"/>
                                         <span>{doc.title}</span>
                                     </h3>
-                                    {doc.version && <div className="text-xs text-blue-600 dark:text-blue-400 font-bold mb-2">Ver {doc.version}</div>}
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-1 line-clamp-2">
+                                    
+                                    {doc.version && <div className="text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">Ver {doc.version}</div>}
+                                    
+                                    {/* 個別タグ表示 */}
+                                    {doc.tags && (
+                                        <div className="flex flex-wrap gap-1 mt-1 mb-2">
+                                            {doc.tags.split(',').map(t => (
+                                                <span key={t} className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">#{t.trim()}</span>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-1 whitespace-pre-wrap line-clamp-3">
                                         {doc.desc || "説明はありません"}
                                     </p>
                                     
@@ -254,7 +322,7 @@
                                         <button onClick={() => handleLinkClick(doc.url)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-1 transition-colors shadow-sm">
                                             <Icons.ExternalLink className="w-4 h-4"/> 閲覧する
                                         </button>
-                                        <button onClick={() => openQaModal(doc.title)} className="px-4 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/40 dark:hover:bg-orange-900/60 text-orange-700 dark:text-orange-400 font-bold rounded-lg text-sm flex items-center justify-center transition-colors border border-orange-200 dark:border-orange-800/50" title="この資料について質問する">
+                                        <button onClick={() => openQaModal(doc.title)} className="px-4 bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 font-bold rounded-lg text-sm flex items-center justify-center transition-colors border border-orange-200 dark:border-orange-800/50" title="この資料について質問する">
                                             <Icons.HelpCircle className="w-5 h-5"/>
                                         </button>
                                     </div>
@@ -263,7 +331,7 @@
                         )}
                     </div>
 
-                    {/* QA Modal */}
+                    {/* QA Modal （省略なしで完全記述） */}
                     {showQa && (
                         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowQa(false)}>
                             <div className="bg-white dark:bg-[#1c1c1e] rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-800" onClick={e => e.stopPropagation()}>
