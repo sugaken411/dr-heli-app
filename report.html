@@ -13,153 +13,39 @@
       --line: rgba(60,60,67,0.12);
     }
     
-    body {
-      font-family: -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      margin: 0;
-      padding: 20px;
-    }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 20px; }
+    header { max-width: 800px; margin: 0 auto 20px; display: flex; justify-content: space-between; align-items: center; }
+    .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; }
+    main { max-width: 800px; margin: 0 auto; }
 
-    header {
-      max-width: 800px;
-      margin: 0 auto 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .card { background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .title { font-size: 18px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 12px; font-weight: bold; color: var(--sub); }
+    input, select, textarea { padding: 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 14px; background: #fff; outline: none; }
 
-    .hdr-btn {
-      background: none;
-      border: none;
-      color: var(--blue);
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-    }
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .chip { background: var(--bg); border: 1px solid transparent; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: bold; cursor: pointer; color: var(--sub); transition: all 0.2s ease; }
+    .chip.on { background: #e3f2fd; color: var(--blue); border-color: var(--blue); }
 
-    main {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    label {
-      font-size: 12px;
-      font-weight: bold;
-      color: var(--sub);
-    }
-
-    input, select, textarea {
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      font-size: 14px;
-      background: #fff;
-      outline: none;
-    }
-
-    /* 自由編集・手動修正用のメイン日誌テキストエリア */
-    textarea.report-main-textarea {
-      width: 100%;
-      font-family: -apple-system, SFMono-Regular, monospace;
-      font-size: 14px;
-      line-height: 1.6;
-      resize: vertical;
-      background: #fafafa;
-      color: var(--ink);
-    }
-
-    .chip-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .chip {
-      background: var(--bg);
-      border: 1px solid transparent;
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      color: var(--sub);
-      transition: all 0.2s ease;
-    }
-
-    .chip.on {
-      background: #e3f2fd;
-      color: var(--blue);
-      border-color: var(--blue);
-    }
-
-    button.save-btn {
-      width: 100%;
-      padding: 16px;
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #global-loader {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.9);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(0,122,255,0.2);
-      border-top: 4px solid var(--blue);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
+    /* 🌟 構造化タイムラインUIの復元デザイン */
+    .timeline-container { display: flex; flex-direction: column; gap: 8px; }
+    .evt-row { display: flex; gap: 12px; align-items: flex-start; background: #fafafa; border: 1px solid #e5e5ea; border-radius: 8px; padding: 12px; position: relative; }
+    .evt-time-col { display: flex; flex-direction: column; gap: 4px; width: 110px; flex-shrink: 0; }
+    .evt-time-input { padding: 6px; text-align: center; border-radius: 6px; border: 1px solid #ccc; font-family: monospace; font-size: 13px; }
+    .time-sep { text-align: center; color: var(--sub); font-size: 12px; }
+    .evt-desc-col { flex: 1; }
+    .evt-desc-input { width: 100%; resize: vertical; min-height: 60px; font-size: 13px; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
     
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    .btn-remove { background: #ffebeb; color: #d32f2f; border: none; border-radius: 6px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .btn-add-row { background: #e3f2fd; color: var(--blue); border: 1px dashed var(--blue); padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 12px; }
+
+    button.save-btn { width: 100%; padding: 16px; background: var(--blue); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 16px; }
+
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -171,10 +57,7 @@
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:800; font-size:16px;">
-    業務日報 (浜町日誌) 
-    <span style="font-size:11px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v3.3</span>
-  </div>
+  <div style="font-weight:800; font-size:16px;">業務日報 (浜町日誌) <span style="font-size:11px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v3.4</span></div>
   <div></div>
 </header>
 
@@ -182,22 +65,9 @@
   <div class="card">
     <div class="title">📅 日報の作成・同期</div>
     <div class="form-grid">
-      <div class="form-group">
-        <label>対象日付</label>
-        <input type="date" id="r-date" onchange="syncFromDb(false)">
-      </div>
-      <div class="form-group">
-        <label>記録者 (Ns)</label>
-        <select id="r-recorder">
-          <option value="">選択...</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>当直Dr</label>
-        <select id="v-dr">
-          <option value="">選択...</option>
-        </select>
-      </div>
+      <div class="form-group"><label>対象日付</label><input type="date" id="r-date" onchange="syncFromDb(false)"></div>
+      <div class="form-group"><label>記録者 (Ns)</label><select id="r-recorder"><option value="">選択...</option></select></div>
+      <div class="form-group"><label>当直Dr</label><select id="v-dr"><option value="">選択...</option></select></div>
     </div>
     
     <div class="form-group" style="margin-top:16px;">
@@ -214,15 +84,15 @@
 
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <div style="font-weight:800; font-size:15px;">📝 日誌本文・活動タイムライン編集</div>
+      <div style="font-weight:800; font-size:15px;">📝 活動タイムライン</div>
       <button onclick="syncFromDb(true)" style="padding:6px 12px; font-size:12px; background:#e5e5ea; color:var(--ink); border:none; border-radius:6px; font-weight:bold; cursor:pointer;">
         🔄 データベースから強制再同期
       </button>
     </div>
     
-    <div class="form-group">
-      <textarea id="r-notes" class="report-main-textarea" rows="18" placeholder="ここに本日のタイムライン文章が自動流し込みされ、手動編集できます。"></textarea>
-    </div>
+    <!-- 🌟 個別編集可能な構造化タイムラインコンテナ -->
+    <div id="timeline-container" class="timeline-container"></div>
+    <button class="btn-add-row" onclick="addEventRow()">＋ 新しい行を追加</button>
   </div>
 
   <button class="save-btn" onclick="saveReport()">💾 この内容で日報を確定・保存する</button>
@@ -230,7 +100,7 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  let rawEvents = [];
+  let currentEvents = [];
   let selectedReasons = [];
 
   window.onload = () => {
@@ -242,18 +112,13 @@
 
   function toggleReason(reasonText) {
     const idx = selectedReasons.indexOf(reasonText);
-    if (idx === -1) {
-      selectedReasons.push(reasonText);
-    } else {
-      selectedReasons.splice(idx, 1);
-    }
+    if (idx === -1) selectedReasons.push(reasonText); else selectedReasons.splice(idx, 1);
     document.querySelectorAll(".chip-grid .chip").forEach(btn => {
       btn.classList.toggle("on", selectedReasons.indexOf(btn.textContent) !== -1);
     });
     document.getElementById("r-reason").value = selectedReasons.join(",");
   }
 
-  // 🌟 GASから取得したイベント群をプレーンな「日誌文章」に変換して流し込む
   async function syncFromDb(force) {
     document.getElementById("global-loader").style.display = "flex";
     const dateVal = document.getElementById("r-date").value;
@@ -264,7 +129,6 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "fetch_daily_report", date: dateVal, force_sync: force })
       });
-      
       const json = await res.json();
       
       if (json.status === "success") {
@@ -283,24 +147,54 @@
           document.getElementById("r-reason").value = "";
         }
         
-        rawEvents = json.data.events || [];
-        
-        // 🌟 タイムラインブロック表示を排除し、以前のテキストエリア出力へと流し込む
-        if (rawEvents.length === 0) {
-          document.getElementById("r-notes").value = "【本日の登録事案・イベントはありません。】";
-        } else {
-          let textNotes = "【本日のフライト・業務タイムライン】\n";
-          rawEvents.forEach(e => {
-            textNotes += `${e.start} 〜 ${e.end} ｜ ${e.desc}\n`;
-          });
-          document.getElementById("r-notes").value = textNotes;
-        }
+        currentEvents = json.data.events || [];
+        renderTimeline();
       }
     } catch(e) {
       alert("同期エラーが発生しました。");
-      console.error(e);
     } finally {
       document.getElementById("global-loader").style.display = "none";
+    }
+  }
+
+  // 🌟 行ごとのタイムライン描画（復元）
+  function renderTimeline() {
+    const container = document.getElementById("timeline-container");
+    if (currentEvents.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--sub); font-size:13px;">データがありません。行を追加してください。</div>';
+      return;
+    }
+    
+    container.innerHTML = currentEvents.map((e, idx) => `
+      <div class="evt-row">
+        <div class="evt-time-col">
+          <input type="time" class="evt-time-input" value="${e.start || ''}" onchange="updateEvent(${idx}, 'start', this.value)">
+          <div class="time-sep">〜</div>
+          <input type="time" class="evt-time-input" value="${e.end || ''}" onchange="updateEvent(${idx}, 'end', this.value)">
+        </div>
+        <div class="evt-desc-col">
+          <textarea class="evt-desc-input" placeholder="活動内容・事案詳細" onchange="updateEvent(${idx}, 'desc', this.value)">${e.desc || ''}</textarea>
+        </div>
+        <button class="btn-remove" onclick="removeEvent(${idx})" title="削除">×</button>
+      </div>
+    `).join("");
+  }
+
+  function updateEvent(idx, field, value) {
+    if(currentEvents[idx]) {
+      currentEvents[idx][field] = value;
+    }
+  }
+
+  function addEventRow() {
+    currentEvents.push({ start: "", end: "", desc: "", category: "inspection" });
+    renderTimeline();
+  }
+
+  function removeEvent(idx) {
+    if(confirm("この行を削除しますか？")) {
+      currentEvents.splice(idx, 1);
+      renderTimeline();
     }
   }
 
@@ -309,31 +203,19 @@
     const rec = document.getElementById("r-recorder").value;
     const dr = document.getElementById("v-dr").value;
     const reason = document.getElementById("r-reason").value;
-    const notesText = document.getElementById("r-notes").value; // 編集後のテキストエリアをそのまま取得
     
-    if (!rec || !dr) {
-      return alert("「記録者」と「当直Dr」を選択してください。");
-    }
+    if (!rec || !dr) return alert("「記録者」と「当直Dr」を選択してください。");
 
     document.getElementById("global-loader").style.display = "flex";
     
     try {
-      // 保存時は、ユーザーが手動改変した日誌本文のテキストデータ整合性を崩さないため、
-      // 特殊な形式オブジェクト（またはテキストをパースしたダミーイベント）としてGASへ返却格納する
-      const virtualEvents = [{
-        start: "08:30",
-        end: "17:15",
-        desc: notesText, // 全文章をそのまま保持
-        category: "inspection"
-      }];
-
       const payload = {
         action: "save_daily_report",
         date: dateVal,
         recorder: rec,
         doctor: dr,
         hamamachiReason: reason,
-        events: virtualEvents
+        events: currentEvents
       };
 
       const res = await fetch(GAS_API_URL, {
@@ -344,7 +226,7 @@
       
       const json = await res.json();
       if (json.status === "success") {
-        alert("日報（浜町日誌）をスプレッドシートへ確定・保存しました。");
+        alert("日報をスプレッドシートへ保存しました。");
       } else {
         alert("保存中にエラーが発生しました: " + json.message);
       }
@@ -362,20 +244,16 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "fetch_init", app_name: "日報" })
       });
-      
       const json = await res.json();
-      
       if (json.status === "success") {
         const fillOptions = (id, arr) => {
           document.getElementById(id).innerHTML = '<option value="">選択...</option>' + arr.map(v => `<option value="${v}">${v}</option>`).join("");
         };
         fillOptions("r-recorder", json.masters.ns);
         fillOptions("v-dr", json.masters.dr);
-        
         syncFromDb(false);
       }
     } catch(e) {
-      console.error(e);
       document.getElementById("global-loader").style.display = "none";
     }
   }
