@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#f2f2f7">
   <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A109E_Power_Helicopter.jpg/180px-A109E_Power_Helicopter.jpg">
   <title>AW109 EMS</title>
+  <link rel="manifest" href="manifest.json">
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --med-blue-text: #1565c0; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -59,6 +61,7 @@
 
 <main id="mainScroll">
   <div id="tab-input" class="tab-content active">
+    <!-- 1. 基本事案情報 -->
     <div class="card">
       <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span class="field-label" style="font-size: 16px; font-weight: 600; flex: 1;">要請番号</span>
@@ -72,6 +75,7 @@
       <div class="inline-field"><span class="field-label">フライトNs</span><select id="v-ns" onchange="toggleStaff('ns'); saveState()"><option value="">読込中...</option></select><input type="text" id="v-ns-other" placeholder="応援ナース名等" style="display:none; text-align: right;" oninput="saveState()"></div>
     </div>
 
+    <!-- 🌟 2. 航空タイムライン（要請・離陸・着陸を復活、OSネイティブピッカー仕様） -->
     <div class="card">
       <div class="card-section"><div class="section-label">🛫 航空タイムライン</div>
         <div style="display:flex; flex-direction:column; gap:12px;">
@@ -91,6 +95,7 @@
       </div>
     </div>
 
+    <!-- 3. 医療活動タイムライン -->
     <div class="card">
       <div class="card-section"><div class="section-label">スキーム選択</div>
         <div class="scheme-picker" id="schemePicker">
@@ -118,12 +123,14 @@
       </div>
     </div>
 
+    <!-- 4. 資機材・処置アコーディオン -->
     <div class="card" style="padding:0;">
       <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span>▼</span></div><div class="acc-body" id="acc-line"><div class="chip-grid" id="box-line"></div></div>
       <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span>▼</span></div><div class="acc-body" id="acc-echo"><div class="chip-grid" id="box-echo"></div></div>
       <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div><div class="acc-body" id="acc-other"><div class="chip-grid" id="box-other"></div></div>
     </div>
 
+    <!-- 5. 動的時間入力ブロック -->
     <div class="card">
       <div class="card-section"><div class="section-label"><span>🌬️ 移動用酸素</span><div><button class="btn-clear" onclick="resetSection('酸素')">クリア</button><button class="btn-add-action" onclick="addDynManual('酸素')">＋</button></div></div><div id="dyn-酸素"></div></div>
     </div>
@@ -136,6 +143,7 @@
     <div class="card"><div class="card-section"><div class="section-label">📝 備考</div><textarea id="v-biko" rows="3" placeholder="特記事項（フリー入力）" onchange="st.vals['備考']=this.value; saveState();"></textarea></div></div>
   </div>
   
+  <!-- 確認・送信タブ -->
   <div id="tab-send" class="tab-content">
     <div class="card">
       <div class="card-section"><div class="section-label">送信プレビュー</div><div id="error-msg" style="color:var(--brand); font-weight:bold; font-size:14px; margin-bottom:12px; display:none; background:var(--brand-light); padding:10px; border-radius:8px; border:1px solid #fca5a5;"></div><div id="preview-box" style="font-size:14px; line-height:1.6;"></div></div>
@@ -154,6 +162,7 @@
   <button class="tab-btn" id="tb-send" onclick="switchTab('send'); renderPreview();"><span class="tab-icon">✉️</span><span>確認・送信</span></button>
 </nav>
 
+<!-- 各モーダル -->
 <div class="modal-overlay" id="modal-confirm" onclick="if(event.target===this)closeModal('confirm')">
   <div class="modal-box" style="text-align:center;">
     <h3 style="margin-bottom:12px;">🚁 通信環境の確認</h3>
@@ -168,6 +177,8 @@
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')"><div class="modal-box"><h3>❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div><div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div><textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea><button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button><button class="modal-close" onclick="closeModal('qa')">閉じる</button></div></div>
 
 <script>
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  const PIN_CODE = "5740";
   const STRUCT = { echo: [{k:"心エコー"},{k:"FAST"},{k:"大血管評価"},{k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},{k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}], other: [{k:"12誘導心電図"}, {k:"血糖測定"},{k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]}, {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"}, {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"}, {k:"胸腔ドレナージ", sub:"drainage"}, {k:"心嚢穿刺・心嚢ドレナージ", sub:"radio", opts:["キット","V1","V2","V3"], skey:"心嚢穿刺・心嚢ドレナージ詳細"}, {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"}, {k:"その他処置", sub:"text"}], line: ["20G","18G","22G","24G","ベニューラ","骨髄針"] };
   let st = { scheme: "", times: {}, vals: {'カフ有無':'あり'}, chips: {}, dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" } };
   
@@ -224,7 +235,7 @@
   function addDynManual(type) { if(st.dyn[type] >= 5) return; const preIdx = st.dyn[type]; const preEndVal = preIdx > 0 ? (document.getElementById(`t-【${type}${preIdx}】終了`).value || "") : ""; addDynRaw(type); const nextIdx = st.dyn[type]; if(preIdx === 0 && document.getElementById("t-接触").value) { document.getElementById(`t-【${type}${nextIdx}】開始`).value = document.getElementById("t-接触").value; } else if(preEndVal) { document.getElementById(`t-【${type}${nextIdx}】開始`).value = preEndVal; } recalcAuto(); }
   function resetSection(type) { document.getElementById(`dyn-${type}`).innerHTML = ""; for(let i=1; i<=5; i++) { delete st.times[`【${type}${i}】開始`]; delete st.times[`【${type}${i}】終了`]; delete st.vals[`【${type}${i}】流量`]; } st.dyn[type] = 0; recalcAuto(); }
   
-  // 🌟 時系列バリデーション（前後チェックの追加・日本語エラーの露出）
+  // 🌟 時系列バリデーション
   function validateTimeline() {
     let msg = []; const t = (id) => document.getElementById(id).value;
     const toMin = (val) => { if(!val) return -1; return parseInt(val.split(":")[0])*60 + parseInt(val.split(":")[1]); };
@@ -270,6 +281,7 @@
     let ccEmails = []; document.querySelectorAll('.mail-cc-check:checked').forEach(cb => ccEmails.push(cb.value));
     const customEmail = document.getElementById("custom-email").value.trim(); if(customEmail) customEmail.split(",").forEach(e => { if(e.trim()) ccEmails.push(e.trim()); });
 
+    const t = (id) => document.getElementById(id).value;
     const payload = { "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value, "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme, "要請時刻・施設間搬送依頼時刻": t("t-request"), "初期離陸時間": t("t-takeoff"), "最終着陸時間": t("t-landing"), "接触": t("t-接触"), "病着": t("t-病着"), "終了": t("t-終了"), "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"", "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"" };
     Object.keys(st.chips).forEach(k => { if(st.chips[k]) payload[k] = "◯"; }); Object.keys(st.vals).forEach(k => { payload[k] = st.vals[k]; });
     for(let i=1; i<=5; i++) { ["酸素","圧迫","呼吸器"].forEach(ty => { payload[`${ty}${i}開始`] = t(`t-【${ty}${i}】開始`); payload[`${ty}${i}終了`] = t(`t-【${ty}${i}】終了`); }); payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || ""; }
