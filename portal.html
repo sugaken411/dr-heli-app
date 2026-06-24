@@ -6,60 +6,26 @@
   <title>AW109 EMS Portal</title>
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand-red: #d32f2f; --brand-blue: #007aff; }
-    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
-    .header-title { text-align: center; margin-bottom: 24px; margin-top: 10px; }
-    .header-title h1 { margin: 0; font-size: 26px; color: var(--ink); letter-spacing: 1.5px; font-weight: 900; }
-    .header-title p { margin: 4px 0 0 0; font-size: 12px; color: var(--brand-blue); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-    
-    #alert-container { width: 100%; max-width: 800px; display: none; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-    .alert-box { background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .alert-box.warning { background: #fff8e1; border-color: #ffecb3; color: #f57f17; }
-    .alert-link { color: inherit; text-decoration: underline; cursor: pointer; }
-    .alert-link:hover { opacity: 0.8; }
-
-    .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; max-width: 800px; margin-bottom: 32px; }
-    .portal-card { background: var(--card); border-radius: 16px; padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; border-top: 6px solid #ccc; position: relative; overflow: hidden; }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    .header-title { text-align: center; margin-bottom: 30px; margin-top: 20px; }
+    .header-title h1 { margin: 0; font-size: 26px; color: var(--ink); letter-spacing: 1.5px; font-weight: 800; }
+    .header-title p { margin: 4px 0 0 0; font-size: 13px; color: var(--brand-blue); text-transform: uppercase; font-weight: 600; }
+    .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; max-width: 800px; }
+    .portal-card { background: var(--card); border-radius: 16px; padding: 24px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; border-top: 5px solid transparent; }
     .portal-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
     .card-red { border-top-color: var(--brand-red); }
     .card-blue { border-top-color: var(--brand-blue); }
-    .card-green { border-top-color: #34c759; }
-    .card-purple { border-top-color: #af52de; }
-    .card-cyan { border-top-color: #06b6d4; }
-    .card-orange { border-top-color: #f59e0b; }
+    .card-gray { border-top-color: var(--sub); opacity: 0.8; pointer-events: none; }
     .icon { font-size: 36px; margin-bottom: 12px; }
-    .title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .title { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
     .desc { font-size: 13px; color: var(--sub); line-height: 1.5; flex: 1; }
-
-    .news-container { width: 100%; max-width: 800px; background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(60,60,67,0.1); }
-    .news-header { font-size: 14px; font-weight: 800; color: var(--ink); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-    .news-list { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
-    .news-item { font-size: 13px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
-    .news-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .news-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    .news-date { font-family: monospace; color: var(--sub); font-size: 11px; }
-    .news-badge { background: #e3f2fd; color: #1565c0; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-    .news-title { font-weight: 700; color: var(--ink); }
-    .news-text { color: var(--sub); font-size: 12px; margin-top: 4px; line-height: 1.4; }
-    
-    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .spinner { width: 30px; height: 30px; border: 3px solid rgba(0,122,255,0.2); border-top: 3px solid var(--brand-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-
-  <div id="global-loader">
-    <div class="spinner"></div>
-    <div style="margin-top:12px; font-weight:700; font-size:12px; color:var(--ink);">システム情報を取得中...</div>
-  </div>
-
   <div class="header-title">
     <h1>AW109 EMS PORTAL</h1>
-    <p>Pre-hospital Information Hub v4.0</p>
+    <p>Pre-hospital Information Hub</p>
   </div>
-
-  <div id="alert-container"></div>
-
   <div class="grid-container">
     <a href="index.html" class="portal-card card-red">
       <div class="icon">🚁</div>
@@ -71,78 +37,21 @@
       <div class="title">事案検索コンソール</div>
       <div class="desc">事案の検索、データの修正、カルテ完了処理を行います。</div>
     </a>
-    <a href="report.html" class="portal-card card-green">
-      <div class="icon">📝</div>
-      <div class="title">業務日報入力</div>
-      <div class="desc">日々の活動タイムラインの作成と管理、事案データベースとの自動連動を行います。</div>
-    </a>
-    <a href="summary.html" class="portal-card card-purple">
-      <div class="icon">📊</div>
-      <div class="title">月間集計ダッシュボード</div>
-      <div class="desc">日報の集計・検索・印刷・CSV出力を行います。（閲覧専用）</div>
-    </a>
-    <a href="library.html" class="portal-card card-cyan">
+    <a href="library.html" class="portal-card card-blue">
       <div class="icon">📚</div>
       <div class="title">資料集・アーカイブ</div>
-      <div class="desc">各種プロトコルや手順書などのPDF資料を検索・閲覧します。（Q&A連動機能つき）</div>
+      <div class="desc">プロトコルやマニュアルの検索・閲覧。AIによる自動分類に対応しています。</div>
     </a>
-    <a href="admin.html" class="portal-card card-orange">
+    <a href="admin.html" class="portal-card" style="border-top-color:#d48806;">
       <div class="icon">⚙️</div>
       <div class="title">システム管理コンソール</div>
-      <div class="desc">各種マスタデータ、お知らせの配信、Q&Aの回答を行います。</div>
+      <div class="desc">マスタデータの追加、Q&Aへの回答公開など、システムの裏側を管理します。</div>
+    </a>
+    <a href="#" class="portal-card card-gray">
+      <div class="icon">📊</div>
+      <div class="title">データ・ダッシュボード</div>
+      <div class="desc">出動件数や滞在時間などの統計データを視覚化します。（準備中）</div>
     </a>
   </div>
-
-  <div class="news-container">
-    <div class="news-header">📢 システムからのお知らせ・アップデート</div>
-    <div class="news-list" id="news-list-box">
-      <div style="text-align:center; color:var(--sub); font-size:12px; padding:10px;">読み込み中...</div>
-    </div>
-  </div>
-
-  <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-    
-    window.onload = async () => {
-      try {
-        const res = await fetch(GAS_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_init", password: "", app_name: "ポータル" }) 
-        });
-        const data = await res.json();
-        
-        if (data.status === "success" && data.alerts && data.alerts.length > 0) {
-            const alertBox = document.getElementById("alert-container");
-            alertBox.style.display = "flex";
-            alertBox.innerHTML = data.alerts.map(a => {
-                if (a.count > 0) {
-                    return `<div class="alert-box warning"><span class="alert-link" onclick="location.href='search.html?filter=uncompleted'">${a.text}</span></div>`;
-                }
-                return `<div class="alert-box">${a.text}</div>`;
-            }).join("");
-        }
-
-        if (data.status === "success" && data.news && data.news.length > 0) {
-          document.getElementById("news-list-box").innerHTML = data.news.map(n => `
-            <div class="news-item">
-              <div class="news-meta">
-                <span class="news-date">${n.date}</span>
-                <span class="news-badge">${n.category}</span>
-              </div>
-              <div class="news-title">${n.title}</div>
-              <div class="news-text">${n.content}</div>
-            </div>
-          `).join("");
-        } else {
-          document.getElementById("news-list-box").innerHTML = `<div style="text-align:center; color:var(--sub); font-size:12px; padding:10px;">現在お知らせはありません。</div>`;
-        }
-      } catch(e) {
-        document.getElementById("news-list-box").innerHTML = `<div style="text-align:center; color:var(--sub); font-size:12px; padding:10px;">オフラインモード（情報は取得できませんでした）</div>`;
-      } finally {
-        document.getElementById("global-loader").style.display = "none";
-      }
-    };
-  </script>
 </body>
 </html>
