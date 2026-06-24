@@ -5,151 +5,444 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>業務日報 (浜町日誌)</title>
   <style>
-    :root { --bg:#f2f2f7; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; --line:rgba(60,60,67,0.12); }
-    body { font-family:-apple-system,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:20px; }
-    header { max-width:800px; margin:0 auto 20px; display:flex; justify-content:space-between; align-items:center; }
-    .hdr-btn { background:none; border:none; color:var(--blue); font-weight:bold; cursor:pointer; font-size:14px; }
-    main { max-width:800px; margin:0 auto; }
-    .card { background:#fff; border-radius:14px; padding:20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-    .title { font-size:18px; font-weight:800; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
-    .form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:16px; }
-    .form-group { display:flex; flex-direction:column; gap:4px; }
-    label { font-size:12px; font-weight:bold; color:var(--sub); }
-    input, select, textarea { padding:10px; border-radius:8px; border:1px solid var(--line); font-size:14px; background:#fff; outline:none; }
-    .chip-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
-    .chip { background:var(--bg); border:1px solid transparent; border-radius:20px; padding:6px 14px; font-size:13px; font-weight:bold; cursor:pointer; color:var(--sub); }
-    .chip.on { background:#e3f2fd; color:var(--blue); border-color:var(--blue); }
-    .evt-item { border-left:4px solid var(--sub); background:var(--bg); padding:10px 12px; border-radius:0 8px 8px 0; margin-bottom:8px; font-size:13px; }
-    .evt-item.mission { border-left-color: #d32f2f; } .evt-item.cancel { border-left-color: #f59e0b; }
-    .evt-time { font-family:monospace; font-weight:bold; color:var(--blue); margin-right:8px; }
-    button.save-btn { width:100%; padding:16px; background:var(--blue); color:#fff; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer; }
-    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .spinner { width:40px; height:40px; border:4px solid rgba(0,122,255,0.2); border-top:4px solid var(--blue); border-radius:50%; animation:spin 1s linear infinite; } @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+    /* -------------------------------------------
+       基本デザイン・カラー定義
+    ------------------------------------------- */
+    :root {
+      --bg: #f2f2f7;
+      --ink: #1c1c1e;
+      --sub: #8e8e93;
+      --blue: #007aff;
+      --line: rgba(60,60,67,0.12);
+    }
+    
+    body {
+      font-family: -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      margin: 0;
+      padding: 20px;
+    }
+
+    header {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hdr-btn {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* -------------------------------------------
+       カード・入力フォーム要素
+    ------------------------------------------- */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--sub);
+    }
+
+    input, select, textarea {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      font-size: 14px;
+      background: #fff;
+      outline: none;
+    }
+
+    /* -------------------------------------------
+       待機事由チップ (複数選択用)
+    ------------------------------------------- */
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      background: var(--bg);
+      border: 1px solid transparent;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--sub);
+      transition: all 0.2s ease;
+    }
+
+    .chip.on {
+      background: #e3f2fd;
+      color: var(--blue);
+      border-color: var(--blue);
+    }
+
+    /* -------------------------------------------
+       タイムラインのイベントリスト
+    ------------------------------------------- */
+    .evt-item {
+      border-left: 4px solid var(--sub);
+      background: var(--bg);
+      padding: 10px 12px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    /* ミッションとキャンセルの色分け（白黒印刷対応はテキストで担保） */
+    .evt-item.mission { border-left-color: #d32f2f; }
+    .evt-item.cancel  { border-left-color: #f59e0b; }
+
+    .evt-time {
+      font-family: monospace;
+      font-weight: bold;
+      color: var(--blue);
+      margin-right: 8px;
+    }
+
+    button.save-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* -------------------------------------------
+       ローディングスピナー
+    ------------------------------------------- */
+    #global-loader {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.9);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0,122,255,0.2);
+      border-top: 4px solid var(--blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
 
-<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:bold;">日報同期中...</div></div>
+<!-- ローディング画面 -->
+<div id="global-loader">
+  <div class="spinner"></div>
+  <div style="margin-top:16px; font-weight:bold;">日報同期中...</div>
+</div>
 
+<!-- ヘッダー -->
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:800; font-size:16px;">業務日報 (浜町日誌) <span style="font-size:11px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v3.1</span></div>
+  <div style="font-weight:800; font-size:16px;">
+    業務日報 (浜町日誌) 
+    <span style="font-size:11px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v3.2</span>
+  </div>
   <div></div>
 </header>
 
 <main>
+  <!-- 上部：基本情報入力エリア -->
   <div class="card">
     <div class="title">📅 日報の作成・同期</div>
     <div class="form-grid">
-      <div class="form-group"><label>対象日付</label><input type="date" id="r-date" onchange="syncFromDb(false)"></div>
-      <div class="form-group"><label>記録者 (Ns)</label><select id="r-recorder"><option value="">選択...</option></select></div>
-      <div class="form-group"><label>当直Dr</label><select id="v-dr"><option value="">選択...</option></select></div>
+      <div class="form-group">
+        <label>対象日付</label>
+        <input type="date" id="r-date" onchange="syncFromDb(false)">
+      </div>
+      <div class="form-group">
+        <label>記録者 (Ns)</label>
+        <select id="r-recorder">
+          <option value="">選択...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>当直Dr</label>
+        <select id="v-dr">
+          <option value="">選択...</option>
+        </select>
+      </div>
     </div>
     
+    <!-- 待機事由選択エリア（4項目に完全固定） -->
     <div class="form-group" style="margin-top:16px;">
       <label>🚁 待機事由・不稼働理由選択 (複数選択可)</label>
       <div class="chip-grid" style="margin-top:8px;">
         <button class="chip" id="reason-風向き" onclick="toggleReason('風向き')">風向き</button>
-        <button class="chip" id="add-reason-天候不良" class="chip" id="reason-天候不良" onclick="toggleReason('天候不良')">天候不良</button>
-        <button class="chip" id="box-reason-強風" onclick="toggleReason('強風')">強風</button>
-        <button class="chip" id="box-reason-機体トラブル" onclick="toggleReason('機体トラブル')">機体トラブル</button>
+        <button class="chip" id="reason-天候不良" onclick="toggleReason('天候不良')">天候不良</button>
+        <button class="chip" id="reason-強風" onclick="toggleReason('強風')">強風</button>
+        <button class="chip" id="reason-機体トラブル" onclick="toggleReason('機体トラブル')">機体トラブル</button>
       </div>
+      <!-- 選択された事由を保存する隠しフィールド -->
       <input type="hidden" id="r-reason">
     </div>
   </div>
 
+  <!-- 下部：タイムライン表示エリア -->
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <div style="font-weight:800; font-size:15px;">📋 本日の動的生成タイムライン</div>
-      <button onclick="syncFromDb(true)" style="padding:6px 12px; font-size:12px; background:#e5e5ea; color:var(--ink); border:none; border-radius:6px; font-weight:bold; cursor:pointer;">🔄 データベースから強制再同期</button>
+      <button onclick="syncFromDb(true)" style="padding:6px 12px; font-size:12px; background:#e5e5ea; color:var(--ink); border:none; border-radius:6px; font-weight:bold; cursor:pointer;">
+        🔄 データベースから強制再同期
+      </button>
     </div>
+    
+    <!-- ここにGASから取得したイベントが描画されます -->
     <div id="timeline-list" style="display:flex; flex-direction:column; gap:4px;"></div>
   </div>
 
+  <!-- 保存ボタン -->
   <button class="save-btn" onclick="saveReport()">💾 この内容で日報を確定・保存する</button>
 </main>
 
 <script>
+  // GAS APIのURL
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  let currentEvents = []; let selectedReasons = [];
+  
+  // 状態管理用の変数
+  let currentEvents = [];
+  let selectedReasons = [];
 
+  // 画面読み込み時の初期化処理
   window.onload = () => {
-    const d = new Date(); document.getElementById("r-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    // 日付を今日にセット
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    document.getElementById("r-date").value = todayStr;
+    
+    // マスタデータの取得を開始
     fetchInit();
   };
 
-  function toggleReason(str) {
-    const idx = selectedReasons.indexOf(str);
-    if(idx === -1) selectedReasons.push(str); else selectedReasons.splice(idx, 1);
+  // 待機事由チップの選択・解除処理
+  function toggleReason(reasonText) {
+    const idx = selectedReasons.indexOf(reasonText);
+    
+    if (idx === -1) {
+      selectedReasons.push(reasonText); // 未選択なら追加
+    } else {
+      selectedReasons.splice(idx, 1);   // 選択済みなら削除
+    }
+    
+    // UIの表示を更新
     document.querySelectorAll(".chip-grid .chip").forEach(btn => {
       const isOn = selectedReasons.indexOf(btn.textContent) !== -1;
       btn.classList.toggle("on", isOn);
     });
+    
+    // 隠しフィールドにカンマ区切りで格納
     document.getElementById("r-reason").value = selectedReasons.join(",");
   }
 
+  // GASから日報データ・事案データを取得して同期する
   async function syncFromDb(force) {
     document.getElementById("global-loader").style.display = "flex";
     const dateVal = document.getElementById("r-date").value;
+    
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_daily_report", date:dateVal, force_sync:force}) });
+      const payload = {
+        action: "fetch_daily_report",
+        date: dateVal,
+        force_sync: force
+      };
+
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      
       const json = await res.json();
-      if(json.status === "success") {
-        if(json.data.recorder) document.getElementById("r-recorder").value = json.data.recorder;
-        if(json.data.doctor) document.getElementById("v-dr").value = json.data.doctor;
-        if(json.data.hamamachiReason) {
+      
+      if (json.status === "success") {
+        // UIフォームへの反映
+        if (json.data.recorder) document.getElementById("r-recorder").value = json.data.recorder;
+        if (json.data.doctor) document.getElementById("v-dr").value = json.data.doctor;
+        
+        // 待機事由の復元
+        if (json.data.hamamachiReason) {
           selectedReasons = json.data.hamamachiReason.split(",").filter(Boolean);
-          document.querySelectorAll(".chip-grid .chip").forEach(btn => { btn.classList.toggle("on", selectedReasons.indexOf(btn.textContent) !== -1); });
+          document.querySelectorAll(".chip-grid .chip").forEach(btn => {
+            btn.classList.toggle("on", selectedReasons.indexOf(btn.textContent) !== -1);
+          });
           document.getElementById("r-reason").value = json.data.hamamachiReason;
         } else {
-          selectedReasons = []; document.querySelectorAll(".chip-grid .chip").forEach(b=>b.classList.remove("on")); document.getElementById("r-reason").value="";
+          selectedReasons = [];
+          document.querySelectorAll(".chip-grid .chip").forEach(b => b.classList.remove("on"));
+          document.getElementById("r-reason").value = "";
         }
+        
+        // タイムラインイベントの格納と描画
         currentEvents = json.data.events || [];
         renderTimeline();
       }
-    } catch(e) { alert("同期エラー"); }
+    } catch(e) {
+      alert("同期エラーが発生しました。");
+      console.error(e);
+    }
+    
     document.getElementById("global-loader").style.display = "none";
   }
 
+  // タイムラインイベントを画面に描画する
   function renderTimeline() {
     const listEl = document.getElementById("timeline-list");
-    if(currentEvents.length === 0) { listEl.innerHTML = '<p style="text-align:center; padding:20px; color:var(--sub); font-size:13px;">本日の登録事案・イベントはありません。</p>'; return; }
     
-    // 🌟 白黒コピー対策：色だけでなく、テキストとしてもミッション種別を確実に描画
-    listEl.innerHTML = currentEvents.map(e => {
-      let cls = e.category || "inspection";
-      return `<div class="evt-item ${cls}">
-        <span class="evt-time">${e.start} 〜 ${e.end}</span>
-        <span style="font-weight:700; color:var(--ink);">${e.desc}</span>
-      </div>`;
-    }).join("");
+    if (currentEvents.length === 0) {
+      listEl.innerHTML = '<p style="text-align:center; padding:20px; color:var(--sub); font-size:13px;">本日の登録事案・イベントはありません。</p>';
+      return;
+    }
+    
+    // 白黒印刷対応：テキストとして[ミッション]等の種別が e.desc の中にGAS側で組み込まれている
+    let htmlString = "";
+    currentEvents.forEach(e => {
+      // cssのクラス判定用（左側のボーダーラインの色を変えるため）
+      const cssClass = e.category || "inspection"; 
+      
+      htmlString += `
+        <div class="evt-item ${cssClass}">
+          <span class="evt-time">${e.start} 〜 ${e.end}</span>
+          <span style="font-weight:700; color:var(--ink);">${e.desc}</span>
+        </div>
+      `;
+    });
+    
+    listEl.innerHTML = htmlString;
   }
 
+  // 確定・保存ボタンの処理
   async function saveReport() {
     const dateVal = document.getElementById("r-date").value;
     const rec = document.getElementById("r-recorder").value;
     const dr = document.getElementById("v-dr").value;
     const reason = document.getElementById("r-reason").value;
-    if(!rec || !dr) return alert("「記録者」と「当直Dr」を選択してください。");
+    
+    if (!rec || !dr) {
+      return alert("「記録者」と「当直Dr」を選択してください。");
+    }
 
     document.getElementById("global-loader").style.display = "flex";
+    
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"save_daily_report", date:dateVal, recorder:rec, doctor:dr, hamamachiReason:reason, events:currentEvents}) });
-      const json = await res.json(); if(json.status === "success") alert("日報をスプレッドシートへ確定・保存しました。");
-    } catch(e) { alert("保存エラー"); }
+      const payload = {
+        action: "save_daily_report",
+        date: dateVal,
+        recorder: rec,
+        doctor: dr,
+        hamamachiReason: reason,
+        events: currentEvents
+      };
+
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      
+      const json = await res.json();
+      if (json.status === "success") {
+        alert("日報をスプレッドシートへ確定・保存しました。");
+      } else {
+        alert("保存中にエラーが発生しました: " + json.message);
+      }
+    } catch(e) {
+      alert("保存エラーが発生しました。通信環境を確認してください。");
+      console.error(e);
+    }
+    
     document.getElementById("global-loader").style.display = "none";
   }
 
+  // 画面起動時のマスタデータ取得処理
   async function fetchInit() {
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", app_name:"日報"}) });
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "fetch_init", app_name: "日報" })
+      });
+      
       const json = await res.json();
-      if(json.status === "success") {
-        const fillOptions = (id, arr) => { document.getElementById(id).innerHTML = '<option value="">選択...</option>' + arr.map(v=>`<option value="${v}">${v}</option>`).join(""); };
-        fillOptions("r-recorder", json.masters.ns); fillOptions("v-dr", json.masters.dr);
+      
+      if (json.status === "success") {
+        // プルダウンにマスタデータを流し込む関数
+        const fillOptions = (id, arr) => {
+          document.getElementById(id).innerHTML = '<option value="">選択...</option>' + arr.map(v => `<option value="${v}">${v}</option>`).join("");
+        };
+        
+        fillOptions("r-recorder", json.masters.ns);
+        fillOptions("v-dr", json.masters.dr);
+        
+        // データの同期（初回は強制上書きしない）
         syncFromDb(false);
       }
-    } catch(e) { document.getElementById("global-loader").style.display = "none"; }
+    } catch(e) {
+      console.error("初期データの取得に失敗しました", e);
+      document.getElementById("global-loader").style.display = "none";
+    }
   }
 </script>
 </body>
