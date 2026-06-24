@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AW109 事案検索コンソール</title>
   <style>
-    :root { --bg:#f2f2f7; --card:#ffffff; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; --brand:#d32f2f; --line: rgba(60,60,67,0.12); }
+    :root { --bg:#f2f2f7; --brand:#d32f2f; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; }
     body { font-family:-apple-system,sans-serif; background:var(--bg); color:var(--ink); margin:0; padding:0; height:100vh; display:flex; flex-direction:column; }
     header { background:#fff; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; flex-shrink:0; }
     .hdr-btn { background:none; border:none; color:var(--blue); font-weight:bold; cursor:pointer; font-size:14px; }
@@ -42,37 +42,18 @@
   <div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div></div>
 
   <header>
-    <div style="display:flex; gap:12px; align-items:center;">
-      <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-      <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
-      <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button>
-    </div>
+    <div style="display:flex; gap:12px; align-items:center;"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button><button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button><button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button></div>
     <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
-    <div style="display:flex; gap:12px; align-items:center;">
-      <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
-      <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
-    </div>
+    <div style="display:flex; gap:12px; align-items:center;"><span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span><button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button></div>
   </header>
 
   <main>
     <div class="card no-print">
       <h3 style="margin-top:0;">🔍 事案の検索</h3>
-      <div style="margin-bottom:16px;">
-        <button class="filter-btn" onclick="quickFilter('未完了')">⚠️ 未完了のみ</button>
-        <button class="filter-btn" onclick="quickFilter('本日')">🚁 今日の出動</button>
-        <button class="filter-btn" onclick="quickFilter('')">🔄 全てクリア</button>
-      </div>
+      <div style="margin-bottom:16px;"><button class="filter-btn" onclick="quickFilter('未完了')">⚠️ 未完了のみ</button><button class="filter-btn" onclick="quickFilter('本日')">🚁 今日の出動</button><button class="filter-btn" onclick="quickFilter('')">🔄 全てクリア</button></div>
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:16px;">
         <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">要請番号</label><input type="text" id="q-id" placeholder="IDを入力" style="width:100%;"></div>
-        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">ステータス</label>
-          <select id="q-status" style="width:100%;">
-            <option value="">全て</option>
-            <option value="未完了">⚠️ 未完了</option>
-            <option value="すべての完了">✅ 完了 (すべて)</option>
-            <option value="完了 (本人)">👤 完了 (本人入力)</option>
-            <option value="完了 (代行)">💻 完了 (代行入力)</option>
-          </select>
-        </div>
+        <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">ステータス</label><select id="q-status" style="width:100%;"><option value="">全て</option><option value="未完了">⚠️ 未完了</option><option value="すべての完了">✅ 完了 (すべて)</option><option value="完了 (本人)">👤 完了 (本人入力)</option><option value="完了 (代行)">💻 完了 (代行入力)</option></select></div>
         <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">出場先</label><select id="q-dest" style="width:100%;"><option value="">読込中...</option></select></div>
         <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">フライトDr</label><select id="q-dr" style="width:100%;"><option value="">読込中...</option></select></div>
         <div><label style="font-size:12px; color:var(--sub); font-weight:bold;">フライトNs</label><select id="q-ns" style="width:100%;"><option value="">読込中...</option></select></div>
@@ -83,19 +64,13 @@
       </div>
     </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
-      <div id="result-count" style="font-weight:bold; color:var(--ink);">検索結果: 0 件</div>
-      <button onclick="exportCSV()" style="background:#34a853;">📊 CSV出力</button>
-    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print"><div id="result-count" style="font-weight:bold; color:var(--ink);">検索結果: 0 件</div><button onclick="exportCSV()" style="background:#34a853;">📊 CSV出力</button></div>
     <div id="results" class="no-print"><p style="text-align:center; color:var(--sub); padding:40px; background:#fff; border-radius:12px;">条件を指定して「検索実行」を押してください。</p></div>
   </main>
 
   <div class="modal" id="detail-modal" onclick="if(event.target===this)closeModal('detail-modal')">
     <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:16px;">
-        <h3 style="margin:0;">事案詳細・修正</h3>
-        <button class="no-print" onclick="window.print()" style="background:#e5e5ea; color:var(--ink); padding:8px 16px;">🖨️ 印刷</button>
-      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:16px;"><h3 style="margin:0;">事案詳細・修正</h3><button class="no-print" onclick="window.print()" style="background:#e5e5ea; color:var(--ink); padding:8px 16px;">🖨️ 印刷</button></div>
       <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; border:1px solid #bbdefb;"><b style="color:#0d47a1;">📦 消費資機材</b><div id="supply-list" style="margin-top:6px; color:#1565c0; line-height:1.5;"></div></div>
       <input type="hidden" id="edit-old-id">
       
@@ -107,7 +82,7 @@
       
       <div class="no-print" style="margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
         <p style="font-size:12px; font-weight:bold; color:var(--brand); margin:0 0 8px 0;">※修正する場合は担当者名を入力し「上書き」を押してください。</p>
-        <input type="text" id="edit-person" placeholder="修正担当者の名前 (必須)" style="width:100%; margin-bottom:12px;">
+        <input type="text" id="edit-person" placeholder="修正担当者の名前(カナ)" style="width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
         
         <div id="complete-box" style="border-top:1px solid #ccc; padding-top:12px; margin-top:4px;">
           <p style="font-size:12px; font-weight:bold; color:var(--blue); margin:0 0 8px 0;">✅ カルテ完了処理</p>
@@ -128,14 +103,12 @@
   </div>
 
   <div class="modal" id="modal-manual" onclick="if(event.target===this)closeModal('modal-manual')"><div class="modal-box"><h3 style="margin-top:0;">📖 取扱説明書 (検索用)</h3><div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div><button class="modal-close" onclick="closeModal('modal-manual')">閉じる</button></div></div>
-  
   <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')"><div class="modal-box"><h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div><div style="background:var(--bg); padding:12px; border-radius:8px;"><div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 システム改善の要望を送る</div><textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea><button onclick="submitQA(event)" style="width:100%; padding:10px;">送信する ✉️</button></div><button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button></div></div>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   let activePin = ""; let allData = []; let filteredData = [];
   
-  // 🌟 オートロックタイマー機能
   let lockTime = 600; let timerInterval;
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
   function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
@@ -155,6 +128,8 @@
     const isDaiko = document.querySelector('input[name="comp-who"]:checked').value === "代行";
     document.getElementById("comp-name").style.display = isDaiko ? "block" : "none";
   }
+
+  function formatKatakana(input) { let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); input.value = val.replace(/[^ァ-ンヴー]/g, ''); }
 
   document.getElementById("edit-id").addEventListener("input", (e) => {
     e.target.style.color = e.target.value.includes("(仮)") ? "var(--brand)" : "var(--ink)";
@@ -187,7 +162,7 @@
             if(stVal === "未完了" && !rowSt.includes("未完了")) m = false;
             else if(stVal === "すべての完了" && (!rowSt.includes("完了") || rowSt.includes("未完了"))) m = false;
             else if(stVal === "完了 (本人)" && !rowSt.includes("本人")) m = false;
-            else if(stVal === "完了 (代行)" && !rowSt.includes("代行")) m = m = false;
+            else if(stVal === "完了 (代行)" && !rowSt.includes("代行")) m = false;
           }
           if(dStart || dEnd) { let dStr = r["日付"] ? String(r["日付"]).replace(/\//g, "-") : ""; if (dStart && dStr < dStart) m = false; if (dEnd && dStr > dEnd) m = false; }
           return m;
@@ -236,7 +211,6 @@
     
     document.querySelector('input[name="comp-who"][value="本人"]').checked = true;
     toggleComp(); document.getElementById("comp-name").value = "";
-    
     openModal("detail-modal");
   }
 
@@ -262,7 +236,7 @@
   }
 
   async function saveRecord() {
-    const editor = document.getElementById("edit-person").value.trim(); if(!editor) return alert("「修正担当者の名前」を入力してください。");
+    const editor = document.getElementById("edit-person").value.trim(); if(!editor) return alert("「修正担当者の名前(カナ)」を入力してください。");
     const oldId = document.getElementById("edit-old-id").value; const newId = document.getElementById("edit-id").value.trim();
     if(!confirm(`データを上書きしてよろしいですか？`)) return;
     const btn = event.target; btn.innerText = "保存中..."; btn.disabled = true;
