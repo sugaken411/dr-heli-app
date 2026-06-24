@@ -39,7 +39,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.2</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -70,17 +70,20 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_ADMIN = "9999"; 
   let lockTime = 600; let timerInterval;
+  
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
   function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
   function startTimer() { updateTimerDisplay(); timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); }
+  
   function checkLogin() {
     const input = document.getElementById("login-pin").value;
     if(input === PIN_ADMIN) { document.getElementById("login-overlay").style.display = "none"; document.getElementById("global-loader").style.display = "flex"; startTimer(); fetchInit(); } else { document.getElementById("login-err").style.display = "block"; document.getElementById("login-pin").value = ""; }
   }
+  
   async function fetchInit() {
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN}) });
-      const jsonRes = await res.json();
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:PIN_ADMIN}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[]}; else throw err; }
       if (jsonRes.status === "success") {
         const qaBox = document.getElementById("qa-list");
         const unanswered = jsonRes.qa.filter(q => q.status !== "◯");
@@ -97,25 +100,28 @@
       }
     } catch(e) { document.getElementById("global-loader").style.display = "none"; }
   }
+  
   async function answerQA(qText, textareaId) {
     const ans = document.getElementById(textareaId).value.trim(); if(!ans) return alert("回答を入力してください");
     try {
       document.getElementById("global-loader").style.display = "flex";
-      await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"answer_question", password:PIN_ADMIN, q:qText, a:ans}) });
+      await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"answer_question", password:PIN_ADMIN, q:qText, a:ans}), redirect:"follow" });
       fetchInit();
     } catch(e) { alert("通信エラー"); document.getElementById("global-loader").style.display = "none"; }
   }
+  
   async function addMaster() {
     const type = document.getElementById("add-type").value; const val1 = document.getElementById("add-val1").value.trim(); const val2 = document.getElementById("add-val2").value.trim();
     if(!val1) return alert("追加する値を入力してください。");
     try {
       const btn = event.target; btn.disabled=true; btn.innerText="追加中...";
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"add_master", password:PIN_ADMIN, type:type, val1:val1, val2:val2}) });
-      const json = await res.json();
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"add_master", password:PIN_ADMIN, type:type, val1:val1, val2:val2}), redirect:"follow" });
+      const textRes = await res.text(); let json; try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw err; }
       if(json.status==="success") { alert("マスタに追加しました。"); document.getElementById("add-val1").value=""; document.getElementById("add-val2").value=""; fetchInit(); } else alert("エラー: "+json.message);
       btn.disabled=false; btn.innerText="＋ マスタに追加";
     } catch(e) { alert("通信エラー"); }
   }
+  
   document.getElementById("add-type").addEventListener('change', (e) => { document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; });
   document.getElementById("box-val2").style.display = 'none';
 </script>
