@@ -10,76 +10,53 @@
   <title>AW109 EMS</title>
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --med-blue-text: #1565c0; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
-    body.dark { --bg: #000000; --card: #1c1c1e; --ink: #f2f2f7; --sub: #aeaeb2; --brand: #ff453a; --brand-light: rgba(255,69,58,0.2); --blue: #0a84ff; --med-blue: rgba(10,132,255,0.2); --med-blue-text: #6eb6ff; --line: rgba(255,255,255,0.15); }
-    
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; transition: background-color 0.3s; }
-    body.dark header { background: rgba(28,28,30,0.92); }
-    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; transition: background-color 0.3s; }
-    body.dark .tab-bar { background: rgba(28,28,30,0.94); }
-    main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; transition: margin-top 0.3s; }
-    
-    .offline-bar { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; background: #ff453a; color: #fff; padding: 10px 16px; display: none; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; z-index: 99; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .offline-btn { background: #fff; color: #ff453a; border: none; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
-
-    .hdr-group { display: flex; gap: 12px; align-items: center; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; }
+    main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; }
+    .hdr-group { display: flex; gap: 12px; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
     .version-tag { font-size: 10px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-    .card { background: var(--card); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: background-color 0.3s; }
+    .card { background: var(--card); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
     .card-section { padding: 16px; border-bottom: 0.5px solid var(--line); } .card-section:last-child { border-bottom: none; }
     .section-label { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); } .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 16px; font-weight: 600; flex: 1; }
-    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="tel"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
+    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
     textarea { width: 100%; border: none; font-size: 15px; background: transparent; outline: none; resize: none; color: var(--ink); line-height: 1.5; }
     .scheme-picker { display: grid; gap: 8px; background: var(--bg); padding: 6px; border-radius: 12px; } .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .scheme-row-bot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 5%; }
     .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; transition: 0.2s; } .scheme-btn.active { background: var(--card); color: var(--brand); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .time-cell { display: flex; flex-direction: column; gap: 4px; } .time-cell-label { font-size: 11px; font-weight: 700; color: var(--sub); text-align: center; }
     .time-box { background: var(--bg); border-radius: 8px; padding: 14px 8px; text-align: center; font-size: 20px; font-weight: 800; color: var(--sub); border: none; cursor: pointer; } .time-box.set { background: var(--brand-light); color: var(--brand); } .time-box.disabled { opacity: 0.3; cursor: not-allowed; }
-    .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .verdict-pill { border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; background: var(--bg); } .verdict-pill .v-label { font-size: 11px; font-weight: 700; color: var(--sub); margin-bottom: 4px; } .verdict-pill .v-icon { font-size: 20px; display: block; margin-bottom: 2px; color: var(--sub); } .verdict-pill.on { background: #d1fae5; } body.dark .verdict-pill.on { background: rgba(6,95,70,0.5); } .verdict-pill.on .v-label, .verdict-pill.on .v-icon { color: #065f46; } body.dark .verdict-pill.on .v-label, body.dark .verdict-pill.on .v-icon { color: #34d399; }
+    .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .verdict-pill { border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; background: var(--bg); } .verdict-pill .v-label { font-size: 11px; font-weight: 700; color: var(--sub); margin-bottom: 4px; } .verdict-pill .v-icon { font-size: 20px; display: block; margin-bottom: 2px; color: var(--sub); } .verdict-pill.on { background: #d1fae5; } .verdict-pill.on .v-label, .verdict-pill.on .v-icon { color: #065f46; }
     .monitor-box { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; cursor: pointer; transition: 0.2s; } .monitor-box.on { background: var(--med-blue); border-color: var(--blue); }
     .monitor-label { font-size: 13px; font-weight: 700; color: var(--sub); } .monitor-box.on .monitor-label { color: var(--med-blue-text); } .monitor-value { font-size: 28px; font-weight: 800; color: var(--sub); } .monitor-box.on .monitor-value { color: var(--blue); }
-    .acc-header { display: flex; align-items: center; padding: 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; font-size: 16px; font-weight: 700; } .acc-header span { color: var(--sub); font-size: 12px; margin-left: auto; } .acc-body { display: none; padding: 16px; background: rgba(242,242,247,0.5); } body.dark .acc-body { background: rgba(0,0,0,0.3); }
+    .acc-header { display: flex; align-items: center; padding: 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; font-size: 16px; font-weight: 700; } .acc-header span { color: var(--sub); font-size: 12px; margin-left: auto; } .acc-body { display: none; padding: 16px; background: rgba(242,242,247,0.5); }
     .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; } .chip { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); } .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
     .sub-panel { background: var(--card); border-radius: 8px; padding: 12px; margin-top: 8px; border: 1px solid var(--line); width: 100%; display: none; } .radio-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; } .radio-btn { flex: 1; text-align: center; padding: 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; } .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
-    .btn-clear { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; } .btn-add-action { background: var(--blue); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    .btn-clear { background: none; border: none; color: var(--red); font-size: 12px; font-weight: 700; cursor: pointer; } .btn-add-action { background: var(--blue); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
     .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: 12px; padding: 18px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 16px; } .submit-btn:disabled { background: var(--sub); cursor: not-allowed; }
     .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none; color: var(--sub); font-size: 11px; font-weight: 700; } .tab-btn.active { color: var(--brand); } .tab-icon { font-size: 24px; line-height: 1; }
     .tab-content { display: none; } .tab-content.active { display: block; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; } .modal-overlay.show { display: flex; } .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 85dvh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); } .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; color: #1c1c1e; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; } .modal-overlay.show { display: flex; } .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 85dvh; overflow-y: auto; } .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
     .dial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: flex-end; justify-content: center; } .dial-overlay.show { display: flex; } .dial-box { background: var(--card); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding-bottom: var(--safe-bot); } .dial-handle { width: 36px; height: 4px; background: var(--line); border-radius: 2px; margin: 10px auto 0; } .dial-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px 10px; font-weight: 700; } .dial-cancel { color: var(--sub); border: none; background: none; font-size: 16px; } .dial-done { color: var(--blue); border: none; background: none; font-size: 16px; }
-    .dial-wheels { display: flex; justify-content: center; align-items: center; gap: 4px; height: 200px; padding: 0 20px; position: relative; } .dial-wheels::before { content: ''; position: absolute; top: 50%; transform: translateY(-50%); left: 20px; right: 20px; height: 40px; background: rgba(118,118,128,0.08); border-radius: 8px; pointer-events: none; } body.dark .dial-wheels::before { background: rgba(255,255,255,0.1); } .dial-wheel { flex: 1; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; } .dial-wheel::-webkit-scrollbar { display: none; } .dial-spacer { height: 80px; } .dial-opt { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: center; transition: 0.1s; }
-    
-    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.95); z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; }
-    body.dark #global-loader { background:rgba(0,0,0,0.85); }
+    .dial-wheels { display: flex; justify-content: center; align-items: center; gap: 4px; height: 200px; padding: 0 20px; position: relative; } .dial-wheels::before { content: ''; position: absolute; top: 50%; transform: translateY(-50%); left: 20px; right: 20px; height: 40px; background: rgba(118,118,128,0.08); border-radius: 8px; pointer-events: none; } .dial-wheel { flex: 1; height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; } .dial-wheel::-webkit-scrollbar { display: none; } .dial-spacer { height: 80px; } .dial-opt { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--sub); scroll-snap-align: center; transition: 0.1s; }
+    #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.95); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .pv-section { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; } .pv-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: 4px; } .pv-ul { list-style: none; padding: 0; margin: 0; } .pv-li { margin-bottom: 4px; position: relative; padding-left: 14px; } .pv-li::before { content: '・'; position: absolute; left: 0; color: var(--sub); font-weight: bold; } .pv-sub-item { position: relative; padding-left: 12px; font-size: 13px; color: var(--sub); } .pv-sub-item::before { content: '└'; position: absolute; left: 0; color: #c4c4c6; }
-    
-    .sg-wrap { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; scrollbar-width: none; }
-    .sg-wrap::-webkit-scrollbar { display: none; }
-    .sg-btn { flex: none; background: var(--bg); border: 1px solid var(--line); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; color: var(--blue); cursor: pointer; white-space: nowrap; transition: 0.2s; }
-    .sg-btn:active { background: var(--med-blue); }
   </style>
 </head>
 <body>
 
-<div id="global-loader"><div class="spinner"></div><div id="loader-msg" style="margin-top:16px; font-weight:800; color:var(--ink);">システム準備中...</div></div>
-
-<div class="offline-bar" id="offline-bar">
-  <span>📶 未送信データが <span id="offline-count">1</span> 件あります</span>
-  <button class="offline-btn" onclick="retryOfflineQueue()">再送信</button>
-</div>
+<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800; color:var(--ink);">システム準備中...</div></div>
 
 <header>
-  <div class="hdr-group">
-    <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <button class="hdr-btn" onclick="toggleDark()" id="btn-dark" style="font-size:18px; margin-left:8px;" title="ダークモード切替">🌙</button>
-  </div>
-  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.6</span></div>
-  <div class="hdr-group"><button class="hdr-btn" onclick="openModal('manual')">📖 取扱説明書</button><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
+  <div class="hdr-group"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
+  <div class="title-box">AW109 EMS<span class="version-tag">現場 v9.1</span></div>
+  <div class="hdr-group"><button class="hdr-btn" onclick="openModal('manual')">📖 取説</button><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
 </header>
 
 <main id="mainScroll">
@@ -87,9 +64,9 @@
     <div class="card">
       <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span class="field-label" style="flex:none; width:80px;">要請番号</span>
-        <input id="v-id" type="tel" inputmode="numeric" placeholder="未入力で自動仮ID" style="flex:1; min-width:100px; text-align:left; background:var(--bg); padding:8px 12px; border-radius:8px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); saveState()">
+        <input id="v-id" type="number" inputmode="numeric" placeholder="未入力で自動仮ID" style="flex:1; min-width:100px; text-align:left; background:var(--bg); padding:8px 12px; border-radius:8px;" oninput="saveState()">
         <label style="font-size:14px; font-weight:500; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;">枝番</label>
-        <input type="tel" id="v-edaban" inputmode="numeric" placeholder="枝" style="display:none; width:60px; text-align:center; background:var(--bg); padding:8px; border-radius:8px;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); saveState()">
+        <input type="number" id="v-edaban" inputmode="numeric" placeholder="枝" style="display:none; width:60px; text-align:center; background:var(--bg); padding:8px; border-radius:8px;" oninput="saveState()">
       </div>
       <div class="inline-field" onclick="document.getElementById('v-date').showPicker()"><span class="field-label">日付</span><input type="date" id="v-date" onchange="saveState()"></div>
       <div class="inline-field"><span class="field-label">出場先</span><select id="v-dest" onchange="saveState()"><option value="">読込中...</option></select></div>
@@ -104,16 +81,6 @@
           <div class="scheme-row-bot"><button class="scheme-btn" onclick="setScheme(this,'Iターン乗り込み')">Iターン乗込</button><button class="scheme-btn" onclick="setScheme(this,'Iターン救急隊のみ')">Iターン救急隊</button></div>
         </div>
       </div>
-      
-      <div class="card-section">
-        <div class="section-label">フライトタイムライン</div>
-        <div class="time-grid" style="margin-bottom: 12px;">
-          <div class="time-cell"><div class="time-cell-label">要請/依頼</div><button class="time-box" id="t-要請時刻・施設間搬送依頼時刻" onclick="openDial('time', '要請時刻・施設間搬送依頼時刻')">--:--</button></div>
-          <div class="time-cell"><div class="time-cell-label">初期離陸</div><button class="time-box" id="t-初期離陸時間" onclick="openDial('time', '初期離陸時間')">--:--</button></div>
-          <div class="time-cell"><div class="time-cell-label">最終着陸</div><button class="time-box" id="t-最終着陸時間" onclick="openDial('time', '最終着陸時間')">--:--</button></div>
-        </div>
-      </div>
-      
       <div class="card-section"><div class="section-label">メインタイムライン <button class="btn-clear" onclick="clearTimeline()">クリア</button></div>
         <div class="time-grid">
           <div class="time-cell"><div class="time-cell-label">接触</div><button class="time-box" id="t-接触" onclick="openDial('time', '接触')">--:--</button></div>
@@ -149,20 +116,14 @@
     <div class="card">
       <div class="card-section"><div class="section-label"><span>🤖 人工呼吸器</span><div><button class="btn-clear" onclick="resetSection('呼吸器')">クリア</button><button class="btn-add-action" onclick="addDynManual('呼吸器')">＋</button></div></div><div id="dyn-呼吸器"></div></div>
     </div>
-    <div class="card">
-      <div class="card-section">
-        <div class="section-label">📝 備考</div>
-        <div class="sg-wrap" id="phrase-box"></div>
-        <textarea id="v-biko" rows="3" placeholder="特記事項（フリー入力）" onchange="st.vals['備考']=this.value; saveState();"></textarea>
-      </div>
-    </div>
+    <div class="card"><div class="card-section"><div class="section-label">📝 備考</div><textarea id="v-biko" rows="3" placeholder="特記事項（フリー入力）" onchange="st.vals['備考']=this.value; saveState();"></textarea></div></div>
   </div>
   
   <div id="tab-send" class="tab-content">
     <div class="card">
       <div class="card-section"><div class="section-label">送信プレビュー</div><div id="error-msg" style="color:var(--brand); font-weight:bold; font-size:13px; margin-bottom:12px; display:none;"></div><div id="preview-box" style="font-size:14px; line-height:1.6;"></div></div>
       <div class="card-section" style="background:var(--bg);">
-        <div class="section-label">✉️ CC送信先</div>
+        <div class="section-label">✉️ 送信先オプション</div>
         <div id="mail-options-box" style="margin-bottom:12px; display:flex; flex-direction:column; gap:8px;"></div>
         <input type="email" id="custom-email" placeholder="手入力 (カンマ区切り可)" style="width:100%; border:1px solid #ccc; background:#fff; text-align:left; border-radius:8px; padding:10px; font-size:14px;">
       </div>
@@ -179,15 +140,15 @@
 <div class="modal-overlay" id="modal-confirm" onclick="if(event.target===this)closeModal('confirm')">
   <div class="modal-box" style="text-align:center;">
     <h3 style="margin-bottom:12px;">🚁 通信環境の確認</h3>
-    <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">アンテナ（電波）が立っていることを確認してください。<br>※エラー時は内部に保存されます</p>
+    <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">アンテナ（電波）が立っていることを確認してください。<br>※不一致時はフライトナース(080-8596-4128)へ連絡</p>
     <div style="display:flex; gap:12px;">
-      <button style="flex:1; padding:14px; border:none; border-radius:8px; background:#e5e5ea; color:var(--ink); font-weight:700;" onclick="closeModal('confirm')">キャンセル</button>
+      <button style="flex:1; padding:14px; border:none; border-radius:8px; background:#e5e5ea; font-weight:700;" onclick="closeModal('confirm')">キャンセル</button>
       <button style="flex:1; padding:14px; border:none; border-radius:8px; background:var(--brand); color:#fff; font-weight:700;" onclick="closeModal('confirm'); submitData();">送信する</button>
     </div>
   </div>
 </div>
-<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')"><div class="modal-box"><h3 style="margin-top:0;">📖 取扱説明書</h3><div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div><button class="modal-close" onclick="closeModal('manual')">閉じる</button></div></div>
-<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')"><div class="modal-box"><h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div><div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div><textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg); color:var(--ink); outline:none;"></textarea><button id="btnQA" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button><button class="modal-close" onclick="closeModal('qa')">閉じる</button></div></div>
+<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')"><div class="modal-box"><h3>📖 取扱説明書</h3><div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div><button class="modal-close" onclick="closeModal('manual')">閉じる</button></div></div>
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')"><div class="modal-box"><h3>❓ Q&A ＆ 要望BOX</h3><div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div><div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div><textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea><button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button><button class="modal-close" onclick="closeModal('qa')">閉じる</button></div></div>
 <div class="dial-overlay" id="dialView" onclick="if(event.target===this)closeDial(false)"><div class="dial-box"><div class="dial-handle"></div><div class="dial-header"><button class="dial-cancel" onclick="closeDial(false)">キャンセル</button><span class="dial-title" id="dialTitle">選択</span><button class="dial-done" onclick="closeDial(true)">完了</button></div><div class="dial-wheels" id="dialWheels"></div></div></div>
 
 <script>
@@ -196,77 +157,10 @@
   const STRUCT = { echo: [{k:"心エコー"},{k:"FAST"},{k:"大血管評価"},{k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},{k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}], other: [{k:"12誘導心電図"}, {k:"血糖測定"},{k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]}, {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"}, {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"}, {k:"胸腔ドレナージ", sub:"drainage"}, {k:"心嚢穿刺・心嚢ドレナージ", sub:"radio", opts:["キット","V1","V2","V3"], skey:"心嚢穿刺・心嚢ドレナージ詳細"}, {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"}, {k:"その他処置", sub:"text"}], line: ["20G","18G","22G","24G","ベニューラ","骨髄針"] };
   let st = { scheme: "", times: {}, vals: {'カフ有無':'あり'}, chips: {}, dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" } };
   
-  function toggleDark() {
-      const isDark = document.body.classList.toggle('dark');
-      document.getElementById('btn-dark').textContent = isDark ? "☀️" : "🌙";
-      localStorage.setItem('aw109_theme', isDark ? 'dark' : 'light');
-  }
-  
-  function addBiko(text) {
-      const el = document.getElementById("v-biko");
-      el.value = el.value ? el.value + "\n" + text : text;
-      st.vals['備考'] = el.value;
-      saveState();
-  }
-
-  function showLoader(msg) { document.getElementById("loader-msg").innerText = msg; document.getElementById("global-loader").style.display = "flex"; }
-  function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
-
   function saveState() { localStorage.setItem("aw109_draft", JSON.stringify({ id: document.getElementById("v-id").value, edaban: document.getElementById("v-edaban").value, chk: document.getElementById("chk-edaban").checked, date: document.getElementById("v-date").value, dest: document.getElementById("v-dest").value, dr: document.getElementById("v-dr").value, drOther: document.getElementById("v-dr-other").value, ns: document.getElementById("v-ns").value, nsOther: document.getElementById("v-ns-other").value, st: st })); }
-  function restoreState() { const str = localStorage.getItem("aw109_draft"); if(!str) return false; try { const draft = JSON.parse(str); if(Object.keys(draft.st.chips).length === 0 && !draft.id && !draft.dest && !draft.st.scheme && Object.keys(draft.st.times).length===0) return false; if(!confirm("未送信のデータがあります。復元しますか？\n「キャンセル」で破棄されます。")) { localStorage.removeItem("aw109_draft"); return false; } document.getElementById("v-id").value = draft.id || ""; document.getElementById("v-edaban").value = draft.edaban || ""; document.getElementById("chk-edaban").checked = draft.chk || false; document.getElementById("v-date").value = draft.date || ""; document.getElementById("v-dest").value = draft.dest || ""; document.getElementById("v-dr").value = draft.dr || ""; document.getElementById("v-dr-other").value = draft.drOther || ""; document.getElementById("v-ns").value = draft.ns || ""; document.getElementById("v-ns-other").value = draft.nsOther || ""; toggleEdaban(); toggleStaff('dr'); toggleStaff('ns'); st = draft.st; if(st.scheme) document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b.innerText.includes(st.scheme.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込")))); ["接触","病着","終了","要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間"].forEach(k => { if(st.times[k]){ document.getElementById(`t-${k}`).textContent = st.times[k]; document.getElementById(`t-${k}`).classList.add("set"); }}); Object.keys(st.chips).forEach(k => { if(st.chips[k]){ document.getElementById(`c-${k}`).classList.add('on'); const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display='block'; const rg = document.getElementById(`rg-${k}`); if(rg) rg.style.display='flex'; }}); Object.keys(st.vals).forEach(k => { const rad = document.getElementById(`r-${k}-${st.vals[k]}`); if(rad){ document.querySelectorAll(`[id^="r-${k}-"]`).forEach(el => el.classList.remove('on')); rad.classList.add('on'); } }); ["酸素","圧迫","呼吸器"].forEach(type => { for(let i=1; i<=st.dyn[type]; i++){ st.dyn[type]--; addDynRaw(type); if(st.times[`【${type}${i}】開始`]) { document.getElementById(`t-【${type}${i}】開始`).textContent = st.times[`【${type}${i}】開始`]; document.getElementById(`t-【${type}${i}】開始`).classList.add("set");} if(st.times[`【${type}${i}】終了`]) { document.getElementById(`t-【${type}${i}】終了`).textContent = st.times[`【${type}${i}】終了`]; document.getElementById(`t-【${type}${i}】終了`).classList.add("set");} if(st.vals[`【${type}${i}】流量`]) { document.getElementById(`v-【${type}${i}】流量`).textContent = st.vals[`【${type}${i}】流量`]+"L"; document.getElementById(`v-【${type}${i}】流量`).classList.add("set");} if(st.vals[`【${type}${i}】FiO2`]) { document.getElementById(`v-【${type}${i}】FiO2`).textContent = st.vals[`【${type}${i}】FiO2`]+"%"; document.getElementById(`v-【${type}${i}】FiO2`).classList.add("set");} }}); if(st.vals['備考']) document.getElementById("v-biko").value = st.vals['備考']; recalcAuto(); return true; } catch(e){ localStorage.removeItem("aw109_draft"); return false; } }
+  function restoreState() { const str = localStorage.getItem("aw109_draft"); if(!str) return false; try { const draft = JSON.parse(str); if(Object.keys(draft.st.chips).length === 0 && !draft.id && !draft.dest && !draft.st.scheme && Object.keys(draft.st.times).length===0) return false; if(!confirm("未送信のデータがあります。復元しますか？\n「キャンセル」で破棄されます。")) { localStorage.removeItem("aw109_draft"); return false; } document.getElementById("v-id").value = draft.id || ""; document.getElementById("v-edaban").value = draft.edaban || ""; document.getElementById("chk-edaban").checked = draft.chk || false; document.getElementById("v-date").value = draft.date || ""; document.getElementById("v-dest").value = draft.dest || ""; document.getElementById("v-dr").value = draft.dr || ""; document.getElementById("v-dr-other").value = draft.drOther || ""; document.getElementById("v-ns").value = draft.ns || ""; document.getElementById("v-ns-other").value = draft.nsOther || ""; toggleEdaban(); toggleStaff('dr'); toggleStaff('ns'); st = draft.st; if(st.scheme) document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b.innerText.includes(st.scheme.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込")))); ["接触","病着","終了"].forEach(k => { if(st.times[k]){ document.getElementById(`t-${k}`).textContent = st.times[k]; document.getElementById(`t-${k}`).classList.add("set"); }}); Object.keys(st.chips).forEach(k => { if(st.chips[k]){ document.getElementById(`c-${k}`).classList.add('on'); const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display='block'; const rg = document.getElementById(`rg-${k}`); if(rg) rg.style.display='flex'; }}); Object.keys(st.vals).forEach(k => { const rad = document.getElementById(`r-${k}-${st.vals[k]}`); if(rad){ document.querySelectorAll(`[id^="r-${k}-"]`).forEach(el => el.classList.remove('on')); rad.classList.add('on'); } }); ["酸素","圧迫","呼吸器"].forEach(type => { for(let i=1; i<=st.dyn[type]; i++){ st.dyn[type]--; addDynRaw(type); if(st.times[`【${type}${i}】開始`]) { document.getElementById(`t-【${type}${i}】開始`).textContent = st.times[`【${type}${i}】開始`]; document.getElementById(`t-【${type}${i}】開始`).classList.add("set");} if(st.times[`【${type}${i}】終了`]) { document.getElementById(`t-【${type}${i}】終了`).textContent = st.times[`【${type}${i}】終了`]; document.getElementById(`t-【${type}${i}】終了`).classList.add("set");} if(st.vals[`【${type}${i}】流量`]) { document.getElementById(`v-【${type}${i}】流量`).textContent = st.vals[`【${type}${i}】流量`]+"L"; document.getElementById(`v-【${type}${i}】流量`).classList.add("set");} if(st.vals[`【${type}${i}】FiO2`]) { document.getElementById(`v-【${type}${i}】FiO2`).textContent = st.vals[`【${type}${i}】FiO2`]+"%"; document.getElementById(`v-【${type}${i}】FiO2`).classList.add("set");} }}); if(st.vals['備考']) document.getElementById("v-biko").value = st.vals['備考']; recalcAuto(); return true; } catch(e){ localStorage.removeItem("aw109_draft"); return false; } }
 
-  window.onload = () => { 
-    if(localStorage.getItem('aw109_theme') === 'dark') toggleDark();
-    buildLines(STRUCT.line, "box-line"); buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); 
-    const restored = restoreState(); if(!restored) { const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; } 
-    checkOfflineQueue();
-    fetchInit(); 
-  };
-  
-  function checkOfflineQueue() {
-      let queue = JSON.parse(localStorage.getItem("aw109_offline_queue") || "[]");
-      const bar = document.getElementById("offline-bar");
-      if(queue.length > 0) {
-          bar.style.display = "flex";
-          document.getElementById("offline-count").innerText = queue.length;
-          document.getElementById("mainScroll").style.marginTop = "calc(56px + 40px + var(--safe-top))";
-      } else {
-          bar.style.display = "none";
-          document.getElementById("mainScroll").style.marginTop = "calc(56px + var(--safe-top))";
-      }
-  }
-
-  async function retryOfflineQueue() {
-      let queue = JSON.parse(localStorage.getItem("aw109_offline_queue") || "[]");
-      if(queue.length === 0) return;
-      
-      showLoader("未送信データを送信中...");
-      let successCount = 0;
-      let newQueue = [];
-      
-      for(let i=0; i<queue.length; i++) {
-          try {
-              const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, cc_emails: queue[i].ccEmails, data:queue[i].payload}), redirect: "follow" });
-              const textRes = await res.text();
-              let jsonRes; 
-              try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes = { status: "success" }; else throw err; }
-              
-              if(jsonRes.status === "success") {
-                  successCount++;
-              } else {
-                  newQueue.push(queue[i]);
-              }
-          } catch(e) {
-              newQueue.push(queue[i]);
-          }
-      }
-      
-      localStorage.setItem("aw109_offline_queue", JSON.stringify(newQueue));
-      hideLoader();
-      alert(`${successCount}件の送信が完了しました。` + (newQueue.length > 0 ? `\n残り${newQueue.length}件は通信エラーにより再保管されました。` : ""));
-      checkOfflineQueue();
-  }
-
+  window.onload = () => { buildLines(STRUCT.line, "box-line"); buildProc(STRUCT.echo, "box-echo"); buildProc(STRUCT.other, "box-other"); const restored = restoreState(); if(!restored) { const d = new Date(); document.getElementById("v-date").value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; } fetchInit(); };
   function fillSel(id, arr, currentVal) { const list = [...arr, "その他"]; document.getElementById(id).innerHTML = `<option value="">選択...</option>` + list.map(v=>`<option value="${v}" ${v===currentVal?'selected':''}>${v}</option>`).join(""); }
   function switchTab(tabId) { ["input","send"].forEach(k => { document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId); document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId); }); window.scrollTo(0,0); }
   function toggleEdaban() { document.getElementById("v-edaban").style.display = document.getElementById("chk-edaban").checked ? "block" : "none"; saveState(); }
@@ -279,9 +173,9 @@
   function buildProc(arr, boxId) {
     let html = ""; arr.forEach(o => { let displayStyle = ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(o.k) ? 'style="display:none;"' : ''; html += `<div style="width:100%;" ${displayStyle}><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
       if(o.sub==="radio") { html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r=> `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`; }
-      else if(o.sub==="text") { html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="フリー入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;color:var(--ink);" onchange="st.vals['${o.k}']=this.value; saveState();"></div>`; }
+      else if(o.sub==="text") { html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="フリー入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['${o.k}']=this.value; saveState();"></div>`; }
       else if(o.sub==="checks") { html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-grid">` + o.opts.map(c=> `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`; }
-      else if(o.sub==="intubation") { html += `<div class="sub-panel" id="s-${o.k}"><div class="inline-field" style="padding:8px 0;"><span class="field-label" style="font-size:14px;">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; saveState();"><option value="">選択</option>${Array.from({length:14},(_,i)=>(8.5-i*0.5).toFixed(1)).map(v=>`<option>${v}</option>`).join("")}</select></div><div class="inline-field" style="padding:8px 0; border-bottom:0.5px solid var(--line);"><span class="field-label" style="font-size:14px;">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn on" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div><div class="inline-field" style="padding:8px 0; border-bottom:none;"><input type="text" placeholder="フリー詳細" style="width:100%;text-align:left;background:var(--bg);color:var(--ink);padding:8px;border:none;border-radius:6px;" onchange="st.vals['気管挿管詳細']=this.value; saveState();"></div></div>`; }
+      else if(o.sub==="intubation") { html += `<div class="sub-panel" id="s-${o.k}"><div class="inline-field" style="padding:8px 0;"><span class="field-label" style="font-size:14px;">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; saveState();"><option value="">選択</option>${Array.from({length:14},(_,i)=>(8.5-i*0.5).toFixed(1)).map(v=>`<option>${v}</option>`).join("")}</select></div><div class="inline-field" style="padding:8px 0; border-bottom:0.5px solid var(--line);"><span class="field-label" style="font-size:14px;">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn on" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div><div class="inline-field" style="padding:8px 0; border-bottom:none;"><input type="text" placeholder="フリー詳細" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['気管挿管詳細']=this.value; saveState();"></div></div>`; }
       else if(o.sub==="drainage") { html += `<div class="sub-panel" id="s-${o.k}"><div style="display:flex; flex-direction:column; gap:8px;">${["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].map(item => `<div style="display:flex; align-items:center; gap:8px;"><div class="chip" id="c-${item}" onclick="tChip('${item}')" style="flex:1;">${item}</div><div class="radio-group" id="rg-${item}" style="display:none; flex:1;"><div class="radio-btn" id="r-${item}本数-1本" onclick="sRad('${item}本数','1本')">1本</div><div class="radio-btn" id="r-${item}本数-2本" onclick="sRad('${item}本数','2本')">2本</div></div></div>`).join("")}</div></div>`; }
       html += `</div>`; }); document.getElementById(boxId).innerHTML = html;
   }
@@ -290,7 +184,7 @@
   function tChip(k) { st.chips[k] = !st.chips[k]; document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]); const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display = st.chips[k] ? 'block' : 'none'; const rg = document.getElementById(`rg-${k}`); if(rg) rg.style.display = st.chips[k] ? 'flex' : 'none'; if(k==="気管挿管" && st.chips[k]) { if(!st.chips["EtCO2"]) tChip("EtCO2"); if(!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料"); } if(k==="血ガス" && st.chips[k]) { if(!st.chips["静脈血採血"]) tChip("静脈血採血"); } if(k==="胸腔ドレナージ" && !st.chips[k]) { ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].forEach(item => { if(st.chips[item]) tChip(item); }); } if(["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(k) && st.chips[k]) { if(!st.vals[`${k}本数`]) sRad(`${k}本数`, '1本'); } saveState(); }
   function sRad(key, val) { st.vals[key] = val; document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => el.classList.remove('on')); document.getElementById(`r-${key}-${val}`).classList.add('on'); saveState(); }
   function setScheme(btn, s) { st.scheme = s; document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); const aBox = document.getElementById("t-病着"); if (s === "Iターン救急隊のみ") { st.times["病着"] = ""; aBox.textContent = "対象外"; aBox.classList.remove("set"); aBox.classList.add("disabled"); } else { aBox.classList.remove("disabled"); if(aBox.textContent === "対象外") aBox.textContent = "--:--"; } recalcAuto(); }
-  function clearTimeline() { ["接触","病着","終了","要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間"].forEach(k => { st.times[k] = ""; document.getElementById(`t-${k}`).textContent = "--:--"; document.getElementById(`t-${k}`).classList.remove("set"); }); const aBox = document.getElementById("t-病着"); if(st.scheme === "Iターン救急隊のみ") { aBox.textContent = "対象外"; aBox.classList.add("disabled"); } recalcAuto(); }
+  function clearTimeline() { ["接触","病着","終了"].forEach(k => { st.times[k] = ""; document.getElementById(`t-${k}`).textContent = "--:--"; document.getElementById(`t-${k}`).classList.remove("set"); }); const aBox = document.getElementById("t-病着"); if(st.scheme === "Iターン救急隊のみ") { aBox.textContent = "対象外"; aBox.classList.add("disabled"); } recalcAuto(); }
   function tCalc(key) { st.calc[key] = !st.calc[key]; if(key==='spo2') { document.getElementById("calc-spo2").classList.toggle('on', st.calc.spo2); document.getElementById("lbl-spo2").textContent = st.calc.spo2 ? "ON" : "OFF"; } else { document.getElementById(`calc-${key}`).classList.toggle('on', st.calc[key]); } saveState(); }
   
   function recalcAuto() {
@@ -304,7 +198,7 @@
   function addDynRaw(type) {
     st.dyn[type]++; const i = st.dyn[type];
     let h = `<div id="div-${type}-${i}" style="border-bottom:0.5px solid var(--line); padding:10px 0; margin-bottom:4px;"><div class="time-grid"><div class="time-cell"><div class="time-cell-label">開始</div><button class="time-box" id="t-【${type}${i}】開始" onclick="openDial('time', '【${type}${i}】開始')">--:--</button></div><div class="time-cell"><div class="time-cell-label">終了</div><button class="time-box" id="t-【${type}${i}】終了" onclick="openDial('time', '【${type}${i}】終了')">--:--</button></div>`;
-    if(type==="酸素" || type==="呼吸器") { h += `<div class="time-cell"><div class="time-cell-label">流量/濃度</div><button class="time-box" style="font-size:14px; padding:6px 2px;" id="v-【${type}${i}】流量" onclick="openDial('flow', '【${type}${i}】流量', 'v-【${type}${i}】流量')">選択</button><button class="time-box" style="font-size:13px; padding:4px 2px; margin-top:4px; background:var(--med-blue); color:var(--blue);" id="v-【${type}${i}】FiO2" onclick="openDial('fio2', '【${type}${i}】FiO2', 'v-【${type}${i}】FiO2')">100%</button></div>`; if(!st.vals[`【${type}${i}】FiO2`]) st.vals[`【${type}${i}】FiO2`] = "100"; }
+    if(type==="酸素" || type==="呼吸器") { h += `<div class="time-cell"><div class="time-cell-label">流量/濃度</div><button class="time-box" style="font-size:14px; padding:6px 2px;" id="v-【${type}${i}】流量" onclick="openDial('flow', '【${type}${i}】流量', 'v-【${type}${i}】流量')">選択</button><button class="time-box" style="font-size:13px; padding:4px 2px; margin-top:4px; background:#e3f2fd; color:var(--blue);" id="v-【${type}${i}】FiO2" onclick="openDial('fio2', '【${type}${i}】FiO2', 'v-【${type}${i}】FiO2')">100%</button></div>`; if(!st.vals[`【${type}${i}】FiO2`]) st.vals[`【${type}${i}】FiO2`] = "100"; }
     h += `</div></div>`; document.getElementById(`dyn-${type}`).insertAdjacentHTML('beforeend', h);
   }
   function addDynManual(type) { if(st.dyn[type] >= 5) return; const isFirst = st.dyn[type] === 0; const preIdx = st.dyn[type]; const preEndVal = preIdx > 0 ? (st.times[`【${type}${preIdx}】終了`] || "") : ""; addDynRaw(type); const nextIdx = st.dyn[type]; const nextKey = `【${type}${nextIdx}】開始`; if(isFirst && st.times["接触"]) { st.times[nextKey] = st.times["接触"]; document.getElementById(`t-${nextKey}`).textContent = st.times["接触"]; document.getElementById(`t-${nextKey}`).classList.add("set"); } else if(preEndVal) { st.times[nextKey] = preEndVal; document.getElementById(`t-${nextKey}`).textContent = preEndVal; document.getElementById(`t-${nextKey}`).classList.add("set"); } saveState(); }
@@ -335,12 +229,11 @@
     if(!id) { const now = new Date(); displayId = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}(仮)`; }
     
     const idStyle = displayId.includes("(仮)") ? 'style="color:var(--brand); font-weight:800;"' : '';
-    
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
 
     let s = `<div class="pv-section"><div class="pv-title">基本情報</div><div><b>要請:</b> <span ${idStyle}>${displayId}</span></div><div><b>日付:</b> ${document.getElementById("v-date").value}</div><div><b>出場先:</b> ${document.getElementById("v-dest").value}</div><div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div><div><b>スキーム:</b> ${st.scheme || "未選択"}</div></div>`;
-    s += `<div class="pv-section"><div class="pv-title">タイムライン＆算定</div><div><b>要請時刻:</b> ${st.times['要請時刻・施設間搬送依頼時刻']||'--:--'} <b>離陸:</b> ${st.times['初期離陸時間']||'--:--'} <b>着陸:</b> ${st.times['最終着陸時間']||'--:--'}</div><div><b>接触:</b> ${st.times['接触']||'--:--'} <b>病着:</b> ${st.times['病着']||(st.scheme.includes('救急隊') ? '対象外' : '--:--')} <b>終了:</b> ${st.times['終了']||'--:--'}</div><div style="margin-top:4px;"><b>往診:</b> ${st.calc.oshin?"◯":"-"} <b>搬送:</b> ${st.calc.hansho?"◯":"-"} <b>長時間:</b> ${st.calc.long?"◯":"-"}</div><div style="margin-top:4px;"><b>モニター:</b> ${st.calc.monitor ? st.calc.mTime : "OFF"} <b>SpO2:</b> ${st.calc.spo2?"◯":"-"}</div></div>`;
+    s += `<div class="pv-section"><div class="pv-title">タイムライン＆算定</div><div><b>接触:</b> ${st.times['接触']||'--:--'} <b>病着:</b> ${st.times['病着']||(st.scheme.includes('救急隊') ? '対象外' : '--:--')} <b>終了:</b> ${st.times['終了']||'--:--'}</div><div style="margin-top:4px;"><b>往診:</b> ${st.calc.oshin?"◯":"-"} <b>搬送:</b> ${st.calc.hansho?"◯":"-"} <b>長時間:</b> ${st.calc.long?"◯":"-"}</div><div style="margin-top:4px;"><b>モニター:</b> ${st.calc.monitor ? st.calc.mTime : "OFF"} <b>SpO2:</b> ${st.calc.spo2?"◯":"-"}</div></div>`;
     s += `<div class="pv-section"><div class="pv-title">処置詳細</div><ul class="pv-ul">`; let hasProc=false;
     Object.keys(st.chips).forEach(k => {
       if(st.chips[k]) {
@@ -372,86 +265,44 @@
     let ccEmails = []; document.querySelectorAll('.mail-cc-check:checked').forEach(cb => ccEmails.push(cb.value));
     const customEmail = document.getElementById("custom-email").value.trim(); if(customEmail) customEmail.split(",").forEach(e => { const c=e.trim(); if(c)ccEmails.push(c); });
 
-    const payload = { "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value, "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme, "要請時刻・施設間搬送依頼時刻": st.times["要請時刻・施設間搬送依頼時刻"]||"", "初期離陸時間": st.times["初期離陸時間"]||"", "最終着陸時間": st.times["最終着陸時間"]||"", "接触": st.times["接触"]||"", "病着": st.times["病着"]||"", "終了": st.times["終了"]||"", "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"", "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"", "心エコー": st.chips["心エコー"]?"◯":"", "FAST": st.chips["FAST"]?"◯":"", "大血管評価": st.chips["大血管評価"]?"◯":"", "頸動脈パルス": st.chips["頸動脈パルス"]? (st.vals["頸動脈パルス"] ? "◯ " + st.vals["頸動脈パルス"] : "◯") : "", "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"", "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", "その他エコー": st.chips["その他エコー"] ? (st.vals["その他エコー"] ? "◯ " + st.vals["その他エコー"] : "◯") : "", "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"", "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"", "気管挿管サイズ": st.chips["気管挿管"] ? (st.vals["気管挿管サイズ"]||"未指定") + (st.vals["気管挿管詳細"] ? " " + st.vals["気管挿管詳細"] : "") : "", "カフ有無": st.chips["気管挿管"]?st.vals["カフ有無"]||"":"", "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"", "除細動パッド": st.chips["除細動パッド"] ? (st.vals["除細動パッド"] ? "◯ " + st.vals["除細動パッド"] : "◯") : "", "胸腔ドレナージ": st.chips["胸腔ドレナージ"]?"◯":"", "1%カルボカイン10ml使用": st.chips["1%カルボカイン10ml使用"] ? "◯ " + (st.vals["1%カルボカイン10ml使用本数"]||"1本") : "", "28Frトロッカー": st.chips["28Frトロッカー"] ? "◯ " + (st.vals["28Frトロッカー本数"]||"1本") : "", "20Frトロッカー": st.chips["20Frトロッカー"] ? "◯ " + (st.vals["20Frトロッカー本数"]||"1本") : "", "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"] ? (st.vals["心嚢穿刺・心嚢ドレナージ詳細"] ? "◯ " + st.vals["心嚢穿刺・心嚢ドレナージ詳細"] : "◯") : "", "開胸心マッサージ": st.chips["開胸心マッサージ"] ? (st.vals["開胸心マッサージ"] ? "◯ " + st.vals["開胸心マッサージ"] : "◯") : "", "心膜開窓": st.chips["心膜開窓"] ? (st.vals["心膜開窓"] ? "◯ " + st.vals["心膜開窓"] : "◯") : "", "その他処置": st.chips["その他処置"] ? (st.vals["その他処置"] ? "◯ " + st.vals["その他処置"] : "◯") : "", "20G": st.chips["20G"]?st.vals["20G本数"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G本数"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G本数"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G本数"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":"" };
+    const payload = { "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value, "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme, "接触": st.times["接触"]||"", "病着": st.times["病着"]||"", "終了": st.times["終了"]||"", "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"", "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"", "心エコー": st.chips["心エコー"]?"◯":"", "FAST": st.chips["FAST"]?"◯":"", "大血管評価": st.chips["大血管評価"]?"◯":"", "頸動脈パルス": st.chips["頸動脈パルス"]? (st.vals["頸動脈パルス"] ? "◯ " + st.vals["頸動脈パルス"] : "◯") : "", "胸部エコー": st.chips["胸部エコー"]?"◯":"", "消化器系エコー": st.chips["消化器系エコー"]?"◯":"", "婦人女性生殖器系エコー": st.chips["婦人女性生殖器系エコー"]?"◯":"", "泌尿器系エコー": st.chips["泌尿器系エコー"]?"◯":"", "その他エコー": st.chips["その他エコー"] ? (st.vals["その他エコー"] ? "◯ " + st.vals["その他エコー"] : "◯") : "", "12誘導心電図": st.chips["12誘導心電図"]?"◯":"", "血糖測定": st.chips["血糖測定"]?"◯":"", "静脈血採血": st.chips["静脈血採血"]?"◯":"", "動脈血採血": st.chips["動脈血採血"]?"◯":"", "気管挿管サイズ": st.chips["気管挿管"] ? (st.vals["気管挿管サイズ"]||"未指定") + (st.vals["気管挿管詳細"] ? " " + st.vals["気管挿管詳細"] : "") : "", "カフ有無": st.chips["気管挿管"]?st.vals["カフ有無"]||"":"", "EtCO2": st.chips["EtCO2"]?"◯":"", "人工呼吸器管理料": st.chips["人工呼吸器管理料"]?"◯":"", "吸引": st.chips["吸引"]?"◯":"", "除細動パッド": st.chips["除細動パッド"] ? (st.vals["除細動パッド"] ? "◯ " + st.vals["除細動パッド"] : "◯") : "", "胸腔ドレナージ": st.chips["胸腔ドレナージ"]?"◯":"", "1%カルボカイン10ml使用": st.chips["1%カルボカイン10ml使用"] ? "◯ " + (st.vals["1%カルボカイン10ml使用本数"]||"1本") : "", "28Frトロッカー": st.chips["28Frトロッカー"] ? "◯ " + (st.vals["28Frトロッカー本数"]||"1本") : "", "20Frトロッカー": st.chips["20Frトロッカー"] ? "◯ " + (st.vals["20Frトロッカー本数"]||"1本") : "", "心嚢穿刺・心嚢ドレナージ": st.chips["心嚢穿刺・心嚢ドレナージ"] ? (st.vals["心嚢穿刺・心嚢ドレナージ詳細"] ? "◯ " + st.vals["心嚢穿刺・心嚢ドレナージ詳細"] : "◯") : "", "開胸心マッサージ": st.chips["開胸心マッサージ"] ? (st.vals["開胸心マッサージ"] ? "◯ " + st.vals["開胸心マッサージ"] : "◯") : "", "心膜開窓": st.chips["心膜開窓"] ? (st.vals["心膜開窓"] ? "◯ " + st.vals["心膜開窓"] : "◯") : "", "その他処置": st.chips["その他処置"] ? (st.vals["その他処置"] ? "◯ " + st.vals["その他処置"] : "◯") : "", "20G": st.chips["20G"]?st.vals["20G本数"]||"1本":"", "18G": st.chips["18G"]?st.vals["18G本数"]||"1本":"", "22G": st.chips["22G"]?st.vals["22G本数"]||"1本":"", "24G": st.chips["24G"]?st.vals["24G本数"]||"1本":"", "ベニューラ": st.chips["ベニューラ"]?st.vals["ベニューラ本数"]||"1本":"", "骨髄針": st.chips["骨髄針"]?st.vals["骨髄針本数"]||"1本":"" };
     for(let i=1; i<=5; i++) { payload[`酸素${i}開始`] = st.times[`【酸素${i}】開始`] || ""; payload[`酸素${i}終了`] = st.times[`【酸素${i}】終了`] || ""; payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || ""; payload[`酸素${i}FiO2`] = st.vals[`【酸素${i}】FiO2`] || ""; payload[`圧迫${i}開始`] = st.times[`【圧迫${i}】開始`] || ""; payload[`圧迫${i}終了`] = st.times[`【圧迫${i}】終了`] || ""; payload[`呼吸器${i}開始`] = st.times[`【呼吸器${i}】開始`] || ""; payload[`呼吸器${i}終了`] = st.times[`【呼吸器${i}】終了`] || ""; payload[`呼吸器${i}FiO2`] = st.vals[`【呼吸器${i}】FiO2`] || ""; }
     payload["備考"] = st.vals["備考"] || "";
 
     const btn = document.getElementById("btnSubmit"); btn.textContent = "送信中... 🚁"; btn.disabled = true;
-    showLoader("事案を送信中...");
-    
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({action:"submit", password:PIN_CODE, cc_emails: ccEmails, data:payload}), redirect: "follow" });
       const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes = { status: "success" }; else throw err; }
-      
-      if(jsonRes.status === "success") { 
-          alert("送信が完了しました！"); 
-          localStorage.removeItem("aw109_draft"); 
-          location.reload(); 
-      } else { 
-          alert("エラー: " + jsonRes.message); 
-          btn.textContent = "送信する 🚁"; btn.disabled = false; 
-      }
-    } catch(e) { 
-        let queue = JSON.parse(localStorage.getItem("aw109_offline_queue") || "[]");
-        queue.push({ payload, ccEmails, timestamp: new Date().getTime() });
-        localStorage.setItem("aw109_offline_queue", JSON.stringify(queue));
-        
-        alert("通信エラーが発生しました。データをオフライン保存しました。電波が良い場所で再送信してください。"); 
-        localStorage.removeItem("aw109_draft");
-        location.reload(); 
-    } finally { 
-        hideLoader(); 
-    }
+      if(jsonRes.status === "success") { alert("送信が完了しました！"); localStorage.removeItem("aw109_draft"); location.reload(); } 
+      else { alert("エラー: " + jsonRes.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
+    } catch(e) { alert("通信エラー\n※不一致時はフライトナース(080-8596-4128)へ。\n" + e.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
   }
 
   async function fetchInit() {
-    const cached = localStorage.getItem("aw109_masters");
-    if (cached) {
-      try {
-        const cData = JSON.parse(cached);
-        fillSel("v-dest", cData.masters.dest, document.getElementById("v-dest").value);
-        fillSel("v-dr", cData.masters.dr, document.getElementById("v-dr").value);
-        fillSel("v-ns", cData.masters.ns, document.getElementById("v-ns").value);
-        renderOptions(cData);
-      } catch(e) {}
-    } else {
-        showLoader("マスタデータを初期同期中...");
-    }
-
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE, app_name:"現場"}), redirect:"follow" });
-      const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manuals:[], masters:{dest:[], dr:[], ns:[], mailOptions:[], phrases:[]}}; else throw err; }
+      const res = await fetch(GAS_API_URL, { method:"POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body:JSON.stringify({action:"fetch_init", password:PIN_CODE}), redirect:"follow" });
+      const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual_client:[], masters:{dest:[], dr:[], ns:[], mailOptions:[]}}; else throw err; }
       if(jsonRes.status === "success") {
-        localStorage.setItem("aw109_masters", JSON.stringify(jsonRes));
-        fillSel("v-dest", jsonRes.masters.dest, document.getElementById("v-dest").value);
-        fillSel("v-dr", jsonRes.masters.dr, document.getElementById("v-dr").value);
-        fillSel("v-ns", jsonRes.masters.ns, document.getElementById("v-ns").value);
-        renderOptions(jsonRes);
+        const curDest = document.getElementById("v-dest").value; fillSel("v-dest", jsonRes.masters.dest, curDest);
+        const curDr = document.getElementById("v-dr").value; fillSel("v-dr", jsonRes.masters.dr, curDr);
+        const curNs = document.getElementById("v-ns").value; fillSel("v-ns", jsonRes.masters.ns, curNs);
+        if (jsonRes.masters.mailOptions.length > 0) document.getElementById("mail-options-box").innerHTML = jsonRes.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:20px;height:20px;"><span>${opt.name}</span></label>`).join("");
+        document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
+        document.getElementById("manual-list").innerHTML = jsonRes.manual_client.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>マニュアルはありません。</p>';
+        document.getElementById("global-loader").style.display = "none";
       }
-    } catch(e) { 
-      console.warn("バックグラウンド通信エラー", e);
-    } finally {
-      hideLoader();
-    }
-  }
-
-  function renderOptions(data) {
-      if (data.masters && data.masters.mailOptions && data.masters.mailOptions.length > 0) document.getElementById("mail-options-box").innerHTML = data.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}" style="width:20px;height:20px;"><span>${opt.name}</span></label>`).join("");
-      if (data.qa) document.getElementById("qa-list").innerHTML = data.qa.map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
-      if (data.manuals) document.getElementById("manual-list").innerHTML = data.manuals.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>取扱説明書はありません。</p>';
-      if (data.masters && data.masters.phrases && data.masters.phrases.length > 0) document.getElementById("phrase-box").innerHTML = data.masters.phrases.map(p => `<button type="button" class="sg-btn" onclick="addBiko('${p}')">${p}</button>`).join("");
+    } catch(e) { document.getElementById("global-loader").style.display = "none"; }
   }
 
   async function submitQA(event) {
     const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
-    showLoader("Q&A送信中...");
     try {
       const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"現場アプリ"}) });
       const textRes = await res.text(); let jsonRes; try{jsonRes=JSON.parse(textRes);}catch(err){if(textRes.includes("Redirect OK"))jsonRes={status:"success"};else throw err;}
       if(jsonRes.status==="success"){ alert("送信しました。"); document.getElementById("qa-input").value=""; closeModal('qa'); } else alert("エラー: "+jsonRes.message);
     } catch(e) { alert("通信エラー"); }
-    finally { hideLoader(); btn.textContent = "送信"; btn.disabled = false; }
+    btn.textContent = "送信"; btn.disabled = false;
   }
 </script>
 </body>
