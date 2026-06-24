@@ -43,7 +43,7 @@
 
   <header>
     <div style="display:flex; gap:12px; align-items:center;"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button><button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button><button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button></div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.1</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.2</span></div>
     <div style="display:flex; gap:12px; align-items:center;"><span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span><button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button></div>
   </header>
 
@@ -82,7 +82,7 @@
       
       <div class="no-print" style="margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
         <p style="font-size:12px; font-weight:bold; color:var(--brand); margin:0 0 8px 0;">※修正する場合は担当者名を入力し「上書き」を押してください。</p>
-        <input type="text" id="edit-person" placeholder="修正担当者の名前(カナ)" style="width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
+        <input type="text" id="edit-person" placeholder="修正担当者の名前(カナ・漢字・英字可)" style="width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
         
         <div id="complete-box" style="border-top:1px solid #ccc; padding-top:12px; margin-top:4px;">
           <p style="font-size:12px; font-weight:bold; color:var(--blue); margin:0 0 8px 0;">✅ カルテ完了処理</p>
@@ -90,7 +90,7 @@
             <label style="font-size:13px; font-weight:bold;"><input type="radio" name="comp-who" value="本人" checked onchange="toggleComp()"> フライトスタッフ本人が入力</label>
             <label style="font-size:13px; font-weight:bold;"><input type="radio" name="comp-who" value="代行" onchange="toggleComp()"> 代行入力</label>
           </div>
-          <input type="text" id="comp-name" placeholder="代行入力者名 (※代行時必須)" style="display:none; width:100%; margin-bottom:12px;">
+          <input type="text" id="comp-name" placeholder="代行入力者名 (※代行時必須)" style="display:none; width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
         </div>
 
         <div style="display:flex; gap:8px; margin-top:12px;">
@@ -129,7 +129,12 @@
     document.getElementById("comp-name").style.display = isDaiko ? "block" : "none";
   }
 
-  function formatKatakana(input) { let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); input.value = val.replace(/[^ァ-ンヴー]/g, ''); }
+  // 🌟 全角カナ強制消去バグの撤廃：ひらがなのみをカタカナに変換し、漢字・英字はそのまま許容する
+  function formatKatakana(input) {
+    let val = input.value;
+    val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); });
+    input.value = val;
+  }
 
   document.getElementById("edit-id").addEventListener("input", (e) => {
     e.target.style.color = e.target.value.includes("(仮)") ? "var(--brand)" : "var(--ink)";
@@ -147,7 +152,7 @@
     document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">検索中...🔍</p>';
     const qId = document.getElementById("q-id").value.trim(); const dStart = document.getElementById("q-date-start").value; const dEnd = document.getElementById("q-date-end").value; const stVal = document.getElementById("q-status").value; const destVal = document.getElementById("q-dest").value; const drVal = document.getElementById("q-dr").value; const nsVal = document.getElementById("q-ns").value;
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_all", password:activePin}) });
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_all", password:activePin}), redirect:"follow" });
       const textRes = await res.text(); let json; try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success",data:[]}; else throw e; }
       if(json.status==="success") {
         allData = json.data;
@@ -228,7 +233,7 @@
     
     const btn = document.getElementById("btn-complete"); btn.innerText = "処理中..."; btn.disabled = true;
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_status", password:activePin, id:id, who:who}) });
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_status", password:activePin, id:id, who:who}), redirect:"follow" });
       const textRes = await res.text(); let json; try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw e; }
       if(json.status==="success") { alert("完了しました！"); closeModal('detail-modal'); fetchData(); } else alert("エラー: " + json.message);
     } catch(e) { alert("通信エラー"); }
@@ -236,13 +241,13 @@
   }
 
   async function saveRecord() {
-    const editor = document.getElementById("edit-person").value.trim(); if(!editor) return alert("「修正担当者の名前(カナ)」を入力してください。");
+    const editor = document.getElementById("edit-person").value.trim(); if(!editor) return alert("「修正担当者の名前」を入力してください。");
     const oldId = document.getElementById("edit-old-id").value; const newId = document.getElementById("edit-id").value.trim();
     if(!confirm(`データを上書きしてよろしいですか？`)) return;
     const btn = event.target; btn.innerText = "保存中..."; btn.disabled = true;
     try {
       const payload = { "要請番号": newId, "日付": document.getElementById("edit-date").value, "出場先": document.getElementById("edit-dest").value, "スキーム選択": document.getElementById("edit-scheme").value, "フライトドクター": document.getElementById("edit-dr").value, "フライトナース": document.getElementById("edit-ns").value, "接触": document.getElementById("edit-contact").value, "病着": document.getElementById("edit-arrival").value, "終了": document.getElementById("edit-end").value };
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_record", password:activePin, old_id:oldId, editor:editor, data:payload}) });
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"update_record", password:activePin, old_id:oldId, editor:editor, data:payload}), redirect:"follow" });
       const textRes = await res.text(); let json; try{ json = JSON.parse(textRes); } catch(e) { if(textRes.includes("Redirect OK")) json={status:"success"}; else throw e; }
       if(json.status==="success") { alert("上書き保存しました。"); closeModal('detail-modal'); document.getElementById("edit-person").value = ""; fetchData(); } else alert("エラー: " + json.message);
     } catch(e) { alert("通信エラー"); }
@@ -259,7 +264,7 @@
 
   async function fetchInit() {
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:activePin}) });
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"fetch_init", password:activePin}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) jsonRes={status:"success", qa:[], manual_admin:[], masters:{dest:[], dr:[], ns:[]}}; else throw err; }
       if(jsonRes.status === "success") {
         if (jsonRes.masters) {
@@ -270,7 +275,7 @@
           const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...jsonRes.masters.dr, ...jsonRes.masters.ns])].map(v=>`<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
           document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
         }
-        document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
+        document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q=>q.status==="◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
         document.getElementById("manual-list").innerHTML = jsonRes.manual_admin.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>マニュアルはありません。</p>';
         document.getElementById("global-loader").style.display = "none";
       }
@@ -281,7 +286,7 @@
     const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:activePin, question:q, source:"検索コンソール"}) });
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:activePin, question:q, source:"検索コンソール"}), redirect:"follow" });
       const textRes = await res.text(); let jsonRes; try{jsonRes=JSON.parse(textRes);}catch(err){if(textRes.includes("Redirect OK"))jsonRes={status:"success"};else throw err;}
       if(jsonRes.status==="success"){ alert("送信しました。"); document.getElementById("qa-input").value=""; closeModal('modal-qa'); } else alert("エラー: "+jsonRes.message);
     } catch(e) { alert("通信エラー"); }
