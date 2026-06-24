@@ -1,338 +1,255 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>月間集計ダッシュボード</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>AW109 EMS Portal</title>
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --ink: #1c1c1e;
+      --sub: #8e8e93;
+      --brand: #d32f2f;
+      --brand-light: #ffebeb;
+      --blue: #007aff;
+      --med-blue: #e3f2fd;
+      --line: rgba(60,60,67,0.12);
+      --safe-top: env(safe-area-inset-top);
+      --safe-bot: env(safe-area-inset-bottom);
+    }
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin="anonymous"></script>
-
-    <style>
-        :root { --bg:#f2f2f7; --card:#ffffff; --ink:#1c1c1e; --sub:#8e8e93; --blue:#007aff; --brand:#d32f2f; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--ink); }
-        ::-webkit-scrollbar { height: 8px; width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        #login-overlay { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
-        #global-loader { position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:9998; flex-direction:column; align-items:center; justify-content:center; display:none; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid #af52de; border-radius: 50%; animation: spin 1s linear infinite; } 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        @media print {
-            @page { size: landscape; margin: 10mm; }
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
-            .no-print { display: none !important; }
-            .print-summary-card { border: 1px solid #ccc !important; box-shadow: none !important; margin-bottom: 8px !important; page-break-inside: avoid; }
-            .print-footer { position: fixed; bottom: 0; right: 0; width: 100%; text-align: right; font-size: 8pt; color: #888; padding-top: 2px; border-top: 1px solid #eee; background: white; }
-        }
-    </style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(20px + var(--safe-bot)); }
+    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    .hdr-group { display: flex; gap: 12px; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+    .version-tag { font-size: 10px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    main { padding: 16px; max-width: 900px; margin: 0 auto; }
+    
+    .alert-box { background: #fff9db; border: 1px solid #ffd43b; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; flex-direction: column; gap: 8px; }
+    .alert-item { font-size: 14px; font-weight: bold; color: #b08800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .alert-item.error { color: var(--brand); }
+    
+    .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .portal-card { background: var(--card); border-radius: 16px; padding: 20px; text-decoration: none; color: var(--ink); display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s ease; border-left: 6px solid var(--sub); }
+    .portal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .card-red { border-left-color: var(--brand); }
+    .card-blue { border-left-color: var(--blue); }
+    .card-green { border-left-color: #10b981; }
+    .card-purple { border-left-color: #8b5cf6; }
+    .card-orange { border-left-color: #f59e0b; }
+    .card-cyan { border-left-color: #0ea5e9; }
+    
+    .icon { font-size: 32px; width: 48px; text-align: center; }
+    .card-body { flex: 1; }
+    .title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .desc { font-size: 12px; color: var(--sub); line-height: 1.4; }
+    
+    .card-section { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .section-label { font-size: 14px; font-weight: 800; color: var(--sub); text-transform: uppercase; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+    .news-item { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 0.5px solid var(--line); }
+    .news-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .news-hdr { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+    .news-date { font-size: 11px; color: var(--sub); font-family: monospace; }
+    .news-cat { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: var(--med-blue); color: var(--blue); }
+    .news-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .news-content { font-size: 13px; color: var(--sub); line-height: 1.5; white-space: pre-wrap; }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans">
-    <div id="root"></div>
+<body>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+<div id="global-loader">
+  <div class="spinner"></div>
+  <div style="margin-top:16px; font-weight:800; color:var(--ink);">システム連携中...</div>
+</div>
 
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-        
-        const Icon = ({ path, className = "w-4 h-4" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
-        );
-        const Icons = {
-            Chart: (props) => <Icon {...props} path={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></>} />,
-            FileSpreadsheet: (props) => <Icon {...props} path={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M10 9v8"/></>} />,
-            Printer: (props) => <Icon {...props} path={<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>} />,
-            Lock: (props) => <Icon {...props} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />,
-            BookOpen: (props) => <Icon {...props} path={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>} />,
-            X: (props) => <Icon {...props} path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
-        };
+<header>
+  <div class="hdr-group"></div>
+  <div class="title-box">AW109 EMS PORTAL</div>
+  <div class="hdr-group">
+    <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
+    <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  </div>
+</header>
 
-        const CATEGORIES = {
-            MISSION: { label: 'ヘリ活動' },
-            CANCEL: { label: 'キャンセル' },
-            INSPECTION: { label: '始業点検' },
-            INSPECTION_END: { label: '終業点検' },
-            ASSISTANT: { label: '補助者業務' },
-            MANAGEMENT: { label: '管理業務' },
-            GROUP: { label: 'グループ業務' },
-            OTHER: { label: 'その他' }
-        };
+<main>
+  <div id="alert-box" class="alert-box"></div>
 
-        const SummaryApp = () => {
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [password, setPassword] = useState('');
-            const [loginError, setLoginError] = useState('');
-            
-            const [isLoading, setIsLoading] = useState(false);
-            const [loadingMsg, setLoadingMsg] = useState('');
-            
-            const [summaryData, setSummaryData] = useState([]);
-            const [masters, setMasters] = useState({ dr: [], ns: [] });
-            const [manuals, setManuals] = useState([]);
-            const [showManual, setShowManual] = useState(false);
-            
-            const [sumMonth, setSumMonth] = useState(new Date().toISOString().substring(0, 7));
-            const [sumDr, setSumDr] = useState("");
-            const [sumNs, setSumNs] = useState("");
-            const [keyword, setKeyword] = useState("");
+  <div class="grid-container">
+    <a href="index.html" class="portal-card card-red">
+      <div class="icon">🚁</div>
+      <div class="card-body">
+        <div class="title">症例登録アプリ</div>
+        <div class="desc">各事案に紐づく実施処置の入力、医療タイムラインの登録を行います。</div>
+      </div>
+    </a>
+    
+    <a href="search.html" class="portal-card card-blue" id="lnk-search">
+      <div class="icon">🔍</div>
+      <div class="card-body">
+        <div class="title">事案検索コンソール</div>
+        <div class="desc">過去データの詳細検索・修正、電子カルテ転記完了処理を管理します。</div>
+      </div>
+    </a>
+    
+    <a href="report.html" class="portal-card card-green">
+      <div class="icon">📝</div>
+      <div class="card-body">
+        <div class="title">業務日報 (浜町日誌)</div>
+        <div class="desc">当直帯の時系列タイムライン文章自動生成・手動修正・印刷を行います。</div>
+      </div>
+    </a>
+    
+    <a href="library.html" class="portal-card card-purple">
+      <div class="icon">📚</div>
+      <div class="card-body">
+        <div class="title">資料集・アーカイブ</div>
+        <div class="desc">ガイドラインや院内自作プロトコルの高速階層ドリルダウン検索（AI分別対応）。</div>
+      </div>
+    </a>
 
-            const handleLogin = async () => {
-                if(!password) return;
-                setLoginError('');
-                setLoadingMsg('データを取得中...');
-                setIsLoading(true);
-                try {
-                    const res = await fetch(GAS_API_URL, {
-                        method: "POST",
-                        headers: {"Content-Type": "text/plain;charset=utf-8"},
-                        body: JSON.stringify({action: "fetch_init", password: password, app_name: "集計"})
-                    });
-                    const json = await res.json();
-                    if (json.status === "success") {
-                        setIsLoggedIn(true);
-                        setMasters({ dr: json.masters.dr || [], ns: json.masters.ns || [] });
-                        setManuals(json.manuals || []);
-                        fetchAllReports(password);
-                    } else {
-                        setLoginError(json.message || 'パスワードが違います');
-                        setIsLoading(false);
-                    }
-                } catch (e) {
-                    setLoginError('通信エラーが発生しました');
-                    setIsLoading(false);
-                }
-            };
+    <a href="summary.html" class="portal-card card-cyan">
+      <div class="icon">📊</div>
+      <div class="card-body">
+        <div class="title">統計ダッシュボード</div>
+        <div class="desc">月次集計、スキーム別件数、主要処置の統計などを確認します。</div>
+      </div>
+    </a>
+    
+    <a href="admin.html" class="portal-card" style="border-left-color:#d48806;">
+      <div class="icon">⚙️</div>
+      <div class="card-body">
+        <div class="title">システム管理コンソール</div>
+        <div class="desc">出場先・医療スタッフ等のマスタ追加、Q&Aの未回答公開処理を行います。</div>
+      </div>
+    </a>
+  </div>
 
-            const handlePasswordChange = (e) => {
-                let val = e.target.value;
-                val = val.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '');
-                setPassword(val);
-            };
+  <div class="card-section">
+    <div class="section-label">📢 最新のお知らせ</div>
+    <div id="news-box" style="font-size:13px; color:var(--sub);">読込中...</div>
+  </div>
+</main>
 
-            const fetchAllReports = async (pass) => {
-                setLoadingMsg('全日誌データを集計中...');
-                try {
-                    const res = await fetch(GAS_API_URL, {
-                        method: "POST",
-                        headers: {"Content-Type": "text/plain;charset=utf-8"},
-                        body: JSON.stringify({action: "fetch_all_reports", password: pass})
-                    });
-                    const json = await res.json();
-                    if (json.status === "success" && json.data) {
-                        setSummaryData(json.data);
-                    }
-                } catch (e) {
-                    alert("集計データの取得に失敗しました。");
-                } finally {
-                    setIsLoading(false);
-                }
-            };
+<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">📖 取扱説明書 (ポータル・共通)</h3>
+    <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
+    <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
+  </div>
+</div>
 
-            const filteredSummary = useMemo(() => {
-                return summaryData.filter(d => {
-                    if (!d.date.startsWith(sumMonth) && !d.date.startsWith(sumMonth.replace('-','/'))) return false;
-                    if (sumDr && d.dr !== sumDr) return false;
-                    if (sumNs && d.ns !== sumNs) return false;
-                    if (keyword) {
-                        const searchTarget = (d.reason + " " + d.eventsStr).toLowerCase();
-                        if (!searchTarget.includes(keyword.toLowerCase())) return false;
-                    }
-                    return true;
-                }).sort((a,b) => new Date(b.date.replace(/\//g,'-')) - new Date(a.date.replace(/\//g,'-')));
-            }, [summaryData, sumMonth, sumDr, sumNs, keyword]);
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
+    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
+  </div>
+</div>
 
-            const summaryStats = useMemo(() => {
-                let totalMission = 0;
-                let totalCancel = 0;
-                let totalDays = filteredSummary.length;
-                filteredSummary.forEach(row => {
-                    try {
-                        const evs = JSON.parse(row.eventsStr);
-                        totalMission += evs.filter(e => e.category === 'mission').length;
-                        totalCancel += evs.filter(e => e.category === 'cancel').length;
-                    } catch(e) {}
-                });
-                return { days: totalDays, mission: totalMission, cancel: totalCancel };
-            }, [filteredSummary]);
+<script>
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 
-            const exportSummaryCSV = () => {
-                if (filteredSummary.length === 0) return alert("出力するデータがありません");
-                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-                let csv = "日付,フライトドクター,フライトナース,待機理由/特記事項,実施件数,キャンセル件数,活動内容詳細\n";
-                filteredSummary.forEach(row => {
-                    let eventsArr = [];
-                    try { eventsArr = JSON.parse(row.eventsStr); } catch(e){}
-                    const mCount = eventsArr.filter(e => e.category === 'mission').length;
-                    const cCount = eventsArr.filter(e => e.category === 'cancel').length;
-                    const eNames = eventsArr.map(e => `[${CATEGORIES[e.category.toUpperCase()]?.label||'他'}] ${e.desc}`).join(" | ");
-                    csv += `"${row.date}","${row.dr}","${row.ns}","${row.reason}",${mCount},${cCount},"${eNames.replace(/"/g, '""')}"\n`;
-                });
-                const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `AW109_Summary_${sumMonth.replace('-','')}.csv`; link.click();
-            };
+  window.onload = () => { fetchInit(); };
 
-            const printDateStr = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-
-            if (!isLoggedIn) {
-                return (
-                    <div id="login-overlay">
-                        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center">
-                            <h2 className="mt-0 text-slate-800 font-bold text-xl mb-2">月間集計ダッシュボード</h2>
-                            <p className="text-slate-500 text-sm mb-6">アクセスコードを入力</p>
-                            <input type="tel" inputMode="numeric" value={password} onChange={handlePasswordChange} onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }} className="w-full mb-6 text-center text-2xl tracking-[0.5em] font-mono border-b-2 border-slate-300 focus:border-purple-500 outline-none pb-2" placeholder="****" />
-                            <button onClick={handleLogin} disabled={isLoading} className="w-full py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 disabled:opacity-50">
-                                {isLoading ? '通信中...' : 'ログイン 🔓'}
-                            </button>
-                            {loginError && <p className="text-red-600 text-xs mt-3 font-bold">{loginError}</p>}
-                        </div>
-                    </div>
-                );
+  async function fetchInit() {
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "fetch_init", app_name: "ポータル" }),
+        redirect: "follow"
+      });
+      const json = await res.json();
+      
+      if (json.status === "success") {
+        const alertBox = document.getElementById("alert-box");
+        if (json.alerts && json.alerts.length > 0) {
+          alertBox.style.display = "flex";
+          alertBox.innerHTML = json.alerts.map(a => {
+            if (a.type === "warning") {
+              return `<div class="alert-item" onclick="location.href='search.html?auto_filter=uncompleted'">` + a.text + `</div>`;
+            } else {
+              return `<div class="alert-item error" onclick="location.href='report.html'">` + a.text + `</div>`;
             }
+          }).join("");
+        } else {
+          alertBox.style.display = "none";
+        }
 
-            return (
-                <div className="p-4 max-w-full mx-auto min-h-screen font-sans print:bg-white print:p-0">
-                    {isLoading && (
-                        <div id="global-loader" style={{display: 'flex'}}>
-                            <div className="spinner mb-4"></div>
-                            <div className="bg-slate-800 text-white font-bold px-6 py-3 rounded-xl shadow-lg text-sm">{loadingMsg}</div>
-                        </div>
-                    )}
+        if (json.news && json.news.length > 0) {
+          document.getElementById("news-box").innerHTML = json.news.map(item => `
+            <div class="news-item">
+              <div class="news-hdr">
+                <span class="news-cat">${item.category}</span>
+                <span class="news-date">${item.date}</span>
+              </div>
+              <div class="news-title">${item.title}</div>
+              <div class="news-content">${item.content}</div>
+            </div>
+          `).join("");
+        } else {
+          document.getElementById("news-box").innerHTML = '<p style="font-size:13px; color:var(--sub);">お知らせはありません。</p>';
+        }
 
-                    {/* Header */}
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 no-print flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <Icons.Chart className="w-5 h-5 text-purple-600" />
-                            <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">月間集計ダッシュボード <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full border border-purple-200">v1.0</span></h1>
-                        </div>
-                        <div className="flex flex-wrap gap-2 items-center">
-                            <a href="portal.html" className="h-10 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors text-xs font-bold"><Icons.Lock className="w-3.5 h-3.5"/> ポータルへ</a>
-                            <button onClick={() => setShowManual(true)} className="h-10 px-3 rounded border border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100 flex items-center gap-1 transition-colors text-xs font-bold"><Icons.BookOpen className="w-3.5 h-3.5"/> 取扱説明書</button>
-                            <div className="h-6 w-px bg-slate-300 mx-1 hidden md:block"></div>
-                            <button onClick={exportSummaryCSV} className="h-10 px-4 rounded bg-green-600 hover:bg-green-700 text-white flex items-center gap-1 transition-colors font-bold text-xs shadow-sm"><Icons.FileSpreadsheet className="w-3.5 h-3.5"/> CSV出力</button>
-                            <button onClick={() => window.print()} className="h-10 px-3 rounded bg-slate-700 hover:bg-slate-800 text-white flex items-center gap-1 transition-colors font-bold text-xs"><Icons.Printer className="w-3.5 h-3.5"/> 印刷</button>
-                        </div>
-                    </div>
+        if (json.qa) {
+          document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+        }
+        
+        const manualsData = json.manuals || [];
+        document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>マニュアルはありません。</p>';
+      }
+    } catch (e) {
+      document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。";
+    } finally {
+      document.getElementById("global-loader").style.display = "none";
+    }
+  }
 
-                    {/* Manual Modal */}
-                    {showManual && (
-                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 no-print" onClick={() => setShowManual(false)}>
-                            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
-                                <div className="flex justify-between items-center mb-4 border-b pb-2">
-                                    <h2 className="text-lg font-bold flex items-center gap-2"><Icons.BookOpen className="w-5 h-5 text-purple-600"/> 取扱説明書</h2>
-                                    <button onClick={() => setShowManual(false)} className="text-slate-400 hover:text-slate-600"><Icons.X className="w-5 h-5"/></button>
-                                </div>
-                                <div className="prose prose-sm text-slate-700">
-                                    {manuals.length > 0 ? manuals.map((m, i) => <div key={i}><h3 className="font-bold text-purple-700 mb-2 border-l-4 border-purple-600 pl-2 mt-4">{m.title}</h3><p className="whitespace-pre-wrap">{m.text}</p></div>) : <p>取扱説明書はありません。</p>}
-                                </div>
-                                <div className="mt-6 text-right">
-                                    <button onClick={() => setShowManual(false)} className="bg-slate-800 text-white font-bold px-8 py-2.5 rounded-lg hover:bg-slate-900">閉じる</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
-                    <div className="print:block">
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 print:border-none print:shadow-none print:p-0">
-                            <h2 className="text-lg font-bold mb-4 hidden print:flex items-center gap-2 text-black">業務日報 月間集計レポート</h2>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 no-print bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">対象月</label>
-                                    <input type="month" value={sumMonth} onChange={e => setSumMonth(e.target.value)} className="w-full border border-slate-300 rounded-md p-2 text-sm font-bold outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">Dr 絞り込み</label>
-                                    <select value={sumDr} onChange={e => setSumDr(e.target.value)} className="w-full border border-slate-300 rounded-md p-2 text-sm font-bold outline-none bg-white">
-                                        <option value="">全て</option>
-                                        {masters.dr.map(d => <option key={d} value={d}>{d}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">Ns 絞り込み</label>
-                                    <select value={sumNs} onChange={e => setSumNs(e.target.value)} className="w-full border border-slate-300 rounded-md p-2 text-sm font-bold outline-none bg-white">
-                                        <option value="">全て</option>
-                                        {masters.ns.map(n => <option key={n} value={n}>{n}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 mb-1">キーワード検索</label>
-                                    <input type="text" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="給油、事案内容など" className="w-full border border-slate-300 rounded-md p-2 text-sm font-bold outline-none" />
-                                </div>
-                            </div>
-
-                            <div className="hidden print:block mb-4 text-sm font-bold border-b border-black pb-2">
-                                抽出条件: [対象月: {sumMonth}] [Dr: {sumDr || '全て'}] [Ns: {sumNs || '全て'}] {keyword ? `[検索: ${keyword}]` : ''}
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4 mb-6 print:mb-4">
-                                <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg text-center print-summary-card">
-                                    <div className="text-xs font-bold text-purple-600 mb-1">登録日数</div>
-                                    <div className="text-2xl font-black text-purple-900">{summaryStats.days} 日</div>
-                                </div>
-                                <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-center print-summary-card">
-                                    <div className="text-xs font-bold text-red-600 mb-1">合計実施件数</div>
-                                    <div className="text-2xl font-black text-red-900">{summaryStats.mission} 件</div>
-                                </div>
-                                <div className="bg-slate-100 border border-slate-300 p-4 rounded-lg text-center print-summary-card">
-                                    <div className="text-xs font-bold text-slate-600 mb-1">キャンセル件数</div>
-                                    <div className="text-2xl font-black text-slate-800">{summaryStats.cancel} 件</div>
-                                </div>
-                            </div>
-                            
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm print-text-xs border-collapse">
-                                    <thead className="bg-slate-100 text-slate-600 text-xs border-y border-slate-300 print:border-y-2 print:border-black">
-                                        <tr>
-                                            <th className="py-3 px-4 font-bold border-r border-slate-200">日付</th>
-                                            <th className="py-3 px-4 font-bold border-r border-slate-200">Dr</th>
-                                            <th className="py-3 px-4 font-bold border-r border-slate-200">Ns</th>
-                                            <th className="py-3 px-4 font-bold border-r border-slate-200 text-center">実施</th>
-                                            <th className="py-3 px-4 font-bold border-r border-slate-200 text-center">Cxl</th>
-                                            <th className="py-3 px-4 font-bold">待機理由 / 備考</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-200 print:divide-slate-300">
-                                        {filteredSummary.length === 0 ? <tr><td colSpan="6" className="text-center py-8 text-slate-500">該当するデータがありません</td></tr> : 
-                                         filteredSummary.map((row, i) => {
-                                            let evs = []; try { evs = JSON.parse(row.eventsStr); } catch(e){}
-                                            const mCount = evs.filter(e => e.category === 'mission').length;
-                                            const cCount = evs.filter(e => e.category === 'cancel').length;
-                                            return (
-                                                <tr key={i} className="hover:bg-slate-50">
-                                                    <td className="py-2 px-4 font-mono font-bold border-r border-slate-100 print:border-slate-300">{row.date}</td>
-                                                    <td className="py-2 px-4 border-r border-slate-100 print:border-slate-300 whitespace-nowrap">{row.dr}</td>
-                                                    <td className="py-2 px-4 border-r border-slate-100 print:border-slate-300 whitespace-nowrap">{row.ns}</td>
-                                                    <td className="py-2 px-4 text-center font-bold text-red-600 border-r border-slate-100 print:border-slate-300 print:text-black">{mCount > 0 ? mCount : '-'}</td>
-                                                    <td className="py-2 px-4 text-center text-slate-500 border-r border-slate-100 print:border-slate-300">{cCount > 0 ? cCount : '-'}</td>
-                                                    <td className="py-2 px-4 text-xs text-slate-600 print:text-black print:text-xs">
-                                                        <div className="font-bold mb-1">{row.reason}</div>
-                                                        <div className="text-[10px] text-slate-400 print:text-slate-600 line-clamp-2 print:line-clamp-none">
-                                                            {evs.map(e => `[${CATEGORIES[e.category.toUpperCase()]?.label||'他'}] ${e.desc}`).join(" | ")}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Print Footer */}
-                    <div className="hidden print:block print-footer">
-                        出力日時: {printDateStr} | AW109 EMS Pre-hospital Information Hub
-                    </div>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<SummaryApp />);
-    </script>
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim();
+    if (!q) return alert("入力してください。");
+    
+    const btn = event.target;
+    btn.textContent = "送信中...";
+    btn.disabled = true;
+    
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "submit_question", question: q, source: "ポータル" }),
+        redirect: "follow"
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        alert("送信しました。");
+        document.getElementById("qa-input").value = "";
+        closeModal('qa');
+      }
+    } catch (e) {
+      alert("通信同期エラーが発生しました。");
+    } finally {
+      btn.textContent = "送信";
+      btn.disabled = false;
+    }
+  }
+</script>
 </body>
 </html>
