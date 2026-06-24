@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AW109 事案検索コンソール</title>
   <style>
-    /* 基本デザイン変数 */
+    /* -------------------------------------------
+       基本デザイン・カラー定義
+    ------------------------------------------- */
     :root {
       --bg: #f2f2f7;
       --brand: #d32f2f;
@@ -117,7 +119,9 @@
       font-weight: bold;
     }
     
-    /* モーダル群 */
+    /* -------------------------------------------
+       モーダル群
+    ------------------------------------------- */
     .modal {
       display: none;
       position: fixed;
@@ -173,7 +177,9 @@
       width: 100%;
     }
     
-    /* オーバーレイ */
+    /* -------------------------------------------
+       オーバーレイ・ローディング
+    ------------------------------------------- */
     #login-overlay {
       position: fixed;
       inset: 0;
@@ -209,6 +215,7 @@
       100% { transform: rotate(360deg); }
     }
     
+    /* 印刷時の設定 */
     @media print {
       body * { visibility: hidden; }
       .modal-box, .modal-box * { visibility: visible; }
@@ -248,7 +255,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.3</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.4</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -282,15 +289,21 @@
         </div>
         <div>
           <label>出場先</label>
-          <select id="q-dest" style="width:100%;"><option value="">読込中...</option></select>
+          <select id="q-dest" style="width:100%;">
+            <option value="">読込中...</option>
+          </select>
         </div>
         <div>
           <label>フライトDr</label>
-          <select id="q-dr" style="width:100%;"><option value="">読込中...</option></select>
+          <select id="q-dr" style="width:100%;">
+            <option value="">読込中...</option>
+          </select>
         </div>
         <div>
           <label>フライトNs</label>
-          <select id="q-ns" style="width:100%;"><option value="">読込中...</option></select>
+          <select id="q-ns" style="width:100%;">
+            <option value="">読込中...</option>
+          </select>
         </div>
       </div>
       
@@ -466,7 +479,7 @@
     document.getElementById("comp-name").style.display = isDaiko ? "block" : "none";
   }
 
-  // 🌟 ひらがなのみをカタカナに変換し、漢字や英字は許容する関数
+  // 漢字・英字は許容し、ひらがなのみをカタカナに変換する関数
   function formatKatakana(input) { 
     let val = input.value; 
     val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); 
@@ -585,7 +598,6 @@
     
     document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
     
-    // 資機材の抽出
     let supply = []; 
     ["20G","18G","22G","24G","ベニューラ","骨髄針","1%カルボカイン10ml使用","28Frトロッカー","20Frトロッカー"].forEach(k => { 
       let v = String(row[k]||""); 
@@ -599,12 +611,10 @@
     
     document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "<span style='color:var(--sub);'>消費資機材なし</span>";
     
-    // カルテ完了状態の判定
     const isDone = (row["ステータス"]||"").includes("完了") && !(row["ステータス"]||"").includes("未完了");
     document.getElementById("btn-complete").style.display = isDone ? "none" : "block";
     document.getElementById("complete-box").style.display = isDone ? "none" : "block";
     
-    // カルテ処理の初期化
     document.querySelector('input[name="comp-who"][value="本人"]').checked = true;
     toggleComp(); 
     document.getElementById("comp-name").value = "";
@@ -750,9 +760,16 @@
           document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
         }
         
-        // 🌟 堅牢設計：バックエンドが統一して返す `manuals` キーのみを厳密に受け取る
+        // 🌟 バックエンド固定キー「manuals」のみで厳密にバインド
         const manualsData = jsonRes.manuals || [];
         document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>マニュアルはありません。</p>';
+        
+        // 🌟 URLパラメータからの「未完了」自動抽出連携ロジック
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('auto_filter') === 'uncompleted') {
+          document.getElementById('q-status').value = '未完了';
+          fetchData(); // 自動で検索を実行
+        }
         
       } else {
         alert("初期設定データの取得に失敗しました。");
