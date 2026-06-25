@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AW109 システム管理</title>
   <style>
+    /* 基本デザイン変数 */
     :root {
       --bg: #f2f2f7;
       --brand: #d32f2f;
@@ -88,6 +89,7 @@
       opacity: 0.8;
     }
     
+    /* オーバーレイ */
     #login-overlay {
       position: fixed;
       inset: 0;
@@ -145,7 +147,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.4</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.5</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -190,6 +192,7 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_ADMIN = "9999"; 
   
+  // オートロック機能
   let lockTime = 600; 
   let timerInterval;
   
@@ -227,6 +230,7 @@
     }
   }
   
+  // 初期データの取得と画面描画
   async function fetchInit() {
     try {
       const res = await fetch(GAS_API_URL, { 
@@ -265,6 +269,7 @@
     }
   }
   
+  // Q&Aの回答を送信
   async function answerQA(qText, textareaId) {
     const ans = document.getElementById(textareaId).value.trim(); 
     if(!ans) return alert("回答を入力してください");
@@ -282,7 +287,7 @@
       const jsonRes = await res.json();
       
       if(jsonRes.status === "success") {
-        fetchInit(); 
+        fetchInit(); // リストを再取得して更新
       } else {
         alert("エラー: " + jsonRes.message);
         document.getElementById("global-loader").style.display = "none";
@@ -293,6 +298,7 @@
     }
   }
   
+  // マスタデータの追加
   async function addMaster() {
     const type = document.getElementById("add-type").value; 
     const val1 = document.getElementById("add-val1").value.trim(); 
@@ -330,10 +336,12 @@
     }
   }
   
+  // マスタ追加画面の入力枠の表示切替
   document.getElementById("add-type").addEventListener('change', (e) => { 
     document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; 
   });
   
+  // 初期状態では値2(メアド)の枠を隠す
   document.getElementById("box-val2").style.display = 'none';
 </script>
 </body>
