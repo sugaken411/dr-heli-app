@@ -34,562 +34,97 @@
       --safe-bot: env(safe-area-inset-bottom);
     }
     
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    body {
-      background: var(--bg);
-      color: var(--ink);
-      -webkit-font-smoothing: antialiased;
-    }
-    
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: calc(56px + var(--safe-top));
-      padding-top: var(--safe-top);
-      padding-left: 16px;
-      padding-right: 16px;
-      background: rgba(242,242,247,0.92);
-      backdrop-filter: blur(20px);
-      border-bottom: 0.5px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 100;
-    }
-    
-    .tab-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: calc(56px + var(--safe-bot));
-      padding-bottom: var(--safe-bot);
-      background: rgba(255,255,255,0.94);
-      backdrop-filter: blur(20px);
-      border-top: 0.5px solid var(--line);
-      display: flex;
-      z-index: 100;
-    }
-    
-    main {
-      margin-top: calc(56px + var(--safe-top));
-      margin-bottom: calc(56px + var(--safe-bot));
-      padding: 16px 16px 24px;
-    }
-    
-    .hdr-group {
-      display: flex;
-      gap: 12px;
-    }
-    
-    .hdr-btn {
-      color: var(--blue);
-      background: none;
-      border: none;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    
-    .title-box {
-      text-align: center;
-      font-weight: 800;
-      font-size: 16px;
-      letter-spacing: 0.5px;
-    }
-    
-    .version-tag {
-      font-size: 10px;
-      color: var(--brand);
-      font-weight: bold;
-      background: var(--brand-light);
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-    
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      overflow: hidden;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    
-    .card-section {
-      padding: 16px;
-      border-bottom: 0.5px solid var(--line);
-    }
-    
-    .card-section:last-child {
-      border-bottom: none;
-    }
-    
-    .section-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--sub);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .inline-field {
-      display: flex;
-      align-items: center;
-      padding: 14px 16px;
-      border-bottom: 0.5px solid var(--line);
-    }
-    
-    .inline-field:last-child {
-      border-bottom: none;
-    }
-    
-    .field-label {
-      font-size: 16px;
-      font-weight: 600;
-      flex: 1;
-    }
-    
-    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="time"] {
-      text-align: right;
-      font-size: 16px;
-      border: none;
-      background: transparent;
-      color: var(--blue);
-      outline: none;
-      flex: 1;
-      margin-left: 10px;
-      font-weight: 600;
-    }
-    
-    input[type="time"] {
-      color: var(--ink);
-      background: var(--bg);
-      padding: 6px 10px;
-      border-radius: 6px;
-      max-width: 110px;
-      text-align: center;
-    }
-    
-    textarea {
-      width: 100%;
-      border: none;
-      font-size: 15px;
-      background: transparent;
-      outline: none;
-      resize: none;
-      color: var(--ink);
-      line-height: 1.5;
-    }
-    
-    .scheme-picker {
-      display: grid;
-      gap: 8px;
-      background: var(--bg);
-      padding: 6px;
-      border-radius: 12px;
-    }
-    
-    .scheme-row-top {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-    }
-    
-    .scheme-row-bot {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-      padding: 0 5%;
-    }
-    
-    .scheme-btn {
-      padding: 10px 4px;
-      border: none;
-      border-radius: 8px;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--sub);
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    
-    .scheme-btn.active {
-      background: var(--card);
-      color: var(--brand);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    
-    .time-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    
-    .time-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    
-    .time-cell-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--sub);
-      text-align: center;
-    }
-    
-    .verdict-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    
-    .verdict-pill {
-      border-radius: 12px;
-      padding: 12px 8px;
-      text-align: center;
-      cursor: pointer;
-      background: var(--bg);
-    }
-    
-    .verdict-pill .v-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--sub);
-      margin-bottom: 4px;
-    }
-    
-    .verdict-pill .v-icon {
-      font-size: 20px;
-      display: block;
-      margin-bottom: 2px;
-      color: var(--sub);
-    }
-    
-    .verdict-pill.on {
-      background: #d1fae5;
-    }
-    
-    .verdict-pill.on .v-label, .verdict-pill.on .v-icon {
-      color: #065f46;
-    }
-    
-    .monitor-box {
-      background: var(--card);
-      border: 2px solid var(--line);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 12px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    
-    .monitor-box.on {
-      background: var(--med-blue);
-      border-color: var(--blue);
-    }
-    
-    .monitor-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--sub);
-    }
-    
-    .monitor-box.on .monitor-label {
-      color: var(--med-blue-text);
-    }
-    
-    .monitor-value {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--sub);
-    }
-    
-    .monitor-box.on .monitor-value {
-      color: var(--blue);
-    }
-    
-    .acc-header {
-      display: flex;
-      align-items: center;
-      padding: 16px;
-      border-bottom: 0.5px solid var(--line);
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 700;
-    }
-    
-    .acc-header span {
-      color: var(--sub);
-      font-size: 12px;
-      margin-left: auto;
-    }
-    
-    .acc-body {
-      display: none;
-      padding: 16px;
-      background: rgba(242,242,247,0.5);
-    }
-    
-    .chip-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    
-    .chip {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 8px 14px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--ink);
-    }
-    
-    .chip.on {
-      background: var(--brand-light);
-      border-color: var(--brand);
-      color: var(--brand);
-    }
-    
-    .sub-panel {
-      background: var(--card);
-      border-radius: 8px;
-      padding: 12px;
-      margin-top: 8px;
-      border: 1px solid var(--line);
-      width: 100%;
-      display: none;
-    }
-    
-    .radio-group {
-      display: flex;
-      gap: 8px;
-      width: 100%;
-      flex-wrap: wrap;
-    }
-    
-    .radio-btn {
-      flex: 1;
-      text-align: center;
-      padding: 8px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--sub);
-      cursor: pointer;
-    }
-    
-    .radio-btn.on {
-      background: var(--brand);
-      color: #fff;
-      border-color: var(--brand);
-    }
-    
-    .btn-clear {
-      background: none;
-      border: none;
-      color: var(--brand);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    
-    .btn-add-action {
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    
-    .submit-btn {
-      width: 100%;
-      background: var(--brand);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 18px;
-      font-size: 18px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 16px;
-    }
-    
-    .submit-btn:disabled {
-      background: var(--sub);
-      cursor: not-allowed;
-    }
-    
-    .tab-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      border: none;
-      background: none;
-      color: var(--sub);
-      font-size: 11px;
-      font-weight: 700;
-    }
-    
-    .tab-btn.active {
-      color: var(--brand);
-    }
-    
-    .tab-icon {
-      font-size: 24px;
-      line-height: 1;
-    }
-    
-    .tab-content {
-      display: none;
-    }
-    
-    .tab-content.active {
-      display: block;
-    }
-    
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 9998;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .modal-overlay.show {
-      display: flex;
-    }
-    
-    .modal-box {
-      background: var(--bg);
-      width: 100%;
-      max-width: 400px;
-      border-radius: 16px;
-      padding: 20px;
-      max-height: 85dvh;
-      overflow-y: auto;
-    }
-    
-    .modal-close {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      margin-top: 16px;
-      background: #e5e5ea;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    
-    #global-loader {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.95);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(0,122,255,0.2);
-      border-top: 4px solid var(--blue);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .pv-section {
-      background: var(--bg);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 12px;
-    }
-    
-    .pv-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--sub);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 4px;
-    }
-    
-    .pv-ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    
-    .pv-li {
-      margin-bottom: 4px;
-      position: relative;
-      padding-left: 14px;
-    }
-    
-    .pv-li::before {
-      content: '・';
-      position: absolute;
-      left: 0;
-      color: var(--sub);
-      font-weight: bold;
-    }
-    
-    .pv-sub-item {
-      position: relative;
-      padding-left: 12px;
-      font-size: 13px;
-      color: var(--sub);
-    }
-    
-    .pv-sub-item::before {
-      content: '└';
-      position: absolute;
-      left: 0;
-      color: #c4c4c6;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    
+    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; }
+    main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; }
+    
+    .hdr-group { display: flex; gap: 12px; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+    .version-tag { font-size: 10px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    
+    .card { background: var(--card); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .card-section { padding: 16px; border-bottom: 0.5px solid var(--line); }
+    .card-section:last-child { border-bottom: none; }
+    .section-label { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
+    .inline-field:last-child { border-bottom: none; }
+    .field-label { font-size: 16px; font-weight: 600; flex: 1; }
+    
+    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="time"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
+    input[type="time"] { color: var(--ink); background: var(--bg); padding: 6px 10px; border-radius: 6px; max-width: 110px; text-align: center; }
+    textarea { width: 100%; border: none; font-size: 15px; background: transparent; outline: none; resize: none; color: var(--ink); line-height: 1.5; }
+    
+    .scheme-picker { display: grid; gap: 8px; background: var(--bg); padding: 6px; border-radius: 12px; }
+    .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .scheme-row-bot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 5%; }
+    .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; transition: 0.2s; }
+    .scheme-btn.active { background: var(--card); color: var(--brand); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    
+    .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .time-cell { display: flex; flex-direction: column; gap: 4px; }
+    .time-cell-label { font-size: 11px; font-weight: 700; color: var(--sub); text-align: center; }
+    
+    .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .verdict-pill { border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; background: var(--bg); }
+    .verdict-pill .v-label { font-size: 11px; font-weight: 700; color: var(--sub); margin-bottom: 4px; }
+    .verdict-pill .v-icon { font-size: 20px; display: block; margin-bottom: 2px; color: var(--sub); }
+    .verdict-pill.on { background: #d1fae5; }
+    .verdict-pill.on .v-label, .verdict-pill.on .v-icon { color: #065f46; }
+    
+    .monitor-box { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; cursor: pointer; transition: 0.2s; }
+    .monitor-box.on { background: var(--med-blue); border-color: var(--blue); }
+    .monitor-label { font-size: 13px; font-weight: 700; color: var(--sub); }
+    .monitor-box.on .monitor-label { color: var(--med-blue-text); }
+    .monitor-value { font-size: 28px; font-weight: 800; color: var(--sub); }
+    .monitor-box.on .monitor-value { color: var(--blue); }
+    
+    .acc-header { display: flex; align-items: center; padding: 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; font-size: 16px; font-weight: 700; }
+    .acc-header span { color: var(--sub); font-size: 12px; margin-left: auto; }
+    .acc-body { display: none; padding: 16px; background: rgba(242,242,247,0.5); }
+    
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); }
+    .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
+    
+    .sub-panel { background: var(--card); border-radius: 8px; padding: 12px; margin-top: 8px; border: 1px solid var(--line); width: 100%; display: none; }
+    .radio-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+    .radio-btn { flex: 1; text-align: center; padding: 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; }
+    .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+    
+    .btn-clear { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-add-action { background: var(--blue); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    
+    .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: 12px; padding: 18px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 16px; }
+    .submit-btn:disabled { background: var(--sub); cursor: not-allowed; }
+    
+    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none; color: var(--sub); font-size: 11px; font-weight: 700; }
+    .tab-btn.active { color: var(--brand); }
+    .tab-icon { font-size: 24px; line-height: 1; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 85dvh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .pv-section { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    .pv-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+    .pv-ul { list-style: none; padding: 0; margin: 0; }
+    .pv-li { margin-bottom: 4px; position: relative; padding-left: 14px; }
+    .pv-li::before { content: '・'; position: absolute; left: 0; color: var(--sub); font-weight: bold; }
+    .pv-sub-item { position: relative; padding-left: 12px; font-size: 13px; color: var(--sub); }
+    .pv-sub-item::before { content: '└'; position: absolute; left: 0; color: #c4c4c6; }
   </style>
 </head>
 <body>
@@ -841,7 +376,38 @@
 </div>
 
 <script>
-  // 画面起動時の全ビルドとデータ同期
+  // ----------------------------------------------------
+  // JS ロジック・ステート管理
+  // ----------------------------------------------------
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  
+  const STRUCT = { 
+    echo: [
+      {k:"心エコー"},{k:"FAST"},{k:"大血管評価"},
+      {k:"頸動脈パルス", sub:"radio", opts:["あり","なし"], skey:"頸動脈パルス"},
+      {k:"胸部エコー"}, {k:"消化器系エコー"}, {k:"婦人女性生殖器系エコー"}, {k:"泌尿器系エコー"}, {k:"その他エコー", sub:"text"}
+    ], 
+    other: [
+      {k:"12誘導心電図"}, {k:"血糖測定"},
+      {k:"血ガス", sub:"checks", opts:["静脈血採血","動脈血採血"]}, 
+      {k:"気管挿管", sub:"intubation"}, {k:"EtCO2"}, {k:"人工呼吸器管理料"}, {k:"吸引"}, 
+      {k:"除細動パッド", sub:"radio", opts:["パッド使用","パッドなし"], skey:"除細動パッド"}, 
+      {k:"胸腔ドレナージ", sub:"drainage"}, 
+      {k:"心嚢穿刺・心嚢ドレナージ", sub:"radio", opts:["キット","V1","V2","V3"], skey:"心嚢穿刺・心嚢ドレナージ詳細"}, 
+      {k:"開胸心マッサージ", sub:"text"}, {k:"心膜開窓", sub:"text"}, {k:"その他処置", sub:"text"}
+    ], 
+    line: ["20G","18G","22G","24G","ベニューラ","骨髄針"] 
+  };
+  
+  let st = { 
+    scheme: "", 
+    times: {}, 
+    vals: {'カフ有無':'あり'}, 
+    chips: {}, 
+    dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, 
+    calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" } 
+  };
+
   window.onload = () => {
     buildLines(STRUCT.line, "box-line");
     buildProc(STRUCT.echo, "box-echo");
@@ -892,7 +458,7 @@
     other.style.display = sel.value === "その他" ? "block" : "none";
     saveState();
   }
-  
+
   function buildProc(arr, boxId) {
     let html = "";
     arr.forEach(o => {
@@ -1104,6 +670,81 @@
     return msg;
   }
 
+  function saveState() { 
+    localStorage.setItem("aw109_draft", JSON.stringify({ 
+      id: document.getElementById("v-id").value, 
+      edaban: document.getElementById("v-edaban").value, 
+      chk: document.getElementById("chk-edaban").checked, 
+      date: document.getElementById("v-date").value, 
+      dest: document.getElementById("v-dest").value, 
+      dr: document.getElementById("v-dr").value, 
+      drOther: document.getElementById("v-dr-other").value, 
+      ns: document.getElementById("v-ns").value, 
+      nsOther: document.getElementById("v-ns-other").value, 
+      st: st 
+    })); 
+  }
+
+  function restoreState() { 
+    const str = localStorage.getItem("aw109_draft"); 
+    if(!str) return false; 
+    try { 
+      const draft = JSON.parse(str); 
+      if(Object.keys(draft.st.chips).length === 0 && !draft.id && !draft.dest && !draft.st.scheme) return false; 
+      if(!confirm("未送信のデータがあります。復元しますか？")) { 
+        localStorage.removeItem("aw109_draft"); 
+        return false; 
+      } 
+      document.getElementById("v-id").value = draft.id || ""; 
+      document.getElementById("v-edaban").value = draft.edaban || ""; 
+      document.getElementById("chk-edaban").checked = draft.chk || false; 
+      document.getElementById("v-date").value = draft.date || ""; 
+      document.getElementById("v-dest").value = draft.dest || ""; 
+      document.getElementById("v-dr").value = draft.dr || ""; 
+      document.getElementById("v-dr-other").value = draft.drOther || ""; 
+      document.getElementById("v-ns").value = draft.ns || ""; 
+      document.getElementById("v-ns-other").value = draft.nsOther || ""; 
+      toggleEdaban(); toggleStaff('dr'); toggleStaff('ns'); 
+      st = draft.st; 
+      if(st.scheme) setSchemeVisual(st.scheme); 
+      ["request","takeoff","landing","接触","病着","終了"].forEach(k => { 
+        if(st.times[k]) document.getElementById(`t-${k}`).value = st.times[k]; 
+      }); 
+      Object.keys(st.chips).forEach(k => { 
+        if(st.chips[k]){ 
+          document.getElementById(`c-${k}`).classList.add('on'); 
+          const sub = document.getElementById(`s-${k}`); 
+          if(sub) sub.style.display='block'; 
+        }
+      }); 
+      Object.keys(st.vals).forEach(k => { 
+        const rad = document.getElementById(`r-${k}-${st.vals[k]}`); 
+        if(rad){ 
+          document.querySelectorAll(`[id^="r-${k}-"]`).forEach(el => el.classList.remove('on')); 
+          rad.classList.add('on'); 
+        } 
+      }); 
+      ["酸素","圧迫","呼吸器"].forEach(type => { 
+        for(let i=1; i<=st.dyn[type]; i++){ 
+          st.dyn[type]--; 
+          addDynRaw(type); 
+          if(st.times[`【${type}${i}】開始`]) document.getElementById(`t-【${type}${i}】開始`).value = st.times[`【${type}${i}】開始`]; 
+          if(st.times[`【${type}${i}】終了`]) document.getElementById(`t-【${type}${i}】終了`).value = st.times[`【${type}${i}】終了`]; 
+          if(st.vals[`【${type}${i}】流量`]) document.getElementById(`v-【${type}${i}】流量`).value = st.vals[`【${type}${i}】流量`]; 
+        }
+      }); 
+      if(st.vals['備考']) document.getElementById("v-biko").value = st.vals['備考']; 
+      recalcAuto(); 
+      return true; 
+    } catch(e){ 
+      localStorage.removeItem("aw109_draft"); 
+      return false; 
+    } 
+  }
+
+  // ----------------------------------------------------
+  // HTML生成・プレビュー・通信処理
+  // ----------------------------------------------------
   function renderPreview() {
     recalcAuto();
     let errs = validateTimeline();
@@ -1120,7 +761,11 @@
     const errBox = document.getElementById("error-msg");
     if (errs.length > 0) {
       errBox.style.display = "block";
-      errBox.innerHTML = "<b>【入力内容を確認してください】</b><br>" + errs.join("<br>");
+      
+      // 🌟 【修正】構文エラーの原因となった HTML 文字列結合をテンプレートリテラルで安全に記述
+      let errHtml = `<b>【入力内容を確認してください】</b><br>`;
+      errHtml += errs.join("<br>");
+      errBox.innerHTML = errHtml;
     } else {
       errBox.style.display = "none";
     }
@@ -1133,30 +778,56 @@
       displayId = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}(仮)`;
     }
     
-    const idStyle = displayId.includes("(仮)") ? 'style="color:var(--brand); font-weight:800;"' : '';
+    const idStyle = displayId.includes("(仮)") ? `style="color:var(--brand); font-weight:800;"` : ``;
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "other"||nsVal==="その他") nsVal = document.getElementById("v-ns-other").value;
 
-    let s = `<div class="pv-section"><div class="pv-title">基本情報</div><div><b>要請番号:</b> <span ${idStyle}>${displayId}</span></div><div><b>日付:</b> ${document.getElementById("v-date").value}</div><div><b>出場先:</b> ${document.getElementById("v-dest").value}</div><div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div><div><b>スキーム:</b> ${st.scheme || "未選択"}</div></div>`;
-    s += `<div class="pv-section"><div class="pv-title">タイムライン</div><div><b>要請:</b> ${t("t-request")||'--:--'} ｜ <b>離陸:</b> ${t("t-takeoff")||'--:--'} ｜ <b>着陸:</b> ${t("t-landing")||'--:--'}</div><div style="margin-top:4px;"><b>接触:</b> ${t("t-接触")||'--:--'} ｜ <b>病着:</b> ${t("t-病着")||(st.scheme==='Iターン救急隊のみ'?'対象外':'--:--')} ｜ <b>終了:</b> ${t("t-終了")||'--:--'}</div></div>`;
-    s += `<div class="pv-section"><div class="pv-title">処置詳細</div><ul class="pv-ul">`;
-    let hasProc = false;
+    // 🌟 【修正】文字列の結合を安全に行うため、全てテンプレートリテラル（バッククォート）で囲む
+    let s = `
+      <div class="pv-section">
+        <div class="pv-title">基本情報</div>
+        <div><b>要請番号:</b> <span ${idStyle}>${displayId}</span></div>
+        <div><b>日付:</b> ${document.getElementById("v-date").value}</div>
+        <div><b>出場先:</b> ${document.getElementById("v-dest").value}</div>
+        <div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div>
+        <div><b>スキーム:</b> ${st.scheme || "未選択"}</div>
+      </div>
+      
+      <div class="pv-section">
+        <div class="pv-title">タイムライン</div>
+        <div><b>要請:</b> ${t("t-request")||'--:--'} ｜ <b>離陸:</b> ${t("t-takeoff")||'--:--'} ｜ <b>着陸:</b> ${t("t-landing")||'--:--'}</div>
+        <div style="margin-top:4px;"><b>接触:</b> ${t("t-接触")||'--:--'} ｜ <b>病着:</b> ${t("t-病着")||(st.scheme==='Iターン救急隊のみ'?'対象外':'--:--')} ｜ <b>終了:</b> ${t("t-終了")||'--:--'}</div>
+      </div>
+      
+      <div class="pv-section">
+        <div class="pv-title">処置詳細</div>
+        <ul class="pv-ul">
+    `;
     
+    let hasProc = false;
     Object.keys(st.chips).forEach(k => {
       if (st.chips[k]) {
         let txt = k;
         if (k === "気管挿管") txt += ` (サイズ:${st.vals['気管挿管サイズ']||"未指定"} / カフ:${st.vals['カフ有無']||""})`;
         else if (["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) txt += ` (${st.vals[k+"本数"]||"1本"})`;
         else if (st.vals[k]) txt += ` (${st.vals[k]})`;
+        
         s += `<li class="pv-li">${txt}</li>`;
         hasProc = true;
       }
     });
     
     if (!hasProc) s += `<li class="pv-li">なし</li>`;
-    s += "</ul></div><div class="pv-section"><div class="pv-title">持続・積算</div><ul class="pv-ul">";
-    let hasDyn = false;
     
+    s += `
+        </ul>
+      </div>
+      <div class="pv-section">
+        <div class="pv-title">持続・積算</div>
+        <ul class="pv-ul">
+    `;
+    
+    let hasDyn = false;
     ["酸素","圧迫","呼吸器"].forEach(type => {
       for (let i = 1; i <= st.dyn[type]; i++) {
         let sT = t(`t-【${type}${i}】開始`), eT = t(`t-【${type}${i}】終了`);
@@ -1169,9 +840,16 @@
     
     if (st.dyn["圧迫"] > 0) s += `<li class="pv-li" style="color:var(--brand);font-weight:bold;">CPR積算: ${document.getElementById("cpr-total").textContent}</li>`;
     if (!hasDyn) s += `<li class="pv-li">なし</li>`;
-    s += "</ul></div>";
+    s += `</ul></div>`;
     
-    if (st.vals['備考']) s += `<div class="pv-section"><div class="pv-title">備考</div><div>${st.vals['備考'].replace(/\n/g, '<br>')}</div></div>`;
+    if (st.vals['備考']) {
+      s += `
+        <div class="pv-section">
+          <div class="pv-title">備考</div>
+          <div>${st.vals['備考'].replace(/\n/g, '<br>')}</div>
+        </div>
+      `;
+    }
     document.getElementById("preview-box").innerHTML = s;
   }
 
@@ -1248,16 +926,14 @@
     }
   }
 
-  // 🌟 全方位防御のフェイルセーフ初期データロード
   async function fetchInit() {
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }),
+        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE }),
         redirect: "follow"
       });
-      
       const jsonRes = await res.json();
       
       if (jsonRes.status === "success") {
@@ -1273,8 +949,8 @@
           document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
         }
         
-        // 🌟 キー名の不一致（manuals / manual_client / manual_admin）を全探索で完全防御
-        const manualsData = jsonRes.manuals || jsonRes.manual_client || jsonRes.manual_admin || [];
+        // 🌟 バックエンドが返す manuals キーに完全に依存する
+        const manualsData = jsonRes.manuals || [];
         document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p><b>■ ${item.title}</b><br>${item.text.replace(/\\n/g,'<br>')}</p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
       } else {
         alert("初期データの読み込みに失敗しました: " + (jsonRes.message || "未知のエラー"));
@@ -1283,7 +959,7 @@
       console.error(e);
       alert("初期通信に失敗しました。電波環境を確認してください。");
     } finally {
-      // 🌟 通信成否に関わらず必ずローディング画面を消去する
+      // 🌟 処理が終わったら必ずローディングを消す
       document.getElementById("global-loader").style.display = "none";
     }
   }
@@ -1292,7 +968,12 @@
     const q = document.getElementById("qa-input").value.trim();
     if (!q) return alert("入力してください。");
     try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "症例登録" }), redirect: "follow" });
+      await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "症例登録" }), 
+        redirect: "follow" 
+      });
       alert("要望を送信しました。");
       document.getElementById("qa-input").value = "";
       closeModal('qa');
