@@ -19,73 +19,105 @@
   </script>
   
   <style>
-    /* CSSは省略せずに記述 */
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --med-blue-text: #1565c0; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
+    :root {
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --ink: #1c1c1e;
+      --sub: #8e8e93;
+      --brand: #d32f2f;
+      --brand-light: #ffebeb;
+      --blue: #007aff;
+      --med-blue: #e3f2fd;
+      --med-blue-text: #1565c0;
+      --line: rgba(60,60,67,0.12);
+      --safe-top: env(safe-area-inset-top);
+      --safe-bot: env(safe-area-inset-bottom);
+    }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; }
     main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; }
+    
     .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
     .version-tag { font-size: 10px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    
     .card { background: var(--card); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
     .card-section { padding: 16px; border-bottom: 0.5px solid var(--line); }
     .card-section:last-child { border-bottom: none; }
     .section-label { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    
     .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
     .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 16px; font-weight: 600; flex: 1; }
+    
     select, input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="time"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
     input[type="time"] { color: var(--ink); background: var(--bg); padding: 6px 10px; border-radius: 6px; max-width: 110px; text-align: center; }
     textarea { width: 100%; border: none; font-size: 15px; background: transparent; outline: none; resize: none; color: var(--ink); line-height: 1.5; }
+    
     .scheme-picker { display: grid; gap: 8px; background: var(--bg); padding: 6px; border-radius: 12px; }
     .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .scheme-row-bot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 5%; }
     .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; transition: 0.2s; }
     .scheme-btn.active { background: var(--card); color: var(--brand); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    
     .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .time-cell { display: flex; flex-direction: column; gap: 4px; }
     .time-cell-label { font-size: 11px; font-weight: 700; color: var(--sub); text-align: center; }
+    
     .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .verdict-pill { border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; background: var(--bg); }
     .verdict-pill .v-label { font-size: 11px; font-weight: 700; color: var(--sub); margin-bottom: 4px; }
     .verdict-pill .v-icon { font-size: 20px; display: block; margin-bottom: 2px; color: var(--sub); }
     .verdict-pill.on { background: #d1fae5; }
     .verdict-pill.on .v-label, .verdict-pill.on .v-icon { color: #065f46; }
+    
     .monitor-box { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; cursor: pointer; transition: 0.2s; }
     .monitor-box.on { background: var(--med-blue); border-color: var(--blue); }
     .monitor-label { font-size: 13px; font-weight: 700; color: var(--sub); }
     .monitor-box.on .monitor-label { color: var(--med-blue-text); }
     .monitor-value { font-size: 28px; font-weight: 800; color: var(--sub); }
     .monitor-box.on .monitor-value { color: var(--blue); }
+    
     .acc-header { display: flex; align-items: center; padding: 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; font-size: 16px; font-weight: 700; }
     .acc-header span { color: var(--sub); font-size: 12px; margin-left: auto; }
     .acc-body { display: none; padding: 16px; background: rgba(242,242,247,0.5); }
+    
     .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); }
     .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
+    
     .sub-panel { background: var(--card); border-radius: 8px; padding: 12px; margin-top: 8px; border: 1px solid var(--line); width: 100%; display: none; }
     .radio-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
     .radio-btn { flex: 1; text-align: center; padding: 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; }
     .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+    
     .btn-clear { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; }
     .btn-add-action { background: var(--blue); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    
     .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: 12px; padding: 18px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 16px; }
     .submit-btn:disabled { background: var(--sub); cursor: not-allowed; }
+    
     .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none; color: var(--sub); font-size: 11px; font-weight: 700; }
     .tab-btn.active { color: var(--brand); }
     .tab-icon { font-size: 24px; line-height: 1; }
+    
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+    
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 85dvh; overflow-y: auto; }
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
     .pv-section { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
     .pv-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
     .pv-ul { list-style: none; padding: 0; margin: 0; }
@@ -99,14 +131,14 @@
 
 <div id="global-loader">
   <div class="spinner"></div>
-  <div style="margin-top:16px; font-weight:800; color:var(--ink);">システム連携中...</div>
+  <div style="margin-top:16px; font-weight:800; color:var(--ink);">システム準備中...</div>
 </div>
 
 <header>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
   </div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v9.7</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v9.8</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -115,6 +147,7 @@
 
 <main id="mainScroll">
   <div id="tab-input" class="tab-content active">
+    
     <div class="card">
       <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span class="field-label" style="font-size: 16px; font-weight: 600; flex: 1;">要請番号</span>
@@ -156,19 +189,39 @@
 
     <div class="card">
       <div class="card-section">
-        <div class="section-label">🛫 航空タイムライン</div>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:600; font-size:15px;">要請/依頼時刻</span>
+        <div class="section-label">🛫 航空タイムライン <button class="btn-clear" onclick="clearAviationTimeline()">クリア</button></div>
+        <div class="time-grid">
+          <div class="time-cell">
+            <div class="time-cell-label">要請/依頼</div>
             <input type="time" id="t-request" onchange="recalcAuto()">
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:600; font-size:15px;">初期離陸時間</span>
+          <div class="time-cell">
+            <div class="time-cell-label">初期離陸</div>
             <input type="time" id="t-takeoff" onchange="recalcAuto()">
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:600; font-size:15px;">最終着陸時間</span>
+          <div class="time-cell">
+            <div class="time-cell-label">最終着陸</div>
             <input type="time" id="t-landing" onchange="recalcAuto()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-section">
+        <div class="section-label">医療活動タイムライン <button class="btn-clear" onclick="clearMedicalTimeline()">クリア</button></div>
+        <div class="time-grid">
+          <div class="time-cell">
+            <div class="time-cell-label">患者接触</div>
+            <input type="time" id="t-接触" onchange="recalcAuto()">
+          </div>
+          <div class="time-cell">
+            <div class="time-cell-label">病院到着</div>
+            <input type="time" id="t-病着" onchange="recalcAuto()">
+          </div>
+          <div class="time-cell">
+            <div class="time-cell-label">活動終了</div>
+            <input type="time" id="t-終了" onchange="recalcAuto()">
           </div>
         </div>
       </div>
@@ -189,25 +242,9 @@
           </div>
         </div>
       </div>
+    </div>
       
-      <div class="card-section">
-        <div class="section-label">医療活動タイムライン <button class="btn-clear" onclick="clearTimeline()">クリア</button></div>
-        <div class="time-grid">
-          <div class="time-cell">
-            <div class="time-cell-label">患者接触</div>
-            <input type="time" id="t-接触" onchange="recalcAuto()">
-          </div>
-          <div class="time-cell">
-            <div class="time-cell-label">病院到着</div>
-            <input type="time" id="t-病着" onchange="recalcAuto()">
-          </div>
-          <div class="time-cell">
-            <div class="time-cell-label">活動終了</div>
-            <input type="time" id="t-終了" onchange="recalcAuto()">
-          </div>
-        </div>
-      </div>
-      
+    <div class="card">
       <div class="card-section">
         <div class="section-label">自動判定 ＆ 算定フラグ</div>
         <div class="verdict-row">
@@ -217,12 +254,10 @@
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
           <div class="monitor-box" id="calc-monitor" onclick="tCalc('monitor')">
-            <span class="monitor-label">モニター<br>算定時間</span>
-            <span class="monitor-value" id="lbl-monitor">--:--</span>
+            <span class="monitor-label">モニター<br>算定時間</span><span class="monitor-value" id="lbl-monitor">--:--</span>
           </div>
           <div class="monitor-box" id="calc-spo2" onclick="tCalc('spo2')" style="flex-direction:column; justify-content:center;">
-            <span class="monitor-label" style="text-align:center; font-size:14px;">SpO2</span>
-            <span class="monitor-value" id="lbl-spo2" style="font-size:16px;">ON</span>
+            <span class="monitor-label" style="text-align:center; font-size:14px;">SpO2</span><span class="monitor-value" id="lbl-spo2" style="font-size:16px;">ON</span>
           </div>
         </div>
       </div>
@@ -346,8 +381,6 @@
   // ----------------------------------------------------
   // JS ロジック・ステート管理 (完全非圧縮版)
   // ----------------------------------------------------
-  
-  // 🔴【重要】ステップ2でコピーした「新しいGASのURL」をここに貼り付けてください！
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   
@@ -507,8 +540,19 @@
     }
   }
   
-  function clearTimeline() {
-    ["request","takeoff","landing","接触","病着","終了"].forEach(k => {
+  // 🌟 航空タイムラインのクリア
+  function clearAviationTimeline() {
+    ["request","takeoff","landing"].forEach(k => {
+      st.times[k] = "";
+      const el = document.getElementById(`t-${k}`);
+      if (el) el.value = "";
+    });
+    recalcAuto();
+  }
+
+  // 🌟 医療活動タイムラインのクリア
+  function clearMedicalTimeline() {
+    ["接触","病着","終了"].forEach(k => {
       st.times[k] = "";
       const el = document.getElementById(`t-${k}`);
       if (el) el.value = "";
@@ -728,9 +772,6 @@
     } 
   }
 
-  // ----------------------------------------------------
-  // HTML生成・プレビュー・通信処理
-  // ----------------------------------------------------
   function renderPreview() {
     recalcAuto();
     let errs = validateTimeline();
@@ -747,8 +788,6 @@
     const errBox = document.getElementById("error-msg");
     if (errs.length > 0) {
       errBox.style.display = "block";
-      
-      // 文字列の結合をテンプレートリテラルで安全に記述
       let errHtml = `<b>【入力内容を確認してください】</b><br>`;
       errHtml += errs.join("<br>");
       errBox.innerHTML = errHtml;
@@ -846,6 +885,25 @@
     document.getElementById("modal-confirm").classList.add("show");
   }
 
+  // 🌟 通信エラー時にシステム管理者へ自動報告する関数
+  async function reportErrorToAdmin(errMsg) {
+    try {
+      await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "submit_question",
+          password: PIN_CODE,
+          question: `【自動エラー検知】\n送信エラーが発生しました。\n・画面: 症例登録アプリ\n・エラー内容: ${errMsg}\n・時間: ${new Date().toLocaleString()}`,
+          source: "システム自動送信"
+        }),
+        redirect: "follow"
+      });
+    } catch (e) {
+      // 報告自体の通信エラーはサイレントに処理（二次エラーの防止）
+    }
+  }
+
   async function submitData() {
     let id = document.getElementById("v-id").value.trim();
     const eda = document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value ? "-" + document.getElementById("v-edaban").value.trim() : "";
@@ -903,7 +961,7 @@
         if(textRes.includes("Redirect OK")) {
           jsonRes = { status: "success" }; 
         } else {
-          throw new Error("JSON Parse Error");
+          throw new Error("JSON Parse Error: " + textRes.substring(0, 50));
         }
       }
       
@@ -912,18 +970,21 @@
         localStorage.removeItem("aw109_draft"); 
         location.reload(); 
       } else { 
-        alert("送信に失敗しました: " + (jsonRes.message || "未知のエラー")); 
+        const errMsg = "送信に失敗しました: " + (jsonRes.message || "未知のエラー");
+        alert(errMsg); 
+        reportErrorToAdmin(errMsg); // 🌟 管理者へ自動報告
         btn.textContent = "送信する 🚁"; 
         btn.disabled = false; 
       }
     } catch(e) { 
-      alert("通信に失敗しました。電波環境の良い場所で再度お試しください。"); 
+      const errMsg = "通信に失敗しました。電波環境の良い場所で再度お試しください。(" + e.message + ")";
+      alert(errMsg); 
+      reportErrorToAdmin(errMsg); // 🌟 管理者へ自動報告
       btn.textContent = "送信する 🚁"; 
       btn.disabled = false; 
     }
   }
 
-  // 🌟 通信エラー（白い幕）の原因を完全除去した強靭なフェッチロジック
   async function fetchInit() {
     try {
       const res = await fetch(GAS_API_URL, { 
@@ -941,7 +1002,7 @@
         if(textRes.includes("Redirect OK")) {
           jsonRes = { status: "success", masters: {dest:[], dr:[], ns:[], mailOptions:[]}, qa: [], manuals: [] };
         } else {
-          throw new Error("通信レスポンスが不正です。GASが新バージョンでデプロイされているか確認してください。");
+          throw new Error("通信レスポンスが不正です。");
         }
       }
       
@@ -974,32 +1035,18 @@
   async function submitQA(event) {
     const q = document.getElementById("qa-input").value.trim(); 
     if (!q) return alert("入力してください。");
-    
     try {
-      const res = await fetch(GAS_API_URL, { 
+      await fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
         body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "症例登録" }), 
         redirect: "follow" 
       });
-      const textRes = await res.text();
-      let jsonRes; 
-      try { 
-        jsonRes = JSON.parse(textRes); 
-      } catch(err) { 
-        if(textRes.includes("Redirect OK")) jsonRes = { status: "success" }; 
-        else throw err; 
-      }
-      
-      if(jsonRes.status === "success") { 
-        alert("要望を送信しました。"); 
-        document.getElementById("qa-input").value = ""; 
-        closeModal('qa'); 
-      } else { 
-        alert("送信エラー: " + jsonRes.message); 
-      }
-    } catch(e) { 
-      alert("送信に失敗しました。"); 
+      alert("要望を送信しました。");
+      document.getElementById("qa-input").value = "";
+      closeModal('qa');
+    } catch(e) {
+      alert("送信に失敗しました。");
     }
   }
 </script>
