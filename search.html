@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AW109 事案検索コンソール</title>
   <style>
-    /* -------------------------------------------
-       基本デザイン・カラー定義
-    ------------------------------------------- */
+    /* 基本デザイン・カラー定義 */
     :root {
       --bg: #f2f2f7;
       --brand: #d32f2f;
@@ -119,9 +117,7 @@
       font-weight: bold;
     }
     
-    /* -------------------------------------------
-       モーダル群
-    ------------------------------------------- */
+    /* モーダル群 */
     .modal {
       display: none;
       position: fixed;
@@ -177,9 +173,7 @@
       width: 100%;
     }
     
-    /* -------------------------------------------
-       オーバーレイ・ローディング
-    ------------------------------------------- */
+    /* オーバーレイ・ローディング */
     #login-overlay {
       position: fixed;
       inset: 0;
@@ -255,7 +249,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.4</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.5</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -479,7 +473,7 @@
     document.getElementById("comp-name").style.display = isDaiko ? "block" : "none";
   }
 
-  // 漢字・英字は許容し、ひらがなのみをカタカナに変換する関数
+  // 🌟 漢字・英字は許容し、ひらがなのみをカタカナに変換する関数
   function formatKatakana(input) { 
     let val = input.value; 
     val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); 
