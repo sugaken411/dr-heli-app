@@ -26,7 +26,7 @@
             .print-only { display: block !important; }
         }
 
-        /* 🌟 ローディング画面用スタイル追加 */
+        /* ローディング画面用スタイル */
         #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid #007aff; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -42,7 +42,9 @@
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 p-4 flex justify-between items-center no-print">
         <div class="flex items-center gap-2">
             <button onclick="location.href='portal.html'" class="mr-4 text-blue-600 font-bold hover:text-blue-800">◀ ポータル</button>
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
             <h1 class="text-xl font-bold text-slate-800">業務日報データ / 活動実績チャート</h1>
         </div>
         <div class="flex gap-2">
@@ -206,7 +208,7 @@
 
 
     <script>
-        // 🌟 GAS API URLの設定
+        // 🌟 ご自身のデプロイ済みGAS API URLに必ず書き換えてください。
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 
         // --- 設定と初期データ ---
@@ -225,7 +227,7 @@
             other: { label: 'その他', color: 'bg-purple-500', prep: 0, rec: 0 }
         };
 
-        // イベントデータを保持する配列（空で初期化）
+        // イベントデータを保持する配列
         let events = [];
         let editingId = null; 
 
@@ -459,6 +461,7 @@
                 let prep = cat.prep;
                 if (idx > 0 && events[idx-1].cont) prep = 0; 
                 
+                // 🌟 活動60分未満で30分、以上で45分の復帰時間自動計算ロジック
                 let rec = 0;
                 if (!ev.cont) {
                     if (cat.rec === 'auto') rec = (dur < 60) ? 30 : 45;
