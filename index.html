@@ -138,7 +138,7 @@
   <div class="hdr-group">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
   </div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v9.8</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v9.9</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -378,9 +378,6 @@
 </div>
 
 <script>
-  // ----------------------------------------------------
-  // JS ロジック・ステート管理 (完全非圧縮版)
-  // ----------------------------------------------------
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   
@@ -540,7 +537,6 @@
     }
   }
   
-  // 🌟 航空タイムラインのクリア
   function clearAviationTimeline() {
     ["request","takeoff","landing"].forEach(k => {
       st.times[k] = "";
@@ -550,7 +546,6 @@
     recalcAuto();
   }
 
-  // 🌟 医療活動タイムラインのクリア
   function clearMedicalTimeline() {
     ["接触","病着","終了"].forEach(k => {
       st.times[k] = "";
@@ -689,7 +684,7 @@
   
   function validateTimeline() {
     let msg = [];
-    const t = (id) => document.getElementById(id).value;
+    const t = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
     const toMin = (val) => { if(!val) return -1; return parseInt(val.split(":")[0])*60 + parseInt(val.split(":")[1]); };
     const req = toMin(t("t-request")), take = toMin(t("t-takeoff")), land = toMin(t("t-landing")), c = toMin(t("t-接触")), a = toMin(t("t-病着")), e = toMin(t("t-終了"));
     
@@ -775,7 +770,8 @@
   function renderPreview() {
     recalcAuto();
     let errs = validateTimeline();
-    const t = (id) => document.getElementById(id).value;
+    // 🌟 バグ修正: null参照回避
+    const t = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
     
     ["酸素","圧迫","呼吸器"].forEach(type => {
       for (let i = 1; i <= st.dyn[type]; i++) {
@@ -885,7 +881,6 @@
     document.getElementById("modal-confirm").classList.add("show");
   }
 
-  // 🌟 通信エラー時にシステム管理者へ自動報告する関数
   async function reportErrorToAdmin(errMsg) {
     try {
       await fetch(GAS_API_URL, {
@@ -899,9 +894,7 @@
         }),
         redirect: "follow"
       });
-    } catch (e) {
-      // 報告自体の通信エラーはサイレントに処理（二次エラーの防止）
-    }
+    } catch (e) {}
   }
 
   async function submitData() {
@@ -926,7 +919,8 @@
       });
     }
 
-    const t = (id) => document.getElementById(id).value;
+    // 🌟 バグ修正: null参照回避
+    const t = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
     const payload = { "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value, "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme, "要請時刻・施設間搬送依頼時刻": t("t-request"), "初期離陸時間": t("t-takeoff"), "最終着陸時間": t("t-landing"), "接触": t("t-接触"), "病着": t("t-病着"), "終了": t("t-終了"), "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"", "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"" };
     
     Object.keys(st.chips).forEach(k => { if(st.chips[k]) payload[k] = "◯"; });
@@ -972,14 +966,14 @@
       } else { 
         const errMsg = "送信に失敗しました: " + (jsonRes.message || "未知のエラー");
         alert(errMsg); 
-        reportErrorToAdmin(errMsg); // 🌟 管理者へ自動報告
+        reportErrorToAdmin(errMsg); 
         btn.textContent = "送信する 🚁"; 
         btn.disabled = false; 
       }
     } catch(e) { 
       const errMsg = "通信に失敗しました。電波環境の良い場所で再度お試しください。(" + e.message + ")";
       alert(errMsg); 
-      reportErrorToAdmin(errMsg); // 🌟 管理者へ自動報告
+      reportErrorToAdmin(errMsg); 
       btn.textContent = "送信する 🚁"; 
       btn.disabled = false; 
     }
