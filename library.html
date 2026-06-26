@@ -11,80 +11,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin="anonymous"></script>
     
     <style>
-        /* 基本カラー・デザイン変数 */
-        :root { 
-            --bg: #f2f2f7; 
-            --card: #ffffff; 
-            --ink: #1c1c1e; 
-            --sub: #8e8e93; 
-            --blue: #007aff; 
-            --brand: #d32f2f; 
-            --line: rgba(60,60,67,0.12);
-        }
+        :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --brand: #d32f2f; --line: rgba(60,60,67,0.12); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--ink); margin: 0; padding: 0; }
         
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--ink); 
-            margin: 0;
-            padding: 0;
-        }
-
-        /* 🌟 ポータル・症例登録と全く同じiOSネイティブ風ヘッダー */
-        header { 
-            position: fixed; 
-            top: 0; left: 0; right: 0; 
-            height: calc(56px + env(safe-area-inset-top)); 
-            padding-top: env(safe-area-inset-top); 
-            padding-left: 16px; padding-right: 16px; 
-            background: rgba(242,242,247,0.92); 
-            backdrop-filter: blur(20px); 
-            border-bottom: 0.5px solid var(--line); 
-            display: flex; align-items: center; justify-content: space-between; 
-            z-index: 100; 
-        }
+        header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
         .hdr-group { display: flex; gap: 12px; }
         .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
         .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
         .version-tag { font-size: 10px; color: var(--blue); font-weight: bold; background: #e3f2fd; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
         
-        /* スクロールバー装飾 */
         ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
-        /* ローディング画面 */
-        #global-loader { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(255,255,255,0.95); 
-            z-index: 9998; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            display: none; 
-        }
+        #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; flex-direction: column; align-items: center; justify-content: center; display: none; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; } 
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .spinner { 
-            width: 40px; 
-            height: 40px; 
-            border: 4px solid rgba(0,122,255,0.2); 
-            border-top: 4px solid var(--blue); 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-        } 
-        
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
-        
-        .card-ui { 
-            background-color: var(--card); 
-            border: 1px solid rgba(60,60,67,0.1); 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
+        .card-ui { background-color: var(--card); border: 1px solid rgba(60,60,67,0.1); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .cat-tab { white-space: nowrap; padding: 10px 18px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
         .cat-tab.active { background-color: var(--blue); color: white; box-shadow: 0 2px 8px rgba(0,122,255,0.3); }
         .cat-tab.inactive { background-color: #e5e5ea; color: #8e8e93; }
@@ -96,7 +40,6 @@
         .doc-card { display: flex; flex-direction: column; padding: 16px; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s; }
         .doc-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .doc-card.needs-review { border-color: #f87171; background-color: #fef2f2; }
-        
         .search-input { background-color: #ffffff; color: #1c1c1e; border: 1px solid #d1d5db; }
     </style>
 </head>
@@ -141,9 +84,7 @@
             const [editDoc, setEditDoc] = useState(null);
 
             useEffect(() => {
-                if (sessionStorage.getItem('aw109_admin') === 'true') {
-                    setIsAdmin(true);
-                }
+                if (sessionStorage.getItem('aw109_admin') === 'true') { setIsAdmin(true); }
                 fetchLibraryData();
             }, []);
 
@@ -169,22 +110,9 @@
                     });
                     const textRes = await res.text(); 
                     let json; 
-                    try { 
-                        json = JSON.parse(textRes); 
-                    } catch(err) { 
-                        if(textRes.includes("Redirect OK")) json = { status: "success", data: [] }; 
-                        else throw err; 
-                    }
-                    if (json.status === "success" && json.data) {
-                        setDocs(json.data);
-                    } else {
-                        alert("データ取得エラーが発生しました。");
-                    }
-                } catch (e) { 
-                    alert("通信エラーが発生しました。"); 
-                } finally { 
-                    setIsLoading(false); 
-                }
+                    try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) json = { status: "success", data: [] }; else throw err; }
+                    if (json.status === "success" && json.data) { setDocs(json.data); } else { alert("データ取得エラーが発生しました。"); }
+                } catch (e) { alert("通信エラーが発生しました。"); } finally { setIsLoading(false); }
             };
 
             const isDocVisible = (d) => {
@@ -200,9 +128,7 @@
             
             const domains = useMemo(() => {
                 let filtered = docs.filter(isDocVisible);
-                if (activeCategory !== "全て") {
-                    filtered = filtered.filter(d => d.category === activeCategory);
-                }
+                if (activeCategory !== "全て") filtered = filtered.filter(d => d.category === activeCategory);
                 const availableDomains = filtered.map(d => d.domain).filter(Boolean);
                 return ["全て", ...new Set(availableDomains)];
             }, [docs, activeCategory, isAdmin]);
@@ -211,13 +137,10 @@
                 let filtered = docs.filter(isDocVisible);
                 if (activeCategory !== "全て") filtered = filtered.filter(d => d.category === activeCategory);
                 if (activeDomain !== "全て") filtered = filtered.filter(d => d.domain === activeDomain);
-                
                 const tags = new Set();
                 filtered.forEach(d => { 
                     if(d.tags) {
-                        d.tags.split(/[,、，]+/).forEach(t => { 
-                            if(t.trim()) tags.add(t.trim()); 
-                        }); 
+                        d.tags.split(/[,、，]+/).forEach(t => { if(t.trim()) tags.add(t.trim()); }); 
                     }
                 });
                 return Array.from(tags).sort();
@@ -226,227 +149,129 @@
             useEffect(() => { setActiveDomain("全て"); setSelectedTags([]); }, [activeCategory]);
             useEffect(() => { setSelectedTags([]); }, [activeDomain]);
 
-            const toggleTag = (tag) => {
-                setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
-            };
+            const toggleTag = (tag) => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
 
             const filteredDocs = useMemo(() => {
                 return docs.filter(d => {
                     if (!isDocVisible(d)) return false;
                     if (activeCategory !== "全て" && d.category !== activeCategory) return false;
                     if (activeDomain !== "全て" && d.domain !== activeDomain) return false;
-                    
                     if (selectedTags.length > 0) {
                         const docTags = d.tags ? d.tags.split(/[,、，]+/).map(t => t.trim()).filter(Boolean) : [];
                         if (!selectedTags.every(st => docTags.includes(st))) return false;
                     }
-                    
                     if (keyword) {
                         const searchTarget = (d.title + " " + (d.desc||"") + " " + d.category + " " + (d.domain||"") + " " + (d.tags||"")).toLowerCase();
                         if (!searchTarget.includes(keyword.toLowerCase())) return false;
                     }
-                    
                     return true;
                 });
             }, [docs, activeCategory, activeDomain, selectedTags, keyword, isAdmin]);
 
-            const openQaModal = (docTitle) => { 
-                setQaTargetDoc(docTitle); 
-                setQaText(`【${docTitle} についての質問】\n`); 
-                setShowQa(true); 
-            };
+            const openQaModal = (docTitle) => { setQaTargetDoc(docTitle); setQaText(`【${docTitle} についての質問】\n`); setShowQa(true); };
             
             const submitQA = async () => {
                 const q = qaText.trim();
                 if(!q || q === `【${qaTargetDoc} についての質問】`) return alert("質問内容を入力してください");
-                
                 setIsLoading(true);
                 try {
                     const res = await fetch(GAS_API_URL, { 
-                        method: "POST", 
-                        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                        body: JSON.stringify({action: "submit_question", password: PIN_CODE, question: q, source: "資料集"}), 
-                        redirect: "follow" 
+                        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                        body: JSON.stringify({action: "submit_question", password: PIN_CODE, question: q, source: "資料集"}), redirect: "follow" 
                     });
                     const textRes = await res.text();
                     let json; try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) json = { status: "success" }; else throw err; }
-                    
-                    if(json.status === "success"){ 
-                        alert("質問を送信しました"); 
-                        setQaText(""); 
-                        setShowQa(false); 
-                    } else {
-                        alert("エラー: " + json.message);
-                    }
-                } catch(e) { 
-                    alert("通信エラーが発生しました"); 
-                } finally { 
-                    setIsLoading(false); 
-                }
+                    if(json.status === "success"){ alert("質問を送信しました"); setQaText(""); setShowQa(false); } else { alert("エラー: " + json.message); }
+                } catch(e) { alert("通信エラーが発生しました"); } finally { setIsLoading(false); }
             };
 
             const saveEdit = async () => {
                 setIsLoading(true);
                 try {
                     const res = await fetch(GAS_API_URL, { 
-                        method: "POST", 
-                        headers: {"Content-Type": "text/plain;charset=utf-8"}, 
-                        body: JSON.stringify({action: "update_library_record", password: ADMIN_CODE, rowIdx: editDoc.rowIdx, editData: editDoc }), 
-                        redirect: "follow" 
+                        method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"}, 
+                        body: JSON.stringify({action: "update_library_record", password: ADMIN_CODE, rowIdx: editDoc.rowIdx, editData: editDoc }), redirect: "follow" 
                     });
                     const textRes = await res.text();
                     let json; try { json = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) json = { status: "success" }; else throw err; }
-                    
-                    if(json.status === "success"){ 
-                        alert("資料データを保存しました"); 
-                        setEditDoc(null); 
-                        fetchLibraryData(); 
-                    } else {
-                        alert("エラー: " + json.message);
-                    }
-                } catch(e) { 
-                    alert("通信エラーが発生しました"); 
-                } finally { 
-                    setIsLoading(false); 
-                }
+                    if(json.status === "success"){ alert("資料データを保存しました"); setEditDoc(null); fetchLibraryData(); } else { alert("エラー: " + json.message); }
+                } catch(e) { alert("通信エラーが発生しました"); } finally { setIsLoading(false); }
             };
 
-            // 🌟 修正：優しくなったURL補完ロジック
+            // 🌟 修正ポイント：厳格なURLチェック（アクセスブロック）
             const handleLinkClick = (url) => {
-                if (!url || url.trim() === "") {
-                    alert("URLが登録されていません。");
-                    return;
-                }
+                if (!url || url.trim() === "") { alert("URLが登録されていません。"); return; }
                 let pUrl = url.trim();
                 
-                // httpから始まっていなければ自動で補完する
                 if (!pUrl.startsWith('http://') && !pUrl.startsWith('https://')) {
-                    pUrl = 'https://' + pUrl;
+                    alert("登録されているURLの形式が不正です。\nスプレッドシートのデータ（I列）に正しいリンクが入力されているか確認してください。\n\n【対象のエラーデータ】: " + pUrl);
+                    return;
                 }
                 
-                // Google Driveの場合はプレビューモードに変換
-                if(pUrl.includes('drive.google.com')) {
-                    pUrl = pUrl.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
-                }
-                
+                if(pUrl.includes('drive.google.com')) pUrl = pUrl.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
                 window.open(pUrl, '_blank', 'noopener,noreferrer');
             };
 
             return (
                 <div>
-                    {/* 🌟 1pxの狂いもなく完全統一された固定ヘッダー */}
                     <header>
-                        <div className="hdr-group">
-                            <button className="hdr-btn" onClick={() => window.location.href='portal.html'}>◀ ポータル</button>
-                        </div>
-                        <div className="title-box">
-                            資料・プロトコル集<span className="version-tag">AI搭載</span>
-                        </div>
-                        <div className="hdr-group">
-                            <button className={`hdr-btn ${isAdmin ? 'text-red-500' : ''}`} onClick={toggleAdmin}>
-                                {isAdmin ? '管理解除' : '管理'}
-                            </button>
-                        </div>
+                        <div className="hdr-group"><button className="hdr-btn" onClick={() => window.location.href='portal.html'}>◀ ポータル</button></div>
+                        <div className="title-box">資料・プロトコル集<span className="version-tag">AI搭載</span></div>
+                        <div className="hdr-group"><button className={`hdr-btn ${isAdmin ? 'text-red-500' : ''}`} onClick={toggleAdmin}>{isAdmin ? '管理解除' : '管理'}</button></div>
                     </header>
 
-                    {/* メインコンテンツ（ヘッダー分の余白を下げる） */}
                     <main className="max-w-4xl mx-auto p-4" style={{ marginTop: 'calc(56px + env(safe-area-inset-top))' }}>
-                        
-                        {/* ローディングオーバーレイ */}
                         <div id="global-loader" style={{display: isLoading ? 'flex' : 'none'}}>
                             <div className="spinner mb-4"></div>
                             <div className="text-blue-600 font-bold px-6 py-3 bg-white rounded-xl shadow-lg text-sm">データを同期中...</div>
                         </div>
                         
-                        {/* 検索・絞り込みエリア */}
                         <div className="card-ui rounded-xl shadow-sm mb-6 p-4 md:p-6 mt-4">
-                            
-                            {/* フリーワード検索 */}
                             <div className="relative w-full mb-6">
                                 <div className="absolute left-4 top-3.5 text-gray-400"><Icons.Search className="w-5 h-5" /></div>
-                                <input 
-                                    type="text" 
-                                    value={keyword} 
-                                    onChange={e => setKeyword(e.target.value)} 
-                                    placeholder="資料名やキーワードで検索..." 
-                                    className="w-full pl-12 pr-4 py-3 rounded-xl text-base font-bold outline-none search-input focus:ring-2 focus:ring-blue-500 shadow-sm"
-                                />
+                                <input type="text" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="資料名やキーワードで検索..." className="w-full pl-12 pr-4 py-3 rounded-xl text-base font-bold outline-none search-input focus:ring-2 focus:ring-blue-500 shadow-sm" />
                             </div>
                             
-                            {/* 1. 大項目タブ */}
                             <div className="mb-6">
-                                <div className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">
-                                    <Icons.Folder className="w-4 h-4"/> 1. 大項目（資料の種類）
-                                </div>
+                                <div className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1"><Icons.Folder className="w-4 h-4"/> 1. 大項目（資料の種類）</div>
                                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                     {categories.map(cat => (
-                                        <button 
-                                            key={cat} 
-                                            onClick={() => setActiveCategory(cat)} 
-                                            className={`cat-tab shadow-sm ${activeCategory === cat ? 'active' : 'inactive'}`}
-                                        >
-                                            {cat}
-                                        </button>
+                                        <button key={cat} onClick={() => setActiveCategory(cat)} className={`cat-tab shadow-sm ${activeCategory === cat ? 'active' : 'inactive'}`}>{cat}</button>
                                     ))}
                                 </div>
                             </div>
                             
-                            {/* 2. 中項目 & 3. タグ エリア */}
                             <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                                 <div className="flex flex-col md:flex-row md:items-start gap-6">
-                                    
                                     <div className="flex-1">
-                                        <div className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">
-                                            <Icons.Filter className="w-3 h-3"/> 2. 中項目（対象領域）
-                                        </div>
-                                        <select 
-                                            value={activeDomain} 
-                                            onChange={e => setActiveDomain(e.target.value)} 
-                                            className="w-full px-4 py-2.5 rounded-lg text-sm font-bold outline-none search-input cursor-pointer appearance-none shadow-sm"
-                                        >
+                                        <div className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1"><Icons.Filter className="w-3 h-3"/> 2. 中項目（対象領域）</div>
+                                        <select value={activeDomain} onChange={e => setActiveDomain(e.target.value)} className="w-full px-4 py-2.5 rounded-lg text-sm font-bold outline-none search-input cursor-pointer appearance-none shadow-sm">
                                             {domains.map(d => <option key={d} value={d}>{d === "全て" ? "🌐 全ての中項目" : d}</option>)}
                                         </select>
                                     </div>
-                                    
                                     {availableTags.length > 0 && (
                                         <div className="flex-[2]">
-                                            <div className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">
-                                                <Icons.Hash className="w-3 h-3"/> 3. キーワード（タグ複数選択可）
-                                            </div>
+                                            <div className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1"><Icons.Hash className="w-3 h-3"/> 3. キーワード（タグ複数選択可）</div>
                                             <div className="flex flex-wrap gap-2">
                                                 {availableTags.map(tag => (
-                                                    <button 
-                                                        key={tag} 
-                                                        onClick={() => toggleTag(tag)} 
-                                                        className={`tag-pill shadow-sm ${selectedTags.includes(tag) ? 'active' : 'inactive'}`}
-                                                    >
-                                                        #{tag}
-                                                    </button>
+                                                    <button key={tag} onClick={() => toggleTag(tag)} className={`tag-pill shadow-sm ${selectedTags.includes(tag) ? 'active' : 'inactive'}`}>#{tag}</button>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
-                                    
                                 </div>
                             </div>
                         </div>
                         
-                        {/* 検索結果（資料カード）一覧 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {filteredDocs.length === 0 ? (
-                                <div className="col-span-full text-center py-12 text-gray-500 font-bold bg-white rounded-xl border border-gray-200 shadow-sm">
-                                    条件に一致する資料が見つかりません。
-                                </div>
+                                <div className="col-span-full text-center py-12 text-gray-500 font-bold bg-white rounded-xl border border-gray-200 shadow-sm">条件に一致する資料が見つかりません。</div>
                             ) : (
                                 filteredDocs.map((doc, i) => (
                                     <div key={i} className={`card-ui doc-card relative overflow-hidden ${doc.status === "要確認" ? "needs-review" : ""}`}>
-                                        {/* 右上の中項目バッジ */}
                                         {doc.domain && (
-                                            <div className={`absolute top-0 right-0 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg opacity-90 ${doc.status==="要確認"?'bg-red-500':'bg-blue-500'}`}>
-                                                {doc.domain}
-                                            </div>
+                                            <div className={`absolute top-0 right-0 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg opacity-90 ${doc.status==="要確認"?'bg-red-500':'bg-blue-500'}`}>{doc.domain}</div>
                                         )}
-                                        
                                         <div className="flex items-center justify-between mb-2 mt-1 pr-12">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-bold bg-gray-200 text-gray-700 px-2 py-1 rounded">{doc.category}</span>
@@ -456,28 +281,21 @@
                                         </div>
                                         
                                         <h3 className="font-bold text-lg mb-1 leading-tight flex items-start gap-2" style={{color: '#1c1c1e'}}>
-                                            <Icons.FileText className="w-5 h-5 text-blue-500 mt-0.5 shrink-0"/>
-                                            <span>{doc.title}</span>
+                                            <Icons.FileText className="w-5 h-5 text-blue-500 mt-0.5 shrink-0"/><span>{doc.title}</span>
                                         </h3>
                                         
                                         {doc.tags && (
                                             <div className="flex flex-wrap gap-1 mt-1 mb-2">
                                                 {doc.tags.split(/[,、，]+/).map(t => t.trim()).filter(Boolean).map(t => (
-                                                    <span key={t} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
-                                                        #{t}
-                                                    </span>
+                                                    <span key={t} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">#{t}</span>
                                                 ))}
                                             </div>
                                         )}
                                         
-                                        <p className="text-sm text-gray-600 mb-4 flex-1 whitespace-pre-wrap line-clamp-3">
-                                            {doc.desc || "説明はありません"}
-                                        </p>
+                                        <p className="text-sm text-gray-600 mb-4 flex-1 whitespace-pre-wrap line-clamp-3">{doc.desc || "説明はありません"}</p>
                                         
                                         {isAdmin && doc.status === "要確認" && doc.aiReason && (
-                                            <div className="text-[11px] bg-red-100 text-red-800 p-2 rounded mb-3 border border-red-200">
-                                                <strong>AIのコメント:</strong> {doc.aiReason}
-                                            </div>
+                                            <div className="text-[11px] bg-red-100 text-red-800 p-2 rounded mb-3 border border-red-200"><strong>AIのコメント:</strong> {doc.aiReason}</div>
                                         )}
                                         
                                         <div className="flex gap-2 mt-auto pt-4 border-t border-gray-100">
@@ -498,41 +316,33 @@
                             )}
                         </div>
 
-                        {/* 管理者用：資料の事後編集モーダル */}
                         {isAdmin && editDoc && (
                             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setEditDoc(null)}>
                                 <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                                     <h2 className="text-lg font-bold mb-4 border-b pb-2 flex items-center gap-2" style={{color: '#1c1c1e'}}>
                                         <Icons.Edit className="w-5 h-5"/> 資料の事後編集
                                     </h2>
-                                    
                                     <label className="block text-xs font-bold text-gray-500 mb-1">タイトル</label>
                                     <input type="text" className="w-full p-2 mb-3 rounded border search-input" value={editDoc.title} onChange={e=>setEditDoc({...editDoc, title: e.target.value})} />
-                                    
                                     <label className="block text-xs font-bold text-gray-500 mb-1">大分類（種類）</label>
                                     <select className="w-full p-2 mb-3 rounded border search-input" value={editDoc.categoryRaw} onChange={e=>setEditDoc({...editDoc, categoryRaw: e.target.value})}>
                                         {categoriesList.map(c => <option key={c} value={c}>{c}</option>)}
                                     </select>
-                                    
                                     <label className="block text-xs font-bold text-gray-500 mb-1">中分類（対象領域）</label>
                                     <select className="w-full p-2 mb-3 rounded border search-input" value={editDoc.domain} onChange={e=>setEditDoc({...editDoc, domain: e.target.value})}>
                                         <option value="">未選択</option>
                                         {domainsList.map(d => <option key={d} value={d}>{d}</option>)}
                                     </select>
-                                    
                                     <label className="block text-xs font-bold text-gray-500 mb-1">タグ (カンマ区切り)</label>
                                     <input type="text" className="w-full p-2 mb-3 rounded border search-input" value={editDoc.tags} onChange={e=>setEditDoc({...editDoc, tags: e.target.value})} />
-                                    
                                     <label className="block text-xs font-bold text-gray-500 mb-1">概要・特記事項</label>
                                     <textarea rows="3" className="w-full p-2 mb-3 rounded border search-input" value={editDoc.desc} onChange={e=>setEditDoc({...editDoc, desc: e.target.value})}></textarea>
-                                    
                                     <label className="block text-xs font-bold text-gray-500 mb-1">公開ステータス</label>
                                     <select className="w-full p-2 mb-6 rounded border search-input font-bold text-blue-600" value={editDoc.status} onChange={e=>setEditDoc({...editDoc, status: e.target.value})}>
                                         <option value="要確認">要確認 (非公開)</option>
                                         <option value="共有中">共有中 (公開)</option>
                                         <option value="非公開">非公開</option>
                                     </select>
-                                    
                                     <div className="flex gap-3">
                                         <button onClick={() => setEditDoc(null)} className="flex-1 bg-gray-200 text-gray-800 font-bold py-2.5 rounded hover:opacity-80">キャンセル</button>
                                         <button onClick={saveEdit} className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded hover:bg-blue-700">保存する</button>
@@ -541,7 +351,6 @@
                             </div>
                         )}
 
-                        {/* Q&A 質問送信モーダル */}
                         {showQa && (
                             <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowQa(false)}>
                                 <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
@@ -560,7 +369,6 @@
                 </div>
             );
         };
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<LibraryApp />);
     </script>
