@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 
     <style>
-        /* 🌟 システム統一カラー・変数 */
         :root { 
             --bg: #f2f2f7; 
             --card: #ffffff; 
@@ -22,7 +21,6 @@
         
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--ink); margin: 0; padding: 0; }
         
-        /* 🌟 統一固定ヘッダー */
         header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
         .hdr-group { display: flex; gap: 12px; }
         .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -62,7 +60,7 @@
         <div class="hdr-group">
             <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
         </div>
-        <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v3.5</span></div>
+        <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v3.6</span></div>
         <div class="hdr-group">
             <button class="hdr-btn" onclick="toggleModal('manual-modal')">📖 取説</button>
             <button class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
@@ -88,19 +86,16 @@
                         <label class="block text-xs font-bold text-slate-500 mb-1">日付</label>
                         <input type="date" id="info-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none font-bold text-slate-700" onchange="calculateSun(); syncFromDb(false);">
                     </div>
-                    <div id="sun-display" class="flex gap-3 text-xs bg-amber-50 px-3 py-2.5 rounded-lg border border-amber-100 text-amber-800 font-medium">
-                        </div>
+                    <div id="sun-display" class="flex gap-3 text-xs bg-amber-50 px-3 py-2.5 rounded-lg border border-amber-100 text-amber-800 font-medium"></div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">記載者 (Ns)</label>
-                            <select id="info-nurse" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-nurse', 'info-nurse-other')">
-                                </select>
+                            <select id="info-nurse" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-nurse', 'info-nurse-other')"></select>
                             <input type="text" id="info-nurse-other" placeholder="氏名を入力" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">担当医師</label>
-                            <select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-doctor', 'info-doctor-other')">
-                                </select>
+                            <select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:border-blue-500 outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-doctor', 'info-doctor-other')"></select>
                             <input type="text" id="info-doctor-other" placeholder="氏名を入力" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm">
                         </div>
                     </div>
@@ -165,9 +160,7 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-md border border-slate-200 mb-6 overflow-hidden">
-            <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50 flex gap-4 text-xs font-bold text-slate-600 flex-wrap" id="legend-box">
-                </div>
-            
+            <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50 flex gap-4 text-xs font-bold text-slate-600 flex-wrap" id="legend-box"></div>
             <div class="overflow-x-auto relative min-h-[160px]" style="padding-bottom: 20px;">
                 <div class="min-w-[1000px] relative h-32 mx-4 mt-8" id="chart-area">
                     <div id="chart-grid" class="absolute inset-0 pointer-events-none"></div>
@@ -177,9 +170,7 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-            <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 font-bold text-slate-700 text-sm">
-                📋 登録済みデータリスト
-            </div>
+            <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 font-bold text-slate-700 text-sm">📋 登録済みデータリスト</div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm whitespace-nowrap">
                     <thead class="bg-slate-100 text-slate-500 text-xs">
@@ -193,8 +184,7 @@
                             <th class="px-4 py-3 w-24 text-center no-print">操作</th>
                         </tr>
                     </thead>
-                    <tbody id="list-body" class="divide-y divide-slate-100">
-                        </tbody>
+                    <tbody id="list-body" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
         </div>
@@ -232,12 +222,11 @@
         </div>
     </div>
 
-
     <script>
-        // 🌟 ご自身のデプロイ済みGAS API URL
+        // 🌟 PINコードを正しく追加！
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+        const PIN_CODE = "5740";
 
-        // --- 設定と初期データ ---
         const START_HOUR = 8;
         const END_HOUR = 19;
         const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60;
@@ -269,7 +258,7 @@
                 const res = await fetch(GAS_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: "fetch_init", app_name: "日報" })
+                    body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" })
                 });
                 const json = await res.json();
                 
@@ -292,7 +281,7 @@
                 const res = await fetch(GAS_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: "fetch_daily_report", date: dateVal, force_sync: force })
+                    body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force })
                 });
                 const json = await res.json();
                 
@@ -343,7 +332,7 @@
                 const res = await fetch(GAS_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: "save_daily_report", date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons, events: events })
+                    body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons, events: events })
                 });
                 const json = await res.json();
                 if (json.status === "success") alert("日報データをスプレッドシートへ保存しました！");
@@ -482,7 +471,6 @@
             tbody.innerHTML = listHtml;
         }
 
-        // --- データ操作 ---
         function saveEvent() {
             const cat = document.getElementById('event-cat').value;
             const no = document.getElementById('event-no').value.trim();
@@ -525,7 +513,7 @@
             
             const btn = document.getElementById('btn-save');
             btn.innerText = "更新する";
-            btn.style.backgroundColor = "#f59e0b"; // amber-500
+            btn.style.backgroundColor = "#f59e0b"; 
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
             render(); 
