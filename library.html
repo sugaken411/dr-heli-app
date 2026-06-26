@@ -66,7 +66,7 @@
         };
 
         const categoriesList = ["01_公式ガイドライン・規約", "02_ERマニュアル・自作プロトコル", "03_院内勉強会・レクチャー資料", "04_院外研修・外部セミナー資料", "05_プレホスピタル・航空医療・災害", "06_添付文書", "07_取扱説明書", "08_企業資料", "★迷ったらここ（未分類・一時保管）"];
-        const domainsList = ["蘇生・集中治療", "中毒・環境障害", "感染症・敗血症", "外傷・整形外科", "周産期・母体救命", "小児救急", "消化器・一般外科", "循環器", "呼吸器", "災害・DMAT・CBRNE災害", "その他・全般"];
+        const domainsList = ["蘇生・集中治療（心肺停止、ショック、アナフィラキシーなど）", "中毒・環境障害（急性中毒、熱中症、偶発性低体温など）", "感染症・敗血症（敗血症性ショック、感染対策、COVIDなど）", "外傷・整形外科（JATEC、多発外傷、骨折、熱傷など）", "災害・CBRNE災害（シーバーン災害、DMAT、BCPなど）", "周産期・母体救命", "小児救急", "消化器・一般外科", "循環器", "呼吸器", "その他・全般"];
 
         const LibraryApp = () => {
             const [docs, setDocs] = useState([]);
@@ -198,16 +198,10 @@
                 } catch(e) { alert("通信エラーが発生しました"); } finally { setIsLoading(false); }
             };
 
-            // 🌟 修正ポイント：厳格なURLチェック（アクセスブロック）
             const handleLinkClick = (url) => {
                 if (!url || url.trim() === "") { alert("URLが登録されていません。"); return; }
                 let pUrl = url.trim();
-                
-                if (!pUrl.startsWith('http://') && !pUrl.startsWith('https://')) {
-                    alert("登録されているURLの形式が不正です。\nスプレッドシートのデータ（I列）に正しいリンクが入力されているか確認してください。\n\n【対象のエラーデータ】: " + pUrl);
-                    return;
-                }
-                
+                if (!pUrl.startsWith('http://') && !pUrl.startsWith('https://')) pUrl = 'https://' + pUrl;
                 if(pUrl.includes('drive.google.com')) pUrl = pUrl.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
                 window.open(pUrl, '_blank', 'noopener,noreferrer');
             };
@@ -292,7 +286,8 @@
                                             </div>
                                         )}
                                         
-                                        <p className="text-sm text-gray-600 mb-4 flex-1 whitespace-pre-wrap line-clamp-3">{doc.desc || "説明はありません"}</p>
+                                        {/* ★ 修正ポイント：line-clamp-3 を削除し、全文が表示されるようにしました */}
+                                        <p className="text-sm text-gray-600 mb-4 flex-1 whitespace-pre-wrap">{doc.desc || "説明はありません"}</p>
                                         
                                         {isAdmin && doc.status === "要確認" && doc.aiReason && (
                                             <div className="text-[11px] bg-red-100 text-red-800 p-2 rounded mb-3 border border-red-200"><strong>AIのコメント:</strong> {doc.aiReason}</div>
