@@ -172,6 +172,38 @@
     .form-group input, .form-group textarea, .form-group select {
       width: 100%;
     }
+
+    /* 🌟 新規：選択式（チェックボックス＋プルダウン）のコンテナ用 */
+    .supply-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .supply-row label {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--ink);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .supply-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+    .supply-row select {
+      width: 80px;
+      padding: 6px;
+      font-size: 13px;
+    }
     
     /* オーバーレイ・ローディング */
     #login-overlay {
@@ -234,7 +266,6 @@
 </head>
 <body>
 
-  <!-- ログイン画面 -->
   <div id="login-overlay">
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">事案検索コンソール</h2>
@@ -245,7 +276,6 @@
     </div>
   </div>
 
-  <!-- ローディング画面 -->
   <div id="global-loader">
     <div class="spinner"></div>
     <div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div>
@@ -257,7 +287,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.8</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.9</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -332,7 +362,6 @@
     </div>
   </main>
 
-  <!-- 事案詳細・修正モーダル -->
   <div class="modal" id="detail-modal" onclick="if(event.target===this)closeModal('detail-modal')">
     <div class="modal-box">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:16px;">
@@ -340,11 +369,10 @@
         <button class="no-print" onclick="window.print()" style="background:#e5e5ea; color:var(--ink); padding:8px 16px;">🖨️ 印刷</button>
       </div>
       
-      <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; border:1px solid #bbdefb;">
-        <b style="color:#0d47a1;">📦 消費資機材・処置内容（編集可能）</b>
-        <div id="edit-supply-container" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
-          <!-- JSで動的に追加されます -->
-        </div>
+      <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; border:1px solid #bbdefb;">
+        <b style="color:#0d47a1; font-size:14px; margin-bottom:8px; display:block;">📦 消費資機材・処置内容（編集可能）</b>
+        <div id="edit-supply-container" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          </div>
       </div>
       
       <input type="hidden" id="edit-old-id">
@@ -391,15 +419,30 @@
       
       <div style="display:flex; gap:12px;">
         <div class="form-group" style="flex:1;">
-          <label>接触時間</label>
+          <label>要請</label>
+          <input type="time" id="edit-request">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>離陸</label>
+          <input type="time" id="edit-takeoff">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>着陸</label>
+          <input type="time" id="edit-landing">
+        </div>
+      </div>
+      
+      <div style="display:flex; gap:12px;">
+        <div class="form-group" style="flex:1;">
+          <label>接触</label>
           <input type="time" id="edit-contact">
         </div>
         <div class="form-group" style="flex:1;">
-          <label>病着時間</label>
+          <label>病着</label>
           <input type="time" id="edit-arrival">
         </div>
         <div class="form-group" style="flex:1;">
-          <label>終了時間</label>
+          <label>終了</label>
           <input type="time" id="edit-end">
         </div>
       </div>
@@ -423,9 +466,7 @@
         </div>
 
         <div style="display:flex; gap:8px; margin-top:12px;">
-          <!-- 🌟 新機能：削除ボタン -->
           <button style="flex:1; background:var(--brand); color:#fff; font-size:12px;" onclick="deleteRecord()">🗑️ 削除</button>
-          
           <button style="flex:1;" onclick="saveRecord()">💾 上書き</button>
           <button style="flex:1; background:#ff9800; color:#fff;" id="btn-email" onclick="sendEmail()">📧 メール</button>
           <button style="flex:1; background:#34c759;" id="btn-complete" onclick="markComplete()">✅ 完了</button>
@@ -621,7 +662,7 @@
     }
   }
 
-  // 詳細画面（モーダル）を開く処理
+  // 🌟 詳細画面（モーダル）を開く処理
   function openDetail(row) {
     document.getElementById("edit-old-id").value = row["要請番号"]; 
     
@@ -630,10 +671,10 @@
     idEl.style.color = row["要請番号"].includes("(仮)") ? "var(--brand)" : "var(--ink)";
     idEl.style.fontWeight = row["要請番号"].includes("(仮)") ? "bold" : "normal";
 
-    // 🌟 HTMLの input[type="date"] は「YYYY-MM-DD」形式のみ受け付けるため、ゼロ埋めに変換
+    // 🌟 日付の確実なフォーマット処理（/ や . の区切りを - に変換してからゼロ埋め）
     let dVal = row["日付"] || "";
     if (dVal) {
-      dVal = dVal.replace(/\//g, "-");
+      dVal = dVal.replace(/[\/\.]/g, "-");
       let parts = dVal.split("-");
       if (parts.length === 3) {
         document.getElementById("edit-date").value = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
@@ -650,25 +691,55 @@
     document.getElementById("edit-ns").value = row["フライトナース"] || "";
     
     const fmtTime = (t) => t ? String(t).substring(0, 5) : "";
+    document.getElementById("edit-request").value = fmtTime(row["要請時刻・施設間搬送依頼時刻"]); 
+    document.getElementById("edit-takeoff").value = fmtTime(row["初期離陸時間"]); 
+    document.getElementById("edit-landing").value = fmtTime(row["最終着陸時間"]); 
     document.getElementById("edit-contact").value = fmtTime(row["接触"]); 
     document.getElementById("edit-arrival").value = fmtTime(row["病着"]); 
     document.getElementById("edit-end").value = fmtTime(row["終了"]);
     
     document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
     
-    // 処置・資機材の入力枠を動的に生成して値をセット
-    const supplyKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー", "除細動パッド", "心嚢穿刺・心嚢ドレナージ"];
-    
+    // 🌟 処置・資機材の「選択式UI」を動的に生成
     let supplyHtml = "";
-    supplyKeys.forEach(k => {
+    
+    // 1. 本数があるもの
+    const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
+    lineKeys.forEach(k => {
       let v = String(row[k] || "");
+      let isChecked = v.includes("◯") ? "checked" : "";
+      let numMatch = v.match(/\d+本/);
+      let num = numMatch ? numMatch[0] : "1本";
+      
       supplyHtml += `
-        <div class="form-group" style="margin-bottom:4px;">
-          <label style="font-weight:normal; font-size:11px;">${k}</label>
-          <input type="text" id="edit-supply-${k}" value="${v}" style="padding:6px; font-size:13px;" placeholder="入力 (例: ◯ 1本)">
+        <div class="supply-row">
+          <label><input type="checkbox" id="edit-chk-${k}" ${isChecked}> ${k}</label>
+          <select id="edit-sel-${k}">
+            <option value="1本" ${num==='1本'?'selected':''}>1本</option>
+            <option value="2本" ${num==='2本'?'selected':''}>2本</option>
+            <option value="3本" ${num==='3本'?'selected':''}>3本</option>
+            <option value="4本" ${num==='4本'?'selected':''}>4本</option>
+          </select>
         </div>
       `;
     });
+    
+    // 2. 本数がなくチェックのみのもの
+    const chkOnlyKeys = [
+      { key: "1%カルボカイン10ml使用", label: "カルボカイン" },
+      { key: "除細動パッド", label: "除細動パッド" },
+      { key: "心嚢穿刺・心嚢ドレナージ", label: "心嚢ドレナージ" }
+    ];
+    chkOnlyKeys.forEach(obj => {
+      let v = String(row[obj.key] || "");
+      let isChecked = (v.includes("◯") || v.includes("キット")) ? "checked" : "";
+      supplyHtml += `
+        <div class="supply-row" style="justify-content: flex-start;">
+          <label><input type="checkbox" id="edit-chk-${obj.key}" ${isChecked}> ${obj.label}</label>
+        </div>
+      `;
+    });
+    
     document.getElementById("edit-supply-container").innerHTML = supplyHtml;
     
     const isDone = (row["ステータス"] || "").includes("完了") && !(row["ステータス"] || "").includes("未完了");
@@ -761,7 +832,7 @@
     btn.disabled = false;
   }
 
-  // データの修正保存（上書き）
+  // 🌟 データの修正保存（上書き）
   async function saveRecord() {
     const editor = document.getElementById("edit-person").value.trim(); 
     if(!editor) return alert("「修正担当者の名前」を入力してください。");
@@ -776,6 +847,7 @@
     btn.disabled = true;
     
     try {
+      // 基本データ
       let payload = { 
         "要請番号": newId, 
         "日付": document.getElementById("edit-date").value, 
@@ -783,17 +855,29 @@
         "スキーム選択": document.getElementById("edit-scheme").value, 
         "フライトドクター": document.getElementById("edit-dr").value, 
         "フライトナース": document.getElementById("edit-ns").value, 
+        "要請時刻・施設間搬送依頼時刻": document.getElementById("edit-request").value, 
+        "初期離陸時間": document.getElementById("edit-takeoff").value, 
+        "最終着陸時間": document.getElementById("edit-landing").value, 
         "接触": document.getElementById("edit-contact").value, 
         "病着": document.getElementById("edit-arrival").value, 
         "終了": document.getElementById("edit-end").value 
       };
       
-      // 処置内容データを動的に取得して結合
-      const supplyKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー", "除細動パッド", "心嚢穿刺・心嚢ドレナージ"];
-      supplyKeys.forEach(k => {
-        const el = document.getElementById(`edit-supply-${k}`);
-        if (el) payload[k] = el.value;
+      // 🌟 選択式UIからデータを抽出してペイロードに追加
+      const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
+      lineKeys.forEach(k => {
+        const chk = document.getElementById(`edit-chk-${k}`);
+        const sel = document.getElementById(`edit-sel-${k}`);
+        if (chk && chk.checked) {
+          payload[k] = "◯ " + sel.value; // 例: ◯ 1本
+        } else {
+          payload[k] = "";
+        }
       });
+      
+      if (document.getElementById("edit-chk-1%カルボカイン10ml使用").checked) payload["1%カルボカイン10ml使用"] = "◯"; else payload["1%カルボカイン10ml使用"] = "";
+      if (document.getElementById("edit-chk-除細動パッド").checked) payload["除細動パッド"] = "◯"; else payload["除細動パッド"] = "";
+      if (document.getElementById("edit-chk-心嚢穿刺・心嚢ドレナージ").checked) payload["心嚢穿刺・心嚢ドレナージ"] = "キット"; else payload["心嚢穿刺・心嚢ドレナージ"] = "";
       
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
