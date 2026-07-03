@@ -4,252 +4,109 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 デブリーフィング</title>
-  
   <style>
-    /* 🌟 基本デザイン変数（全アプリ統一） */
-    :root {
-      --bg: #f2f2f7;
-      --card: #ffffff;
-      --ink: #1c1c1e;
-      --sub: #8e8e93;
-      --brand: #d32f2f;
-      --brand-light: #ffebeb;
-      --blue: #007aff;
-      --line: rgba(60,60,67,0.12);
-      --safe-top: env(safe-area-inset-top);
-      --safe-bot: env(safe-area-inset-bottom);
+    /* 🌟 基本デザイン・統一カラー */
+    :root { 
+      --bg: #f2f2f7; 
+      --card: #ffffff; 
+      --ink: #1c1c1e; 
+      --sub: #8e8e93; 
+      --brand: #d32f2f; 
+      --brand-light: #ffebeb; 
+      --blue: #007aff; 
+      --med-blue: #e3f2fd;
+      --line: rgba(60,60,67,0.12); 
     }
     
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, sans-serif;
-      -webkit-tap-highlight-color: transparent;
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    
+    /* 🌟 ヘッダー */
+    header { 
+      position: fixed; top: 0; left: 0; right: 0; height: 56px; padding: 0 16px; 
+      background: rgba(242,242,247,0.95); backdrop-filter: blur(20px); 
+      border-bottom: 1px solid var(--line); display: flex; align-items: center; 
+      justify-content: space-between; z-index: 100; 
+    }
+    .hdr-btn { 
+      color: var(--blue); background: none; border: none; font-size: 14px; 
+      font-weight: 600; cursor: pointer; text-decoration: none; 
     }
     
-    body {
-      background: var(--bg);
-      color: var(--ink);
-      -webkit-font-smoothing: antialiased;
+    /* 🌟 上部タブナビゲーション（小児版UIを採用） */
+    .tab-container { 
+      position: fixed; top: 56px; left: 0; right: 0; height: 44px; 
+      background: #fff; border-bottom: 1px solid var(--line); display: flex; 
+      overflow-x: auto; z-index: 99; scrollbar-width: none; 
     }
+    .tab-container::-webkit-scrollbar { display: none; }
+    .nav-tab { 
+      flex: 1; text-align: center; padding: 0 8px; height: 44px; line-height: 44px; 
+      font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; 
+      border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s;
+    }
+    .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
     
-    /* 🌟 ヘッダー・フッター */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: calc(56px + var(--safe-top));
-      padding-top: var(--safe-top);
-      padding-left: 16px;
-      padding-right: 16px;
-      background: rgba(242,242,247,0.92);
-      backdrop-filter: blur(20px);
-      border-bottom: 0.5px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 100;
-    }
+    /* 🌟 メインコンテンツ */
+    main { margin-top: 100px; margin-bottom: 60px; padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
-    .tab-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: calc(56px + var(--safe-bot));
-      padding-bottom: var(--safe-bot);
-      background: rgba(255,255,255,0.94);
-      backdrop-filter: blur(20px);
-      border-top: 0.5px solid var(--line);
-      display: flex;
-      z-index: 100;
-    }
+    .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 16px; }
+    .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
     
-    main {
-      margin-top: calc(56px + var(--safe-top));
-      margin-bottom: calc(56px + var(--safe-bot));
-      padding: 16px;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
+    /* 入力フォーム */
+    input[type="text"], input[type="month"], select, textarea { 
+      width: 100%; border: 1px solid var(--line); font-size: 14px; 
+      background: var(--bg); outline: none; padding: 10px; border-radius: 8px; 
+      margin-bottom: 8px; color: var(--ink); font-weight: 600; 
     }
+    textarea { resize: none; line-height: 1.5; }
     
-    .hdr-group {
-      display: flex;
-      gap: 12px;
-      width: 80px;
-    }
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .input-row label { font-size: 12px; font-weight: bold; color: var(--sub); width: 80px; flex-shrink: 0; text-align: right; }
     
-    .hdr-btn {
-      color: var(--blue);
-      background: none;
-      border: none;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
+    /* ボタン類 */
+    .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
+    .btn-blue:disabled { background: var(--sub); cursor: not-allowed; }
+    .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
     
-    .title-box {
-      flex: 1;
-      text-align: center;
-      font-weight: 800;
-      font-size: 16px;
-      letter-spacing: 0.5px;
-    }
+    /* 検索結果リスト */
+    .search-result-item { padding: 12px; border: 1px solid var(--blue); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #fff; transition: 0.2s; }
+    .search-result-item:hover { background: var(--med-blue); }
     
-    /* 🌟 UIパーツ（カード・入力欄） */
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    
-    .section-label {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--sub);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    select, input, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      outline: none;
-      background: var(--bg);
-      color: var(--ink);
-      margin-bottom: 16px;
-    }
-    
-    textarea {
-      resize: none;
-      min-height: 120px;
-      line-height: 1.5;
-    }
-    
-    /* 🌟 タグチップUI */
-    .chip-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
-    
-    .chip {
-      padding: 8px 14px;
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: var(--card);
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-      user-select: none;
-    }
-    
-    .chip.active {
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(0,122,255,0.2);
-    }
-    
-    /* 🌟 タブ切り替えUI */
-    .tab-content {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-    
-    .tab-content.active {
-      display: block;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .tab-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      border: none;
-      background: none;
-      color: var(--sub);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    
-    .tab-btn.active {
-      color: var(--blue);
-    }
-    
-    .tab-icon {
-      font-size: 22px;
-      line-height: 1;
-    }
-    
-    /* 🌟 送信ボタン */
-    .submit-btn {
-      width: 100%;
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 16px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,122,255,0.3);
-      transition: 0.2s;
-    }
-    
-    .submit-btn:disabled {
-      background: var(--sub);
-      box-shadow: none;
-      cursor: not-allowed;
-    }
+    /* データプレビュー表示枠 */
+    .data-preview { font-size: 12px; background: #f9f9f9; padding: 12px; border-radius: 6px; border-left: 4px solid var(--blue); margin-bottom: 12px; line-height: 1.6; }
+    .preview-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
+    .preview-table th, .preview-table td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    .preview-table th { background: #e5e5ea; width: 25%; }
 
-    /* 🌟 ローディング画面 */
-    #global-loader {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.95);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+    /* チップUI（タグ） */
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; } 
+    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); user-select: none; background: var(--bg); transition: 0.15s; } 
+    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(0,122,255,0.2);
-      border-top: 4px solid var(--blue);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
+    /* タブ切り替え */
+    .tab-content { display: none; animation: fadeIn 0.3s ease; } 
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    /* 印刷用レポート（小児版デザイン踏襲） */
+    .print-report { background: #fff; border: 1px solid #000; padding: 20px; font-size: 12px; line-height: 1.5; color: #000; margin-bottom: 16px; }
+    .print-report h2 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 12px; font-size: 16px; }
+    .print-report h3 { font-size: 13px; background: #eee; padding: 4px 8px; border-left: 4px solid var(--brand); margin-top: 16px; margin-bottom: 8px; }
+    .p-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; } 
+    .p-table th, .p-table td { border: 1px solid #000; padding: 6px; text-align: left; }
+    .p-table th { background: #f0f0f0; width: 20%; }
+    
+    /* ローディング */
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    
+    @media print { 
+      body { background: #fff; padding: 0; } 
+      header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; }
+      #tab-sec4 { display: block !important; margin: 0; padding: 0; }
+      .print-report { border: none; padding: 0; }
     }
   </style>
 </head>
@@ -257,124 +114,128 @@
 
 <div id="global-loader">
   <div class="spinner"></div>
-  <div style="margin-top:16px; font-weight:800; color:var(--ink);">データを同期中...</div>
+  <div style="margin-top:16px; font-weight:800; color:var(--ink);">システム起動中...</div>
 </div>
 
 <header>
-  <div class="hdr-group">
-    <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  </div>
-  <div class="title-box">デブリーフィング</div>
-  <div class="hdr-group" style="justify-content: flex-end;"></div>
+  <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+  <div style="font-weight: 800; font-size: 16px; text-align:center;">デブリーフィング</div>
+  <button class="hdr-btn no-print" onclick="window.print()">🖨️ 印刷</button>
 </header>
 
+<div class="tab-container no-print">
+  <div class="nav-tab active" onclick="switchTab('sec1')">1.検索・事案</div>
+  <div class="nav-tab" onclick="switchTab('sec2')">2.タグ付け</div>
+  <div class="nav-tab" onclick="switchTab('sec3')">3.振り返り</div>
+  <div class="nav-tab" onclick="switchTab('sec4')">4.プレビュー</div>
+</div>
+
 <main>
-  <div id="tab-info" class="tab-content active">
-    <div class="card">
-      <div class="section-label">🚁 対象の事案を選択</div>
-      <select id="case-select" onchange="autoTagging()">
-        <option value="">読込中...</option>
-      </select>
-      <p style="font-size:12px; color:var(--sub); margin-top:-8px; margin-bottom:16px;">
-        ※事案を選ぶと、疾患や処置のタグが自動でONになります。
-      </p>
-
-      <div class="section-label">👤 記載者</div>
-      <select id="recorder-select">
-        <option value="">読込中...</option>
-      </select>
-    </div>
-  </div>
-
-  <div id="tab-tags" class="tab-content">
-    <div class="card" id="tags-container">
+  <div id="tab-sec1" class="tab-content active">
+    <div class="card no-print">
+      <div class="section-label">🔍 事案の検索と紐付け</div>
+      <p style="font-size:11px; color:var(--sub); margin-bottom:12px;">※空白のまま検索すると直近の事案が表示されます。</p>
+      <div class="grid-2col">
+        <div class="input-row"><label>要請番号</label><input type="text" id="s-id" placeholder="ID入力"></div>
+        <div class="input-row"><label>スタッフ</label><input type="text" id="s-staff" placeholder="Dr/Ns名"></div>
       </div>
+      <button class="btn-blue" id="btn-search" onclick="searchCases()">事案を検索する</button>
+      <div id="search-results-area" style="display:none; margin-top:16px;"></div>
+    </div>
+
+    <div id="case-data-area" style="display:none;">
+      <div class="card">
+        <div class="section-label" style="color:var(--blue); border-bottom-color:var(--line);">📝 事案のタイムラインと実施処置</div>
+        <div id="v-fetched-data"></div>
+        
+        <div class="section-label" style="margin-top:16px;">👤 今回のシート記載者</div>
+        <select id="recorder-select">
+          <option value="">読込中...</option>
+        </select>
+      </div>
+    </div>
+    
+    <button class="btn-next no-print" onclick="switchTab('sec2')">次へ (タグ付け) ➔</button>
   </div>
 
-  <div id="tab-memo" class="tab-content">
+  <div id="tab-sec2" class="tab-content">
     <div class="card">
-      <div class="section-label">🟢 Good (良かった点・成功要因)</div>
-      <textarea id="val-good" placeholder="例：現場の救急隊との情報共有がスムーズだった。早期の輸液ルート確保が有効だった。"></textarea>
+      <p style="font-size:11px; color:var(--brand); margin-bottom:12px; font-weight:bold;">※事案を紐付けると、「疾患」や「処置」タグは自動で選択されます。</p>
+      <div id="tags-container">
+        </div>
+    </div>
+    <button class="btn-next" onclick="switchTab('sec3')">次へ (振り返り入力) ➔</button>
+  </div>
 
-      <div class="section-label">🔺 Bad / Next (課題・次への改善点)</div>
-      <textarea id="val-bad" placeholder="例：機内持ち込み資機材の準備に手間取った。次回からはチェックリストを活用する。"></textarea>
-      
-      <button class="submit-btn" id="btn-submit" onclick="submitDebriefing()">振り返りを提出する 🚀</button>
+  <div id="tab-sec3" class="tab-content">
+    <div class="card">
+      <div class="section-label" style="color:#065f46; border-bottom-color:#d1fae5;">🟢 Good (良かった点・成功要因)</div>
+      <textarea id="val-good" rows="3" placeholder="例：現場の救急隊との情報共有がスムーズだった。早期の輸液ルート確保が有効だった。"></textarea>
+    </div>
+    <div class="card">
+      <div class="section-label" style="color:#d48806; border-bottom-color:#fef08a;">⚠️ Bad / Gap (想定外の事態・課題)</div>
+      <textarea id="val-bad" rows="3" placeholder="例：機内持ち込み資機材の準備に手間取った。患者の体重評価にズレがあった。"></textarea>
+    </div>
+    <div class="card">
+      <div class="section-label" style="color:var(--brand); border-bottom-color:var(--brand-light);">🎯 次回へのアクションプラン</div>
+      <textarea id="val-action" rows="3" placeholder="例：次回からは〇〇のチェックリストを活用する。チーム内での声出しを徹底する。"></textarea>
+    </div>
+    <button class="btn-next" onclick="switchTab('sec4')">次へ (プレビュー・保存) ➔</button>
+  </div>
+
+  <div id="tab-sec4" class="tab-content">
+    <div class="card" style="padding: 0;">
+      <div id="print-area">
+        </div>
+    </div>
+    
+    <div class="no-print">
+      <button class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ この内容でアーカイブ保存</button>
     </div>
   </div>
+
 </main>
 
-<nav class="tab-bar">
-  <button class="tab-btn active" id="tb-info" onclick="switchTab('info')">
-    <span class="tab-icon">🚁</span>
-    <span>基本情報</span>
-  </button>
-  <button class="tab-btn" id="tb-tags" onclick="switchTab('tags')">
-    <span class="tab-icon">🏷️</span>
-    <span>タグ付け</span>
-  </button>
-  <button class="tab-btn" id="tb-memo" onclick="switchTab('memo')">
-    <span class="tab-icon">📝</span>
-    <span>振り返り</span>
-  </button>
-</nav>
-
 <script>
-  // 🌟 GASのURL（他アプリと同じもの）とPIN設定
+  // 🌟 GASのURLとPINコード
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 マスターデータ（要件定義で指定された全項目）
+  // 🌟 AW109 マスターデータ
   const TAG_MASTERS = {
-    keyword: { 
-      label: "🔑 キーワード要請", 
-      items: ["閉じ込められている", "横転している", "車外放出された", "車両の下敷き", "体幹の挟圧", "車体が大きく変形している", "車両同士の正面衝突", "歩行者/自転車が自動車にはねとばされた", "法定速度以上", "バイクと車両の衝突", "運転者がオートバイから放り出された", "2階以上の高さ", "山岳部滑落", "車両落下", "溺れている", "窒息", "生き埋め", "各種事故（列車/バス/航空機/船舶/爆発/落雷）", "撃たれた", "刺された", "殴られて意識が悪い", "全身熱傷", "四肢切断", "40歳以上の胸痛または背部痛", "呼吸困難", "息が苦しい", "息が出来ない", "人が倒れている", "人が突然倒れた", "呼びかけても反応がない", "構語障害", "意識がない", "突然の激しい頭痛", "痙攣", "手足のまひ", "呼吸をしていない", "呼吸が変", "脈が触れない", "様子がおかしい", "手足が急に動かなくなった", "アナフィラキシーショック", "大量吐血", "D-call Net"] 
-    },
-    scene: { 
-      label: "📍 活動場面", 
-      items: ["要請内容から出動前まで", "出動～接触前まで", "接触・現場対応", "搬送", "引き継ぎ", "次事案への準備", "その他"] 
-    },
-    practice: { 
-      label: "🛠 実務項目", 
-      items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "患者の安楽", "家族対応", "申し送り", "院内連携"] 
-    },
-    disease: { 
-      label: "🩺 疾患", 
-      items: ["外傷", "心大血管", "脳血管", "急性呼吸不全", "急性腹症", "熱傷", "アナフィラキシー", "小児", "心肺停止", "母子・周産期", "新生児"] 
-    },
-    treatment: { 
-      label: "💉 処置", 
-      items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] 
-    },
-    special: { 
-      label: "🚨 特殊ケース", 
-      items: ["馬毛島", "緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] 
-    },
-    risk: { 
-      label: "⚠️ リスク関連", 
-      items: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"] 
-    }
+    keyword: { label: "🔑 キーワード要請", items: ["閉じ込められている", "横転している", "車外放出された", "車両の下敷き", "体幹の挟圧", "車体が大きく変形している", "車両同士の正面衝突", "歩行者/自転車が自動車にはねとばされた", "法定速度以上", "バイクと車両の衝突", "運転者がオートバイから放り出された", "2階以上の高さ", "山岳部滑落", "車両落下", "溺れている", "窒息", "生き埋め", "各種事故（列車/バス/航空機/船舶/爆発/落雷）", "撃たれた", "刺された", "殴られて意識が悪い", "全身熱傷", "四肢切断", "40歳以上の胸痛または背部痛", "呼吸困難", "息が苦しい", "息が出来ない", "人が倒れている", "人が突然倒れた", "呼びかけても反応がない", "構語障害", "意識がない", "突然の激しい頭痛", "痙攣", "手足のまひ", "呼吸をしていない", "呼吸が変", "脈が触れない", "様子がおかしい", "手足が急に動かなくなった", "アナフィラキシーショック", "大量吐血", "D-call Net"] },
+    scene: { label: "📍 活動場面", items: ["要請内容から出動前まで", "出動～接触前まで", "接触・現場対応", "搬送", "引き継ぎ", "次事案への準備", "その他"] },
+    practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "患者の安楽", "家族対応", "申し送り", "院内連携"] },
+    disease: { label: "🩺 疾患", items: ["外傷", "心大血管", "脳血管", "急性呼吸不全", "急性腹症", "熱傷", "アナフィラキシー", "小児", "心肺停止", "母子・周産期", "新生児"] },
+    treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] },
+    special: { label: "🚨 特殊ケース", items: ["馬毛島", "緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] },
+    risk: { label: "⚠️ リスク関連", items: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"] }
   };
 
-  // 選択状態の管理
-  let selectedTags = { 
-    keyword: [], scene: [], practice: [], disease: [], treatment: [], special: [], risk: [] 
-  };
-  let recentCasesData = [];
+  let selectedTags = { keyword: [], scene: [], practice: [], disease: [], treatment: [], special: [], risk: [] };
+  let allCasesData = []; // fetch_all で取得した全データ
+  let currentCase = null; // 選択された事案
 
-  // 初期読み込み
+  // 初期化
   window.onload = () => {
     buildTagUI();
     fetchInitData();
   };
 
-  // タブ切り替え処理
-  function switchTab(tabId) {
-    ["info", "tags", "memo"].forEach(k => {
-      document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId);
-      document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId);
-    });
-    window.scrollTo(0, 0);
+  // タブの切り替え処理
+  function switchTab(id) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); 
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // クリックしたタブをアクティブにする
+    event.target.classList.add('active'); 
+    document.getElementById('tab-' + id).classList.add('active'); 
+    window.scrollTo(0,0);
+    
+    // プレビュータブが開かれたらレポートを生成
+    if (id === 'sec4') {
+      generatePreview();
+    }
   }
 
   // タグUIの動的生成
@@ -382,7 +243,7 @@
     let html = "";
     Object.keys(TAG_MASTERS).forEach(key => {
       html += `<div class="section-label">${TAG_MASTERS[key].label}</div>`;
-      html += `<div class="chip-container">`;
+      html += `<div class="chip-grid">`;
       TAG_MASTERS[key].items.forEach(item => {
         html += `<div class="chip" id="chip-${key}-${item}" onclick="toggleTag('${key}', '${item}')">${item}</div>`;
       });
@@ -391,19 +252,19 @@
     document.getElementById("tags-container").innerHTML = html;
   }
 
-  // タグのON/OFF
+  // タグのON/OFF処理
   function toggleTag(catKey, item) {
     const el = document.getElementById(`chip-${catKey}-${item}`);
     if (selectedTags[catKey].includes(item)) {
       selectedTags[catKey] = selectedTags[catKey].filter(x => x !== item);
-      el.classList.remove("active");
+      el.classList.remove("on");
     } else {
       selectedTags[catKey].push(item);
-      el.classList.add("active");
+      el.classList.add("on");
     }
   }
 
-  // GASから初期データを取得（スタッフ一覧と直近の事案）
+  // GASから全データとスタッフ名を取得
   async function fetchInitData() {
     try {
       // 1. スタッフマスターの取得
@@ -414,24 +275,21 @@
         redirect: "follow" 
       });
       const json1 = await res1.json();
-      
       if (json1.status === "success") {
         const staffList = [...(json1.masters.dr || []), ...(json1.masters.ns || [])];
         document.getElementById("recorder-select").innerHTML = `<option value="">選択してください</option>` + staffList.map(s => `<option value="${s}">${s}</option>`).join("");
       }
 
-      // 2. 直近事案の取得
+      // 2. 事案データベースの全件取得（検索用）
       const res2 = await fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), 
+        body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), 
         redirect: "follow" 
       });
       const json2 = await res2.json();
-      
       if (json2.status === "success") {
-        recentCasesData = json2.data;
-        document.getElementById("case-select").innerHTML = `<option value="">選択してください</option>` + recentCasesData.map(c => `<option value="${c.id}">${c.date} | No.${c.id} (${c.dest})</option>`).join("");
+        allCasesData = json2.data.reverse(); // 最新順にする
       }
     } catch(e) {
       alert("データの取得に失敗しました。電波環境を確認してください。");
@@ -440,58 +298,185 @@
     }
   }
 
-  // 🌟 事案を選択した時の「自動タグ付け機能」
-  function autoTagging() {
-    const caseId = document.getElementById("case-select").value;
-    const targetCase = recentCasesData.find(c => c.id === caseId);
-    if (!targetCase) return;
-
-    const rData = targetCase.rawData;
+  // 🌟 事案の検索機能
+  function searchCases() {
+    const qId = document.getElementById("s-id").value.trim();
+    const qStaff = document.getElementById("s-staff").value.trim();
+    const resArea = document.getElementById("search-results-area");
+    const btn = document.getElementById("btn-search");
     
-    // 【処置の自動抽出】
+    btn.textContent = "検索中...";
+    btn.disabled = true;
+
+    // 検索フィルタリング
+    let results = allCasesData.filter(r => {
+      if (!r["要請番号"]) return false;
+      let match = true;
+      if (qId && !String(r["要請番号"]).includes(qId)) match = false;
+      if (qStaff && !String(r["フライトドクター"]).includes(qStaff) && !String(r["フライトナース"]).includes(qStaff)) match = false;
+      return match;
+    });
+
+    // 最大10件まで表示
+    results = results.slice(0, 10);
+
+    if (results.length === 0) {
+      resArea.style.display = "block";
+      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当する事案が見つかりません</div>";
+    } else {
+      resArea.style.display = "block";
+      resArea.innerHTML = `<div style="font-size:11px; margin-bottom:8px; color:var(--sub);">対象の事案をタップしてください：</div>` + 
+        results.map(r => `
+          <div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
+            <div style="font-weight:bold; color:var(--blue);">No.${r["要請番号"]} ｜ ${r["日付"] || "日付不明"}</div>
+            <div style="font-size:12px; color:var(--sub); margin-top:4px;">
+              出場先: ${r["出場先"] || "-"} <br>
+              Dr: ${r["フライトドクター"] || "-"} / Ns: ${r["フライトナース"] || "-"}
+            </div>
+          </div>
+        `).join("");
+    }
+    
+    btn.textContent = "事案を検索する";
+    btn.disabled = false;
+  }
+
+  // 🌟 事案を選択したときの処理（データ展開と自動タグ付け）
+  function selectCase(row) {
+    currentCase = row;
+    document.getElementById("search-results-area").style.display = "none";
+    document.getElementById("case-data-area").style.display = "block";
+    
+    // タイムラインの構築
+    const fmt = (time) => time ? String(time).substring(0, 5) : "--:--";
+    let tlHtml = `
+      <table class="preview-table">
+        <tr><th>要請</th><td>${fmt(row["要請時刻・施設間搬送依頼時刻"])}</td><th>接触</th><td>${fmt(row["接触"])}</td></tr>
+        <tr><th>離陸</th><td>${fmt(row["初期離陸時間"])}</td><th>病着</th><td>${fmt(row["病着"])}</td></tr>
+        <tr><th>着陸</th><td>${fmt(row["最終着陸時間"])}</td><th>終了</th><td>${fmt(row["終了"])}</td></tr>
+      </table>
+    `;
+
+    // 実施処置の抽出
+    let procs = [];
+    const supplyKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー", "除細動パッド", "心嚢穿刺・心嚢ドレナージ"];
+    supplyKeys.forEach(k => { if(String(row[k]).includes("◯")) procs.push(k); });
+    TAG_MASTERS.treatment.items.forEach(t => { if(String(row[t]).includes("◯") && !procs.includes(t)) procs.push(t); });
+    
+    let procHtml = procs.length > 0 ? procs.map(p => `・${p}`).join("<br>") : "なし";
+    
+    document.getElementById("v-fetched-data").innerHTML = `
+      <div class="data-preview">
+        <b style="color:var(--ink);">■ 基本情報</b><br>
+        事案No: <b>${row["要請番号"]}</b><br>
+        スキーム: ${row["スキーム選択"] || "未選択"}<br>
+        出場先: ${row["出場先"] || "不明"}<br>
+        Dr: ${row["フライトドクター"] || "-"} / Ns: ${row["フライトナース"] || "-"}<br>
+        <br>
+        <b style="color:var(--ink);">■ タイムライン</b>
+        ${tlHtml}
+        <br>
+        <b style="color:var(--ink);">■ 実施処置・消費資機材</b><br>
+        ${procHtml}
+      </div>
+    `;
+
+    // 【自動タグ付け】
+    // 処置タグの自動ON
     TAG_MASTERS.treatment.items.forEach(t => {
-      if (rData[t] && String(rData[t]).includes("◯") && !selectedTags.treatment.includes(t)) {
+      if (String(row[t]).includes("◯") && !selectedTags.treatment.includes(t)) {
         toggleTag("treatment", t);
       }
     });
 
-    // 【疾患の自動抽出】
+    // 疾患タグの自動ON（備考や出場先から推測）
+    const searchTxt = String(row["備考"] || "") + String(row["出場先"] || "");
     TAG_MASTERS.disease.items.forEach(d => {
-      if ((String(rData["備考"] || "").includes(d) || String(rData["出場先"] || "").includes(d)) && !selectedTags.disease.includes(d)) {
+      if (searchTxt.includes(d) && !selectedTags.disease.includes(d)) {
         toggleTag("disease", d);
       }
     });
 
-    alert("💡 事案データから「疾患」や「処置」のタグを自動で設定しました。タブ2を確認してください。");
+    alert("💡 事案データの紐付けが完了しました。\n関連する処置や疾患のタグが自動でONになっています。");
   }
 
-  // 提出処理
-  async function submitDebriefing() {
-    const caseId = document.getElementById("case-select").value;
-    const recorder = document.getElementById("recorder-select").value;
-    const goodTxt = document.getElementById("val-good").value.trim();
-    const badTxt = document.getElementById("val-bad").value.trim();
-
-    if (!caseId || !recorder) {
-      return alert("タブ1の「対象の事案」と「記載者」を必ず選択してください。");
+  // 🌟 印刷用プレビューの生成
+  function generatePreview() {
+    if (!currentCase) {
+      document.getElementById("print-area").innerHTML = "<p style='text-align:center; color:var(--brand); padding:20px;'>※タブ1で事案を検索・紐付けしてください。</p>";
+      document.getElementById("btn-submit").disabled = true;
+      return;
     }
     
-    if (!goodTxt && !badTxt) {
-      return alert("振り返り（Good または Bad/Next）を記入してください。");
-    }
+    document.getElementById("btn-submit").disabled = false;
+    const recorder = document.getElementById("recorder-select").value || "未指定";
+    
+    // タグを文字列化
+    const tagsStr = Object.keys(TAG_MASTERS).map(k => {
+      if (selectedTags[k].length > 0) {
+        return `<b>${TAG_MASTERS[k].label.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '').trim()}</b>: ${selectedTags[k].join(", ")}`;
+      }
+      return '';
+    }).filter(Boolean).join("<br>");
 
-    // 送信用にカンマ区切り文字列に変換
+    const good = document.getElementById("val-good").value.replace(/\n/g, '<br>') || "記載なし";
+    const bad = document.getElementById("val-bad").value.replace(/\n/g, '<br>') || "記載なし";
+    const action = document.getElementById("val-action").value.replace(/\n/g, '<br>') || "記載なし";
+
+    document.getElementById("print-area").innerHTML = `
+      <div class="print-report">
+        <h2>AW109 デブリーフィング・レポート</h2>
+        <table class="p-table">
+          <tr><th>要請番号</th><td>${currentCase["要請番号"]}</td><th>発生日</th><td>${currentCase["日付"] || '-'}</td></tr>
+          <tr><th>スキーム</th><td>${currentCase["スキーム選択"] || '-'}</td><th>出場先</th><td>${currentCase["出場先"] || '-'}</td></tr>
+          <tr><th>Dr / Ns</th><td colspan="3">${currentCase["フライトドクター"] || '-'} / ${currentCase["フライトナース"] || '-'}</td></tr>
+          <tr><th>記録者</th><td colspan="3" style="font-weight:bold; color:var(--blue);">${recorder}</td></tr>
+        </table>
+        
+        <h3>■ カテゴリ・タグ</h3>
+        <div style="margin-bottom:12px; line-height:1.6; background:#f9f9f9; padding:8px; border:1px solid #ccc;">
+          ${tagsStr || "タグ選択なし"}
+        </div>
+        
+        <h3>■ 振り返り・ギャップ評価</h3>
+        <table class="p-table">
+          <tr><th style="background:#e8f5e9;">Good (良かった点)</th><td>${good}</td></tr>
+          <tr><th style="background:#fffde6;">Bad (課題・想定外)</th><td>${bad}</td></tr>
+          <tr><th style="background:#ffebeb;">次回アクション</th><td style="font-weight:bold; color:var(--brand);">${action}</td></tr>
+        </table>
+      </div>
+    `;
+  }
+
+  // 🌟 デブリーフィングの送信処理
+  async function submitDebriefing() {
+    if (!currentCase) return alert("事案が紐付けられていません。");
+    const recorder = document.getElementById("recorder-select").value;
+    if (!recorder) return alert("タブ1で「記載者」を選択してください。");
+
+    // 振り返りテキストの結合
+    const goodTxt = document.getElementById("val-good").value.trim();
+    const badTxtBase = document.getElementById("val-bad").value.trim();
+    const actionTxt = document.getElementById("val-action").value.trim();
+    
+    if (!goodTxt && !badTxtBase && !actionTxt) {
+      return alert("タブ3で振り返りの内容を記入してください。");
+    }
+    
+    // BadとActionをまとめてGASの "bad" カラムに送る
+    let combinedBad = "";
+    if (badTxtBase) combinedBad += `【課題】\n${badTxtBase}\n\n`;
+    if (actionTxt) combinedBad += `【次回アクション】\n${actionTxt}`;
+
     const tagsObj = {};
-    Object.keys(selectedTags).forEach(k => { 
-      tagsObj[k] = selectedTags[k].join(", "); 
-    });
+    Object.keys(selectedTags).forEach(k => { tagsObj[k] = selectedTags[k].join(", "); });
 
     const payload = {
-      caseId: caseId,
+      caseId: currentCase["要請番号"],
       recorder: recorder,
       tags: tagsObj,
       good: goodTxt,
-      bad: badTxt
+      bad: combinedBad.trim()
     };
 
     const btn = document.getElementById("btn-submit");
@@ -518,7 +503,7 @@
       alert("通信に失敗しました。電波環境の良い場所で再度お試しください。");
     } finally {
       btn.disabled = false;
-      btn.innerText = "振り返りを提出する 🚀";
+      btn.innerText = "✅ この内容でアーカイブ保存";
     }
   }
 </script>
