@@ -5,14 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AW109 事案検索コンソール</title>
   <style>
-    /* 基本デザイン・カラー定義 */
-    :root {
-      --bg: #f2f2f7;
-      --brand: #d32f2f;
-      --ink: #1c1c1e;
-      --sub: #8e8e93;
-      --blue: #007aff;
-    }
+    :root { --bg: #f2f2f7; --brand: #d32f2f; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; }
     body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
     header { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; }
     .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; }
@@ -60,8 +53,10 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
+      <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.7</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.8</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -174,12 +169,33 @@
         </div>
 
         <div style="display:flex; gap:8px; margin-top:12px;">
-          <button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal('detail-modal')">キャンセル</button>
+          <button style="flex:1; background:var(--brand); color:#fff; font-size:12px;" onclick="deleteRecord()">🗑️ 削除</button>
           <button style="flex:1;" onclick="saveRecord()">💾 上書き</button>
-          <button style="flex:1; background:#ff9800; color:#fff;" id="btn-email" onclick="sendEmail()">📧 メール送信</button>
-          <button style="flex:1; background:#34c759;" id="btn-complete" onclick="markComplete()">✅ カルテ完了</button>
+          <button style="flex:1; background:#ff9800; color:#fff;" id="btn-email" onclick="sendEmail()">📧 メール</button>
+          <button style="flex:1; background:#34c759;" id="btn-complete" onclick="markComplete()">✅ 完了</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-manual" onclick="if(event.target===this)closeModal('modal-manual')">
+    <div class="modal-box">
+      <h3 style="margin-top:0;">📖 取扱説明書 (検索用)</h3>
+      <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
+      <button class="modal-close" onclick="closeModal('modal-manual')">閉じる</button>
+    </div>
+  </div>
+  
+  <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
+    <div class="modal-box">
+      <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div>
+      <div style="background:var(--bg); padding:12px; border-radius:8px;">
+        <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 システム改善の要望を送る</div>
+        <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
+        <button onclick="submitQA(event)" style="width:100%; padding:10px;">送信する ✉️</button>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
     </div>
   </div>
 
@@ -252,7 +268,6 @@
     document.getElementById("edit-old-id").value = row["要請番号"]; 
     const idEl = document.getElementById("edit-id"); idEl.value = row["要請番号"]; idEl.style.color = row["要請番号"].includes("(仮)") ? "var(--brand)" : "var(--ink)"; idEl.style.fontWeight = row["要請番号"].includes("(仮)") ? "bold" : "normal";
 
-    // 🌟 バグ修正: HTMLのinput type="date" が読み込めるよう、必ず YYYY-MM-DD のゼロ埋めフォーマットに変換する
     let dVal = row["日付"] || "";
     if (dVal) {
       dVal = dVal.replace(/\//g, "-");
@@ -284,6 +299,34 @@
     document.getElementById("btn-complete").style.display = isDone ? "none" : "block"; document.getElementById("complete-box").style.display = isDone ? "none" : "block";
     document.querySelector('input[name="comp-who"][value="本人"]').checked = true; toggleComp(); document.getElementById("comp-name").value = "";
     openModal("detail-modal");
+  }
+
+  // 🌟 削除機能
+  async function deleteRecord() {
+    const p = prompt("この事案データを完全に削除しますか？\n実行するにはアクセスコードを入力してください。");
+    if (p !== activePin) {
+      if(p !== null) alert("パスワードが一致しません。削除は中止されました。");
+      return;
+    }
+    
+    const id = document.getElementById("edit-old-id").value;
+    document.getElementById("global-loader").style.display = "flex";
+    
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_record", password: activePin, id: id }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") { 
+        alert("事案を削除しました。"); 
+        closeModal('detail-modal'); 
+        fetchData(); 
+      } else { 
+        alert("エラー: " + json.message); 
+      }
+    } catch(e) { 
+      alert("通信エラーが発生しました。"); 
+    } finally {
+      document.getElementById("global-loader").style.display = "none";
+    }
   }
 
   async function markComplete() {
@@ -327,7 +370,7 @@
       const json = await res.json();
       if (json.status === "success") { alert("メールを送信しました！"); } else { alert("エラー: " + json.message); }
     } catch(e) { alert("通信エラーが発生しました。"); }
-    btn.innerText = "📧 メール送信"; btn.disabled = false;
+    btn.innerText = "📧 メール"; btn.disabled = false;
   }
 
   function exportCSV() {
@@ -347,10 +390,22 @@
           document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + jsonRes.masters.dr.map(v=>`<option value="${v}">${v}</option>`).join(""); document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + jsonRes.masters.ns.map(v=>`<option value="${v}">${v}</option>`).join("");
           const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...jsonRes.masters.dr, ...jsonRes.masters.ns])].map(v=>`<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>'; document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
         }
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('auto_filter') === 'uncompleted') { document.getElementById('q-status').value = '未完了'; fetchData(); }
+        if (jsonRes.qa) { document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>'; }
+        const manualsData = jsonRes.manuals || []; document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>マニュアルはありません。</p>';
+        const urlParams = new URLSearchParams(window.location.search); if (urlParams.get('auto_filter') === 'uncompleted') { document.getElementById('q-status').value = '未完了'; fetchData(); }
       }
     } catch(e) {} finally { document.getElementById("global-loader").style.display = "none"; }
+  }
+
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: activePin, question: q, source: "検索コンソール" }), redirect: "follow" });
+      const jsonRes = await res.json();
+      if(jsonRes.status === "success") { alert("送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } else { alert("エラー: " + jsonRes.message); }
+    } catch(e) { alert("通信エラーが発生しました。"); }
+    btn.textContent = "送信する ✉️"; btn.disabled = false;
   }
 </script>
 </body>
