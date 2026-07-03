@@ -5,44 +5,309 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 EMS Portal</title>
   <style>
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(20px + var(--safe-bot)); }
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-group { display: flex; gap: 12px; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
-    .version-tag { font-size: 10px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-    main { padding: 16px; max-width: 900px; margin: 0 auto; }
-    .alert-box { background: #fff9db; border: 1px solid #ffd43b; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; flex-direction: column; gap: 8px; }
-    .alert-item { font-size: 14px; font-weight: bold; color: #b08800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-    .alert-item.error { color: var(--brand); }
-    .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .portal-card { background: var(--card); border-radius: 16px; padding: 20px; text-decoration: none; color: var(--ink); display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s ease; border-left: 6px solid var(--sub); }
-    .portal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .card-red { border-left-color: var(--brand); } .card-blue { border-left-color: var(--blue); } .card-green { border-left-color: #10b981; } .card-purple { border-left-color: #8b5cf6; } .card-orange { border-left-color: #f59e0b; }
-    .icon { font-size: 32px; width: 48px; text-align: center; }
-    .card-body { flex: 1; }
-    .title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
-    .desc { font-size: 12px; color: var(--sub); line-height: 1.4; }
-    .card-section { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-    .section-label { font-size: 14px; font-weight: 800; color: var(--sub); text-transform: uppercase; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
-    .news-item { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 0.5px solid var(--line); }
-    .news-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-    .news-hdr { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
-    .news-date { font-size: 11px; color: var(--sub); font-family: monospace; }
-    .news-cat { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: var(--med-blue); color: var(--blue); }
-    .news-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .news-content { font-size: 13px; color: var(--sub); line-height: 1.5; white-space: pre-wrap; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.show { display: flex; }
-    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
-    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    /* 基本デザイン・カラー定義 */
+    :root {
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --ink: #1c1c1e;
+      --sub: #8e8e93;
+      --brand: #d32f2f;
+      --brand-light: #ffebeb;
+      --blue: #007aff;
+      --med-blue: #e3f2fd;
+      --line: rgba(60,60,67,0.12);
+      --safe-top: env(safe-area-inset-top);
+      --safe-bot: env(safe-area-inset-bottom);
+    }
     
-    /* ローダーの背景を透過させて目立たなくする */
-    #global-loader { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.9); padding: 8px 16px; border-radius: 20px; z-index: 9999; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); pointer-events: none; }
-    .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,122,255,0.2); border-top: 2px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      padding-top: calc(56px + var(--safe-top));
+      padding-bottom: calc(20px + var(--safe-bot));
+    }
+    
+    /* ヘッダー */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + var(--safe-top));
+      padding-top: var(--safe-top);
+      padding-left: 16px;
+      padding-right: 16px;
+      background: rgba(242,242,247,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 0.5px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+    }
+    
+    .hdr-group {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .hdr-btn {
+      color: var(--blue);
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .title-box {
+      text-align: center;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+    
+    .version-tag {
+      font-size: 10px;
+      color: var(--brand);
+      font-weight: bold;
+      background: var(--brand-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    
+    main {
+      padding: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    /* 警告・未完了アラート枠 */
+    .alert-box {
+      background: #fff9db;
+      border: 1px solid #ffd43b;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .alert-item {
+      font-size: 14px;
+      font-weight: bold;
+      color: #b08800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .alert-item.error {
+      color: var(--brand);
+    }
+    
+    /* アプリ一覧グリッド */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .portal-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      text-decoration: none;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: 0.2s ease;
+      border-left: 6px solid var(--sub);
+    }
+    
+    .portal-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .card-red { border-left-color: var(--brand); }
+    .card-blue { border-left-color: var(--blue); }
+    .card-green { border-left-color: #10b981; }
+    .card-purple { border-left-color: #8b5cf6; }
+    .card-orange { border-left-color: #f59e0b; }
+    
+    .icon {
+      font-size: 32px;
+      width: 48px;
+      text-align: center;
+    }
+    
+    .card-body {
+      flex: 1;
+    }
+    
+    .title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    
+    .desc {
+      font-size: 12px;
+      color: var(--sub);
+      line-height: 1.4;
+    }
+    
+    /* お知らせ枠 */
+    .card-section {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    
+    .section-label {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--sub);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+    
+    .news-item {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 0.5px solid var(--line);
+    }
+    
+    .news-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .news-hdr {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    
+    .news-date {
+      font-size: 11px;
+      color: var(--sub);
+      font-family: monospace;
+    }
+    
+    .news-cat {
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--med-blue);
+      color: var(--blue);
+    }
+    
+    .news-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .news-content {
+      font-size: 13px;
+      color: var(--sub);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    
+    /* モーダル */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9998;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal-overlay.show {
+      display: flex;
+    }
+    
+    .modal-box {
+      background: var(--bg);
+      width: 100%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 20px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    
+    .modal-close {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-top: 16px;
+      background: #e5e5ea;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    /* 🌟 サクサク動くためのローダー（画面全体を隠さない仕様に） */
+    #global-loader {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.95);
+      padding: 8px 16px;
+      border-radius: 20px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      pointer-events: none;
+    }
+    
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0,122,255,0.2);
+      border-top: 2px solid var(--blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -150,6 +415,7 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 
+  // 画面ロード時に実行
   window.onload = () => {
     // 🌟 キャッシュがあれば一瞬で画面を描画する
     const cachedData = localStorage.getItem("aw109_portal_cache");
@@ -158,10 +424,12 @@
     } else {
       document.getElementById("news-box").innerHTML = "初回データを読み込み中...少しお待ちください。";
     }
+    
     // 裏側で最新データを同期
     fetchInit();
   };
 
+  // GASから最新データを取得
   async function fetchInit() {
     document.getElementById("global-loader").style.display = "flex";
     try {
@@ -172,12 +440,14 @@
         redirect: "follow"
       });
       const json = await res.json();
+      
       if (json.status === "success") {
         // 最新データをキャッシュに保存し、画面を更新
         localStorage.setItem("aw109_portal_cache", JSON.stringify(json));
         renderPortal(json);
       }
     } catch (e) {
+      // キャッシュもない初回かつエラーの場合のみ表示
       if(!localStorage.getItem("aw109_portal_cache")) {
         document.getElementById("news-box").innerHTML = "通信エラーが発生しました。一覧を再読み込みしてください。";
       }
@@ -186,44 +456,90 @@
     }
   }
 
+  // 取得したデータで画面を描画する処理
   function renderPortal(json) {
     const alertBox = document.getElementById("alert-box");
+    
     if (json.alerts && json.alerts.length > 0) {
       alertBox.style.display = "flex";
       alertBox.innerHTML = json.alerts.map(a => {
-        if (a.type === "warning") return `<div class="alert-item" onclick="location.href='search.html?auto_filter=uncompleted'">` + a.text + `</div>`;
-        else return `<div class="alert-item error" onclick="location.href='report.html'">` + a.text + `</div>`;
+        if (a.type === "warning") {
+          return `<div class="alert-item" onclick="location.href='search.html?auto_filter=uncompleted'">` + a.text + `</div>`;
+        } else {
+          return `<div class="alert-item error" onclick="location.href='report.html'">` + a.text + `</div>`;
+        }
       }).join("");
     } else {
       alertBox.style.display = "none";
     }
 
     if (json.news && json.news.length > 0) {
-      document.getElementById("news-box").innerHTML = json.news.map(item => `<div class="news-item"><div class="news-hdr"><span class="news-cat">${item.category}</span><span class="news-date">${item.date}</span></div><div class="news-title">${item.title}</div><div class="news-content">${item.content}</div></div>`).join("");
+      document.getElementById("news-box").innerHTML = json.news.map(item => `
+        <div class="news-item">
+          <div class="news-hdr">
+            <span class="news-cat">${item.category}</span>
+            <span class="news-date">${item.date}</span>
+          </div>
+          <div class="news-title">${item.title}</div>
+          <div class="news-content">${item.content}</div>
+        </div>
+      `).join("");
     } else {
       document.getElementById("news-box").innerHTML = '<p style="font-size:13px; color:var(--sub);">お知らせはありません。</p>';
     }
 
     if (json.qa) {
-      document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+      document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `
+        <p style="margin-bottom:8px;">
+          <b>Q. ${item.q}</b><br>
+          <span style="color:var(--ink);">A. ${item.a}</span>
+        </p>
+        <hr style="border:none;border-top:1px solid var(--line);">
+      `).join("");
     }
     
     const manualsData = json.manuals || [];
-    document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+    document.getElementById("manual-list").innerHTML = manualsData.map(item => `
+      <p style="margin-bottom:8px;">
+        <b>■ ${item.title}</b><br>
+        <span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span>
+      </p>
+      <hr style="border:none;border-top:1px solid var(--line);">
+    `).join("");
   }
 
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
+  // Q&Aの送信
   async function submitQA(event) {
     const q = document.getElementById("qa-input").value.trim();
     if (!q) return alert("入力してください。");
-    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    
+    const btn = event.target;
+    btn.textContent = "送信中...";
+    btn.disabled = true;
+    
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", question: q, source: "ポータル" }), redirect: "follow" });
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "submit_question", question: q, source: "ポータル" }),
+        redirect: "follow"
+      });
       const json = await res.json();
-      if (json.status === "success") { alert("送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); }
-    } catch (e) { alert("通信同期エラーが発生しました。"); } finally { btn.textContent = "送信"; btn.disabled = false; }
+      
+      if (json.status === "success") {
+        alert("送信しました。");
+        document.getElementById("qa-input").value = "";
+        closeModal('qa');
+      }
+    } catch (e) {
+      alert("通信同期エラーが発生しました。");
+    } finally {
+      btn.textContent = "送信";
+      btn.disabled = false;
+    }
   }
 </script>
 </body>
