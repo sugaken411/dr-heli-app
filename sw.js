@@ -1,5 +1,5 @@
 // バージョンを更新（古いキャッシュを強制破棄させます）
-const CACHE_NAME = 'aw109-ems-cache-v9.7';
+const CACHE_NAME = 'aw109-ems-cache-v9.8';
 const urlsToCache = [
   './',
   './index.html',
@@ -7,7 +7,9 @@ const urlsToCache = [
   './report.html',
   './library.html',
   './admin.html',
-  './portal.html'
+  './portal.html',
+  './summary.html',
+  './debriefing.html'
 ];
 
 self.addEventListener('install', event => {
@@ -17,11 +19,15 @@ self.addEventListener('install', event => {
   );
 });
 
-// 🌟 【最重要修正】通信のコントロール
+// 🌟 【最重要修正】通信のコントロール（リダイレクト先もスルーする）
 self.addEventListener('fetch', event => {
-  // GETリクエスト以外（GASへのPOST送信など）、または GAS(script.google.com) への通信の場合は
+  // GETリクエスト以外、または GAS関連ドメイン への通信の場合は
   // Service Workerを完全にスルーして、ブラウザ本来の直接通信を行わせる
-  if (event.request.method !== 'GET' || event.request.url.includes('script.google.com')) {
+  if (
+    event.request.method !== 'GET' || 
+    event.request.url.includes('script.google.com') ||
+    event.request.url.includes('script.googleusercontent.com')
+  ) {
     return; 
   }
 
