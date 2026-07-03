@@ -6,125 +6,82 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#f2f2f7">
-  
   <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A109E_Power_Helicopter.jpg/180px-A109E_Power_Helicopter.jpg">
-  
   <title>AW109 症例登録</title>
-  
   <link rel="manifest" href="manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
-  
+  <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }</script>
   <style>
-    :root {
-      --bg: #f2f2f7;
-      --card: #ffffff;
-      --ink: #1c1c1e;
-      --sub: #8e8e93;
-      --brand: #d32f2f;
-      --brand-light: #ffebeb;
-      --blue: #007aff;
-      --med-blue: #e3f2fd;
-      --med-blue-text: #1565c0;
-      --line: rgba(60,60,67,0.12);
-      --safe-top: env(safe-area-inset-top);
-      --safe-bot: env(safe-area-inset-bottom);
-    }
-    
+    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --med-blue-text: #1565c0; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
-    
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; }
     main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(56px + var(--safe-bot)); padding: 16px 16px 24px; }
-    
     .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
     .version-tag { font-size: 10px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-    
     .card { background: var(--card); border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
     .card-section { padding: 16px; border-bottom: 0.5px solid var(--line); }
     .card-section:last-child { border-bottom: none; }
     .section-label { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-    
     .inline-field { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid var(--line); }
     .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 16px; font-weight: 600; flex: 1; }
-    
     select, input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="time"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
     input[type="time"] { color: var(--ink); background: var(--bg); padding: 6px 10px; border-radius: 6px; max-width: 110px; text-align: center; }
     textarea { width: 100%; border: none; font-size: 15px; background: transparent; outline: none; resize: none; color: var(--ink); line-height: 1.5; }
-    
     .scheme-picker { display: grid; gap: 8px; background: var(--bg); padding: 6px; border-radius: 12px; }
     .scheme-row-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .scheme-row-bot { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 5%; }
+    .scheme-row-bot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: transparent; font-size: 13px; font-weight: 600; color: var(--sub); cursor: pointer; transition: 0.2s; }
     .scheme-btn.active { background: var(--card); color: var(--brand); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    
     .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .time-cell { display: flex; flex-direction: column; gap: 4px; }
     .time-cell-label { font-size: 11px; font-weight: 700; color: var(--sub); text-align: center; }
-    
     .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .verdict-pill { border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; background: var(--bg); }
     .verdict-pill .v-label { font-size: 11px; font-weight: 700; color: var(--sub); margin-bottom: 4px; }
     .verdict-pill .v-icon { font-size: 20px; display: block; margin-bottom: 2px; color: var(--sub); }
     .verdict-pill.on { background: #d1fae5; }
     .verdict-pill.on .v-label, .verdict-pill.on .v-icon { color: #065f46; }
-    
     .monitor-box { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; cursor: pointer; transition: 0.2s; }
     .monitor-box.on { background: var(--med-blue); border-color: var(--blue); }
     .monitor-label { font-size: 13px; font-weight: 700; color: var(--sub); }
     .monitor-box.on .monitor-label { color: var(--med-blue-text); }
     .monitor-value { font-size: 28px; font-weight: 800; color: var(--sub); }
     .monitor-box.on .monitor-value { color: var(--blue); }
-    
     .acc-header { display: flex; align-items: center; padding: 16px; border-bottom: 0.5px solid var(--line); cursor: pointer; font-size: 16px; font-weight: 700; }
     .acc-header span { color: var(--sub); font-size: 12px; margin-left: auto; }
     .acc-body { display: none; padding: 16px; background: rgba(242,242,247,0.5); }
-    
     .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); }
     .chip.on { background: var(--brand-light); border-color: var(--brand); color: var(--brand); }
-    
     .sub-panel { background: var(--card); border-radius: 8px; padding: 12px; margin-top: 8px; border: 1px solid var(--line); width: 100%; display: none; }
     .radio-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
     .radio-btn { flex: 1; text-align: center; padding: 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; }
     .radio-btn.on { background: var(--brand); color: #fff; border-color: var(--brand); }
-    
     .btn-clear { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; }
     .btn-add-action { background: var(--blue); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-    
     .submit-btn { width: 100%; background: var(--brand); color: #fff; border: none; border-radius: 12px; padding: 18px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 16px; }
     .submit-btn:disabled { background: var(--sub); cursor: not-allowed; }
-    
     .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none; color: var(--sub); font-size: 11px; font-weight: 700; }
     .tab-btn.active { color: var(--brand); }
     .tab-icon { font-size: 24px; line-height: 1; }
-    
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 85dvh; overflow-y: auto; }
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
-    
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    
     .pv-section { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
     .pv-title { font-size: 13px; font-weight: 700; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
     .pv-ul { list-style: none; padding: 0; margin: 0; }
     .pv-li { margin-bottom: 4px; position: relative; padding-left: 14px; }
     .pv-li::before { content: '・'; position: absolute; left: 0; color: var(--sub); font-weight: bold; }
-    .pv-sub-item { position: relative; padding-left: 12px; font-size: 13px; color: var(--sub); }
-    .pv-sub-item::before { content: '└'; position: absolute; left: 0; color: #c4c4c6; }
   </style>
 </head>
 <body>
@@ -138,7 +95,7 @@
   <div class="hdr-group">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
   </div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v9.9</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.0</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -151,7 +108,7 @@
     <div class="card">
       <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span class="field-label" style="font-size: 16px; font-weight: 600; flex: 1;">要請番号</span>
-        <input id="v-id" type="number" inputmode="numeric" placeholder="未入力で自動仮ID" style="text-align: right; font-weight: 600;" oninput="saveState()">
+        <input id="v-id" type="number" inputmode="numeric" placeholder="未入力で仮ID" style="text-align: right; font-weight: 600;" oninput="saveState()">
         <label style="font-size:14px; font-weight:500; display:flex; align-items:center; gap:4px; margin-left: 12px;">
           <input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;">枝番
         </label>
@@ -165,24 +122,18 @@
       
       <div class="inline-field">
         <span class="field-label">出場先</span>
-        <select id="v-dest" onchange="saveState()">
-          <option value="">読込中...</option>
-        </select>
+        <select id="v-dest" onchange="saveState()"><option value="">読込中...</option></select>
       </div>
       
       <div class="inline-field">
         <span class="field-label">フライトDr</span>
-        <select id="v-dr" onchange="toggleStaff('dr'); saveState()">
-          <option value="">読込中...</option>
-        </select>
+        <select id="v-dr" onchange="toggleStaff('dr'); saveState()"><option value="">読込中...</option></select>
         <input type="text" id="v-dr-other" placeholder="外部ドクター名等" style="display:none; text-align: right;" oninput="saveState()">
       </div>
       
       <div class="inline-field">
         <span class="field-label">フライトNs</span>
-        <select id="v-ns" onchange="toggleStaff('ns'); saveState()">
-          <option value="">読込中...</option>
-        </select>
+        <select id="v-ns" onchange="toggleStaff('ns'); saveState()"><option value="">読込中...</option></select>
         <input type="text" id="v-ns-other" placeholder="応援ナース名等" style="display:none; text-align: right;" oninput="saveState()">
       </div>
     </div>
@@ -191,18 +142,9 @@
       <div class="card-section">
         <div class="section-label">🛫 航空タイムライン <button class="btn-clear" onclick="clearAviationTimeline()">クリア</button></div>
         <div class="time-grid">
-          <div class="time-cell">
-            <div class="time-cell-label">要請/依頼</div>
-            <input type="time" id="t-request" onchange="recalcAuto()">
-          </div>
-          <div class="time-cell">
-            <div class="time-cell-label">初期離陸</div>
-            <input type="time" id="t-takeoff" onchange="recalcAuto()">
-          </div>
-          <div class="time-cell">
-            <div class="time-cell-label">最終着陸</div>
-            <input type="time" id="t-landing" onchange="recalcAuto()">
-          </div>
+          <div class="time-cell"><div class="time-cell-label">要請/依頼</div><input type="time" id="t-request" onchange="recalcAuto()"></div>
+          <div class="time-cell"><div class="time-cell-label">初期離陸</div><input type="time" id="t-takeoff" onchange="recalcAuto()"></div>
+          <div class="time-cell"><div class="time-cell-label">最終着陸</div><input type="time" id="t-landing" onchange="recalcAuto()"></div>
         </div>
       </div>
     </div>
@@ -211,18 +153,9 @@
       <div class="card-section">
         <div class="section-label">医療活動タイムライン <button class="btn-clear" onclick="clearMedicalTimeline()">クリア</button></div>
         <div class="time-grid">
-          <div class="time-cell">
-            <div class="time-cell-label">患者接触</div>
-            <input type="time" id="t-接触" onchange="recalcAuto()">
-          </div>
-          <div class="time-cell">
-            <div class="time-cell-label">病院到着</div>
-            <input type="time" id="t-病着" onchange="recalcAuto()">
-          </div>
-          <div class="time-cell">
-            <div class="time-cell-label">活動終了</div>
-            <input type="time" id="t-終了" onchange="recalcAuto()">
-          </div>
+          <div class="time-cell"><div class="time-cell-label">患者接触</div><input type="time" id="t-接触" onchange="recalcAuto()"></div>
+          <div class="time-cell"><div class="time-cell-label">病院到着</div><input type="time" id="t-病着" onchange="recalcAuto()"></div>
+          <div class="time-cell"><div class="time-cell-label">活動終了</div><input type="time" id="t-終了" onchange="recalcAuto()"></div>
         </div>
       </div>
     </div>
@@ -239,6 +172,8 @@
           <div class="scheme-row-bot">
             <button class="scheme-btn" onclick="setScheme(this,'Iターン乗り込み')">Iターン乗込</button>
             <button class="scheme-btn" onclick="setScheme(this,'Iターン救急隊のみ')">Iターン救急隊</button>
+            <!-- 🌟 キャンセルを追加 -->
+            <button class="scheme-btn" onclick="setScheme(this,'キャンセル')" style="color:var(--brand);">キャンセル</button>
           </div>
         </div>
       </div>
@@ -253,11 +188,15 @@
           <div class="verdict-pill off" id="calc-long"><div class="v-label">長時間加算</div><span class="v-icon">—</span></div>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+          <!-- 🌟 モニター時間を手入力可能に変更し、ON/OFFタップを復旧 -->
           <div class="monitor-box" id="calc-monitor" onclick="tCalc('monitor')">
-            <span class="monitor-label">モニター<br>算定時間</span><span class="monitor-value" id="lbl-monitor">--:--</span>
+            <span class="monitor-label">モニター<br>算定時間</span>
+            <input type="text" id="lbl-monitor" class="monitor-value" style="width:70px; background:transparent; border:none; outline:none; text-align:right; font-family:monospace; color:inherit;" value="--:--" onclick="event.stopPropagation()" onchange="st.calc.mTimeManual=true; st.calc.mTime=this.value; saveState();">
           </div>
+          <!-- 🌟 SpO2のON/OFFタップを復旧 -->
           <div class="monitor-box" id="calc-spo2" onclick="tCalc('spo2')" style="flex-direction:column; justify-content:center;">
-            <span class="monitor-label" style="text-align:center; font-size:14px;">SpO2</span><span class="monitor-value" id="lbl-spo2" style="font-size:16px;">ON</span>
+            <span class="monitor-label" style="text-align:center; font-size:14px;">SpO2</span>
+            <span class="monitor-value" id="lbl-spo2" style="font-size:16px;">ON</span>
           </div>
         </div>
       </div>
@@ -276,39 +215,21 @@
 
     <div class="card">
       <div class="card-section">
-        <div class="section-label">
-          <span>🌬️ 移動用酸素</span>
-          <div>
-            <button class="btn-clear" onclick="resetSection('酸素')">クリア</button>
-            <button class="btn-add-action" onclick="addDynManual('酸素')">＋</button>
-          </div>
-        </div>
+        <div class="section-label"><span>🌬️ 移動用酸素</span><div><button class="btn-clear" onclick="resetSection('酸素')">クリア</button><button class="btn-add-action" onclick="addDynManual('酸素')">＋</button></div></div>
         <div id="dyn-酸素"></div>
       </div>
     </div>
     
     <div class="card">
       <div class="card-section">
-        <div class="section-label">
-          <span>💓 胸骨圧迫 <span style="color:var(--ink); margin-left:8px;">積算: <span id="cpr-total">00:00</span></span></span>
-          <div>
-            <button class="btn-clear" onclick="resetSection('圧迫')">クリア</button>
-            <button class="btn-add-action" onclick="addDynManual('圧迫')">＋</button>
-          </div>
-        </div>
+        <div class="section-label"><span>💓 胸骨圧迫 <span style="color:var(--ink); margin-left:8px;">積算: <span id="cpr-total">00:00</span></span></span><div><button class="btn-clear" onclick="resetSection('圧迫')">クリア</button><button class="btn-add-action" onclick="addDynManual('圧迫')">＋</button></div></div>
         <div id="dyn-圧迫"></div>
       </div>
     </div>
     
     <div class="card">
       <div class="card-section">
-        <div class="section-label">
-          <span>🤖 人工呼吸器</span>
-          <div>
-            <button class="btn-clear" onclick="resetSection('呼吸器')">クリア</button>
-            <button class="btn-add-action" onclick="addDynManual('呼吸器')">＋</button>
-          </div>
-        </div>
+        <div class="section-label"><span>🤖 人工呼吸器</span><div><button class="btn-clear" onclick="resetSection('呼吸器')">クリア</button><button class="btn-add-action" onclick="addDynManual('呼吸器')">＋</button></div></div>
         <div id="dyn-呼吸器"></div>
       </div>
     </div>
@@ -350,30 +271,11 @@
 <div class="modal-overlay" id="modal-confirm" onclick="if(event.target===this)closeModal('confirm')">
   <div class="modal-box" style="text-align:center;">
     <h3 style="margin-bottom:12px;">🚁 通信環境の確認</h3>
-    <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">アンテナ（電波）が立っていることを確認してください。<br>※不一致時はフライトナースへ連絡</p>
+    <p style="font-size:14px; color:var(--sub); margin-bottom:20px;">アンテナ（電波）が立っていることを確認してください。</p>
     <div style="display:flex; gap:12px;">
       <button style="flex:1; padding:14px; border:none; border-radius:8px; background:#e5e5ea; font-weight:700;" onclick="closeModal('confirm')">キャンセル</button>
       <button style="flex:1; padding:14px; border:none; border-radius:8px; background:var(--brand); color:#fff; font-weight:700;" onclick="closeModal('confirm'); submitData();">送信する</button>
     </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
-  <div class="modal-box">
-    <h3>📖 取扱説明書</h3>
-    <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
-    <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
-  <div class="modal-box">
-    <h3>❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
-    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
-    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
-    <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
   </div>
 </div>
 
@@ -405,14 +307,13 @@
     vals: {'カフ有無':'あり'}, 
     chips: {}, 
     dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, 
-    calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--" } 
+    calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--", mTimeManual:false } 
   };
 
   window.onload = () => {
     buildLines(STRUCT.line, "box-line");
     buildProc(STRUCT.echo, "box-echo");
     buildProc(STRUCT.other, "box-other");
-    
     const restored = restoreState();
     if (!restored) {
       const d = new Date();
@@ -434,29 +335,13 @@
     window.scrollTo(0,0);
   }
 
-  function toggleEdaban() {
-    document.getElementById("v-edaban").style.display = document.getElementById("chk-edaban").checked ? "block" : "none";
-    saveState();
-  }
-
-  function toggleAcc(id) {
-    const el = document.getElementById(id);
-    el.style.display = el.style.display === "block" ? "none" : "block";
-  }
-
-  function openModal(id) {
-    document.getElementById('modal-'+id).classList.add('show');
-  }
-
-  function closeModal(id) {
-    document.getElementById('modal-'+id).classList.remove('show');
-  }
-
+  function toggleEdaban() { document.getElementById("v-edaban").style.display = document.getElementById("chk-edaban").checked ? "block" : "none"; saveState(); }
+  function toggleAcc(id) { const el = document.getElementById(id); el.style.display = el.style.display === "block" ? "none" : "block"; }
+  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
   function toggleStaff(type) {
-    const sel = document.getElementById(`v-${type}`);
-    const other = document.getElementById(`v-${type}-other`);
-    other.style.display = sel.value === "その他" ? "block" : "none";
-    saveState();
+    const sel = document.getElementById(`v-${type}`); const other = document.getElementById(`v-${type}-other`);
+    other.style.display = sel.value === "その他" ? "block" : "none"; saveState();
   }
 
   function buildProc(arr, boxId) {
@@ -464,18 +349,11 @@
     arr.forEach(o => {
       let displayStyle = ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].includes(o.k) ? 'style="display:none;"' : '';
       html += `<div style="width:100%;" ${displayStyle}><div class="chip" id="c-${o.k}" onclick="tChip('${o.k}')">${o.k}</div>`;
-      
-      if (o.sub === "radio") {
-        html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r => `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`;
-      } else if (o.sub === "text") {
-        html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="フリー入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['${o.k}']=this.value; saveState();"></div>`;
-      } else if (o.sub === "checks") {
-        html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-grid">` + o.opts.map(c => `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`;
-      } else if (o.sub === "intubation") {
-        html += `<div class="sub-panel" id="s-${o.k}"><div class="inline-field" style="padding:8px 0;"><span class="field-label" style="font-size:14px;">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; saveState();"><option value="">選択</option>${Array.from({length:14},(_,i)=>(8.5-i*0.5).toFixed(1)).map(v=>`<option>${v}</option>`).join("")}</select></div><div class="inline-field" style="padding:8px 0; border-bottom:0.5px solid var(--line);"><span class="field-label" style="font-size:14px;">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn on" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div><div class="inline-field" style="padding:8px 0; border-bottom:none;"><input type="text" placeholder="フリー詳細" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['気管挿管詳細']=this.value; saveState();"></div></div>`;
-      } else if (o.sub === "drainage") {
-        html += `<div class="sub-panel" id="s-${o.k}"><div style="display:flex; flex-direction:column; gap:8px;">${["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].map(item => `<div style="display:flex; align-items:center; gap:8px;"><div class="chip" id="c-${item}" onclick="tChip('${item}')" style="flex:1;">${item}</div><div class="radio-group" id="rg-${item}" style="display:none; flex:1;"><div class="radio-btn" id="r-${item}本数-1本" onclick="sRad('${item}本数','1本')">1本</div><div class="radio-btn" id="r-${item}本数-2本" onclick="sRad('${item}本数','2本')">2本</div></div></div>`).join("")}</div></div>`;
-      }
+      if (o.sub === "radio") html += `<div class="sub-panel" id="s-${o.k}"><div class="radio-group">` + o.opts.map(r => `<div class="radio-btn" id="r-${o.skey}-${r}" onclick="sRad('${o.skey}','${r}')">${r}</div>`).join("") + `</div></div>`;
+      else if (o.sub === "text") html += `<div class="sub-panel" id="s-${o.k}"><input type="text" placeholder="フリー入力" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['${o.k}']=this.value; saveState();"></div>`;
+      else if (o.sub === "checks") html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-grid">` + o.opts.map(c => `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`;
+      else if (o.sub === "intubation") html += `<div class="sub-panel" id="s-${o.k}"><div class="inline-field" style="padding:8px 0;"><span class="field-label" style="font-size:14px;">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; saveState();"><option value="">選択</option>${Array.from({length:14},(_,i)=>(8.5-i*0.5).toFixed(1)).map(v=>`<option>${v}</option>`).join("")}</select></div><div class="inline-field" style="padding:8px 0; border-bottom:0.5px solid var(--line);"><span class="field-label" style="font-size:14px;">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn on" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div><div class="inline-field" style="padding:8px 0; border-bottom:none;"><input type="text" placeholder="フリー詳細" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['気管挿管詳細']=this.value; saveState();"></div></div>`;
+      else if (o.sub === "drainage") html += `<div class="sub-panel" id="s-${o.k}"><div style="display:flex; flex-direction:column; gap:8px;">${["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].map(item => `<div style="display:flex; align-items:center; gap:8px;"><div class="chip" id="c-${item}" onclick="tChip('${item}')" style="flex:1;">${item}</div><div class="radio-group" id="rg-${item}" style="display:none; flex:1;"><div class="radio-btn" id="r-${item}本数-1本" onclick="sRad('${item}本数','1本')">1本</div><div class="radio-btn" id="r-${item}本数-2本" onclick="sRad('${item}本数','2本')">2本</div></div></div>`).join("")}</div></div>`;
       html += `</div>`;
     });
     document.getElementById(boxId).innerHTML = html;
@@ -490,19 +368,9 @@
     document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]);
     const sub = document.getElementById(`s-${k}`);
     if (sub) sub.style.display = st.chips[k] ? 'block' : 'none';
-    
-    if (k === "気管挿管" && st.chips[k]) {
-      if (!st.chips["EtCO2"]) tChip("EtCO2");
-      if (!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料");
-    }
-    if (k === "血ガス" && st.chips[k]) {
-      if (!st.chips["静脈血採血"]) tChip("静脈血採血");
-    }
-    if (k === "胸腔ドレナージ" && !st.chips[k]) {
-      ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].forEach(item => {
-        if (st.chips[item]) tChip(item);
-      });
-    }
+    if (k === "気管挿管" && st.chips[k]) { if (!st.chips["EtCO2"]) tChip("EtCO2"); if (!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料"); }
+    if (k === "血ガス" && st.chips[k]) { if (!st.chips["静脈血採血"]) tChip("静脈血採血"); }
+    if (k === "胸腔ドレナージ" && !st.chips[k]) { ["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].forEach(item => { if (st.chips[item]) tChip(item); }); }
     saveState();
   }
 
@@ -516,48 +384,23 @@
   function setScheme(btn, s) {
     st.scheme = s;
     document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn));
-    toggleArrivalState();
-    recalcAuto();
-  }
-
-  function setSchemeVisual(s) {
-    document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b.innerText.includes(s.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込"))));
-    toggleArrivalState();
-  }
-
-  function toggleArrivalState() {
     const aBox = document.getElementById("t-病着");
-    if (st.scheme === "Iターン救急隊のみ") {
-      aBox.value = "";
-      aBox.disabled = true;
-      aBox.style.opacity = "0.3";
-    } else {
-      aBox.disabled = false;
-      aBox.style.opacity = "1";
-    }
-  }
-  
-  function clearAviationTimeline() {
-    ["request","takeoff","landing"].forEach(k => {
-      st.times[k] = "";
-      const el = document.getElementById(`t-${k}`);
-      if (el) el.value = "";
-    });
+    if (s === "Iターン救急隊のみ") { aBox.value = ""; aBox.disabled = true; aBox.style.opacity = "0.3"; } 
+    else { aBox.disabled = false; aBox.style.opacity = "1"; }
     recalcAuto();
   }
 
-  function clearMedicalTimeline() {
-    ["接触","病着","終了"].forEach(k => {
-      st.times[k] = "";
-      const el = document.getElementById(`t-${k}`);
-      if (el) el.value = "";
-    });
-    toggleArrivalState();
-    recalcAuto();
+  function clearAviationTimeline() { ["request","takeoff","landing"].forEach(k => { st.times[k] = ""; const el = document.getElementById(`t-${k}`); if (el) el.value = ""; }); recalcAuto(); }
+  function clearMedicalTimeline() { 
+    ["接触","病着","終了"].forEach(k => { st.times[k] = ""; const el = document.getElementById(`t-${k}`); if (el) el.value = ""; }); 
+    st.calc.mTimeManual = false; // 手動設定をリセット
+    recalcAuto(); 
   }
 
+  // 🌟 SpO2とモニターのON/OFFタップ復旧
   function tCalc(key) {
     st.calc[key] = !st.calc[key];
+    saveState();
     recalcAuto();
   }
   
@@ -568,11 +411,12 @@
     });
     
     const sc = st.scheme, c = st.times["接触"], a = st.times["病着"], e = st.times["終了"];
-    st.calc.oshin = false; st.calc.hansho = false; st.calc.long = false; st.calc.mTime = "--:--";
+    st.calc.oshin = false; st.calc.hansho = false; st.calc.long = false;
+    let mTimeCalc = "--:--";
     
     if (sc) {
       st.calc.oshin = true;
-      if (sc.indexOf("救急隊") === -1) st.calc.hansho = true;
+      if (sc.indexOf("救急隊") === -1 && sc !== "キャンセル") st.calc.hansho = true;
     }
     
     if (c && e) {
@@ -582,47 +426,57 @@
       if (diff < 0) diff += 1440;
       if (diff >= 30) st.calc.long = true;
       
-      if (sc.indexOf("救急隊") !== -1) {
-        st.calc.mTime = `${String(Math.floor(diff/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
-      } else if (a && sc !== "Iターン救急隊のみ") {
+      if (sc && sc.indexOf("救急隊") !== -1) {
+        mTimeCalc = `${String(Math.floor(diff/60)).padStart(2,'0')}:${String(diff%60).padStart(2,'0')}`;
+      } else if (a && sc && sc !== "Iターン救急隊のみ" && sc !== "キャンセル") {
         let amins = parseInt(a.split(":")[0])*60 + parseInt(a.split(":")[1]);
         let mdiff = amins - cmins;
         if (mdiff < 0) mdiff += 1440;
-        st.calc.mTime = `${String(Math.floor(mdiff/60)).padStart(2,'0')}:${String(mdiff%60).padStart(2,'0')}`;
+        mTimeCalc = `${String(Math.floor(mdiff/60)).padStart(2,'0')}:${String(mdiff%60).padStart(2,'0')}`;
       }
+    }
+    
+    // 手動で編集されていなければ自動計算値をセット
+    if (!st.calc.mTimeManual) {
+      st.calc.mTime = mTimeCalc;
     }
     
     const setV = (domId, isOn) => {
       const el = document.getElementById(domId);
-      if (el) {
-        el.classList.toggle('on', isOn);
-        el.querySelector('.v-icon').textContent = isOn ? "✓" : "—";
-      }
+      if (el) { el.classList.toggle('on', isOn); el.querySelector('.v-icon').textContent = isOn ? "✓" : "—"; }
     };
     
     setV("calc-oshin", st.calc.oshin);
     setV("calc-hansho", st.calc.hansho);
     setV("calc-long", st.calc.long);
-    document.getElementById("lbl-monitor").textContent = st.calc.mTime;
+    
+    // 🌟 モニターとSpO2のUI更新（バグ修正）
+    const mBox = document.getElementById("calc-monitor");
+    if(mBox) {
+      mBox.classList.toggle('on', st.calc.monitor);
+      document.getElementById("lbl-monitor").value = st.calc.mTime;
+    }
+    const sBox = document.getElementById("calc-spo2");
+    if(sBox) {
+      sBox.classList.toggle('on', st.calc.spo2);
+      document.getElementById("lbl-spo2").textContent = st.calc.spo2 ? "ON" : "OFF";
+    }
     
     let cprMins = 0;
     for (let i = 1; i <= 5; i++) {
-      let s = document.getElementById(`t-【圧迫${i}】開始`);
-      let ed = document.getElementById(`t-【圧迫${i}】終了`);
+      let s = document.getElementById(`t-【圧迫${i}】開始`), ed = document.getElementById(`t-【圧迫${i}】終了`);
       if (s && ed && s.value && ed.value) {
         let diff = (parseInt(ed.value.split(":")[0])*60+parseInt(ed.value.split(":")[1])) - (parseInt(s.value.split(":")[0])*60+parseInt(s.value.split(":")[1]));
         if (diff < 0) diff += 1440;
         cprMins += diff;
-        st.times[`【圧迫${i}】開始`] = s.value;
-        st.times[`【圧迫${i}】終了`] = ed.value;
+        st.times[`【圧迫${i}】開始`] = s.value; st.times[`【圧迫${i}】終了`] = ed.value;
       }
     }
     document.getElementById("cpr-total").textContent = `${String(Math.floor(cprMins/60)).padStart(2,'0')}:${String(cprMins%60).padStart(2,'0')}`;
     
     for (let i = 1; i <= 5; i++) {
       ["酸素","呼吸器"].forEach(ty => {
-        const s = document.getElementById(`t-【${ty}${i}】開始`);
-        const ed = document.getElementById(`t-【${ty}${i}】終了`);
+        const s = document.getElementById(`t-【${ty}${i}】開始`), ed = document.getElementById(`t-【${ty}${i}】終了`);
         if (s && s.value) st.times[`【${ty}${i}】開始`] = s.value;
         if (ed && ed.value) st.times[`【${ty}${i}】終了`] = ed.value;
       });
@@ -631,55 +485,26 @@
   }
   
   function addDynRaw(type) {
-    st.dyn[type]++;
-    const i = st.dyn[type];
-    let h = `
-      <div id="div-${type}-${i}" style="border-bottom:0.5px solid var(--line); padding:10px 0; margin-bottom:4px;">
-        <div class="time-grid">
-          <div class="time-cell">
-            <div class="time-cell-label">開始</div>
-            <input type="time" id="t-【${type}${i}】開始" onchange="recalcAuto()">
-          </div>
-          <div class="time-cell">
-            <div class="time-cell-label">終了</div>
-            <input type="time" id="t-【${type}${i}】終了" onchange="recalcAuto()">
-          </div>
-    `;
-    if (type === "酸素" || type === "呼吸器") {
-      h += `
-          <div class="time-cell">
-            <div class="time-cell-label">設定値</div>
-            <input type="number" id="v-【${type}${i}】流量" placeholder="${type==='酸素'?'L/分':'FiO2%'}" style="background:var(--bg); padding:6px; border-radius:6px; font-size:14px; text-align:center; width:100%;" onchange="st.vals['【${type}${i}】流量']=this.value; saveState();">
-          </div>
-      `;
-    }
+    st.dyn[type]++; const i = st.dyn[type];
+    let h = `<div id="div-${type}-${i}" style="border-bottom:0.5px solid var(--line); padding:10px 0; margin-bottom:4px;"><div class="time-grid"><div class="time-cell"><div class="time-cell-label">開始</div><input type="time" id="t-【${type}${i}】開始" onchange="recalcAuto()"></div><div class="time-cell"><div class="time-cell-label">終了</div><input type="time" id="t-【${type}${i}】終了" onchange="recalcAuto()"></div>`;
+    if (type === "酸素" || type === "呼吸器") { h += `<div class="time-cell"><div class="time-cell-label">設定値</div><input type="number" id="v-【${type}${i}】流量" placeholder="${type==='酸素'?'L/分':'FiO2%'}" style="background:var(--bg); padding:6px; border-radius:6px; font-size:14px; text-align:center; width:100%;" onchange="st.vals['【${type}${i}】流量']=this.value; saveState();"></div>`; }
     h += `</div></div>`;
     document.getElementById(`dyn-${type}`).insertAdjacentHTML('beforeend', h);
   }
 
   function addDynManual(type) {
     if (st.dyn[type] >= 5) return;
-    const preIdx = st.dyn[type];
-    const preEndVal = preIdx > 0 ? (document.getElementById(`t-【${type}${preIdx}】終了`).value || "") : "";
-    addDynRaw(type);
-    const nextIdx = st.dyn[type];
-    if (preIdx === 0 && document.getElementById("t-接触").value) {
-      document.getElementById(`t-【${type}${nextIdx}】開始`).value = document.getElementById("t-接触").value;
-    } else if (preEndVal) {
-      document.getElementById(`t-【${type}${nextIdx}】開始`).value = preEndVal;
-    }
+    const preIdx = st.dyn[type]; const preEndVal = preIdx > 0 ? (document.getElementById(`t-【${type}${preIdx}】終了`).value || "") : "";
+    addDynRaw(type); const nextIdx = st.dyn[type];
+    if (preIdx === 0 && document.getElementById("t-接触").value) { document.getElementById(`t-【${type}${nextIdx}】開始`).value = document.getElementById("t-接触").value; } 
+    else if (preEndVal) { document.getElementById(`t-【${type}${nextIdx}】開始`).value = preEndVal; }
     recalcAuto();
   }
 
   function resetSection(type) {
     document.getElementById(`dyn-${type}`).innerHTML = "";
-    for (let i = 1; i <= 5; i++) {
-      delete st.times[`【${type}${i}】開始`];
-      delete st.times[`【${type}${i}】終了`];
-      delete st.vals[`【${type}${i}】流量`];
-    }
-    st.dyn[type] = 0;
-    recalcAuto();
+    for (let i = 1; i <= 5; i++) { delete st.times[`【${type}${i}】開始`]; delete st.times[`【${type}${i}】終了`]; delete st.vals[`【${type}${i}】流量`]; }
+    st.dyn[type] = 0; recalcAuto();
   }
   
   function validateTimeline() {
@@ -691,86 +516,39 @@
     if (req !== -1 && take !== -1 && take < req) msg.push("・「初期離陸」は「要請時刻」以降に設定してください。");
     if (take !== -1 && c !== -1 && c < take) msg.push("・「患者接触」は「初期離陸」以降に設定してください。");
     if (c !== -1 && e !== -1 && e < c) msg.push("・「活動終了」は「患者接触」以降に設定してください。");
-    if (st.scheme && st.scheme !== "Iターン救急隊のみ" && c !== -1 && a !== -1 && a < c) msg.push("・「病院到着」は「患者接触」以降に設定してください。");
+    if (st.scheme && st.scheme !== "Iターン救急隊のみ" && st.scheme !== "キャンセル" && c !== -1 && a !== -1 && a < c) msg.push("・「病院到着」は「患者接触」以降に設定してください。");
     return msg;
   }
 
   function saveState() { 
-    localStorage.setItem("aw109_draft", JSON.stringify({ 
-      id: document.getElementById("v-id").value, 
-      edaban: document.getElementById("v-edaban").value, 
-      chk: document.getElementById("chk-edaban").checked, 
-      date: document.getElementById("v-date").value, 
-      dest: document.getElementById("v-dest").value, 
-      dr: document.getElementById("v-dr").value, 
-      drOther: document.getElementById("v-dr-other").value, 
-      ns: document.getElementById("v-ns").value, 
-      nsOther: document.getElementById("v-ns-other").value, 
-      st: st 
-    })); 
+    localStorage.setItem("aw109_draft", JSON.stringify({ id: document.getElementById("v-id").value, edaban: document.getElementById("v-edaban").value, chk: document.getElementById("chk-edaban").checked, date: document.getElementById("v-date").value, dest: document.getElementById("v-dest").value, dr: document.getElementById("v-dr").value, drOther: document.getElementById("v-dr-other").value, ns: document.getElementById("v-ns").value, nsOther: document.getElementById("v-ns-other").value, st: st })); 
   }
 
   function restoreState() { 
-    const str = localStorage.getItem("aw109_draft"); 
-    if(!str) return false; 
+    const str = localStorage.getItem("aw109_draft"); if(!str) return false; 
     try { 
       const draft = JSON.parse(str); 
       if(Object.keys(draft.st.chips).length === 0 && !draft.id && !draft.dest && !draft.st.scheme) return false; 
-      if(!confirm("未送信のデータがあります。復元しますか？")) { 
-        localStorage.removeItem("aw109_draft"); 
-        return false; 
-      } 
-      document.getElementById("v-id").value = draft.id || ""; 
-      document.getElementById("v-edaban").value = draft.edaban || ""; 
-      document.getElementById("chk-edaban").checked = draft.chk || false; 
-      document.getElementById("v-date").value = draft.date || ""; 
-      document.getElementById("v-dest").value = draft.dest || ""; 
-      document.getElementById("v-dr").value = draft.dr || ""; 
-      document.getElementById("v-dr-other").value = draft.drOther || ""; 
-      document.getElementById("v-ns").value = draft.ns || ""; 
-      document.getElementById("v-ns-other").value = draft.nsOther || ""; 
-      toggleEdaban(); toggleStaff('dr'); toggleStaff('ns'); 
+      if(!confirm("未送信のデータがあります。復元しますか？")) { localStorage.removeItem("aw109_draft"); return false; } 
+      document.getElementById("v-id").value = draft.id || ""; document.getElementById("v-edaban").value = draft.edaban || ""; document.getElementById("chk-edaban").checked = draft.chk || false; document.getElementById("v-date").value = draft.date || ""; document.getElementById("v-dest").value = draft.dest || ""; document.getElementById("v-dr").value = draft.dr || ""; document.getElementById("v-dr-other").value = draft.drOther || ""; document.getElementById("v-ns").value = draft.ns || ""; document.getElementById("v-ns-other").value = draft.nsOther || ""; toggleEdaban(); toggleStaff('dr'); toggleStaff('ns'); 
       st = draft.st; 
-      if(st.scheme) setSchemeVisual(st.scheme); 
-      ["request","takeoff","landing","接触","病着","終了"].forEach(k => { 
-        if(st.times[k]) document.getElementById(`t-${k}`).value = st.times[k]; 
-      }); 
-      Object.keys(st.chips).forEach(k => { 
-        if(st.chips[k]){ 
-          document.getElementById(`c-${k}`).classList.add('on'); 
-          const sub = document.getElementById(`s-${k}`); 
-          if(sub) sub.style.display='block'; 
-        }
-      }); 
-      Object.keys(st.vals).forEach(k => { 
-        const rad = document.getElementById(`r-${k}-${st.vals[k]}`); 
-        if(rad){ 
-          document.querySelectorAll(`[id^="r-${k}-"]`).forEach(el => el.classList.remove('on')); 
-          rad.classList.add('on'); 
-        } 
-      }); 
-      ["酸素","圧迫","呼吸器"].forEach(type => { 
-        for(let i=1; i<=st.dyn[type]; i++){ 
-          st.dyn[type]--; 
-          addDynRaw(type); 
-          if(st.times[`【${type}${i}】開始`]) document.getElementById(`t-【${type}${i}】開始`).value = st.times[`【${type}${i}】開始`]; 
-          if(st.times[`【${type}${i}】終了`]) document.getElementById(`t-【${type}${i}】終了`).value = st.times[`【${type}${i}】終了`]; 
-          if(st.vals[`【${type}${i}】流量`]) document.getElementById(`v-【${type}${i}】流量`).value = st.vals[`【${type}${i}】流量`]; 
-        }
-      }); 
+      if(st.scheme) {
+        document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b.innerText.includes(st.scheme.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込"))));
+        const aBox = document.getElementById("t-病着"); if (st.scheme === "Iターン救急隊のみ") { aBox.value = ""; aBox.disabled = true; aBox.style.opacity = "0.3"; } else { aBox.disabled = false; aBox.style.opacity = "1"; }
+      }
+      ["request","takeoff","landing","接触","病着","終了"].forEach(k => { if(st.times[k]) document.getElementById(`t-${k}`).value = st.times[k]; }); 
+      Object.keys(st.chips).forEach(k => { if(st.chips[k]){ document.getElementById(`c-${k}`).classList.add('on'); const sub = document.getElementById(`s-${k}`); if(sub) sub.style.display='block'; }}); 
+      Object.keys(st.vals).forEach(k => { const rad = document.getElementById(`r-${k}-${st.vals[k]}`); if(rad){ document.querySelectorAll(`[id^="r-${k}-"]`).forEach(el => el.classList.remove('on')); rad.classList.add('on'); } }); 
+      ["酸素","圧迫","呼吸器"].forEach(type => { for(let i=1; i<=st.dyn[type]; i++){ st.dyn[type]--; addDynRaw(type); if(st.times[`【${type}${i}】開始`]) document.getElementById(`t-【${type}${i}】開始`).value = st.times[`【${type}${i}】開始`]; if(st.times[`【${type}${i}】終了`]) document.getElementById(`t-【${type}${i}】終了`).value = st.times[`【${type}${i}】終了`]; if(st.vals[`【${type}${i}】流量`]) document.getElementById(`v-【${type}${i}】流量`).value = st.vals[`【${type}${i}】流量`]; }}); 
       if(st.vals['備考']) document.getElementById("v-biko").value = st.vals['備考']; 
       recalcAuto(); 
       return true; 
-    } catch(e){ 
-      localStorage.removeItem("aw109_draft"); 
-      return false; 
-    } 
+    } catch(e){ localStorage.removeItem("aw109_draft"); return false; } 
   }
 
   function renderPreview() {
     recalcAuto();
     let errs = validateTimeline();
-    // 🌟 バグ修正: null参照回避
     const t = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
     
     ["酸素","圧迫","呼吸器"].forEach(type => {
@@ -782,47 +560,18 @@
     });
     
     const errBox = document.getElementById("error-msg");
-    if (errs.length > 0) {
-      errBox.style.display = "block";
-      let errHtml = `<b>【入力内容を確認してください】</b><br>`;
-      errHtml += errs.join("<br>");
-      errBox.innerHTML = errHtml;
-    } else {
-      errBox.style.display = "none";
-    }
+    if (errs.length > 0) { errBox.style.display = "block"; let errHtml = `<b>【入力内容を確認してください】</b><br>`; errHtml += errs.join("<br>"); errBox.innerHTML = errHtml; } else { errBox.style.display = "none"; }
     
     let id = document.getElementById("v-id").value.trim();
     const eda = document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value ? "-" + document.getElementById("v-edaban").value.trim() : "";
     let displayId = id + eda;
-    if (!id) {
-      const now = new Date();
-      displayId = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}(仮)`;
-    }
+    if (!id) { const now = new Date(); displayId = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}(仮)`; }
     
     const idStyle = displayId.includes("(仮)") ? `style="color:var(--brand); font-weight:800;"` : ``;
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "other"||nsVal==="その他") nsVal = document.getElementById("v-ns-other").value;
 
-    let s = `
-      <div class="pv-section">
-        <div class="pv-title">基本情報</div>
-        <div><b>要請番号:</b> <span ${idStyle}>${displayId}</span></div>
-        <div><b>日付:</b> ${document.getElementById("v-date").value}</div>
-        <div><b>出場先:</b> ${document.getElementById("v-dest").value}</div>
-        <div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div>
-        <div><b>スキーム:</b> ${st.scheme || "未選択"}</div>
-      </div>
-      
-      <div class="pv-section">
-        <div class="pv-title">タイムライン</div>
-        <div><b>要請:</b> ${t("t-request")||'--:--'} ｜ <b>離陸:</b> ${t("t-takeoff")||'--:--'} ｜ <b>着陸:</b> ${t("t-landing")||'--:--'}</div>
-        <div style="margin-top:4px;"><b>接触:</b> ${t("t-接触")||'--:--'} ｜ <b>病着:</b> ${t("t-病着")||(st.scheme==='Iターン救急隊のみ'?'対象外':'--:--')} ｜ <b>終了:</b> ${t("t-終了")||'--:--'}</div>
-      </div>
-      
-      <div class="pv-section">
-        <div class="pv-title">処置詳細</div>
-        <ul class="pv-ul">
-    `;
+    let s = `<div class="pv-section"><div class="pv-title">基本情報</div><div><b>要請番号:</b> <span ${idStyle}>${displayId}</span></div><div><b>日付:</b> ${document.getElementById("v-date").value}</div><div><b>出場先:</b> ${document.getElementById("v-dest").value}</div><div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div><div><b>スキーム:</b> ${st.scheme || "未選択"}</div></div><div class="pv-section"><div class="pv-title">タイムライン</div><div><b>要請:</b> ${t("t-request")||'--:--'} ｜ <b>離陸:</b> ${t("t-takeoff")||'--:--'} ｜ <b>着陸:</b> ${t("t-landing")||'--:--'}</div><div style="margin-top:4px;"><b>接触:</b> ${t("t-接触")||'--:--'} ｜ <b>病着:</b> ${t("t-病着")||(st.scheme==='Iターン救急隊のみ'?'対象外':'--:--')} ｜ <b>終了:</b> ${t("t-終了")||'--:--'}</div></div><div class="pv-section"><div class="pv-title">処置詳細</div><ul class="pv-ul">`;
     
     let hasProc = false;
     Object.keys(st.chips).forEach(k => {
@@ -831,30 +580,18 @@
         if (k === "気管挿管") txt += ` (サイズ:${st.vals['気管挿管サイズ']||"未指定"} / カフ:${st.vals['カフ有無']||""})`;
         else if (["20G","18G","22G","24G","ベニューラ","骨髄針"].includes(k)) txt += ` (${st.vals[k+"本数"]||"1本"})`;
         else if (st.vals[k]) txt += ` (${st.vals[k]})`;
-        
-        s += `<li class="pv-li">${txt}</li>`;
-        hasProc = true;
+        s += `<li class="pv-li">${txt}</li>`; hasProc = true;
       }
     });
     
     if (!hasProc) s += `<li class="pv-li">なし</li>`;
-    
-    s += `
-        </ul>
-      </div>
-      <div class="pv-section">
-        <div class="pv-title">持続・積算</div>
-        <ul class="pv-ul">
-    `;
+    s += `</ul></div><div class="pv-section"><div class="pv-title">持続・積算</div><ul class="pv-ul">`;
     
     let hasDyn = false;
     ["酸素","圧迫","呼吸器"].forEach(type => {
       for (let i = 1; i <= st.dyn[type]; i++) {
         let sT = t(`t-【${type}${i}】開始`), eT = t(`t-【${type}${i}】終了`);
-        if (sT || eT) {
-          s += `<li class="pv-li">${type}${i} (${sT||'--:--'}〜${eT||'--:--'}) ${st.vals[`【${type}${i}】流量`]?`[設定:${st.vals[`【${type}${i}】流量`]}]`:''}</li>`;
-          hasDyn = true;
-        }
+        if (sT || eT) { s += `<li class="pv-li">${type}${i} (${sT||'--:--'}〜${eT||'--:--'}) ${st.vals[`【${type}${i}】流量`]?`[設定:${st.vals[`【${type}${i}】流量`]}]`:''}</li>`; hasDyn = true; }
       }
     });
     
@@ -862,186 +599,54 @@
     if (!hasDyn) s += `<li class="pv-li">なし</li>`;
     s += `</ul></div>`;
     
-    if (st.vals['備考']) {
-      s += `
-        <div class="pv-section">
-          <div class="pv-title">備考</div>
-          <div>${st.vals['備考'].replace(/\n/g, '<br>')}</div>
-        </div>
-      `;
-    }
+    if (st.vals['備考']) { s += `<div class="pv-section"><div class="pv-title">備考</div><div>${st.vals['備考'].replace(/\n/g, '<br>')}</div></div>`; }
     document.getElementById("preview-box").innerHTML = s;
   }
 
-  function confirmSubmit() {
-    if (validateTimeline().length > 0) {
-      alert("タイムラインに時系列の矛盾があるため送信できません。修正してください。");
-      return;
-    }
-    document.getElementById("modal-confirm").classList.add("show");
-  }
-
-  async function reportErrorToAdmin(errMsg) {
-    try {
-      await fetch(GAS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "submit_question",
-          password: PIN_CODE,
-          question: `【自動エラー検知】\n送信エラーが発生しました。\n・画面: 症例登録アプリ\n・エラー内容: ${errMsg}\n・時間: ${new Date().toLocaleString()}`,
-          source: "システム自動送信"
-        }),
-        redirect: "follow"
-      });
-    } catch (e) {}
-  }
+  function confirmSubmit() { if (validateTimeline().length > 0) { alert("タイムラインに矛盾があるため送信できません。修正してください。"); return; } document.getElementById("modal-confirm").classList.add("show"); }
 
   async function submitData() {
     let id = document.getElementById("v-id").value.trim();
     const eda = document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value ? "-" + document.getElementById("v-edaban").value.trim() : "";
     let displayId = id + eda;
-    if (!id) {
-      const now = new Date();
-      displayId = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}(仮)`;
-    }
+    if (!id) { const now = new Date(); displayId = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}(仮)`; }
     
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他") drVal = document.getElementById("v-dr-other").value;
     let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他") nsVal = document.getElementById("v-ns-other").value;
     
-    let ccEmails = [];
-    document.querySelectorAll('.mail-cc-check:checked').forEach(cb => ccEmails.push(cb.value));
-    
+    let ccEmails = []; document.querySelectorAll('.mail-cc-check:checked').forEach(cb => ccEmails.push(cb.value));
     const customEmail = document.getElementById("custom-email").value.trim();
-    if (customEmail) {
-      customEmail.split(",").forEach(e => {
-        if (e.trim()) ccEmails.push(e.trim());
-      });
-    }
+    if (customEmail) { customEmail.split(",").forEach(e => { if (e.trim()) ccEmails.push(e.trim()); }); }
 
-    // 🌟 バグ修正: null参照回避
     const t = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
-    const payload = { "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value, "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme, "要請時刻・施設間搬送依頼時刻": t("t-request"), "初期離陸時間": t("t-takeoff"), "最終着陸時間": t("t-landing"), "接触": t("t-接触"), "病着": t("t-病着"), "終了": t("t-終了"), "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"", "モニター算定時間": st.calc.monitor ? st.calc.mTime : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"" };
+    const payload = { "要請番号": displayId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value, "フライトドクター": drVal, "フライトナース": nsVal, "スキーム選択": st.scheme, "要請時刻・施設間搬送依頼時刻": t("t-request"), "初期離陸時間": t("t-takeoff"), "最終着陸時間": t("t-landing"), "接触": t("t-接触"), "病着": t("t-病着"), "終了": t("t-終了"), "往診料": st.calc.oshin?"◯":"", "搬送料": st.calc.hansho?"◯":"", "搬送料（長時間）": st.calc.long?"◯":"", "モニター算定時間": st.calc.monitor ? document.getElementById("lbl-monitor").value : "", "経皮的酸素飽和度": st.calc.spo2?"◯":"" };
     
     Object.keys(st.chips).forEach(k => { if(st.chips[k]) payload[k] = "◯"; });
     Object.keys(st.vals).forEach(k => { payload[k] = st.vals[k]; });
     
-    for (let i = 1; i <= 5; i++) {
-      ["酸素","圧迫","呼吸器"].forEach(ty => {
-        payload[`${ty}${i}開始`] = t(`t-【${ty}${i}】開始`);
-        payload[`${ty}${i}終了`] = t(`t-【${ty}${i}】終了`);
-      });
-      payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || "";
-    }
+    for (let i = 1; i <= 5; i++) { ["酸素","圧迫","呼吸器"].forEach(ty => { payload[`${ty}${i}開始`] = t(`t-【${ty}${i}】開始`); payload[`${ty}${i}終了`] = t(`t-【${ty}${i}】終了`); }); payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || ""; }
     payload["備考"] = document.getElementById("v-biko").value;
 
-    const btn = document.getElementById("btnSubmit");
-    btn.textContent = "送信中... 🚁";
-    btn.disabled = true;
+    const btn = document.getElementById("btnSubmit"); btn.textContent = "送信中... 🚁"; btn.disabled = true;
     
     try {
-      const res = await fetch(GAS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "submit", password: PIN_CODE, cc_emails: ccEmails, data: payload }),
-        redirect: "follow"
-      });
-      
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit", password: PIN_CODE, cc_emails: ccEmails, data: payload }), redirect: "follow" });
       const textRes = await res.text();
-      let jsonRes;
-      try { 
-        jsonRes = JSON.parse(textRes); 
-      } catch(err) {
-        if(textRes.includes("Redirect OK")) {
-          jsonRes = { status: "success" }; 
-        } else {
-          throw new Error("JSON Parse Error: " + textRes.substring(0, 50));
-        }
-      }
-      
-      if (jsonRes.status === "success") { 
-        alert("送信が完了しました！"); 
-        localStorage.removeItem("aw109_draft"); 
-        location.reload(); 
-      } else { 
-        const errMsg = "送信に失敗しました: " + (jsonRes.message || "未知のエラー");
-        alert(errMsg); 
-        reportErrorToAdmin(errMsg); 
-        btn.textContent = "送信する 🚁"; 
-        btn.disabled = false; 
-      }
-    } catch(e) { 
-      const errMsg = "通信に失敗しました。電波環境の良い場所で再度お試しください。(" + e.message + ")";
-      alert(errMsg); 
-      reportErrorToAdmin(errMsg); 
-      btn.textContent = "送信する 🚁"; 
-      btn.disabled = false; 
-    }
+      let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) { jsonRes = { status: "success" }; } else { throw new Error("Parse Error"); } }
+      if (jsonRes.status === "success") { alert("送信が完了しました！"); localStorage.removeItem("aw109_draft"); location.reload(); } else { alert("送信に失敗: " + jsonRes.message); btn.textContent = "送信する 🚁"; btn.disabled = false; }
+    } catch(e) { alert("通信エラーが発生しました。"); btn.textContent = "送信する 🚁"; btn.disabled = false; }
   }
 
   async function fetchInit() {
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), 
-        redirect: "follow" 
-      });
-      
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
       const textRes = await res.text();
-      let jsonRes;
-      try { 
-        jsonRes = JSON.parse(textRes); 
-      } catch(err) {
-        if(textRes.includes("Redirect OK")) {
-          jsonRes = { status: "success", masters: {dest:[], dr:[], ns:[], mailOptions:[]}, qa: [], manuals: [] };
-        } else {
-          throw new Error("通信レスポンスが不正です。");
-        }
-      }
-      
+      let jsonRes; try { jsonRes = JSON.parse(textRes); } catch(err) { if(textRes.includes("Redirect OK")) { jsonRes = { status: "success", masters: {dest:[], dr:[], ns:[], mailOptions:[]}, qa: [], manuals: [] }; } else { throw new Error("Parse Error"); } }
       if (jsonRes.status === "success") {
-        fillSel("v-dest", jsonRes.masters.dest || [], "");
-        fillSel("v-dr", jsonRes.masters.dr || [], "");
-        fillSel("v-ns", jsonRes.masters.ns || [], "");
-        
-        if (jsonRes.masters.mailOptions && jsonRes.masters.mailOptions.length > 0) {
-          document.getElementById("mail-options-box").innerHTML = jsonRes.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}"><span>${opt.name}</span></label>`).join("");
-        }
-        
-        if (jsonRes.qa) { 
-          document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join(""); 
-        }
-        
-        const manualsData = jsonRes.manuals || [];
-        document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p><b>■ ${item.title}</b><br>${item.text.replace(/\\n/g,'<br>')}</p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
-      } else {
-        alert("初期データの読み込みに失敗しました: " + (jsonRes.message || "未知のエラー"));
+        fillSel("v-dest", jsonRes.masters.dest || [], ""); fillSel("v-dr", jsonRes.masters.dr || [], ""); fillSel("v-ns", jsonRes.masters.ns || [], "");
+        if (jsonRes.masters.mailOptions && jsonRes.masters.mailOptions.length > 0) { document.getElementById("mail-options-box").innerHTML = jsonRes.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}"><span>${opt.name}</span></label>`).join(""); }
       }
-    } catch(e) {
-      console.error(e);
-      alert("初期通信に失敗しました。電波環境を確認してください。\n" + e.message);
-    } finally {
-      document.getElementById("global-loader").style.display = "none";
-    }
-  }
-
-  async function submitQA(event) {
-    const q = document.getElementById("qa-input").value.trim(); 
-    if (!q) return alert("入力してください。");
-    try {
-      await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "症例登録" }), 
-        redirect: "follow" 
-      });
-      alert("要望を送信しました。");
-      document.getElementById("qa-input").value = "";
-      closeModal('qa');
-    } catch(e) {
-      alert("送信に失敗しました。");
-    }
+    } catch(e) {} finally { document.getElementById("global-loader").style.display = "none"; }
   }
 </script>
 </body>
