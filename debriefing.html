@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>AW109 デブリーフィング</title>
+  
+  <style>
+    /* 🌟 基本デザイン変数（全アプリ統一） */
+    :root {
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --ink: #1c1c1e;
+      --sub: #8e8e93;
+      --brand: #d32f2f;
+      --brand-light: #ffebeb;
+      --blue: #007aff;
+      --line: rgba(60,60,67,0.12);
+      --safe-top: env(safe-area-inset-top);
+      --safe-bot: env(safe-area-inset-bottom);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* 🌟 ヘッダー・フッター */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + var(--safe-top));
+      padding-top: var(--safe-top);
+      padding-left: 16px;
+      padding-right: 16px;
+      background: rgba(242,242,247,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 0.5px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+    }
+    
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + var(--safe-bot));
+      padding-bottom: var(--safe-bot);
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(20px);
+      border-top: 0.5px solid var(--line);
+      display: flex;
+      z-index: 100;
+    }
+    
+    main {
+      margin-top: calc(56px + var(--safe-top));
+      margin-bottom: calc(56px + var(--safe-bot));
+      padding: 16px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .hdr-group {
+      display: flex;
+      gap: 12px;
+      width: 80px;
+    }
+    
+    .hdr-btn {
+      color: var(--blue);
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .title-box {
+      flex: 1;
+      text-align: center;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+    
+    /* 🌟 UIパーツ（カード・入力欄） */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    
+    .section-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--sub);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    select, input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      background: var(--bg);
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+    
+    textarea {
+      resize: none;
+      min-height: 120px;
+      line-height: 1.5;
+    }
+    
+    /* 🌟 タグチップUI */
+    .chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    
+    .chip {
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      user-select: none;
+    }
+    
+    .chip.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,122,255,0.2);
+    }
+    
+    /* 🌟 タブ切り替えUI */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      background: none;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    
+    .tab-btn.active {
+      color: var(--blue);
+    }
+    
+    .tab-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+    
+    /* 🌟 送信ボタン */
+    .submit-btn {
+      width: 100%;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+      transition: 0.2s;
+    }
+    
+    .submit-btn:disabled {
+      background: var(--sub);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* 🌟 ローディング画面 */
+    #global-loader {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.95);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0,122,255,0.2);
+      border-top: 4px solid var(--blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="global-loader">
+  <div class="spinner"></div>
+  <div style="margin-top:16px; font-weight:800; color:var(--ink);">データを同期中...</div>
+</div>
+
+<header>
+  <div class="hdr-group">
+    <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+  </div>
+  <div class="title-box">デブリーフィング</div>
+  <div class="hdr-group" style="justify-content: flex-end;"></div>
+</header>
+
+<main>
+  <div id="tab-info" class="tab-content active">
+    <div class="card">
+      <div class="section-label">🚁 対象の事案を選択</div>
+      <select id="case-select" onchange="autoTagging()">
+        <option value="">読込中...</option>
+      </select>
+      <p style="font-size:12px; color:var(--sub); margin-top:-8px; margin-bottom:16px;">
+        ※事案を選ぶと、疾患や処置のタグが自動でONになります。
+      </p>
+
+      <div class="section-label">👤 記載者</div>
+      <select id="recorder-select">
+        <option value="">読込中...</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="tab-tags" class="tab-content">
+    <div class="card" id="tags-container">
+      </div>
+  </div>
+
+  <div id="tab-memo" class="tab-content">
+    <div class="card">
+      <div class="section-label">🟢 Good (良かった点・成功要因)</div>
+      <textarea id="val-good" placeholder="例：現場の救急隊との情報共有がスムーズだった。早期の輸液ルート確保が有効だった。"></textarea>
+
+      <div class="section-label">🔺 Bad / Next (課題・次への改善点)</div>
+      <textarea id="val-bad" placeholder="例：機内持ち込み資機材の準備に手間取った。次回からはチェックリストを活用する。"></textarea>
+      
+      <button class="submit-btn" id="btn-submit" onclick="submitDebriefing()">振り返りを提出する 🚀</button>
+    </div>
+  </div>
+</main>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" id="tb-info" onclick="switchTab('info')">
+    <span class="tab-icon">🚁</span>
+    <span>基本情報</span>
+  </button>
+  <button class="tab-btn" id="tb-tags" onclick="switchTab('tags')">
+    <span class="tab-icon">🏷️</span>
+    <span>タグ付け</span>
+  </button>
+  <button class="tab-btn" id="tb-memo" onclick="switchTab('memo')">
+    <span class="tab-icon">📝</span>
+    <span>振り返り</span>
+  </button>
+</nav>
+
+<script>
+  // 🌟 GASのURL（他アプリと同じもの）とPIN設定
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  const PIN_CODE = "5740";
+
+  // 🌟 マスターデータ（要件定義で指定された全項目）
+  const TAG_MASTERS = {
+    keyword: { 
+      label: "🔑 キーワード要請", 
+      items: ["閉じ込められている", "横転している", "車外放出された", "車両の下敷き", "体幹の挟圧", "車体が大きく変形している", "車両同士の正面衝突", "歩行者/自転車が自動車にはねとばされた", "法定速度以上", "バイクと車両の衝突", "運転者がオートバイから放り出された", "2階以上の高さ", "山岳部滑落", "車両落下", "溺れている", "窒息", "生き埋め", "各種事故（列車/バス/航空機/船舶/爆発/落雷）", "撃たれた", "刺された", "殴られて意識が悪い", "全身熱傷", "四肢切断", "40歳以上の胸痛または背部痛", "呼吸困難", "息が苦しい", "息が出来ない", "人が倒れている", "人が突然倒れた", "呼びかけても反応がない", "構語障害", "意識がない", "突然の激しい頭痛", "痙攣", "手足のまひ", "呼吸をしていない", "呼吸が変", "脈が触れない", "様子がおかしい", "手足が急に動かなくなった", "アナフィラキシーショック", "大量吐血", "D-call Net"] 
+    },
+    scene: { 
+      label: "📍 活動場面", 
+      items: ["要請内容から出動前まで", "出動～接触前まで", "接触・現場対応", "搬送", "引き継ぎ", "次事案への準備", "その他"] 
+    },
+    practice: { 
+      label: "🛠 実務項目", 
+      items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "患者の安楽", "家族対応", "申し送り", "院内連携"] 
+    },
+    disease: { 
+      label: "🩺 疾患", 
+      items: ["外傷", "心大血管", "脳血管", "急性呼吸不全", "急性腹症", "熱傷", "アナフィラキシー", "小児", "心肺停止", "母子・周産期", "新生児"] 
+    },
+    treatment: { 
+      label: "💉 処置", 
+      items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] 
+    },
+    special: { 
+      label: "🚨 特殊ケース", 
+      items: ["馬毛島", "緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] 
+    },
+    risk: { 
+      label: "⚠️ リスク関連", 
+      items: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"] 
+    }
+  };
+
+  // 選択状態の管理
+  let selectedTags = { 
+    keyword: [], scene: [], practice: [], disease: [], treatment: [], special: [], risk: [] 
+  };
+  let recentCasesData = [];
+
+  // 初期読み込み
+  window.onload = () => {
+    buildTagUI();
+    fetchInitData();
+  };
+
+  // タブ切り替え処理
+  function switchTab(tabId) {
+    ["info", "tags", "memo"].forEach(k => {
+      document.getElementById(`tab-${k}`).classList.toggle('active', k === tabId);
+      document.getElementById(`tb-${k}`).classList.toggle('active', k === tabId);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  // タグUIの動的生成
+  function buildTagUI() {
+    let html = "";
+    Object.keys(TAG_MASTERS).forEach(key => {
+      html += `<div class="section-label">${TAG_MASTERS[key].label}</div>`;
+      html += `<div class="chip-container">`;
+      TAG_MASTERS[key].items.forEach(item => {
+        html += `<div class="chip" id="chip-${key}-${item}" onclick="toggleTag('${key}', '${item}')">${item}</div>`;
+      });
+      html += `</div>`;
+    });
+    document.getElementById("tags-container").innerHTML = html;
+  }
+
+  // タグのON/OFF
+  function toggleTag(catKey, item) {
+    const el = document.getElementById(`chip-${catKey}-${item}`);
+    if (selectedTags[catKey].includes(item)) {
+      selectedTags[catKey] = selectedTags[catKey].filter(x => x !== item);
+      el.classList.remove("active");
+    } else {
+      selectedTags[catKey].push(item);
+      el.classList.add("active");
+    }
+  }
+
+  // GASから初期データを取得（スタッフ一覧と直近の事案）
+  async function fetchInitData() {
+    try {
+      // 1. スタッフマスターの取得
+      const res1 = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), 
+        redirect: "follow" 
+      });
+      const json1 = await res1.json();
+      
+      if (json1.status === "success") {
+        const staffList = [...(json1.masters.dr || []), ...(json1.masters.ns || [])];
+        document.getElementById("recorder-select").innerHTML = `<option value="">選択してください</option>` + staffList.map(s => `<option value="${s}">${s}</option>`).join("");
+      }
+
+      // 2. 直近事案の取得
+      const res2 = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), 
+        redirect: "follow" 
+      });
+      const json2 = await res2.json();
+      
+      if (json2.status === "success") {
+        recentCasesData = json2.data;
+        document.getElementById("case-select").innerHTML = `<option value="">選択してください</option>` + recentCasesData.map(c => `<option value="${c.id}">${c.date} | No.${c.id} (${c.dest})</option>`).join("");
+      }
+    } catch(e) {
+      alert("データの取得に失敗しました。電波環境を確認してください。");
+    } finally {
+      document.getElementById("global-loader").style.display = "none";
+    }
+  }
+
+  // 🌟 事案を選択した時の「自動タグ付け機能」
+  function autoTagging() {
+    const caseId = document.getElementById("case-select").value;
+    const targetCase = recentCasesData.find(c => c.id === caseId);
+    if (!targetCase) return;
+
+    const rData = targetCase.rawData;
+    
+    // 【処置の自動抽出】
+    TAG_MASTERS.treatment.items.forEach(t => {
+      if (rData[t] && String(rData[t]).includes("◯") && !selectedTags.treatment.includes(t)) {
+        toggleTag("treatment", t);
+      }
+    });
+
+    // 【疾患の自動抽出】
+    TAG_MASTERS.disease.items.forEach(d => {
+      if ((String(rData["備考"] || "").includes(d) || String(rData["出場先"] || "").includes(d)) && !selectedTags.disease.includes(d)) {
+        toggleTag("disease", d);
+      }
+    });
+
+    alert("💡 事案データから「疾患」や「処置」のタグを自動で設定しました。タブ2を確認してください。");
+  }
+
+  // 提出処理
+  async function submitDebriefing() {
+    const caseId = document.getElementById("case-select").value;
+    const recorder = document.getElementById("recorder-select").value;
+    const goodTxt = document.getElementById("val-good").value.trim();
+    const badTxt = document.getElementById("val-bad").value.trim();
+
+    if (!caseId || !recorder) {
+      return alert("タブ1の「対象の事案」と「記載者」を必ず選択してください。");
+    }
+    
+    if (!goodTxt && !badTxt) {
+      return alert("振り返り（Good または Bad/Next）を記入してください。");
+    }
+
+    // 送信用にカンマ区切り文字列に変換
+    const tagsObj = {};
+    Object.keys(selectedTags).forEach(k => { 
+      tagsObj[k] = selectedTags[k].join(", "); 
+    });
+
+    const payload = {
+      caseId: caseId,
+      recorder: recorder,
+      tags: tagsObj,
+      good: goodTxt,
+      bad: badTxt
+    };
+
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
+    btn.innerText = "送信中... 🚁";
+
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }),
+        redirect: "follow"
+      });
+      
+      const json = await res.json();
+      
+      if (json.status === "success") {
+        alert("デブリーフィングシートを保存しました！お疲れ様でした。");
+        location.reload();
+      } else {
+        alert("保存エラー: " + json.message);
+      }
+    } catch(e) {
+      alert("通信に失敗しました。電波環境の良い場所で再度お試しください。");
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "振り返りを提出する 🚀";
+    }
+  }
+</script>
+</body>
+</html>
