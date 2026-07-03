@@ -68,7 +68,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     
-    input, select, button {
+    input, select, button, textarea {
       padding: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
@@ -249,7 +249,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A送信</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.5</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.6</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -332,8 +332,9 @@
       </div>
       
       <div style="background:#e3f2fd; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; border:1px solid #bbdefb;">
-        <b style="color:#0d47a1;">📦 消費資機材</b>
-        <div id="supply-list" style="margin-top:6px; color:#1565c0; line-height:1.5;"></div>
+        <b style="color:#0d47a1;">📦 消費資機材・処置内容（編集可能）</b>
+        <div id="edit-supply-container" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
+          </div>
       </div>
       
       <input type="hidden" id="edit-old-id">
@@ -386,6 +387,7 @@
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button style="flex:1; background:#e5e5ea; color:var(--ink);" onclick="closeModal('detail-modal')">キャンセル</button>
           <button style="flex:1;" onclick="saveRecord()">💾 上書き</button>
+          <button style="flex:1; background:#ff9800; color:#fff;" id="btn-email" onclick="sendEmail()">📧 メール送信</button>
           <button style="flex:1; background:#34c759;" id="btn-complete" onclick="markComplete()">✅ カルテ完了</button>
         </div>
       </div>
@@ -592,18 +594,20 @@
     
     document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
     
-    let supply = []; 
-    ["20G","18G","22G","24G","ベニューラ","骨髄針","1%カルボカイン10ml使用","28Frトロッカー","20Frトロッカー"].forEach(k => { 
-      let v = String(row[k]||""); 
-      if(v.includes("◯")) { 
-        let num = v.match(/\d+本/); 
-        supply.push(`・${k}: <b>${num?num[0]:"1本"}</b>`); 
-      } 
-    });
-    if(String(row["除細動パッド"]||"").includes("◯")) supply.push("・除細動パッド: <b>使用</b>"); 
-    if(String(row["心嚢穿刺・心嚢ドレナージ"]||"").includes("キット")) supply.push("・心嚢ドレナージキット: <b>使用</b>");
+    // 【修正】処置内容を入力フォームとして生成
+    const supplyKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー", "除細動パッド", "心嚢穿刺・心嚢ドレナージ"];
     
-    document.getElementById("supply-list").innerHTML = supply.length > 0 ? supply.join("<br>") : "<span style='color:var(--sub);'>消費資機材なし</span>";
+    let supplyHtml = "";
+    supplyKeys.forEach(k => {
+      let v = String(row[k] || "");
+      supplyHtml += `
+        <div class="form-group" style="margin-bottom:4px;">
+          <label style="font-weight:normal; font-size:11px;">${k}</label>
+          <input type="text" id="edit-supply-${k}" value="${v}" style="padding:6px; font-size:13px;" placeholder="入力 (例: ◯ 1本)">
+        </div>
+      `;
+    });
+    document.getElementById("edit-supply-container").innerHTML = supplyHtml;
     
     const isDone = (row["ステータス"]||"").includes("完了") && !(row["ステータス"]||"").includes("未完了");
     document.getElementById("btn-complete").style.display = isDone ? "none" : "block";
@@ -672,7 +676,8 @@
     btn.disabled = true;
     
     try {
-      const payload = { 
+      // 基本データ
+      let payload = { 
         "要請番号": newId, 
         "日付": document.getElementById("edit-date").value, 
         "出場先": document.getElementById("edit-dest").value, 
@@ -683,6 +688,13 @@
         "病着": document.getElementById("edit-arrival").value, 
         "終了": document.getElementById("edit-end").value 
       };
+      
+      // 【追加】処置内容データを動的に取得して結合
+      const supplyKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー", "除細動パッド", "心嚢穿刺・心嚢ドレナージ"];
+      supplyKeys.forEach(k => {
+        const el = document.getElementById(`edit-supply-${k}`);
+        if(el) payload[k] = el.value;
+      });
       
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
@@ -706,6 +718,38 @@
     }
     
     btn.innerText = "💾 上書き"; 
+    btn.disabled = false;
+  }
+
+  // 📧 新規追加：メール再送信機能
+  async function sendEmail() {
+    const id = document.getElementById("edit-id").value;
+    if(!confirm(`事案 [ ${id} ] の内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き」を実行してください。`)) return;
+
+    const btn = document.getElementById("btn-email");
+    btn.innerText = "送信中...";
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "send_email", password: activePin, id: id }), 
+        redirect: "follow" 
+      });
+      
+      const json = await res.json();
+      
+      if (json.status === "success") { 
+        alert("メールを送信しました！"); 
+      } else { 
+        alert("エラー: " + json.message); 
+      }
+    } catch(e) { 
+      alert("通信エラーが発生しました。"); 
+    }
+    
+    btn.innerText = "📧 メール送信";
     btn.disabled = false;
   }
 
@@ -754,15 +798,13 @@
           document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
         }
         
-        // 🌟 バックエンド固定キー「manuals」のみで厳密にバインド
         const manualsData = jsonRes.manuals || [];
         document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>マニュアルはありません。</p>';
         
-        // 🌟 URLパラメータからの「未完了」自動抽出連携ロジック
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('auto_filter') === 'uncompleted') {
           document.getElementById('q-status').value = '未完了';
-          fetchData(); // 自動で検索を実行
+          fetchData(); 
         }
         
       } else {
