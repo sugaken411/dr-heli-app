@@ -21,9 +21,8 @@
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
     
-    input[type="text"], input[type="time"], textarea { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
+    input[type="text"], input[type="time"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
     textarea { resize: none; line-height: 1.5; }
-    select { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 10px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
     
     .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
     .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
@@ -57,26 +56,32 @@
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     
-    .print-report { background: #fff; border: 1px solid #000; padding: 20px; font-size: 12px; line-height: 1.5; color: #000; margin-bottom: 16px; }
-    .print-report h2 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 12px; font-size: 16px; }
-    .print-report h3 { font-size: 13px; background: #eee; padding: 4px 8px; border-left: 4px solid var(--brand); margin-top: 16px; margin-bottom: 8px; }
-    
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
-    @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec5), .no-print { display: none !important; } #tab-sec5 { display: block !important; margin: 0; padding: 0; } .print-report { border: none; padding: 0; } }
+    
+    /* Q&Aモーダル用 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    
+    @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec5), .no-print { display: none !important; } #tab-sec5 { display: block !important; margin: 0; padding: 0; } }
   </style>
 </head>
 <body>
 
 <datalist id="ext-affil-list"></datalist>
 <datalist id="ext-staff-list"></datalist>
+<datalist id="diagnosis-list"></datalist>
 
 <div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800; color:var(--ink);" id="loader-text">システム起動中...</div></div>
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
   <div style="font-weight: 800; font-size: 16px;">デブリーフィング</div>
-  <button class="hdr-btn no-print" onclick="window.print()">🖨️ 印刷</button>
+  <div style="display:flex; gap:12px;">
+    <button class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
+  </div>
 </header>
 
 <div class="tab-container no-print">
@@ -105,17 +110,14 @@
       <div class="card">
         <div class="section-label" style="color:var(--blue); border-bottom-color:var(--line);">📝 紐付けデータ</div>
         <div id="v-fetched-data"></div>
-        
-        <div class="section-label" style="margin-top:16px;">📖 事案概要・ストーリー</div>
-        <textarea id="v-summary" rows="3" placeholder="全体的な流れや背景..."></textarea>
       </div>
 
       <div class="card">
-        <div class="section-label">📋 要請種別・疾患</div>
+        <div class="section-label">📋 要請形態 と 概要</div>
         <div class="radio-group" style="margin-bottom:16px;">
           <label><input type="radio" name="req-type" value="現場要請" onchange="toggleReqType()"> <span class="radio-lbl">現場要請</span></label>
           <label><input type="radio" name="req-type" value="キーワード要請" onchange="toggleReqType()"> <span class="radio-lbl">キーワード要請</span></label>
-          <label><input type="radio" name="req-type" value="施設間要請" onchange="toggleReqType()"> <span class="radio-lbl">施設間要請</span></label>
+          <label><input type="radio" name="req-type" value="施設間要請" onchange="toggleReqType()"> <span class="radio-lbl">施設間搬送</span></label>
         </div>
         
         <div id="kw-container" style="display:none; margin-bottom:16px; background:#f9f9f9; padding:12px; border-radius:8px;">
@@ -123,39 +125,58 @@
           <div class="chip-grid" id="chip-container-keyword"></div>
         </div>
 
-        <div class="acc-header" onclick="toggleAcc(this, 'acc-diagnosis')">🩺 現場診断 (疾患)<span class="arrow">▼</span></div>
-        <div class="acc-body" id="acc-diagnosis">
-          <div class="chip-grid" id="chip-container-diagnosis"></div>
-          <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="new-diagnosis" placeholder="リストにない疾患を追加" style="margin:0; flex:1; font-size:13px; padding:8px;">
-            <button class="btn-small" style="background:var(--blue); color:#fff;" onclick="addMasterAndChip('diagnosis', 'new-diagnosis', 'chip-container-diagnosis')">追加</button>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー</div>
+        <textarea id="v-summary" rows="4" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="section-label">🩺 現場診断 (疾患)</div>
+        <div class="chip-grid" id="chip-container-diagnosis" style="margin-bottom:12px;"></div>
+        
+        <div class="acc-header" onclick="toggleAcc(this, 'acc-diag-gen')" style="background:#f0f4f8; padding:8px 12px; border-radius:8px; border:none; margin-bottom:8px;">➕ 新しい病名を作成・追加する<span class="arrow">▼</span></div>
+        <div class="acc-body" id="acc-diag-gen" style="background:#f9f9f9; padding:12px; border-radius:8px;">
+          <select id="diag-category" style="margin-bottom:8px;">
+            <option value="">大項目から絞り込む...</option>
+            <option value="心停止">心停止</option><option value="ショック">ショック</option><option value="内因性疾患">内因性疾患</option><option value="外因性疾患">外因性疾患</option>
+            <option value="小児内科疾患">小児内科疾患</option><option value="産婦人科">特殊疾患（産婦人科）</option><option value="中毒">特殊疾患（中毒）</option>
+            <option value="熱傷">特殊疾患（熱傷）</option><option value="精神科">特殊疾患（精神科）</option>
+          </select>
+          <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin-bottom:8px;">
+          
+          <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; font-size:13px; font-weight:bold;">
+            <label><input type="checkbox" id="diag-right"> 右</label>
+            <label><input type="checkbox" id="diag-left"> 左</label>
+            <label><input type="checkbox" id="diag-both"> 両側</label>
+            <span style="color:#ccc;">|</span>
+            <label><input type="checkbox" id="diag-doubt"> 疑い</label>
           </div>
+          <button class="btn-small" style="background:var(--blue); color:#fff; width:100%; padding:10px;" onclick="generateDiagnosis()">＋ この病名で確定・マスタ追加</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="section-label">🏢 環境と参加者</div>
+        <div class="section-label">🏢 振り返り環境 と 参加者</div>
         
         <div style="margin-bottom:16px;">
           <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">振り返り場所</div>
           <div class="radio-group">
-            <label><input type="radio" name="env-loc" value="浜町待機所" checked> <span class="radio-lbl">浜町待機所</span></label>
-            <label><input type="radio" name="env-loc" value="運行調整室"> <span class="radio-lbl">運行調整室</span></label>
-            <label><input type="radio" name="env-loc" value="各自"> <span class="radio-lbl">各自(リモート)</span></label>
-            <label><input type="radio" name="env-loc" value="その他" onchange="document.getElementById('env-loc-other').focus()"> <span class="radio-lbl">その他</span></label>
+            <label><input type="radio" name="env-loc" value="浜町待機所" checked onchange="toggleEnvOther('loc')"> <span class="radio-lbl">浜町待機所</span></label>
+            <label><input type="radio" name="env-loc" value="運行調整室" onchange="toggleEnvOther('loc')"> <span class="radio-lbl">運行調整室</span></label>
+            <label><input type="radio" name="env-loc" value="各自" onchange="toggleEnvOther('loc')"> <span class="radio-lbl">各自(リモート)</span></label>
+            <label><input type="radio" name="env-loc" value="その他" onchange="toggleEnvOther('loc')"> <span class="radio-lbl">その他</span></label>
           </div>
-          <input type="text" id="env-loc-other" placeholder="その他の場所を入力" style="margin-top:4px;">
+          <input type="text" id="env-loc-other" placeholder="その他の場所を入力" style="display:none; margin-top:4px;">
         </div>
 
         <div style="margin-bottom:16px;">
           <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">振り返り方法</div>
           <div class="radio-group">
-            <label><input type="radio" name="env-method" value="対面" checked> <span class="radio-lbl">対面</span></label>
-            <label><input type="radio" name="env-method" value="Zoom"> <span class="radio-lbl">Zoom</span></label>
-            <label><input type="radio" name="env-method" value="対面＋Zoom"> <span class="radio-lbl">対面＋Zoom</span></label>
-            <label><input type="radio" name="env-method" value="その他" onchange="document.getElementById('env-method-other').focus()"> <span class="radio-lbl">その他</span></label>
+            <label><input type="radio" name="env-method" value="対面" checked onchange="toggleEnvOther('method')"> <span class="radio-lbl">対面</span></label>
+            <label><input type="radio" name="env-method" value="Zoom" onchange="toggleEnvOther('method')"> <span class="radio-lbl">Zoom</span></label>
+            <label><input type="radio" name="env-method" value="対面＋Zoom" onchange="toggleEnvOther('method')"> <span class="radio-lbl">対面＋Zoom</span></label>
+            <label><input type="radio" name="env-method" value="その他" onchange="toggleEnvOther('method')"> <span class="radio-lbl">その他</span></label>
           </div>
-          <input type="text" id="env-method-other" placeholder="その他の方法を入力" style="margin-top:4px;">
+          <input type="text" id="env-method-other" placeholder="その他の方法を入力" style="display:none; margin-top:4px;">
         </div>
 
         <div style="margin-bottom:16px;">
@@ -178,11 +199,6 @@
           <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">OJT (同乗研修)</div>
           <div id="ojt-pt-container"></div>
           <button class="btn-small" style="background:#fce4ec; color:#c2185b;" onclick="addOjtPt()">＋ OJTを追加</button>
-        </div>
-        
-        <div style="margin-top:16px;">
-          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block;">その他 (オブザーバー等)</label>
-          <input type="text" id="other-pt" placeholder="自由入力">
         </div>
       </div>
     </div>
@@ -215,15 +231,26 @@
 
 </main>
 
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+    <textarea id="qa-input" rows="3" style="width:100%;"></textarea>
+    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
+  </div>
+</div>
+
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
   const SCENE_LIST = ["要請内容から出動前まで", "出動～接触前まで", "接触・現場対応", "搬送", "引き継ぎ", "次事案への準備"];
   
-  // ★バグ修正：TAG_MASTERSという名前でマスタを定義（ラベル付き）
+  // ★ 完全版のキーワード・タグリスト
   const TAG_MASTERS = {
-    keyword: { label: "🔑 キーワード要請", items: ["閉じ込められている", "車外放出された", "山岳部滑落", "溺れている", "CPA", "アナフィラキシーショック", "大量吐血", "D-call Net", "その他"] },
+    keyword: { label: "🔑 キーワード要請", items: ["閉じ込められている", "横転している", "車外放出された", "車両の下敷き", "体幹の挟圧", "車体が大きく変形している", "車両同士の正面衝突", "歩行者/自転車が自動車にはねとばされた", "法定速度以上", "バイクと車両の衝突", "運転者がオートバイから放り出された", "2階以上の高さ", "山岳部滑落", "車両落下", "溺れている", "窒息", "生き埋め", "各種事故（列車/バス/航空機/船舶/爆発/落雷）", "撃たれた", "刺された", "殴られて意識が悪い", "全身熱傷", "四肢切断", "40歳以上の胸痛または背部痛", "呼吸困難", "息が苦しい", "息が出来ない", "人が倒れている", "人が突然倒れた", "呼びかけても反応がない", "構語障害", "意識がない", "突然の激しい頭痛", "痙攣", "手足のまひ", "呼吸をしていない", "呼吸が変", "脈が触れない", "様子がおかしい", "手足が急に動かなくなった", "アナフィラキシーショック", "大量吐血", "D-call Net"] },
     practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
     treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] },
     special: { label: "🚨 特殊ケース", items: ["緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] },
@@ -233,7 +260,6 @@
   let allCasesData = []; let existingDebriefs = []; let currentCase = null; 
   let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[] };
   
-  // 状態管理オブジェクト
   let sysData = {
     reqType: "",
     tags: { keyword:[], diagnosis:[], practice:[], treatment:[], special:[], risk:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[] },
@@ -258,8 +284,25 @@
     if (id === 'sec5') generatePreview();
   }
 
+  // --- Q&Aモーダル操作 ---
+  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}) });
+      const json = await res.json();
+      if (json.status === "success") { alert("送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); }
+    } catch (e) { alert("通信エラー"); } finally { btn.textContent = "送信"; btn.disabled = false; }
+  }
+
   // --- 共通UIヘルパー ---
   function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
+  function toggleEnvOther(type) {
+    const val = document.querySelector(`input[name="env-${type}"]:checked`).value;
+    document.getElementById(`env-${type}-other`).style.display = (val === 'その他') ? 'block' : 'none';
+  }
   
   function renderChips(containerId, list, category, isRadio = false) {
     const box = document.getElementById(containerId); box.innerHTML = "";
@@ -276,7 +319,6 @@
       if(sysData.tags[cat].includes(item)) sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item);
       else sysData.tags[cat].push(item);
     }
-    // 再描画のルーティング
     if(cat === 'keyword') renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
     else if(cat === 'diagnosis') renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
     else if(TAG_MASTERS[cat]) renderChips(`chip-container-${cat}`, TAG_MASTERS[cat].items, cat);
@@ -290,13 +332,22 @@
       const r1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }) });
       const j1 = await r1.json(); if (j1.status === "success") masters = j1.masters;
       
+      // Q&Aの描画
+      if(j1.qa) document.getElementById("qa-list").innerHTML = j1.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+      
       masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
       masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
+      masters.diagnosis.forEach(d => document.getElementById("diagnosis-list").innerHTML += `<option value="${d}">`);
       
-      // 固定参加者アコーディオンの生成
       const buildFixedAcc = (cat, label, arr) => `
         <div class="acc-header" onclick="toggleAcc(this, 'acc-${cat}')">👤 ${label}<span class="arrow">▼</span></div>
-        <div class="acc-body" id="acc-${cat}"><div class="chip-grid" id="chip-container-${cat}"></div></div>`;
+        <div class="acc-body" id="acc-${cat}">
+          <div class="chip-grid" id="chip-container-${cat}" style="margin-bottom:8px;"></div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="new-${cat}" placeholder="${label}を追加" style="margin:0; flex:1; font-size:12px; padding:6px;">
+            <button class="btn-small" style="background:var(--blue); color:#fff;" onclick="addMasterAndChip('${cat}', 'new-${cat}', 'chip-container-${cat}')">登録</button>
+          </div>
+        </div>`;
       document.getElementById("fixed-pt-accordions").innerHTML = buildFixedAcc('dr','フライトドクター', masters.dr) + buildFixedAcc('ns','フライトナース', masters.ns) + buildFixedAcc('pilot','機長', masters.pilot) + buildFixedAcc('mechanic','整備士', masters.mechanic) + buildFixedAcc('cs','CS', masters.cs);
       
       ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
@@ -313,14 +364,36 @@
     } catch(e) { console.log(e); } finally { document.getElementById("global-loader").style.display = "none"; }
   }
 
-  async function addMasterAndChip(cat, inputId, containerId) {
-    const val = document.getElementById(inputId).value.trim(); if(!val) return;
-    document.getElementById(inputId).value = "追加中...";
+  // 病名ジェネレーター
+  async function generateDiagnosis() {
+    const name = document.getElementById("diag-name").value.trim(); if(!name) return;
+    const isRight = document.getElementById("diag-right").checked;
+    const isLeft = document.getElementById("diag-left").checked;
+    const isBoth = document.getElementById("diag-both").checked;
+    const isDoubt = document.getElementById("diag-doubt").checked;
+    
+    let prefix = "";
+    if(isBoth) prefix = "両側"; else if(isRight && isLeft) prefix = "両側"; else if(isRight) prefix = "右"; else if(isLeft) prefix = "左";
+    let suffix = isDoubt ? "疑い" : "";
+    const finalName = `${prefix}${name}${suffix}`;
+    
+    await addMasterAndChip('diagnosis', null, 'chip-container-diagnosis', finalName);
+    
+    document.getElementById("diag-name").value = ""; document.getElementById("diag-right").checked = false;
+    document.getElementById("diag-left").checked = false; document.getElementById("diag-both").checked = false; document.getElementById("diag-doubt").checked = false;
+  }
+
+  async function addMasterAndChip(cat, inputId, containerId, directVal = null) {
+    const val = directVal || document.getElementById(inputId).value.trim(); if(!val) return;
+    if(inputId) document.getElementById(inputId).value = "追加中...";
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: cat, val1: val }) });
-      masters[cat].push(val); sysData.tags[cat].push(val);
-      renderChips(containerId, masters[cat], cat); document.getElementById(inputId).value = "";
-    } catch(e) { alert("エラー"); document.getElementById(inputId).value = ""; }
+      if(!masters[cat].includes(val)) masters[cat].push(val); 
+      if(!sysData.tags[cat]) sysData.tags[cat] = [];
+      if(!sysData.tags[cat].includes(val)) sysData.tags[cat].push(val);
+      renderChips(containerId, masters[cat], cat); 
+      if(inputId) document.getElementById(inputId).value = "";
+    } catch(e) { alert("エラー"); if(inputId) document.getElementById(inputId).value = ""; }
   }
 
   function toggleReqType() {
@@ -334,7 +407,7 @@
   function addExtPt(affil="", name="") {
     extPtCount++; const id = `ext-pt-${extPtCount}`;
     const html = `<div id="${id}" class="ext-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <input type="text" class="e-affil" list="ext-affil-list" placeholder="所属" value="${affil}" style="flex:2; margin:0; padding:8px;">
+        <input type="text" class="e-affil" list="ext-affil-list" placeholder="所属(のみでもOK)" value="${affil}" style="flex:2; margin:0; padding:8px;">
         <input type="text" class="e-name" list="ext-staff-list" placeholder="名前" value="${name}" style="flex:1.5; margin:0; padding:8px;">
         <button class="btn-small" style="background:var(--blue); color:#fff; padding:8px;" onclick="regExtMaster(this)">保存</button>
         <button class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:8px;" onclick="document.getElementById('${id}').remove()">✕</button>
@@ -343,10 +416,10 @@
   }
   async function regExtMaster(btn) {
     const row = btn.parentElement; const affil = row.querySelector('.e-affil').value.trim(); const name = row.querySelector('.e-name').value.trim();
-    if(!affil || !name) return; btn.innerText = "⏳"; btn.disabled = true;
+    if(!affil && !name) return; btn.innerText = "⏳"; btn.disabled = true;
     try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_affil", val1: affil }) });
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_staff", val1: name }) });
+      if(affil) await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_affil", val1: affil }) });
+      if(name) await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_staff", val1: name }) });
       btn.innerText = "✓";
     } catch(e) { btn.innerText = "✕"; }
   }
@@ -377,7 +450,13 @@
 
     const resArea = document.getElementById("search-results-area");
     if(results.length === 0) resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当なし</div>";
-    else resArea.innerHTML = results.map(r => `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'><b>No.${r.id}</b> ｜ ${r.date}<br><span style="font-size:12px;color:var(--sub);">出場先: ${r.dest} / Dr:${r.rawData["フライトドクター"]} Ns:${r.rawData["フライトナース"]}</span></div>`).join("");
+    else resArea.innerHTML = results.map(r => {
+      const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";
+      return `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
+        <b>No.${r.id}</b> ｜ ${r.date} ｜ ${r.scheme || '未選択'}<br>
+        <span style="font-size:12px;color:var(--sub);">[${time}] 出場先: ${r.dest} / Dr:${r.rawData["フライトドクター"]} Ns:${r.rawData["フライトナース"]}</span>
+      </div>`;
+    }).join("");
     resArea.style.display = "block";
   }
 
@@ -385,7 +464,6 @@
     currentCase = rowWrapper.rawData;
     document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
     
-    // ★ 過去データの復元チェック
     const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
     if(past && past["システムデータ"]) {
       if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
@@ -400,8 +478,8 @@
     sysData = sys;
     document.getElementById("v-summary").value = sys.summary || "";
     if(sys.reqType) { document.querySelector(`input[name="req-type"][value="${sys.reqType}"]`).checked = true; toggleReqType(); }
-    if(sys.envLoc) { const el = document.querySelector(`input[name="env-loc"][value="${sys.envLoc}"]`); if(el) el.checked=true; else { document.querySelector(`input[name="env-loc"][value="その他"]`).checked=true; document.getElementById("env-loc-other").value = sys.envLoc; } }
-    if(sys.envMethod) { const el = document.querySelector(`input[name="env-method"][value="${sys.envMethod}"]`); if(el) el.checked=true; else { document.querySelector(`input[name="env-method"][value="その他"]`).checked=true; document.getElementById("env-method-other").value = sys.envMethod; } }
+    if(sys.envLoc) { const el = document.querySelector(`input[name="env-loc"][value="${sys.envLoc}"]`); if(el) el.checked=true; else { document.querySelector(`input[name="env-loc"][value="その他"]`).checked=true; document.getElementById("env-loc-other").value = sys.envLoc; document.getElementById("env-loc-other").style.display="block"; } }
+    if(sys.envMethod) { const el = document.querySelector(`input[name="env-method"][value="${sys.envMethod}"]`); if(el) el.checked=true; else { document.querySelector(`input[name="env-method"][value="その他"]`).checked=true; document.getElementById("env-method-other").value = sys.envMethod; document.getElementById("env-method-other").style.display="block"; } }
     
     ['dr','ns','pilot','mechanic','cs','diagnosis','recorder','keyword'].forEach(cat => {
       if(sysData.tags[cat]) {
@@ -414,7 +492,7 @@
 
     document.getElementById("ext-pt-container").innerHTML = ""; if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
     document.getElementById("ojt-pt-container").innerHTML = ""; if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
-    document.getElementById("other-pt").value = sys.otherPt || "";
+    
     renderEvalBlocks(); renderFeedbackBlocks();
   }
 
@@ -482,7 +560,6 @@
   function renderFeedbackBlocks() {
     const box = document.getElementById("feedback-container"); box.innerHTML = "";
     
-    // 参加者リストの構築
     let ptOptions = `<option value="">(名前を指定しない)</option>`;
     ['dr','ns','pilot','mechanic','cs'].forEach(cat => { if(sysData.tags[cat]) sysData.tags[cat].forEach(n => ptOptions+=`<option value="${n}">${n}</option>`); });
     document.querySelectorAll('.ext-row').forEach(row => { const a = row.querySelector('.e-affil').value; const n = row.querySelector('.e-name').value; if(a||n) ptOptions+=`<option value="${a} ${n}">${a} ${n}</option>`; });
@@ -515,15 +592,13 @@
   function generatePreview() {
     if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;'>事案を紐付けしてください。</p>"; return; }
     
-    // データ整理
     let envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || ""; if(envLoc==='その他') envLoc = document.getElementById("env-loc-other").value;
     let envMethod = document.querySelector('input[name="env-method"]:checked')?.value || ""; if(envMethod==='その他') envMethod = document.getElementById("env-method-other").value;
     
     let ptList = [];
     ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
-    document.querySelectorAll('.ext-row').forEach(r => ptList.push(`${r.querySelector('.e-affil').value} ${r.querySelector('.e-name').value}`));
-    document.querySelectorAll('.ojt-row').forEach(r => ptList.push(`[OJT]${r.querySelector('.o-job').value} ${r.querySelector('.o-name').value}`));
-    if(document.getElementById("other-pt").value) ptList.push(document.getElementById("other-pt").value);
+    document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
+    document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
 
     let evalHtml = sysData.evals.map((e,i) => {
       let sc = e.scene==='その他' ? e.sceneOther : e.scene;
@@ -563,7 +638,6 @@
     sysData.summary = document.getElementById("v-summary").value;
     sysData.envLoc = document.querySelector('input[name="env-loc"]:checked')?.value; if(sysData.envLoc==='その他') sysData.envLoc = document.getElementById("env-loc-other").value;
     sysData.envMethod = document.querySelector('input[name="env-method"]:checked')?.value; if(sysData.envMethod==='その他') sysData.envMethod = document.getElementById("env-method-other").value;
-    sysData.otherPt = document.getElementById("other-pt").value;
     
     sysData.ext = []; document.querySelectorAll('.ext-row').forEach(r => sysData.ext.push({affil:r.querySelector('.e-affil').value, name:r.querySelector('.e-name').value}));
     sysData.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sysData.ojt.push({job:r.querySelector('.o-job').value, name:r.querySelector('.o-name').value}));
@@ -572,7 +646,6 @@
     ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
     sysData.ext.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); }); 
     sysData.ojt.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
-    if(sysData.otherPt) ptList.push(sysData.otherPt);
 
     let evalTxt = sysData.evals.map((e,i) => {
       let sc = e.scene==='その他'?e.sceneOther:e.scene;
