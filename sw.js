@@ -1,39 +1,25 @@
-// バージョンを更新（古いキャッシュを強制破棄させます）
-const CACHE_NAME = 'aw109-ems-cache-v9.8';
+const CACHE_NAME = 'aw109-cache-v11.0'; // 🌟 バージョンを上げて古いキャッシュを破壊
 const urlsToCache = [
   './',
   './index.html',
   './search.html',
+  './debriefing.html',
+  './debrief_search.html',
   './report.html',
   './library.html',
-  './admin.html',
-  './portal.html',
   './summary.html',
-  './debriefing.html'
+  './portal.html',
+  './admin.html',
+  './manifest.json',
+  'https://cdn.jsdelivr.net/npm/chart.js',
+  'https://cdn.tailwindcss.com'
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting(); // 新しいバージョンを即座にアクティブにする
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-  );
-});
-
-// 🌟 【最重要修正】通信のコントロール（リダイレクト先もスルーする）
-self.addEventListener('fetch', event => {
-  // GETリクエスト以外、または GAS関連ドメイン への通信の場合は
-  // Service Workerを完全にスルーして、ブラウザ本来の直接通信を行わせる
-  if (
-    event.request.method !== 'GET' || 
-    event.request.url.includes('script.google.com') ||
-    event.request.url.includes('script.googleusercontent.com')
-  ) {
-    return; 
-  }
-
-  // HTMLやCSSなどの表示用ファイルのみ、キャッシュを確認する
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -41,11 +27,32 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cache => {
-          // 古いバージョンのキャッシュを完全に削除
-          if (cache !== CACHE_NAME) return caches.delete(cache);
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName); // 古いキャッシュをすべて削除
+          }
         })
       );
-    }).then(() => self.clients.claim()) // 開いている画面のコントロールを即座に奪う
+    }).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', event => {
+  // POSTリクエストやAPIへの通信はキャッシュせずスルー
+  if (event.request.method !== 'GET' || event.request.url.includes('script.google.com')) {
+    return;
+  }
+  
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        // ネットワークから取得できたらキャッシュを更新
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request)) // オフライン時はキャッシュを返す
   );
 });
