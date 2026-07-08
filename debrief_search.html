@@ -5,25 +5,45 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>教育・事案検索コンソール</title>
   <style>
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: rgba(60,60,67,0.12); }
+    /* 基本デザイン・変数 */
+    :root {
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --ink: #1c1c1e;
+      --sub: #8e8e93;
+      --brand: #d32f2f;
+      --blue: #007aff;
+      --line: rgba(60,60,67,0.12);
+    }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); padding-bottom: 40px; -webkit-font-smoothing: antialiased; }
     
-    header { position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 16px; border-bottom: 1px solid var(--line); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
-    .hdr-title { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    header {
+      background: #fff;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ccc;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     main { padding: 16px; max-width: 800px; margin: 0 auto; }
     
     .filter-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; margin-bottom: 16px; color: var(--ink); font-weight: 600; }
+    .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; margin-bottom: 16px; color: var(--ink); font-weight: 600; box-sizing: border-box; }
     
     .section-lbl { font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; margin-top: 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
     
-    .cross-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
     .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
-    input[type="date"], input[type="month"], select { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--ink); font-weight: 600; outline: none; }
+    input[type="date"], input[type="month"], select, input[type="tel"] { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--ink); font-weight: 600; outline: none; box-sizing: border-box; }
     
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
@@ -33,12 +53,16 @@
 
     /* 検索結果カードのデザイン */
     .result-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 5px solid var(--blue); position: relative; }
-    .rc-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; align-items: center; }
-    .rc-id { font-weight: 800; color: var(--blue); font-size: 16px; } 
-    .rc-date { color: var(--sub); font-family: monospace; font-weight: bold; }
+    .rc-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
+    .rc-id { font-weight: 800; color: var(--ink); font-size: 15px; } 
+    .rc-date { color: var(--sub); font-size: 12px; font-weight: normal; margin-left: 4px; }
+    .badge { background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     
+    .rc-meta { font-size: 12px; color: var(--ink); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .rc-meta span b { color: var(--sub); font-weight: normal; }
+    .rc-contact { font-size: 12px; color: var(--sub); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+
     .rc-context { font-size: 13px; margin-bottom: 12px; line-height: 1.6; background: #f9f9f9; padding: 10px; border-radius: 6px; color: var(--ink); }
-    .rc-staff-line { font-size: 12px; color: var(--ink); margin-bottom: 12px; background: #f0f0f0; padding: 8px 10px; border-radius: 6px; font-weight: 600; }
     
     .rc-feedback { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px; }
     .fb-box { padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; border: 1px solid var(--line); background: #fafafa; }
@@ -47,12 +71,16 @@
     .rc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; } 
     .t-chip { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
     
-    .btn-edit-case { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; display: block; width: 100%; text-align: center; text-decoration: none; margin-top: 12px; }
+    .btn-edit-case { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: block; width: 100%; text-align: center; text-decoration: none; margin-top: 12px; }
+
+    /* モーダル群 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
 
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
-    
-    @media (max-width: 600px) { .cross-grid { grid-template-columns: 1fr; gap: 8px; } }
   </style>
 </head>
 <body>
@@ -64,16 +92,19 @@
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div class="hdr-title">🧠 教育・事案検索</div>
-  <div style="width:50px;"></div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.0</span></div>
+  <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
 <main>
   <div class="filter-card">
-    <input type="text" id="q-free" class="search-input" placeholder="🔍 フリーワード (概要や振り返り、特殊タグから検索)">
+    <input type="text" id="q-free" class="search-input" placeholder="🔍 フリーワード (概要や振り返り内容から検索)">
     
-    <div class="section-lbl">📅 日付による絞り込み</div>
     <div class="cross-grid" style="margin-bottom: 8px;">
+      <div class="cross-item">
+        <label>要請番号</label>
+        <input type="tel" inputmode="numeric" id="q-id" placeholder="ID検索" oninput="toHalfWidth(this)">
+      </div>
       <div class="cross-item">
         <label>月で探す (◯年◯月)</label>
         <input type="month" id="q-month" onchange="clearDateRange()">
@@ -98,8 +129,7 @@
     </div>
 
     <div class="section-lbl">📌 カテゴリ・タグ指定 (複数選択可)</div>
-    <div class="chip-grid" id="ui-tags">
-      </div>
+    <div class="chip-grid" id="ui-tags"></div>
     
     <button class="btn-search" onclick="executeSearch()">事例を検索する</button>
   </div>
@@ -108,12 +138,32 @@
   <div id="results-area"></div>
 </main>
 
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px; background:var(--bg);"></textarea>
+    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
+  </div>
+</div>
+
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
   let mergedData = []; 
   let availableTags = new Set();
+
+  function toHalfWidth(ele) {
+    let val = ele.value;
+    val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });
+    ele.value = val;
+  }
+
+  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
   window.onload = async () => {
     try {
@@ -123,9 +173,9 @@
       if(jsonInit.status === "success" && jsonInit.masters) {
         jsonInit.masters.dr.forEach(n => document.getElementById("q-dr").innerHTML += `<option value="${n}">${n}</option>`);
         jsonInit.masters.ns.forEach(n => document.getElementById("q-ns").innerHTML += `<option value="${n}">${n}</option>`);
-        // 救急隊・外部スタッフの選択肢を生成
         jsonInit.masters.extStaff.forEach(n => document.getElementById("q-ext").innerHTML += `<option value="${n}">${n}</option>`);
       }
+      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
 
       // 2. 事案DB取得
       document.getElementById("loader-text").innerText = "事案データを読み込み中...";
@@ -141,16 +191,35 @@
       debData.forEach(d => {
         const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
         if(jian) {
-          // タグの抽出 (現場診断や特殊タグも含む)
-          const tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["処置"], d["特殊ケース"], d["リスク関連"]]
+          // タグの抽出 (デブリーフィングDBのもの)
+          let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["処置"], d["特殊ケース"], d["リスク関連"]]
                         .map(t => t ? t.split(",") : []).flat().map(t => t.trim()).filter(Boolean);
-          tags.forEach(t => availableTags.add(t));
+          
+          // Phase 1で追加された現場診断をタグとして統合
+          let diagStr = jian["現場診断"] || "";
+          let diagArr = diagStr.split(",").map(x => x.trim()).filter(Boolean);
+          diagArr.forEach(t => tags.push(t));
+
+          const uniqueTags = [...new Set(tags)];
+          uniqueTags.forEach(t => availableTags.add(t));
           
           mergedData.push({
-            id: d["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
-            dr: jian["フライトドクター"], ns: jian["フライトナース"], participants: d["参加者一覧"] || "",
-            summary: d["概要"], evalText: d["症例評価"], good: d["Good (良かった点)"], bad: d["Bad/Next (課題・次へ)"],
-            tags: tags, loc: d["振り返り場所"], method: d["振り返り方法"]
+            id: d["要請番号"], 
+            date: jian["日付"], 
+            dest: jian["出場先"], 
+            scheme: jian["スキーム選択"],
+            reqTime: jian["要請時刻・施設間搬送依頼時刻"] || jian["初期離陸時間"] || "--:--",
+            contactTime: jian["接触"] || "--:--",
+            dr: jian["フライトドクター"], 
+            ns: jian["フライトナース"], 
+            participants: d["参加者一覧"] || "",
+            summary: d["概要"], 
+            evalText: d["症例評価"], 
+            good: d["Good (良かった点)"], 
+            bad: d["Bad/Next (課題・次へ)"],
+            tags: uniqueTags, 
+            loc: d["振り返り場所"], 
+            method: d["振り返り方法"]
           });
         }
       });
@@ -177,6 +246,7 @@
 
   function executeSearch() {
     const freeW = document.getElementById("q-free").value.trim().toLowerCase();
+    const qId = document.getElementById("q-id").value.trim();
     const dMonth = document.getElementById("q-month").value; // "YYYY-MM"
     const dStart = document.getElementById("q-date-start").value;
     const dEnd = document.getElementById("q-date-end").value;
@@ -190,6 +260,8 @@
     let results = mergedData.filter(m => {
       let mDate = String(m.date).replace(/\//g, "-"); // "2026-07-08" 等に統一
       
+      if (qId && !String(m.id).includes(qId)) return false;
+
       // 日付フィルタ (月指定が優先)
       if (dMonth) {
         if (!mDate.startsWith(dMonth)) return false;
@@ -230,16 +302,21 @@
       return;
     }
 
+    // 🌟 一覧カード表示（接触時間やスキームを明記）
     resArea.innerHTML = results.map(r => `
       <div class="result-card">
         <div class="rc-header">
-          <div class="rc-id">No.${r.id}</div>
-          <div class="rc-date">${r.date} (${r.dest || '不明'})</div>
+          <div class="rc-id">No.${r.id} <span class="rc-date">(${r.date})</span></div>
+          <div class="badge">${r.scheme || '未選択'}</div>
         </div>
         
-        <div class="rc-staff-line">
-          <b>👨‍⚕️搭乗:</b> Dr.${r.dr || '-'} / Ns.${r.ns || '-'}<br>
-          <span style="font-size:11px; margin-top:4px; display:block; color:var(--sub);"><b>👤参加者:</b> ${r.participants || '未記入'}</span>
+        <div class="rc-meta">
+          <span><b>Dr:</b> ${r.dr || '-'} ｜ <b>Ns:</b> ${r.ns || '-'}</span>
+          <span>[要請 ${String(r.reqTime).substring(0,5)}] 出場先: ${r.dest || '-'}</span>
+        </div>
+        
+        <div class="rc-contact">
+          <b style="color:var(--ink);">接触［${String(r.contactTime).substring(0,5)}］</b> ｜ <b>👤参加:</b> ${r.participants || '未記入'}
         </div>
         
         <div class="rc-context">
@@ -259,6 +336,16 @@
         <a href="debriefing.html?editId=${r.id}" class="btn-edit-case">✏️ このデブリーフィングを修正・追記する</a>
       </div>
     `).join("");
+  }
+
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング検索"}) });
+      const json = await res.json();
+      if (json.status === "success") { alert("送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); }
+    } catch (e) { alert("通信エラー"); } finally { btn.textContent = "送信"; btn.disabled = false; }
   }
 </script>
 </body>
