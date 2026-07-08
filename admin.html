@@ -2,16 +2,18 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 システム管理</title>
   <style>
     /* 基本デザイン変数 */
     :root {
       --bg: #f2f2f7;
+      --card: #ffffff;
       --brand: #d32f2f;
       --ink: #1c1c1e;
       --sub: #8e8e93;
       --blue: #007aff;
+      --line: rgba(60,60,67,0.12);
     }
     
     body {
@@ -23,16 +25,21 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
     
     header {
-      background: #fff;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
       padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 0.5px solid var(--line);
       flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     
     .hdr-btn {
@@ -58,36 +65,44 @@
       padding: 20px;
       flex: 1;
       overflow-y: auto;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
     }
     
     .card {
-      background: #fff;
-      border-radius: 12px;
+      background: var(--card);
+      border-radius: 16px;
       padding: 20px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid var(--line);
     }
     
-    input, select, button {
-      padding: 10px;
-      border-radius: 6px;
+    input, select, textarea {
+      padding: 12px;
+      border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 14px;
       box-sizing: border-box;
+      background: var(--bg);
+      color: var(--ink);
+      font-weight: 600;
+      outline: none;
     }
     
-    button {
+    button.btn-primary {
       background: var(--blue);
       color: #fff;
       border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
+      font-size: 14px;
       transition: opacity 0.2s;
     }
-    
-    button:hover {
-      opacity: 0.8;
-    }
+    button.btn-primary:hover { opacity: 0.8; }
     
     /* オーバーレイ */
     #login-overlay {
@@ -98,12 +113,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 20px;
     }
     
     #global-loader {
       position: fixed;
       inset: 0;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.95);
       z-index: 9998;
       display: none;
       flex-direction: column;
@@ -131,23 +147,23 @@
   <div id="login-overlay">
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">システム管理</h2>
-      <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">アクセスコードを入力</p>
-      <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px;" placeholder="****">
-      <button onclick="checkLogin()" style="width:100%; padding:14px; font-size:16px;">ログイン 🔓</button>
-      <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none;">パスワードが違います</p>
+      <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">管理者用アクセスコードを入力</p>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; background:#fff;" placeholder="****" oninput="toHalfWidth(this)">
+      <button class="btn-primary" onclick="checkLogin()" style="width:100%; padding:16px; font-size:16px;">ログイン 🔓</button>
+      <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none; font-weight:bold;">パスワードが違います</p>
     </div>
   </div>
 
   <div id="global-loader">
     <div class="spinner"></div>
-    <div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム準備中...</div>
+    <div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム通信中...</div>
   </div>
 
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v9.5</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v11.0</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -156,33 +172,48 @@
 
   <main>
     <div class="card" style="border:2px solid #ffcc00; background:#fffdf0;">
-      <h3 style="margin-top:0; color:#d48806;">👑 マスタデータ追加</h3>
-      <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+      <h3 style="margin-top:0; color:#d48806; display:flex; align-items:center; gap:6px;">👑 マスタデータ追加</h3>
+      <p style="font-size:12px; color:var(--sub); margin-top:-8px; margin-bottom:12px;">※ 追加したデータはすべてのアプリに即座に反映されます。</p>
+      
+      <div style="display:flex; flex-direction:column; gap:12px;">
         <div>
-          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">種類</label>
-          <select id="add-type">
-            <option value="dest">出場先</option>
-            <option value="dr">フライトドクター</option>
-            <option value="ns">フライトナース</option>
-            <option value="mail">メール送信先(選択肢)</option>
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:4px;">種類を選択</label>
+          <select id="add-type" style="width:100%; background:#fff;">
+            <option value="dr">👨‍⚕️ フライトドクター</option>
+            <option value="ns">👩‍⚕️ フライトナース</option>
+            <option value="dest">🏥 出場先</option>
+            <option value="diagnosis">🩺 現場診断 (病名マスタ)</option>
+            <option value="keyword">🔑 キーワード要請</option>
+            <option value="pilot">🚁 機長</option>
+            <option value="mechanic">🔧 整備士</option>
+            <option value="cs">🎧 CS</option>
+            <option value="ext_affil">🚒 外部所属 (消防本部など)</option>
+            <option value="ext_staff">🧑‍🚒 外部スタッフ (救急隊員など)</option>
+            <option value="mail">✉️ メール送信先 (宛先リスト)</option>
           </select>
         </div>
-        <div style="flex:1;">
-          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">値1 (名前等)</label>
-          <input type="text" id="add-val1" placeholder="名前や出場先を入力" style="width:100%;">
+        
+        <div>
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:4px;">値1 (登録する名称)</label>
+          <input type="text" id="add-val1" placeholder="名前や施設名を入力" style="width:100%; background:#fff;">
         </div>
-        <div style="flex:1;" id="box-val2">
-          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">値2 (メアド ※メール時のみ)</label>
-          <input type="email" id="add-val2" placeholder="example@gmail.com" style="width:100%;">
+        
+        <div id="box-val2" style="display:none;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:4px;">値2 (メールアドレス ※メール送信先追加時のみ)</label>
+          <input type="email" id="add-val2" placeholder="example@gmail.com" style="width:100%; background:#fff;">
         </div>
-        <button onclick="addMaster()" style="background:#d48806; padding:10px 20px;">＋ マスタに追加</button>
+        
+        <button class="btn-primary" onclick="addMaster()" style="background:#d48806; padding:14px; margin-top:8px;">＋ マスタデータベースに追加</button>
       </div>
     </div>
 
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin-top:0;">❓ Q&A 未回答リスト</h3>
-        <span style="font-size:12px; color:var(--sub);">※削除はスプレッドシートから直接行ってください</span>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0; display:flex; align-items:center; gap:6px;">❓ Q&A 未回答リスト</h3>
+          <div style="font-size:12px; color:var(--sub); margin-top:4px;">現場から届いた要望・質問に回答して公開します。</div>
+        </div>
+        <span style="font-size:11px; color:var(--sub); background:var(--bg); padding:4px 8px; border-radius:4px;">※削除はスプレッドシートから</span>
       </div>
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub);">読込中...</div>
     </div>
@@ -196,11 +227,13 @@
   let lockTime = 600; 
   let timerInterval;
   
-  function resetTimer() { 
-    lockTime = 600; 
-    updateTimerDisplay(); 
+  function toHalfWidth(ele) {
+    let val = ele.value;
+    val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });
+    ele.value = val;
   }
-  
+
+  function resetTimer() { lockTime = 600; updateTimerDisplay(); }
   function updateTimerDisplay() { 
     const m = String(Math.floor(lockTime/60)).padStart(2,'0'); 
     const s = String(lockTime%60).padStart(2,'0'); 
@@ -209,11 +242,7 @@
   
   function startTimer() { 
     updateTimerDisplay(); 
-    timerInterval = setInterval(() => { 
-      lockTime--; 
-      updateTimerDisplay(); 
-      if(lockTime <= 0) location.reload(); 
-    }, 1000); 
+    timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); 
     ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); 
   }
   
@@ -236,10 +265,9 @@
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_init", password: PIN_ADMIN }), 
+        body: JSON.stringify({ action: "fetch_init", password: PIN_ADMIN, app_name: "管理" }), 
         redirect: "follow" 
       });
-      
       const jsonRes = await res.json();
       
       if (jsonRes.status === "success") {
@@ -248,15 +276,15 @@
         
         if (unanswered.length > 0) {
           qaBox.innerHTML = unanswered.map((item, i) => `
-            <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue);">
-              <div style="font-size:11px; color:var(--sub); margin-bottom:4px;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
-              <b style="color:var(--ink); font-size:14px;">Q. ${item.q}</b>
-              <textarea id="ans-${i}" rows="2" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:4px; padding:8px; margin:8px 0; font-size:13px;"></textarea>
-              <button onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="padding:8px; font-size:13px; width:100%;">回答を送信・公開</button>
+            <div style="background:var(--bg); padding:16px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line);">
+              <div style="font-size:11px; color:var(--sub); margin-bottom:6px; font-weight:bold;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
+              <div style="color:var(--ink); font-size:14px; font-weight:bold; margin-bottom:12px; line-height:1.4;">Q. ${item.q.replace(/\n/g, '<br>')}</div>
+              <textarea id="ans-${i}" rows="3" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px; margin-bottom:8px; font-size:13px; background:#fff;"></textarea>
+              <button class="btn-primary" onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="width:100%;">回答を送信・公開</button>
             </div>
           `).join("");
         } else {
-          qaBox.innerHTML = '<p style="text-align:center;">未回答の質問はありません。</p>';
+          qaBox.innerHTML = '<div style="text-align:center; padding:30px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">未回答の質問・要望はありません。</div>';
         }
       } else {
         alert("データの取得に失敗しました。");
@@ -283,10 +311,10 @@
         body: JSON.stringify({ action: "answer_question", password: PIN_ADMIN, q: qText, a: ans }),
         redirect: "follow"
       });
-      
       const jsonRes = await res.json();
       
       if(jsonRes.status === "success") {
+        alert("回答を公開しました。");
         fetchInit(); // リストを再取得して更新
       } else {
         alert("エラー: " + jsonRes.message);
@@ -304,11 +332,13 @@
     const val1 = document.getElementById("add-val1").value.trim(); 
     const val2 = document.getElementById("add-val2").value.trim();
     
-    if (!val1) return alert("追加する値を入力してください。");
+    if (!val1) return alert("登録する名称（値1）を入力してください。");
+    if (type === 'mail' && !val2) return alert("メールアドレス（値2）を入力してください。");
     
     const btn = event.target; 
     btn.disabled = true; 
     btn.innerText = "追加中...";
+    document.getElementById("global-loader").style.display = "flex";
     
     try {
       const res = await fetch(GAS_API_URL, { 
@@ -317,11 +347,10 @@
         body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2 }), 
         redirect: "follow" 
       });
-      
       const json = await res.json();
       
       if (json.status === "success") { 
-        alert("マスタに追加しました。"); 
+        alert("マスタデータベースに正常に追加しました。"); 
         document.getElementById("add-val1").value = ""; 
         document.getElementById("add-val2").value = ""; 
         fetchInit(); 
@@ -332,7 +361,8 @@
       alert("通信エラーが発生しました。"); 
     } finally {
       btn.disabled = false; 
-      btn.innerText = "＋ マスタに追加";
+      btn.innerText = "＋ マスタデータベースに追加";
+      document.getElementById("global-loader").style.display = "none";
     }
   }
   
@@ -341,8 +371,6 @@
     document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; 
   });
   
-  // 初期状態では値2(メアド)の枠を隠す
-  document.getElementById("box-val2").style.display = 'none';
 </script>
 </body>
 </html>
