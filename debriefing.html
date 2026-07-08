@@ -5,19 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 デブリーフィング</title>
   <style>
-    :root { 
-      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; 
-      --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --line: rgba(60,60,67,0.12); 
-    }
+    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: rgba(60,60,67,0.12); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-    body { background: var(--bg); color: var(--ink); padding-bottom: 60px; -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: 56px; padding: 0 16px; background: rgba(242,242,247,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
     
     .tab-container { position: fixed; top: 56px; left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; z-index: 99; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
-    .nav-tab { flex: 1; text-align: center; padding: 0 8px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
+    .nav-tab { flex: 1; min-width: 80px; text-align: center; padding: 0 8px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
     
     main { margin-top: 100px; padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
@@ -50,11 +47,10 @@
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
     .eval-block { border: 2px solid var(--blue); border-radius: 8px; padding: 12px; margin-bottom: 16px; background: #fdfdfd; }
-    .eval-row { display: flex; align-items: flex-start; margin-bottom: 6px; }
+    .eval-row { display: flex; align-items: flex-start; margin-bottom: 6px; gap: 4px; }
     .eval-row span { font-size: 11px; font-weight: bold; width: 30px; padding-top: 6px; color: var(--blue); }
     
-    /* 🌟 ラジオボタンUI（職種別切り替え） */
-    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .radio-lbl { display: inline-block; padding: 8px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; font-size: 13px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; }
     input[type="radio"] { display: none; }
     input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
@@ -69,31 +65,18 @@
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
-    
-    @media print { 
-      body { background: #fff; padding: 0; } 
-      header, .tab-container, main > div:not(#tab-sec5), .no-print { display: none !important; }
-      #tab-sec5 { display: block !important; margin: 0; padding: 0; }
-      .print-report { border: none; padding: 0; }
-    }
+    @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec5), .no-print { display: none !important; } #tab-sec5 { display: block !important; margin: 0; padding: 0; } .print-report { border: none; padding: 0; } }
   </style>
 </head>
 <body>
 
 <datalist id="eval-titles">
-  <option value="事前情報(要請時)">
-  <option value="追加情報(無線等)">
-  <option value="接触時(1次評価)">
-  <option value="現場・救急車内(処置後)">
-  <option value="移動前(現場離脱時)">
-  <option value="搬送中">
-  <option value="最終(病院引継ぎ)">
+  <option value="事前情報(要請時)"><option value="追加情報(無線等)"><option value="接触時(1次評価)"><option value="現場・救急車内(処置後)"><option value="移動前(現場離脱時)"><option value="搬送中"><option value="最終(病院引継ぎ)">
 </datalist>
+<datalist id="ext-affil-list"></datalist>
+<datalist id="ext-staff-list"></datalist>
 
-<div id="global-loader">
-  <div class="spinner"></div>
-  <div style="margin-top:16px; font-weight:800; color:var(--ink);">システム起動中...</div>
-</div>
+<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800; color:var(--ink);">システム起動中...</div></div>
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
@@ -102,69 +85,41 @@
 </header>
 
 <div class="tab-container no-print">
-  <div class="nav-tab active" onclick="switchTab('sec1')">1.事案・環境</div>
+  <div class="nav-tab active" onclick="switchTab('sec1')">1.事案環境</div>
   <div class="nav-tab" onclick="switchTab('sec2')">2.症例評価</div>
-  <div class="nav-tab" onclick="switchTab('sec3')">3.タグ付け</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.多職種振返り</div>
-  <div class="nav-tab" onclick="switchTab('sec5')">5.プレビュー</div>
+  <div class="nav-tab" onclick="switchTab('sec3')">3.タグ付</div>
+  <div class="nav-tab" onclick="switchTab('sec4')">4.多職種</div>
+  <div class="nav-tab" onclick="switchTab('sec5')">5.保存</div>
 </div>
 
 <main>
   <div id="tab-sec1" class="tab-content active">
     <div class="card no-print">
       <div class="section-label">🔍 事案の検索と紐付け</div>
-      <div class="grid-2col">
-        <div class="input-row"><label>要請番号</label><input type="text" id="s-id" placeholder="ID入力"></div>
-        <div class="input-row"><label>スタッフ</label><input type="text" id="s-staff" placeholder="Dr/Ns名"></div>
-      </div>
+      <div class="grid-2col"><div class="input-row"><label>要請番号</label><input type="text" id="s-id" placeholder="ID入力"></div><div class="input-row"><label>スタッフ</label><input type="text" id="s-staff" placeholder="Dr/Ns名"></div></div>
       <button class="btn-blue" id="btn-search" onclick="searchCases()">事案を検索する</button>
       <div id="search-results-area" style="display:none; margin-top:16px;"></div>
     </div>
 
     <div id="case-data-area" style="display:none;">
       <div class="card">
-        <div class="section-label" style="color:var(--blue); border-bottom-color:var(--line);">📝 紐付けられた事案データ</div>
+        <div class="section-label" style="color:var(--blue); border-bottom-color:var(--line);">📝 事案データ</div>
         <div id="v-fetched-data"></div>
-        
         <div class="section-label" style="margin-top:16px;">📖 事案の概要（ストーリー）</div>
-        <textarea id="v-summary" rows="3" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
+        <textarea id="v-summary" rows="3" placeholder="全体的な流れや背景..."></textarea>
       </div>
 
       <div class="card">
         <div class="section-label">🏢 開催環境と参加者</div>
-        
         <div class="grid-2col">
-          <div>
-            <label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り場所</label>
-            <select id="env-loc" onchange="if(this.value==='その他') document.getElementById('env-loc-other').style.display='block'; else document.getElementById('env-loc-other').style.display='none';">
-              <option value="浜町待機所">浜町待機所</option>
-              <option value="運行調整室">運行調整室</option>
-              <option value="各自(リモート)">各自(リモート)</option>
-              <option value="その他">その他</option>
-            </select>
-            <input type="text" id="env-loc-other" placeholder="場所を入力" style="display:none; margin-top:4px;">
-          </div>
-          <div>
-            <label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り方法</label>
-            <select id="env-method" onchange="if(this.value==='その他') document.getElementById('env-method-other').style.display='block'; else document.getElementById('env-method-other').style.display='none';">
-              <option value="対面">対面</option>
-              <option value="Zoom">Zoom</option>
-              <option value="対面＋Zoom">対面 ＋ Zoom</option>
-              <option value="その他">その他</option>
-            </select>
-            <input type="text" id="env-method-other" placeholder="方法を入力" style="display:none; margin-top:4px;">
-          </div>
+          <div><label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り場所</label><select id="env-loc" onchange="if(this.value==='その他') document.getElementById('env-loc-other').style.display='block'; else document.getElementById('env-loc-other').style.display='none';"><option value="浜町待機所">浜町待機所</option><option value="運行調整室">運行調整室</option><option value="各自(リモート)">各自(リモート)</option><option value="その他">その他</option></select><input type="text" id="env-loc-other" placeholder="場所を入力" style="display:none; margin-top:4px;"></div>
+          <div><label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り方法</label><select id="env-method" onchange="if(this.value==='その他') document.getElementById('env-method-other').style.display='block'; else document.getElementById('env-method-other').style.display='none';"><option value="対面">対面</option><option value="Zoom">Zoom</option><option value="対面＋Zoom">対面 ＋ Zoom</option><option value="その他">その他</option></select><input type="text" id="env-method-other" placeholder="方法を入力" style="display:none; margin-top:4px;"></div>
         </div>
 
         <div style="margin-top:12px;">
           <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">固定参加者</label>
-          <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:13px; font-weight:bold; color:var(--ink);">
-            <label><input type="checkbox" name="fixed-pt" value="Dr"> Dr</label>
-            <label><input type="checkbox" name="fixed-pt" value="Ns" checked> Ns(記載者)</label>
-            <label><input type="checkbox" name="fixed-pt" value="機長"> 機長</label>
-            <label><input type="checkbox" name="fixed-pt" value="整備士"> 整備士</label>
-            <label><input type="checkbox" name="fixed-pt" value="CS"> CS</label>
-          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;" id="fixed-pt-container">
+            </div>
           <div style="margin-top:8px;">
             <select id="recorder-select" style="font-size:13px; padding:8px;"><option value="">Ns(シート記載者)を選択...</option></select>
           </div>
@@ -175,12 +130,17 @@
           <div id="ext-pt-container"></div>
           <button class="btn-small" style="background:#e3f2fd; color:#0d47a1; margin-top:4px;" onclick="addExtPt()">＋ 外部参加者を追加</button>
         </div>
+        
+        <div style="margin-top:16px; border-top:1px dashed #ccc; padding-top:12px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">OJT (同乗研修)</label>
+          <div id="ojt-pt-container"></div>
+          <button class="btn-small" style="background:#fce4ec; color:#c2185b; margin-top:4px;" onclick="addOjtPt()">＋ OJT参加者を追加</button>
+        </div>
 
         <div style="margin-top:16px;">
           <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block;">その他 (オブザーバー等)</label>
           <input type="text" id="other-pt" placeholder="自由入力">
         </div>
-
       </div>
     </div>
     <button class="btn-next no-print" onclick="switchTab('sec2')">次へ (症例評価) ➔</button>
@@ -193,9 +153,7 @@
   </div>
 
   <div id="tab-sec3" class="tab-content">
-    <div class="card">
-      <div id="tags-container"></div>
-    </div>
+    <div class="card"><div id="tags-container"></div></div>
     <button class="btn-next no-print" onclick="switchTab('sec4')">次へ (多職種振り返り) ➔</button>
   </div>
 
@@ -203,35 +161,40 @@
     <div class="card">
       <div class="section-label">🗣️ 誰の視点の振り返りですか？</div>
       <div class="radio-group">
-        <label><input type="radio" name="prof" value="フライトドクター" checked onchange="changeProf()"> <span class="radio-lbl">フライトドクター</span></label>
-        <label><input type="radio" name="prof" value="フライトナース" onchange="changeProf()"> <span class="radio-lbl">フライトナース</span></label>
+        <label><input type="radio" name="prof" value="フライトドクター" checked onchange="changeProf()"> <span class="radio-lbl">Dr</span></label>
+        <label><input type="radio" name="prof" value="フライトナース" onchange="changeProf()"> <span class="radio-lbl">Ns</span></label>
         <label><input type="radio" name="prof" value="機長・整備士" onchange="changeProf()"> <span class="radio-lbl">機長・整備士</span></label>
         <label><input type="radio" name="prof" value="CS" onchange="changeProf()"> <span class="radio-lbl">CS</span></label>
         <label><input type="radio" name="prof" value="消防・救急隊" onchange="changeProf()"> <span class="radio-lbl">消防・救急隊</span></label>
+        <label><input type="radio" name="prof" value="OJT" onchange="changeProf()"> <span class="radio-lbl">OJT</span></label>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <select id="prof-speaker" style="font-size:12px; padding:8px;" onchange="saveFeedback()"><option value="">発言者を特定する（任意）...</option></select>
       </div>
 
       <div style="background:#e8f5e9; padding:12px; border-radius:8px; border:1px solid #c8e6c9; margin-bottom:12px;">
         <div style="font-weight:bold; color:#2e7d32; font-size:13px; margin-bottom:8px;">🟢 Good (良かった点・成功要因)</div>
-        <textarea id="val-good" rows="4" placeholder="この職種からのGoodポイントを入力..." oninput="saveFeedback()"></textarea>
+        <textarea id="val-good" rows="3" placeholder="Goodポイントを入力..." oninput="saveFeedback()"></textarea>
       </div>
-
-      <div style="background:#fffde6; padding:12px; border-radius:8px; border:1px solid #fff59d;">
-        <div style="font-weight:bold; color:#f57f17; font-size:13px; margin-bottom:8px;">⚠️ Bad / Next (課題・次へのアクション)</div>
-        <textarea id="val-bad" rows="4" placeholder="この職種からの反省点や、次回への改善提案を入力..." oninput="saveFeedback()"></textarea>
+      <div style="background:#fffde6; padding:12px; border-radius:8px; border:1px solid #fff59d; margin-bottom:12px;">
+        <div style="font-weight:bold; color:#f57f17; font-size:13px; margin-bottom:8px;">⚠️ Bad / Gap (課題・ギャップ)</div>
+        <textarea id="val-bad" rows="3" placeholder="反省点や課題を入力..." oninput="saveFeedback()"></textarea>
+      </div>
+      <div style="background:#e3f2fd; padding:12px; border-radius:8px; border:1px solid #bbdefb;">
+        <div style="font-weight:bold; color:#1565c0; font-size:13px; margin-bottom:8px;">🚀 Next (次回へのアクションプラン)</div>
+        <textarea id="val-next" rows="3" placeholder="次回からどう改善するか..." oninput="saveFeedback()"></textarea>
       </div>
     </div>
     <button class="btn-next no-print" onclick="switchTab('sec5')">次へ (プレビュー・保存) ➔</button>
   </div>
 
   <div id="tab-sec5" class="tab-content">
-    <div class="card" style="padding: 0;">
-      <div id="print-area"></div>
-    </div>
+    <div class="card" style="padding: 0;"><div id="print-area"></div></div>
     <div class="no-print">
       <button class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ この内容でアーカイブ保存</button>
     </div>
   </div>
-
 </main>
 
 <script>
@@ -249,67 +212,64 @@
   };
 
   let selectedTags = { keyword: [], scene: [], practice: [], disease: [], treatment: [], special: [], risk: [] };
-  let allCasesData = []; 
-  let currentCase = null; 
-  let evalBlocks = []; 
+  let allCasesData = []; let existingDebriefs = []; let currentCase = null; let evalBlocks = []; 
+  let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[] };
   
-  // 🌟 職種別フィードバック用データオブジェクト
-  const profs = ["フライトドクター", "フライトナース", "機長・整備士", "CS", "消防・救急隊"];
+  const profs = ["フライトドクター", "フライトナース", "機長・整備士", "CS", "消防・救急隊", "OJT"];
   let feedbackData = {};
-  profs.forEach(p => feedbackData[p] = { good: "", bad: "" });
+  profs.forEach(p => feedbackData[p] = { good: "", bad: "", next: "", speaker: "" });
 
-  window.onload = () => {
-    buildTagUI();
-    addEvalBlock(); 
-    fetchInitData();
-  };
+  window.onload = () => { buildTagUI(); addEvalBlock(); fetchInitData(); };
 
   function switchTab(id) {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active'); 
-    document.getElementById('tab-' + id).classList.add('active'); 
-    window.scrollTo(0,0);
+    event.target.classList.add('active'); document.getElementById('tab-' + id).classList.add('active'); window.scrollTo(0,0);
     if (id === 'sec5') generatePreview();
+    if (id === 'sec4') updateSpeakerList();
   }
 
-  // 🌟 外部参加者の動的追加
   let extPtCount = 0;
-  function addExtPt() {
-    extPtCount++;
-    const id = `ext-pt-${extPtCount}`;
-    const html = `
-      <div id="${id}" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <input type="text" id="${id}-affil" placeholder="所属(例:〇〇消防)" style="flex:2; margin:0; padding:8px;">
-        <input type="text" id="${id}-name" placeholder="名前" style="flex:1.5; margin:0; padding:8px;">
+  function addExtPt(affil = "", name = "") {
+    extPtCount++; const id = `ext-pt-${extPtCount}`;
+    const html = `<div id="${id}" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
+        <input type="text" id="${id}-affil" list="ext-affil-list" placeholder="所属(消防等)" value="${affil}" style="flex:2; margin:0; padding:8px;">
+        <input type="text" id="${id}-name" list="ext-staff-list" placeholder="名前" value="${name}" style="flex:1.5; margin:0; padding:8px;">
         <button class="btn-small" style="background:var(--blue); color:#fff; padding:8px;" onclick="registerMaster('${id}')">保存</button>
         <button class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:8px;" onclick="document.getElementById('${id}').remove()">✕</button>
-      </div>
-    `;
+      </div>`;
     document.getElementById("ext-pt-container").insertAdjacentHTML('beforeend', html);
   }
+  
+  let ojtPtCount = 0;
+  function addOjtPt(job = "", name = "") {
+    ojtPtCount++; const id = `ojt-pt-${ojtPtCount}`;
+    const html = `<div id="${id}" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
+        <select id="${id}-job" style="flex:1.5; margin:0; padding:8px; font-size:13px;">
+          <option value="Dr" ${job==='Dr'?'selected':''}>Dr</option><option value="Ns" ${job==='Ns'?'selected':''}>Ns</option>
+          <option value="救急隊" ${job==='救急隊'?'selected':''}>救急隊</option><option value="その他" ${job==='その他'?'selected':''}>その他</option>
+        </select>
+        <input type="text" id="${id}-name" placeholder="名前" value="${name}" style="flex:2; margin:0; padding:8px;">
+        <button class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:8px;" onclick="document.getElementById('${id}').remove()">✕</button>
+      </div>`;
+    document.getElementById("ojt-pt-container").insertAdjacentHTML('beforeend', html);
+  }
 
-  // 🌟 外部参加者のマスタ登録送信
   async function registerMaster(rowId) {
-    const affil = document.getElementById(`${rowId}-affil`).value.trim();
-    const name = document.getElementById(`${rowId}-name`).value.trim();
+    const affil = document.getElementById(`${rowId}-affil`).value.trim(); const name = document.getElementById(`${rowId}-name`).value.trim();
     if(!affil || !name) return alert("所属と名前を入力してください。");
-    
     try {
-      const res1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_affil", val1: affil }), redirect: "follow" });
-      const res2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_staff", val1: name }), redirect: "follow" });
-      alert(`「${affil}」の「${name}」さんをマスタに登録しました。`);
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_affil", val1: affil }) });
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_staff", val1: name }) });
+      alert(`「${affil}」の「${name}」さんをマスタに登録しました。次回から予測変換に出ます。`);
     } catch(e) { alert("通信エラーが発生しました。"); }
   }
 
   function buildTagUI() {
     let html = "";
     Object.keys(TAG_MASTERS).forEach(key => {
-      html += `<div class="acc-header" onclick="toggleAcc(this, 'acc-${key}')">${TAG_MASTERS[key].label}<span class="arrow">▼</span></div>
-               <div class="acc-body" id="acc-${key}"><div class="chip-grid">`;
-      TAG_MASTERS[key].items.forEach(item => {
-        html += `<div class="chip" id="chip-${key}-${item}" onclick="toggleTag('${key}', '${item}')">${item}</div>`;
-      });
+      html += `<div class="acc-header" onclick="toggleAcc(this, 'acc-${key}')">${TAG_MASTERS[key].label}<span class="arrow">▼</span></div><div class="acc-body" id="acc-${key}"><div class="chip-grid">`;
+      TAG_MASTERS[key].items.forEach(item => { html += `<div class="chip" id="chip-${key}-${item}" onclick="toggleTag('${key}', '${item}')">${item}</div>`; });
       html += `</div></div>`;
     });
     document.getElementById("tags-container").innerHTML = html;
@@ -324,49 +284,68 @@
   function renderEvalBlocks() {
     document.getElementById("eval-container").innerHTML = evalBlocks.map((ev, index) => `
       <div class="eval-block">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <div style="font-weight:bold; color:var(--blue);">🩺 評価ポイント #${index+1}</div>
-          ${index > 0 ? `<button class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="removeEvalBlock(${ev.id})">削除</button>` : ''}
-        </div>
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <input type="text" placeholder="評価名 (例: 1次評価)" list="eval-titles" value="${ev.title}" onchange="updateEval(${ev.id}, 'title', this.value)" style="flex:2; margin:0;">
-          <input type="time" value="${ev.time}" onchange="updateEval(${ev.id}, 'time', this.value)" style="flex:1; margin:0; padding:6px;">
-        </div>
-        <div class="eval-row"><span>A:気道</span><textarea rows="1" onchange="updateEval(${ev.id}, 'a', this.value)">${ev.a}</textarea></div>
-        <div class="eval-row"><span>B:呼吸</span><textarea rows="1" onchange="updateEval(${ev.id}, 'b', this.value)">${ev.b}</textarea></div>
-        <div class="eval-row"><span>C:循環</span><textarea rows="1" onchange="updateEval(${ev.id}, 'c', this.value)">${ev.c}</textarea></div>
-        <div class="eval-row"><span>D:神経</span><textarea rows="1" onchange="updateEval(${ev.id}, 'd', this.value)">${ev.d}</textarea></div>
-        <div class="eval-row"><span>E:全身</span><textarea rows="1" onchange="updateEval(${ev.id}, 'e', this.value)">${ev.e}</textarea></div>
-        <div class="eval-row"><span>F:家族</span><textarea rows="1" onchange="updateEval(${ev.id}, 'f', this.value)">${ev.f}</textarea></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><div style="font-weight:bold; color:var(--blue);">🩺 評価ポイント #${index+1}</div>${index > 0 ? `<button class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="removeEvalBlock(${ev.id})">削除</button>` : ''}</div>
+        <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" placeholder="評価名(例:1次評価)" list="eval-titles" value="${ev.title}" onchange="updateEval(${ev.id}, 'title', this.value)" style="flex:2; margin:0;"><input type="time" value="${ev.time}" onchange="updateEval(${ev.id}, 'time', this.value)" style="flex:1; margin:0; padding:6px;"></div>
+        <div class="eval-row"><span>A:気道</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'a_g', this.value)" style="border-color:#a5d6a7;">${ev.a_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'a_b', this.value)" style="border-color:#fff59d;">${ev.a_b||''}</textarea></div>
+        <div class="eval-row"><span>B:呼吸</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'b_g', this.value)" style="border-color:#a5d6a7;">${ev.b_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'b_b', this.value)" style="border-color:#fff59d;">${ev.b_b||''}</textarea></div>
+        <div class="eval-row"><span>C:循環</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'c_g', this.value)" style="border-color:#a5d6a7;">${ev.c_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'c_b', this.value)" style="border-color:#fff59d;">${ev.c_b||''}</textarea></div>
+        <div class="eval-row"><span>D:神経</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'd_g', this.value)" style="border-color:#a5d6a7;">${ev.d_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'd_b', this.value)" style="border-color:#fff59d;">${ev.d_b||''}</textarea></div>
+        <div class="eval-row"><span>E:全身</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'e_g', this.value)" style="border-color:#a5d6a7;">${ev.e_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'e_b', this.value)" style="border-color:#fff59d;">${ev.e_b||''}</textarea></div>
       </div>
     `).join("");
   }
-  function addEvalBlock() { evalBlocks.push({ id: Date.now(), title: "", time: "", a: "", b: "", c: "", d: "", e: "", f: "" }); renderEvalBlocks(); }
+  function addEvalBlock() { evalBlocks.push({ id: Date.now(), title: "", time: "", a_g:"", a_b:"", b_g:"", b_b:"", c_g:"", c_b:"", d_g:"", d_b:"", e_g:"", e_b:"" }); renderEvalBlocks(); }
   function removeEvalBlock(id) { evalBlocks = evalBlocks.filter(e => e.id !== id); renderEvalBlocks(); }
   function updateEval(id, key, val) { const ev = evalBlocks.find(e => e.id === id); if(ev) ev[key] = val; }
 
-  // 🌟 職種別切り替え時の保存・展開処理
-  function changeProf() {
+  function updateSpeakerList() {
+    const sel = document.getElementById("prof-speaker"); sel.innerHTML = '<option value="">発言者を特定する（任意）...</option>';
+    let pts = [];
+    document.querySelectorAll('input[name="fixed-pt"]:checked').forEach(el => pts.push(el.nextSibling.textContent.trim()));
+    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => { if(el.id.endsWith("-affil")) { const nm = document.getElementById(el.id.replace("-affil", "-name")).value; if(nm) pts.push(nm); } });
+    document.querySelectorAll('[id^="ojt-pt-"]').forEach(el => { if(el.id.endsWith("-name")) { const nm = document.getElementById(el.id).value; if(nm) pts.push(nm + "(OJT)"); } });
+    pts.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
     const activeProf = document.querySelector('input[name="prof"]:checked').value;
-    document.getElementById("val-good").value = feedbackData[activeProf].good;
-    document.getElementById("val-bad").value = feedbackData[activeProf].bad;
+    sel.value = feedbackData[activeProf].speaker || "";
+  }
+
+  function changeProf() {
+    const p = document.querySelector('input[name="prof"]:checked').value;
+    document.getElementById("val-good").value = feedbackData[p].good;
+    document.getElementById("val-bad").value = feedbackData[p].bad;
+    document.getElementById("val-next").value = feedbackData[p].next;
+    updateSpeakerList();
   }
   function saveFeedback() {
-    const activeProf = document.querySelector('input[name="prof"]:checked').value;
-    feedbackData[activeProf].good = document.getElementById("val-good").value;
-    feedbackData[activeProf].bad = document.getElementById("val-bad").value;
+    const p = document.querySelector('input[name="prof"]:checked').value;
+    feedbackData[p].good = document.getElementById("val-good").value;
+    feedbackData[p].bad = document.getElementById("val-bad").value;
+    feedbackData[p].next = document.getElementById("val-next").value;
+    feedbackData[p].speaker = document.getElementById("prof-speaker").value;
   }
 
   async function fetchInitData() {
     try {
-      const res1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" });
+      const res1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }) });
       const json1 = await res1.json();
-      if (json1.status === "success" && json1.masters.ns) {
-        document.getElementById("recorder-select").innerHTML = `<option value="">Ns(シート記載者)を選択...</option>` + json1.masters.ns.map(s => `<option value="${s}">${s}</option>`).join("");
+      if (json1.status === "success") {
+        masters = json1.masters;
+        document.getElementById("recorder-select").innerHTML += masters.ns.map(s => `<option value="${s}">${s}</option>`).join("");
+        masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
+        masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
+        
+        let fixedHtml = "";
+        const buildSelect = (label, arr) => `<div style="display:flex;align-items:center;gap:4px;"><label><input type="checkbox" name="fixed-pt" value="${label}"> ${label}</label><select style="width:100px;margin:0;padding:4px;font-size:11px;" onchange="this.previousSibling.checked=true;"><option value="">(名前)</option>${arr.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div>`;
+        fixedHtml += buildSelect("Dr", masters.dr); fixedHtml += buildSelect("機長", masters.pilot); fixedHtml += buildSelect("整備士", masters.mechanic); fixedHtml += buildSelect("CS", masters.cs);
+        document.getElementById("fixed-pt-container").innerHTML = fixedHtml;
       }
-      const res2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
-      const json2 = await res2.json();
-      if (json2.status === "success") allCasesData = json2.data;
+      
+      const res2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }) });
+      const json2 = await res2.json(); if (json2.status === "success") allCasesData = json2.data;
+      
+      const res3 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
+      const json3 = await res3.json(); if (json3.status === "success") existingDebriefs = json3.data;
+      
     } catch(e) {} finally { document.getElementById("global-loader").style.display = "none"; }
   }
 
@@ -380,13 +359,8 @@
       return match;
     }).slice(0, 10);
 
-    if (results.length === 0) resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当する事案が見つかりません</div>";
-    else resArea.innerHTML = `<div style="font-size:11px; margin-bottom:8px; color:var(--sub);">対象の事案をタップしてください：</div>` + 
-        results.map(r => `
-          <div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
-            <div style="font-weight:bold; color:var(--blue);">No.${r.id} ｜ ${r.date || "日付不明"}</div>
-            <div style="font-size:12px; color:var(--sub); margin-top:4px;">出場先: ${r.dest || "-"} <br>Dr: ${r.rawData["フライトドクター"] || "-"} / Ns: ${r.rawData["フライトナース"] || "-"}</div>
-          </div>`).join("");
+    if (results.length === 0) resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当なし</div>";
+    else resArea.innerHTML = results.map(r => `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'><b>No.${r.id}</b> ｜ ${r.date}<br><span style="font-size:11px;color:var(--sub);">Dr:${r.rawData["フライトドクター"]} / Ns:${r.rawData["フライトナース"]}</span></div>`).join("");
     resArea.style.display = "block";
   }
 
@@ -394,129 +368,110 @@
     currentCase = rowWrapper.rawData;
     document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
     const row = currentCase;
-    const fmt = (time) => time ? String(time).substring(0, 5) : "--:--";
-    let tlHtml = `<table class="preview-table"><tr><th>要請</th><td>${fmt(row["要請時刻・施設間搬送依頼時刻"])}</td><th>接触</th><td>${fmt(row["接触"])}</td></tr><tr><th>離陸</th><td>${fmt(row["初期離陸時間"])}</td><th>病着</th><td>${fmt(row["病着"])}</td></tr><tr><th>着陸</th><td>${fmt(row["最終着陸時間"])}</td><th>終了</th><td>${fmt(row["終了"])}</td></tr></table>`;
     
-    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">事案No: <b>${row["要請番号"]}</b><br>スキーム: ${row["スキーム選択"] || "未選択"}<br>出場先: ${row["出場先"] || "不明"}<br>Dr: ${row["フライトドクター"] || "-"} / Ns: ${row["フライトナース"] || "-"}<br><br><b style="color:var(--ink);">■ タイムライン</b>${tlHtml}</div>`;
+    // ★ 過去データの復元チェック
+    const pastDebrief = existingDebriefs.find(d => String(d["要請番号"]) === String(row["要請番号"]));
+    if(pastDebrief && pastDebrief["システムデータ"]) {
+      if(confirm("💡 この事案はすでにデブリーフィングが登録されています。過去のデータを読み込んで上書き編集しますか？")) {
+        restoreSystemData(JSON.parse(pastDebrief["システムデータ"]));
+        document.getElementById("btn-submit").innerText = "💾 過去データを上書き保存";
+        document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
+      }
+    }
 
-    TAG_MASTERS.treatment.items.forEach(t => {
-      if (String(row[t]).includes("◯") && !selectedTags.treatment.includes(t)) { toggleTag("treatment", t); document.getElementById("acc-treatment").classList.add("open"); }
-    });
-    const searchTxt = String(row["備考"] || "") + String(row["出場先"] || "");
-    TAG_MASTERS.disease.items.forEach(d => {
-      if (searchTxt.includes(d) && !selectedTags.disease.includes(d)) { toggleTag("disease", d); document.getElementById("acc-disease").classList.add("open"); }
-    });
-    alert("💡 事案データの紐付けが完了しました。");
+    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${row["要請番号"]}</b><br>出場先: ${row["出場先"] || "不明"}<br>Dr: ${row["フライトドクター"] || "-"} / Ns: ${row["フライトナース"] || "-"}</div>`;
   }
 
-  // 🌟 プレビュー生成（ガッチャンコ処理を含む）
+  function restoreSystemData(sys) {
+    document.getElementById("v-summary").value = sys.summary || "";
+    document.getElementById("recorder-select").value = sys.recorder || "";
+    document.getElementById("env-loc").value = sys.loc || "浜町待機所";
+    document.getElementById("env-method").value = sys.method || "対面";
+    document.getElementById("other-pt").value = sys.otherPt || "";
+    
+    if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
+    if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
+    if(sys.evalBlocks && sys.evalBlocks.length > 0) { evalBlocks = sys.evalBlocks; renderEvalBlocks(); }
+    if(sys.feedbackData) { feedbackData = sys.feedbackData; changeProf(); }
+    if(sys.tags) {
+      selectedTags = sys.tags;
+      Object.keys(selectedTags).forEach(k => { selectedTags[k].forEach(item => { const el = document.getElementById(`chip-${k}-${item}`); if(el) el.classList.add("on"); }); });
+    }
+  }
+
   function generatePreview() {
-    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center; color:var(--brand); padding:20px;'>※事案を紐付けしてください。</p>"; return; }
-    
-    const recorder = document.getElementById("recorder-select").value || "未指定";
-    const summaryTxt = document.getElementById("v-summary").value.replace(/\n/g, '<br>') || "記載なし";
-    
-    let envLoc = document.getElementById("env-loc").value; if(envLoc === "その他") envLoc = document.getElementById("env-loc-other").value;
-    let envMethod = document.getElementById("env-method").value; if(envMethod === "その他") envMethod = document.getElementById("env-method-other").value;
-    
-    let ptList = Array.from(document.querySelectorAll('input[name="fixed-pt"]:checked')).map(el => el.value);
-    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => {
-      if(el.id.endsWith("-affil")) {
-        const affil = document.getElementById(el.id).value; const name = document.getElementById(el.id.replace("-affil", "-name")).value;
-        if(affil || name) ptList.push(`${affil} ${name}`);
-      }
-    });
-    const otherPt = document.getElementById("other-pt").value.trim(); if(otherPt) ptList.push(otherPt);
+    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;'>※事案を紐付けしてください。</p>"; return; }
     
     let evalHtml = evalBlocks.map(e => {
-      if(!e.a && !e.b && !e.c && !e.d && !e.e && !e.f) return "";
       let html = `<div style="margin-bottom:8px;"><b>${e.time||'--:--'} ${e.title||'評価'}</b><br>`;
-      if(e.a) html += `A: ${e.a}<br>`; if(e.b) html += `B: ${e.b}<br>`; if(e.c) html += `C: ${e.c}<br>`;
-      if(e.d) html += `D: ${e.d}<br>`; if(e.e) html += `E: ${e.e}<br>`; if(e.f) html += `F: ${e.f}<br>`;
+      const row = (lbl, g, b) => (g||b) ? `${lbl}: <span style="color:#2e7d32">${g||'-'}</span> / <span style="color:#d32f2f">${b||'-'}</span><br>` : '';
+      html += row('A', e.a_g, e.a_b) + row('B', e.b_g, e.b_b) + row('C', e.c_g, e.c_b) + row('D', e.d_g, e.d_b) + row('E', e.e_g, e.e_b);
       return html + `</div>`;
     }).join(""); if(!evalHtml) evalHtml = "記載なし";
 
-    const tagsStr = Object.keys(TAG_MASTERS).map(k => {
-      return selectedTags[k].length > 0 ? `<b>${TAG_MASTERS[k].label.replace(/[^a-zA-Z]/g, '').trim()}</b>: ${selectedTags[k].join(", ")}` : '';
-    }).filter(Boolean).join("<br>");
-
-    // 🌟 職種ごとのフィードバックをガッチャンコして表示
-    let combinedGood = "", combinedBad = "";
+    let combined = "";
     profs.forEach(p => {
-      if(feedbackData[p].good.trim()) combinedGood += `<div style="margin-bottom:6px;"><b>【${p}】</b><br>${feedbackData[p].good.replace(/\n/g, '<br>')}</div>`;
-      if(feedbackData[p].bad.trim()) combinedBad += `<div style="margin-bottom:6px;"><b>【${p}】</b><br>${feedbackData[p].bad.replace(/\n/g, '<br>')}</div>`;
+      if(feedbackData[p].good||feedbackData[p].bad||feedbackData[p].next) {
+        let spk = feedbackData[p].speaker ? ` (${feedbackData[p].speaker})` : '';
+        combined += `<div style="margin-bottom:8px; border-bottom:1px dashed #ccc; padding-bottom:8px;"><b>【${p}${spk}】</b><br>`;
+        if(feedbackData[p].good) combined += `<span style="color:#2e7d32">■ Good:</span> ${feedbackData[p].good.replace(/\n/g,'<br>')}<br>`;
+        if(feedbackData[p].bad) combined += `<span style="color:#d32f2f">■ Bad/Gap:</span> ${feedbackData[p].bad.replace(/\n/g,'<br>')}<br>`;
+        if(feedbackData[p].next) combined += `<span style="color:#1565c0">■ Next:</span> ${feedbackData[p].next.replace(/\n/g,'<br>')}</div>`;
+      }
     });
 
     document.getElementById("print-area").innerHTML = `
       <div class="print-report">
         <h2>AW109 デブリーフィング</h2>
-        <table class="p-table">
-          <tr><th>事案No.</th><td>${currentCase["要請番号"]}</td><th>日付</th><td>${currentCase["日付"] || '-'}</td></tr>
-          <tr><th>環境/方法</th><td colspan="3">${envLoc} / ${envMethod}</td></tr>
-          <tr><th>参加者</th><td colspan="3">${ptList.join(", ") || "未記入"}</td></tr>
-          <tr><th>記録Ns</th><td colspan="3" style="font-weight:bold; color:var(--blue);">${recorder}</td></tr>
-        </table>
-        
-        <h3>■ 事案概要</h3><div style="padding:8px;">${summaryTxt}</div>
-        <h3>■ 症例評価 (ABCDEF)</h3><div style="background:#e8f5e9; padding:8px; border:1px solid #ccc;">${evalHtml}</div>
-        <h3>■ カテゴリ・タグ</h3><div style="background:#f9f9f9; padding:8px; border:1px solid #ccc;">${tagsStr || "タグ選択なし"}</div>
-        
-        <h3>■ 振り返り・ギャップ評価</h3>
-        <table class="p-table">
-          <tr><th style="background:#e8f5e9; width:20%;">Good (成功要因)</th><td>${combinedGood || "記載なし"}</td></tr>
-          <tr><th style="background:#fffde6;">Bad / Next (課題)</th><td>${combinedBad || "記載なし"}</td></tr>
-        </table>
+        <h3>■ 事案概要</h3><div style="padding:8px;">${document.getElementById("v-summary").value.replace(/\n/g, '<br>') || "記載なし"}</div>
+        <h3>■ 症例評価</h3><div style="background:#f9f9f9; padding:8px;">${evalHtml}</div>
+        <h3>■ 振り返り・ギャップ評価</h3><div style="padding:8px;">${combined || "記載なし"}</div>
       </div>
     `;
   }
 
-  // 🌟 デブリーフィングの送信処理（Q,R,S列含む）
   async function submitDebriefing() {
     if (!currentCase) return alert("事案が紐付けられていません。");
-    const recorder = document.getElementById("recorder-select").value;
-    if (!recorder) return alert("タブ1で「Ns(シート記載者)」を選択してください。");
+    
+    let evalTextStr = evalBlocks.map(e => `【${e.time||'--:--'} ${e.title||'評価'}】\nA(G:${e.a_g||'-'} B:${e.a_b||'-'})\nB(G:${e.b_g||'-'} B:${e.b_b||'-'})\nC(G:${e.c_g||'-'} B:${e.c_b||'-'})\nD(G:${e.d_g||'-'} B:${e.d_b||'-'})\nE(G:${e.e_g||'-'} B:${e.e_b||'-'})`).join("\n");
 
-    const summaryTxt = document.getElementById("v-summary").value.trim();
-    let evalTextStr = evalBlocks.map(e => {
-      if(!e.a && !e.b && !e.c && !e.d && !e.e && !e.f) return "";
-      let txt = `【${e.time||'--:--'} ${e.title||'評価'}】\n`;
-      if(e.a) txt += `A: ${e.a}\n`; if(e.b) txt += `B: ${e.b}\n`; if(e.c) txt += `C: ${e.c}\n`;
-      if(e.d) txt += `D: ${e.d}\n`; if(e.e) txt += `E: ${e.e}\n`; if(e.f) txt += `F: ${e.f}\n`;
-      return txt;
-    }).filter(Boolean).join("\n");
-
-    let combinedGood = "", combinedBad = "";
+    let cg="", cb="";
     profs.forEach(p => {
-      if(feedbackData[p].good.trim()) combinedGood += `【${p}】\n${feedbackData[p].good.trim()}\n\n`;
-      if(feedbackData[p].bad.trim()) combinedBad += `【${p}】\n${feedbackData[p].bad.trim()}\n\n`;
+      let spk = feedbackData[p].speaker ? ` (${feedbackData[p].speaker})` : '';
+      if(feedbackData[p].good) cg += `【${p}${spk}】\n${feedbackData[p].good}\n`;
+      if(feedbackData[p].bad||feedbackData[p].next) cb += `【${p}${spk}】\n[Bad] ${feedbackData[p].bad}\n[Next] ${feedbackData[p].next}\n`;
     });
+
+    let extData = [], ojtData = [];
+    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => { if(el.id.endsWith("-affil")) extData.push({ affil: el.value, name: document.getElementById(el.id.replace("-affil", "-name")).value }); });
+    document.querySelectorAll('[id^="ojt-pt-"]').forEach(el => { if(el.id.endsWith("-job")) ojtData.push({ job: el.value, name: document.getElementById(el.id.replace("-job", "-name")).value }); });
+    
+    let ptList = Array.from(document.querySelectorAll('input[name="fixed-pt"]:checked')).map(el => {
+      let nm = el.nextElementSibling.value; return nm ? `${el.value}(${nm})` : el.value;
+    });
+    extData.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); });
+    ojtData.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
+    const otherPt = document.getElementById("other-pt").value; if(otherPt) ptList.push(otherPt);
 
     const tagsObj = {}; Object.keys(selectedTags).forEach(k => { tagsObj[k] = selectedTags[k].join(", "); });
 
-    let envLoc = document.getElementById("env-loc").value; if(envLoc === "その他") envLoc = document.getElementById("env-loc-other").value;
-    let envMethod = document.getElementById("env-method").value; if(envMethod === "その他") envMethod = document.getElementById("env-method-other").value;
-    let ptList = Array.from(document.querySelectorAll('input[name="fixed-pt"]:checked')).map(el => el.value);
-    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => {
-      if(el.id.endsWith("-affil")) {
-        const affil = document.getElementById(el.id).value; const name = document.getElementById(el.id.replace("-affil", "-name")).value;
-        if(affil || name) ptList.push(`${affil} ${name}`);
-      }
-    });
-    const otherPt = document.getElementById("other-pt").value.trim(); if(otherPt) ptList.push(otherPt);
+    const sysData = {
+      summary: document.getElementById("v-summary").value, recorder: document.getElementById("recorder-select").value,
+      loc: document.getElementById("env-loc").value, method: document.getElementById("env-method").value, otherPt: otherPt,
+      ext: extData, ojt: ojtData, tags: selectedTags, evalBlocks: evalBlocks, feedbackData: feedbackData
+    };
 
     const payload = {
-      caseId: currentCase["要請番号"], recorder: recorder, tags: tagsObj, summary: summaryTxt, evalText: evalTextStr,
-      good: combinedGood.trim(), bad: combinedBad.trim(),
-      location: envLoc, method: envMethod, participants: ptList.join(", ")
+      caseId: currentCase["要請番号"], recorder: sysData.recorder, tags: tagsObj, summary: sysData.summary, evalText: evalTextStr,
+      good: cg.trim(), bad: cb.trim(), location: sysData.loc, method: sysData.method, participants: ptList.join(", "), systemData: sysData
     };
 
     const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }) });
       const json = await res.json();
-      if (json.status === "success") { alert("デブリーフィングを保存しました！"); location.reload(); } 
-      else alert("保存エラー: " + json.message);
-    } catch(e) { alert("通信エラーが発生しました。"); } finally { btn.disabled = false; btn.innerText = "✅ この内容でアーカイブ保存"; }
+      if (json.status === "success") { alert("アーカイブに保存しました！"); location.reload(); } else alert("エラー: " + json.message);
+    } catch(e) { alert("通信エラー"); } finally { btn.disabled = false; btn.innerText = "✅ 保存"; }
   }
 </script>
 </body>
