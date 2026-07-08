@@ -18,7 +18,7 @@
         .hdr-group { display: flex; gap: 12px; }
         .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
         .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
-        .version-tag { font-size: 10px; color: var(--blue); font-weight: bold; background: #e3f2fd; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+        .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
         
         ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -210,7 +210,7 @@
                 <div>
                     <header>
                         <div className="hdr-group"><button className="hdr-btn" onClick={() => window.location.href='portal.html'}>◀ ポータル</button></div>
-                        <div className="title-box">資料・プロトコル集<span className="version-tag">AI搭載</span></div>
+                        <div className="title-box">資料・プロトコル集<span className="version-tag">v11.0</span></div>
                         <div className="hdr-group"><button className={`hdr-btn ${isAdmin ? 'text-red-500' : ''}`} onClick={toggleAdmin}>{isAdmin ? '管理解除' : '管理'}</button></div>
                     </header>
 
@@ -286,7 +286,6 @@
                                             </div>
                                         )}
                                         
-                                        {/* ★ 修正ポイント：line-clamp-3 を削除し、全文が表示されるようにしました */}
                                         <p className="text-sm text-gray-600 mb-4 flex-1 whitespace-pre-wrap">{doc.desc || "説明はありません"}</p>
                                         
                                         {isAdmin && doc.status === "要確認" && doc.aiReason && (
@@ -320,7 +319,7 @@
                                     <label className="block text-xs font-bold text-gray-500 mb-1">タイトル</label>
                                     <input type="text" className="w-full p-2 mb-3 rounded border search-input" value={editDoc.title} onChange={e=>setEditDoc({...editDoc, title: e.target.value})} />
                                     <label className="block text-xs font-bold text-gray-500 mb-1">大分類（種類）</label>
-                                    <select className="w-full p-2 mb-3 rounded border search-input" value={editDoc.categoryRaw} onChange={e=>setEditDoc({...editDoc, categoryRaw: e.target.value})}>
+                                    <select className="w-full p-2 mb-3 rounded border search-input" value={editDoc.categoryRaw || editDoc.category} onChange={e=>setEditDoc({...editDoc, categoryRaw: e.target.value, category: e.target.value})}>
                                         {categoriesList.map(c => <option key={c} value={c}>{c}</option>)}
                                     </select>
                                     <label className="block text-xs font-bold text-gray-500 mb-1">中分類（対象領域）</label>
