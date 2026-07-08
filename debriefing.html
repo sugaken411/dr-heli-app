@@ -7,7 +7,7 @@
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: rgba(60,60,67,0.12); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); padding-bottom: 80px; }
+    body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: 56px; padding: 0 16px; background: rgba(242,242,247,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -23,6 +23,7 @@
     
     input[type="text"], input[type="time"], textarea { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
     textarea { resize: none; line-height: 1.5; }
+    select { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 10px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
     
     .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
     .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
@@ -70,7 +71,7 @@
 <datalist id="ext-affil-list"></datalist>
 <datalist id="ext-staff-list"></datalist>
 
-<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800;" id="loader-text">システム起動中...</div></div>
+<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800; color:var(--ink);" id="loader-text">システム起動中...</div></div>
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
@@ -143,7 +144,7 @@
             <label><input type="radio" name="env-loc" value="各自"> <span class="radio-lbl">各自(リモート)</span></label>
             <label><input type="radio" name="env-loc" value="その他" onchange="document.getElementById('env-loc-other').focus()"> <span class="radio-lbl">その他</span></label>
           </div>
-          <input type="text" id="env-loc-other" placeholder="その他の場所" style="margin-top:4px;">
+          <input type="text" id="env-loc-other" placeholder="その他の場所を入力" style="margin-top:4px;">
         </div>
 
         <div style="margin-bottom:16px;">
@@ -154,7 +155,7 @@
             <label><input type="radio" name="env-method" value="対面＋Zoom"> <span class="radio-lbl">対面＋Zoom</span></label>
             <label><input type="radio" name="env-method" value="その他" onchange="document.getElementById('env-method-other').focus()"> <span class="radio-lbl">その他</span></label>
           </div>
-          <input type="text" id="env-method-other" placeholder="その他の方法" style="margin-top:4px;">
+          <input type="text" id="env-method-other" placeholder="その他の方法を入力" style="margin-top:4px;">
         </div>
 
         <div style="margin-bottom:16px;">
@@ -177,6 +178,11 @@
           <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">OJT (同乗研修)</div>
           <div id="ojt-pt-container"></div>
           <button class="btn-small" style="background:#fce4ec; color:#c2185b;" onclick="addOjtPt()">＋ OJTを追加</button>
+        </div>
+        
+        <div style="margin-top:16px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block;">その他 (オブザーバー等)</label>
+          <input type="text" id="other-pt" placeholder="自由入力">
         </div>
       </div>
     </div>
@@ -214,12 +220,14 @@
   const PIN_CODE = "5740";
 
   const SCENE_LIST = ["要請内容から出動前まで", "出動～接触前まで", "接触・現場対応", "搬送", "引き継ぎ", "次事案への準備"];
-  const TAG_LISTS = {
-    keyword: ["閉じ込められている", "車外放出された", "山岳部滑落", "溺れている", "CPA", "アナフィラキシーショック", "大量吐血", "D-call Net", "その他"],
-    practice: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"],
-    treatment: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"],
-    special: ["緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"],
-    risk: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"]
+  
+  // ★バグ修正：TAG_MASTERSという名前でマスタを定義（ラベル付き）
+  const TAG_MASTERS = {
+    keyword: { label: "🔑 キーワード要請", items: ["閉じ込められている", "車外放出された", "山岳部滑落", "溺れている", "CPA", "アナフィラキシーショック", "大量吐血", "D-call Net", "その他"] },
+    practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
+    treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] },
+    special: { label: "🚨 特殊ケース", items: ["緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] },
+    risk: { label: "⚠️ リスク関連", items: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"] }
   };
 
   let allCasesData = []; let existingDebriefs = []; let currentCase = null; 
@@ -237,6 +245,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('editId');
     if(editId) document.getElementById('s-id').value = editId;
+    
     await fetchInitData();
     if(editId) searchCases();
   };
@@ -267,10 +276,10 @@
       if(sysData.tags[cat].includes(item)) sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item);
       else sysData.tags[cat].push(item);
     }
-    // 再描画
-    if(cat === 'keyword') renderChips('chip-container-keyword', TAG_LISTS.keyword, 'keyword');
+    // 再描画のルーティング
+    if(cat === 'keyword') renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
     else if(cat === 'diagnosis') renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
-    else if(TAG_LISTS[cat]) renderChips(`chip-container-${cat}`, TAG_LISTS[cat], cat);
+    else if(TAG_MASTERS[cat]) renderChips(`chip-container-${cat}`, TAG_MASTERS[cat].items, cat);
     else if(masters[cat]) renderChips(`chip-container-${cat}`, masters[cat], cat);
     else if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
   }
@@ -293,7 +302,7 @@
       ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
       renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
       renderChips('recorder-container', masters.ns, 'recorder', true);
-      renderChips('chip-container-keyword', TAG_LISTS.keyword, 'keyword');
+      renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
 
       const r2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }) });
       const j2 = await r2.json(); if(j2.status === "success") allCasesData = j2.data;
@@ -301,7 +310,7 @@
       const r3 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
       const j3 = await r3.json(); if(j3.status === "success") existingDebriefs = j3.data;
 
-    } catch(e) {} finally { document.getElementById("global-loader").style.display = "none"; }
+    } catch(e) { console.log(e); } finally { document.getElementById("global-loader").style.display = "none"; }
   }
 
   async function addMasterAndChip(cat, inputId, containerId) {
@@ -321,6 +330,7 @@
   }
 
   // --- 外部・OJT追加 ---
+  let extPtCount = 0;
   function addExtPt(affil="", name="") {
     extPtCount++; const id = `ext-pt-${extPtCount}`;
     const html = `<div id="${id}" class="ext-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
@@ -341,6 +351,7 @@
     } catch(e) { btn.innerText = "✕"; }
   }
 
+  let ojtPtCount = 0;
   function addOjtPt(job="", name="") {
     ojtPtCount++; const id = `ojt-pt-${ojtPtCount}`;
     const html = `<div id="${id}" class="ojt-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
@@ -374,6 +385,7 @@
     currentCase = rowWrapper.rawData;
     document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
     
+    // ★ 過去データの復元チェック
     const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
     if(past && past["システムデータ"]) {
       if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
@@ -393,7 +405,7 @@
     
     ['dr','ns','pilot','mechanic','cs','diagnosis','recorder','keyword'].forEach(cat => {
       if(sysData.tags[cat]) {
-        if(cat==='keyword') renderChips('chip-container-keyword', TAG_LISTS.keyword, 'keyword');
+        if(cat==='keyword') renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
         else if(cat==='diagnosis') renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
         else if(cat==='recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
         else renderChips(`chip-container-${cat}`, masters[cat], cat);
@@ -402,6 +414,7 @@
 
     document.getElementById("ext-pt-container").innerHTML = ""; if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
     document.getElementById("ojt-pt-container").innerHTML = ""; if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
+    document.getElementById("other-pt").value = sys.otherPt || "";
     renderEvalBlocks(); renderFeedbackBlocks();
   }
 
@@ -458,7 +471,7 @@
       html += `<div class="acc-header" onclick="toggleAcc(this, 'acc-${key}')">${TAG_MASTERS[key].label}<span class="arrow">▼</span></div><div class="acc-body" id="acc-${key}"><div class="chip-grid" id="chip-container-${key}"></div></div>`;
     });
     document.getElementById("tags-container").innerHTML = html;
-    ["practice", "treatment", "special", "risk"].forEach(cat => renderChips(`chip-container-${cat}`, TAG_LISTS[cat], cat));
+    ["practice", "treatment", "special", "risk"].forEach(cat => renderChips(`chip-container-${cat}`, TAG_MASTERS[cat].items, cat));
   }
 
   // --- Tab 4: 多職種振り返り ---
@@ -515,26 +528,28 @@
     let evalHtml = sysData.evals.map((e,i) => {
       let sc = e.scene==='その他' ? e.sceneOther : e.scene;
       let html = `<div style="margin-bottom:12px; border-bottom:1px dashed #ccc; padding-bottom:8px;"><b>#${i+1} ${e.type} (${sc||'場面未選択'})</b><br>`;
-      if(e.type === '状況評価') html += `[状況] ${e.desc}<br>`;
+      if(e.type === '状況評価') html += `[状況] ${e.desc||'-'}<br>`;
       else html += `[ABCDEF] A:${e.a||'-'} B:${e.b||'-'} C:${e.c||'-'} D:${e.d||'-'} E:${e.e||'-'} F:${e.f||'-'}<br>`;
-      html += `[対応] ${e.response}<br><span style="color:#2e7d32">[Good] ${e.good}</span><br><span style="color:#d32f2f">[Bad] ${e.bad}</span></div>`;
+      html += `[対応] ${e.response||'-'}<br><span style="color:#2e7d32">[Good] ${e.good||'-'}</span><br><span style="color:#d32f2f">[Bad] ${e.bad||'-'}</span></div>`;
       return html;
     }).join("");
     
     let fbHtml = sysData.feedbacks.map(f => {
       let nm = f.name ? `(${f.name})` : '';
-      return `<div style="margin-bottom:8px;"><b>【${f.prof}${nm}】</b><br><span style="color:#2e7d32">G: ${f.good}</span><br><span style="color:#d32f2f">B: ${f.bad}</span><br><span style="color:#1565c0">N: ${f.next}</span></div>`;
+      return `<div style="margin-bottom:8px;"><b>【${f.prof}${nm}】</b><br><span style="color:#2e7d32">G: ${f.good||'-'}</span><br><span style="color:#d32f2f">B: ${f.bad||'-'}</span><br><span style="color:#1565c0">N: ${f.next||'-'}</span></div>`;
     }).join("");
 
+    const summaryVal = document.getElementById("v-summary").value || "";
+    
     document.getElementById("print-area").innerHTML = `
       <div class="print-report">
         <h2>AW109 デブリーフィング</h2>
-        <div style="margin-bottom:8px;"><b>要請:</b> ${sysData.reqType} / <b>診断:</b> ${(sysData.tags.diagnosis||[]).join(", ")}</div>
+        <div style="margin-bottom:8px;"><b>要請:</b> ${sysData.reqType||'-'} / <b>診断:</b> ${(sysData.tags.diagnosis||[]).join(", ")||'-'}</div>
         <div style="margin-bottom:8px;"><b>環境:</b> ${envLoc} / ${envMethod}</div>
-        <div style="margin-bottom:8px;"><b>参加者:</b> ${ptList.join(", ")}</div>
-        <h3>■ 概要</h3><div style="padding:4px;">${document.getElementById("v-summary").value.replace(/\n/g,'<br>')}</div>
-        <h3>■ 症例評価</h3><div style="padding:4px;">${evalHtml}</div>
-        <h3>■ 振り返り</h3><div style="padding:4px;">${fbHtml}</div>
+        <div style="margin-bottom:8px;"><b>参加者:</b> ${ptList.join(", ")||'未記入'}</div>
+        <h3>■ 概要</h3><div style="padding:4px;">${summaryVal.replace(/\n/g,'<br>')||'記載なし'}</div>
+        <h3>■ 症例評価</h3><div style="padding:4px;">${evalHtml||'記載なし'}</div>
+        <h3>■ 振り返り</h3><div style="padding:4px;">${fbHtml||'記載なし'}</div>
       </div>
     `;
   }
@@ -549,18 +564,21 @@
     sysData.envLoc = document.querySelector('input[name="env-loc"]:checked')?.value; if(sysData.envLoc==='その他') sysData.envLoc = document.getElementById("env-loc-other").value;
     sysData.envMethod = document.querySelector('input[name="env-method"]:checked')?.value; if(sysData.envMethod==='その他') sysData.envMethod = document.getElementById("env-method-other").value;
     sysData.otherPt = document.getElementById("other-pt").value;
+    
     sysData.ext = []; document.querySelectorAll('.ext-row').forEach(r => sysData.ext.push({affil:r.querySelector('.e-affil').value, name:r.querySelector('.e-name').value}));
     sysData.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sysData.ojt.push({job:r.querySelector('.o-job').value, name:r.querySelector('.o-name').value}));
 
     let ptList = [];
     ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
-    sysData.ext.forEach(e => ptList.push(`${e.affil} ${e.name}`)); sysData.ojt.forEach(o => ptList.push(`[OJT]${o.job} ${o.name}`));
+    sysData.ext.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); }); 
+    sysData.ojt.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
     if(sysData.otherPt) ptList.push(sysData.otherPt);
 
     let evalTxt = sysData.evals.map((e,i) => {
-      let txt = `【#${i+1} ${e.type}(${e.scene==='その他'?e.sceneOther:e.scene})】\n`;
-      if(e.type==='状況評価') txt+=`状況: ${e.desc}\n`; else txt+=`A:${e.a} B:${e.b} C:${e.c} D:${e.d} E:${e.e} F:${e.f}\n`;
-      return txt + `対応: ${e.response}\nGood: ${e.good}\nBad: ${e.bad}\n`;
+      let sc = e.scene==='その他'?e.sceneOther:e.scene;
+      let txt = `【#${i+1} ${e.type}(${sc||'未選択'})】\n`;
+      if(e.type==='状況評価') txt+=`状況: ${e.desc||'-'}\n`; else txt+=`A:${e.a||'-'} B:${e.b||'-'} C:${e.c||'-'} D:${e.d||'-'} E:${e.e||'-'} F:${e.f||'-'}\n`;
+      return txt + `対応: ${e.response||'-'}\nGood: ${e.good||'-'}\nBad: ${e.bad||'-'}\n`;
     }).join("\n");
 
     let cg="", cb="";
@@ -570,8 +588,15 @@
       if(f.bad||f.next) cb += `【${f.prof}${nm}】\n[Bad] ${f.bad}\n[Next] ${f.next}\n`;
     });
 
-    const tagsObj = {};
-    ["keyword","practice","treatment","special","risk"].forEach(k => { tagsObj[k] = (sysData.tags[k]||[]).join(", "); });
+    const tagsObj = {
+      keyword: (sysData.reqType ? `[${sysData.reqType}] ` : "") + (sysData.tags['keyword']||[]).join(", "),
+      scene: [...new Set(sysData.evals.map(e => e.scene==='その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
+      practice: (sysData.tags['practice']||[]).join(", "),
+      disease: (sysData.tags['diagnosis']||[]).join(", "),
+      treatment: (sysData.tags['treatment']||[]).join(", "),
+      special: (sysData.tags['special']||[]).join(", "),
+      risk: (sysData.tags['risk']||[]).join(", ")
+    };
 
     const payload = {
       caseId: currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt,
