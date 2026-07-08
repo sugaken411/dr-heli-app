@@ -10,7 +10,8 @@
     body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: 56px; padding: 0 16px; background: rgba(242,242,247,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     .tab-container { position: fixed; top: 56px; left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; z-index: 99; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
@@ -21,8 +22,8 @@
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
     
-    input[type="text"], input[type="time"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
-    textarea { resize: none; line-height: 1.5; }
+    input[type="text"], input[type="tel"], input[type="time"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; box-sizing: border-box; }
+    textarea { resize: vertical; line-height: 1.5; }
     
     .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
     .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
@@ -78,7 +79,7 @@
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 800; font-size: 16px;">デブリーフィング</div>
+  <div style="font-weight:900; font-size:16px;">🧠 デブリーフィング <span class="version-tag">v11.0</span></div>
   <div style="display:flex; gap:12px;">
     <button class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -100,7 +101,7 @@
         <input type="checkbox" id="s-today" checked onchange="searchCases()" style="display:block; width:16px; height:16px; margin:0;"> 本日の事案のみ表示
       </label>
       <div style="display:flex; gap:8px; margin-bottom:8px;">
-        <input type="text" id="s-id" placeholder="要請番号" style="margin:0; flex:1;">
+        <input type="tel" inputmode="numeric" id="s-id" placeholder="要請番号" style="margin:0; flex:1;" oninput="toHalfWidth(this)">
         <button class="btn-blue" onclick="searchCases()" style="width:80px; padding:0;">検索</button>
       </div>
       <div id="search-results-area" style="display:none; margin-top:12px;"></div>
@@ -133,22 +134,22 @@
         <div class="section-label">🩺 現場診断 (疾患)</div>
         <div class="chip-grid" id="chip-container-diagnosis" style="margin-bottom:12px;"></div>
         
-        <div class="acc-header" onclick="toggleAcc(this, 'acc-diag-gen')" style="background:#f0f4f8; padding:8px 12px; border-radius:8px; border:none; margin-bottom:8px;">➕ 新しい病名を作成・追加する<span class="arrow">▼</span></div>
+        <div class="acc-header" onclick="toggleAcc(this, 'acc-diag-gen')" style="background:#e3f2fd; color:#0d47a1; padding:8px 12px; border-radius:8px; border:none; margin-bottom:8px; font-size:13px;">➕ 新しい病名を作成・追加する<span class="arrow">▼</span></div>
         <div class="acc-body" id="acc-diag-gen" style="background:#f9f9f9; padding:12px; border-radius:8px;">
-          <select id="diag-category" style="margin-bottom:8px;">
+          <select id="diag-category" style="margin-bottom:8px; border:1px solid #ccc; font-size:13px;">
             <option value="">大項目から絞り込む...</option>
             <option value="心停止">心停止</option><option value="ショック">ショック</option><option value="内因性疾患">内因性疾患</option><option value="外因性疾患">外因性疾患</option>
             <option value="小児内科疾患">小児内科疾患</option><option value="産婦人科">特殊疾患（産婦人科）</option><option value="中毒">特殊疾患（中毒）</option>
             <option value="熱傷">特殊疾患（熱傷）</option><option value="精神科">特殊疾患（精神科）</option>
           </select>
-          <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin-bottom:8px;">
+          <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin-bottom:8px; border:1px solid #ccc;">
           
           <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; font-size:13px; font-weight:bold;">
-            <label><input type="checkbox" id="diag-right"> 右</label>
-            <label><input type="checkbox" id="diag-left"> 左</label>
-            <label><input type="checkbox" id="diag-both"> 両側</label>
+            <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-right" style="width:16px;height:16px;display:block;"> 右</label>
+            <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-left" style="width:16px;height:16px;display:block;"> 左</label>
+            <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-both" style="width:16px;height:16px;display:block;"> 両側</label>
             <span style="color:#ccc;">|</span>
-            <label><input type="checkbox" id="diag-doubt"> 疑い</label>
+            <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-doubt" style="width:16px;height:16px;display:block;"> 疑い</label>
           </div>
           <button class="btn-small" style="background:var(--blue); color:#fff; width:100%; padding:10px;" onclick="generateDiagnosis()">＋ この病名で確定・マスタ追加</button>
         </div>
@@ -236,8 +237,8 @@
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
     <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
     <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-    <textarea id="qa-input" rows="3" style="width:100%;"></textarea>
-    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px;"></textarea>
+    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
     <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
   </div>
 </div>
@@ -250,7 +251,7 @@
   
   // ★ 完全版のキーワード・タグリスト
   const TAG_MASTERS = {
-    keyword: { label: "🔑 キーワード要請", items: ["閉じ込められている", "横転している", "車外放出された", "車両の下敷き", "体幹の挟圧", "車体が大きく変形している", "車両同士の正面衝突", "歩行者/自転車が自動車にはねとばされた", "法定速度以上", "バイクと車両の衝突", "運転者がオートバイから放り出された", "2階以上の高さ", "山岳部滑落", "車両落下", "溺れている", "窒息", "生き埋め", "各種事故（列車/バス/航空機/船舶/爆発/落雷）", "撃たれた", "刺された", "殴られて意識が悪い", "全身熱傷", "四肢切断", "40歳以上の胸痛または背部痛", "呼吸困難", "息が苦しい", "息が出来ない", "人が倒れている", "人が突然倒れた", "呼びかけても反応がない", "構語障害", "意識がない", "突然の激しい頭痛", "痙攣", "手足のまひ", "呼吸をしていない", "呼吸が変", "脈が触れない", "様子がおかしい", "手足が急に動かなくなった", "アナフィラキシーショック", "大量吐血", "D-call Net"] },
+    keyword: { label: "🔑 キーワード要請", items: [] }, // 初期化時にマスタから取得
     practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
     treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] },
     special: { label: "🚨 特殊ケース", items: ["緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] },
@@ -258,13 +259,20 @@
   };
 
   let allCasesData = []; let existingDebriefs = []; let currentCase = null; 
-  let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[] };
+  let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[], keyword:[] };
   
   let sysData = {
     reqType: "",
     tags: { keyword:[], diagnosis:[], practice:[], treatment:[], special:[], risk:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[] },
     evals: [], feedbacks: []
   };
+
+  // 全角半角自動補正
+  function toHalfWidth(ele) {
+    let val = ele.value;
+    val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });
+    ele.value = val;
+  }
 
   window.onload = async () => {
     buildTagUI();
@@ -319,8 +327,8 @@
       if(sysData.tags[cat].includes(item)) sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item);
       else sysData.tags[cat].push(item);
     }
-    if(cat === 'keyword') renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
-    else if(cat === 'diagnosis') renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
+    if(cat === 'keyword') renderChips('chip-container-keyword', masters.keyword, 'keyword');
+    else if(cat === 'diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis'); // 選ばれたものだけ表示
     else if(TAG_MASTERS[cat]) renderChips(`chip-container-${cat}`, TAG_MASTERS[cat].items, cat);
     else if(masters[cat]) renderChips(`chip-container-${cat}`, masters[cat], cat);
     else if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
@@ -332,12 +340,19 @@
       const r1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }) });
       const j1 = await r1.json(); if (j1.status === "success") masters = j1.masters;
       
-      // Q&Aの描画
       if(j1.qa) document.getElementById("qa-list").innerHTML = j1.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
       
       masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
       masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
       masters.diagnosis.forEach(d => document.getElementById("diagnosis-list").innerHTML += `<option value="${d}">`);
+      
+      // キーワードマスタのセット
+      if(masters.keyword && masters.keyword.length > 0) {
+        TAG_MASTERS.keyword.items = masters.keyword;
+      } else {
+        masters.keyword = ["閉じ込められている", "車外放出された", "山岳部滑落", "溺れている", "CPA", "アナフィラキシーショック", "大量吐血", "D-call Net", "その他"];
+        TAG_MASTERS.keyword.items = masters.keyword;
+      }
       
       const buildFixedAcc = (cat, label, arr) => `
         <div class="acc-header" onclick="toggleAcc(this, 'acc-${cat}')">👤 ${label}<span class="arrow">▼</span></div>
@@ -351,9 +366,8 @@
       document.getElementById("fixed-pt-accordions").innerHTML = buildFixedAcc('dr','フライトドクター', masters.dr) + buildFixedAcc('ns','フライトナース', masters.ns) + buildFixedAcc('pilot','機長', masters.pilot) + buildFixedAcc('mechanic','整備士', masters.mechanic) + buildFixedAcc('cs','CS', masters.cs);
       
       ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
-      renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
       renderChips('recorder-container', masters.ns, 'recorder', true);
-      renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
+      renderChips('chip-container-keyword', masters.keyword, 'keyword');
 
       const r2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }) });
       const j2 = await r2.json(); if(j2.status === "success") allCasesData = j2.data;
@@ -364,7 +378,7 @@
     } catch(e) { console.log(e); } finally { document.getElementById("global-loader").style.display = "none"; }
   }
 
-  // 病名ジェネレーター
+  // 🌟 病名ジェネレーター
   async function generateDiagnosis() {
     const name = document.getElementById("diag-name").value.trim(); if(!name) return;
     const isRight = document.getElementById("diag-right").checked;
@@ -377,7 +391,9 @@
     let suffix = isDoubt ? "疑い" : "";
     const finalName = `${prefix}${name}${suffix}`;
     
-    await addMasterAndChip('diagnosis', null, 'chip-container-diagnosis', finalName);
+    if(!sysData.tags.diagnosis) sysData.tags.diagnosis = [];
+    if(!sysData.tags.diagnosis.includes(finalName)) sysData.tags.diagnosis.push(finalName);
+    renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
     
     document.getElementById("diag-name").value = ""; document.getElementById("diag-right").checked = false;
     document.getElementById("diag-left").checked = false; document.getElementById("diag-both").checked = false; document.getElementById("diag-doubt").checked = false;
@@ -435,7 +451,7 @@
     document.getElementById("ojt-pt-container").insertAdjacentHTML('beforeend', html);
   }
 
-  // --- 事案検索 ---
+  // --- 事案検索・紐付け ---
   function searchCases() {
     const isToday = document.getElementById("s-today").checked;
     const qId = document.getElementById("s-id").value.trim();
@@ -464,6 +480,31 @@
     currentCase = rowWrapper.rawData;
     document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
     
+    // 🌟 Phase 1の「システムデータ（現場診断・キーワード等）」の復元
+    let sys = {};
+    try { if(currentCase["システムデータ"]) sys = JSON.parse(currentCase["システムデータ"]); } catch(e){}
+    
+    if(sys.tags) {
+      if(sys.tags.keyword) {
+        sys.tags.keyword.forEach(k => { if(!sysData.tags.keyword.includes(k)) sysData.tags.keyword.push(k); });
+      }
+      if(sys.tags.diagnosis) {
+        sys.tags.diagnosis.forEach(d => { if(!sysData.tags.diagnosis.includes(d)) sysData.tags.diagnosis.push(d); });
+      }
+    }
+    // システムデータが無い場合のフォールバック（現場診断列や備考から）
+    if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) {
+      sysData.tags.diagnosis = currentCase["現場診断"].split(",").map(d => d.trim()).filter(Boolean);
+    }
+    if(sys.reqType) {
+      document.querySelector(`input[name="req-type"][value="${sys.reqType}"]`).checked = true;
+      toggleReqType();
+    }
+    
+    // UI反映
+    renderChips('chip-container-keyword', masters.keyword, 'keyword');
+    renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
+
     const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
     if(past && past["システムデータ"]) {
       if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
@@ -483,8 +524,8 @@
     
     ['dr','ns','pilot','mechanic','cs','diagnosis','recorder','keyword'].forEach(cat => {
       if(sysData.tags[cat]) {
-        if(cat==='keyword') renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
-        else if(cat==='diagnosis') renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
+        if(cat==='keyword') renderChips('chip-container-keyword', masters.keyword, 'keyword');
+        else if(cat==='diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
         else if(cat==='recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
         else renderChips(`chip-container-${cat}`, masters[cat], cat);
       }
