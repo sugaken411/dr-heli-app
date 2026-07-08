@@ -28,16 +28,16 @@
     .chip { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; background: var(--bg); color: var(--ink); cursor: pointer; border: 1px solid transparent; transition: 0.15s; user-select: none; }
     .chip.active { background: var(--brand); color: #fff; box-shadow: 0 4px 10px rgba(0,122,255,0.25); }
     .chip-tag { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; background: #fff; border: 1px solid var(--line); color: var(--ink); }
-    .chip-tag.active { background: #e3f2fd; color: var(--brand); border-color: var(--brand); }
+    .chip-tag.active { background: #e3f2fd; color: #0369a1; border-color: #bae6fd; }
 
     .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-    .doc-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line); position: relative; transition: transform 0.2s; }
+    .doc-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line); position: relative; transition: transform 0.2s; }
     
-    .card-top { margin-bottom: 12px; }
-    .cat-badge { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 800; background: #e3f2fd; color: var(--brand); padding: 4px 8px; border-radius: 6px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .doc-title { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 8px; padding-right: 90px; word-break: break-all; }
-    .doc-meta { font-size: 11px; color: var(--sub); font-weight: bold; margin-bottom: 8px; display: flex; gap: 8px; }
-    .doc-desc { font-size: 13px; color: #48484a; line-height: 1.5; margin-bottom: 12px; word-break: break-all; }
+    .card-top { margin-bottom: 12px; flex: 1; display: flex; flex-direction: column; }
+    .cat-badge { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 800; background: #e3f2fd; color: var(--brand); padding: 4px 8px; border-radius: 6px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .doc-title { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 6px; padding-right: 110px; word-break: break-all; }
+    .doc-meta { font-size: 11px; color: var(--sub); font-weight: bold; margin-bottom: 8px; }
+    .doc-desc { font-size: 13px; color: #48484a; line-height: 1.5; margin-bottom: 12px; white-space: pre-wrap; word-break: break-all; flex: 1; }
     
     .tag-box { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
     .doc-tag { font-size: 11px; color: var(--sub); background: #f2f2f7; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
@@ -55,18 +55,18 @@
 
 <div id="global-loader">
   <div class="spinner"></div>
-  <div style="margin-top:16px; font-weight:800; color:var(--ink);">資料アーカイブを同期中...</div>
+  <div style="margin-top:16px; font-weight:800; color:var(--ink);">資料データベースを同期中...</div>
 </div>
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.2</span></div>
+  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.3</span></div>
   <div style="width:60px;"></div>
 </header>
 
 <main>
   <div class="search-box">
-    <input type="text" id="search-input" placeholder="資料名やキーワードで検索..." oninput="filterDocs()">
+    <input type="text" id="search-input" placeholder="資料名、概要、キーワードで検索..." oninput="filterDocs()">
   </div>
 
   <div class="filter-card">
@@ -85,7 +85,7 @@
     </div>
     
     <div class="filter-section" style="border-top: 1px dashed var(--line); padding-top: 12px;">
-      <div class="filter-title">＃ 3. キーキーワード（タグ複数選択可）</div>
+      <div class="filter-title">＃ 3. キーワード（タグ複数選択可）</div>
       <div class="chip-grid" id="filter-tags"></div>
     </div>
   </div>
@@ -105,28 +105,29 @@
     await fetchLibraryData();
   };
 
-  // 🌟 GASとの通信経路・インデックスズレをダブルで修正するコアロジック
+  // 🌟 「資料データベース」タブの真の構造を完全に復元するロジック
   async function fetchLibraryData() {
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }) // アクション名をGAS側に完全統一
+        body: JSON.stringify({ action: "fetch_library", password: PIN_CODE })
       });
       const json = await res.json();
       
       if (json.status === "success" && json.data) {
-        // スプレッドシート（オブジェクト配列）のキーマッピングをフォーム回答形式に強制補正
+        // 🌟 提供されたCSV「資料データベース」の列構造を完全にマッピング
         allDocs = json.data.map((item, index) => {
           return {
             id: index,
-            timestamp: item.title || "日付不明", // ズレによりtitleプロパティに日時が入ってしまっている状態
-            url: item.url || "",
-            title: item.category || "無題の資料", // categoryプロパティにタイトルが入ってしまっている状態
-            large: item.domain || "未分類", // domainプロパティに大項目が入ってしまっている状態
-            medium: "一般", // 中項目はデフォルト配置
-            keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [],
-            editor: item.desc || "システム" // descプロパティに更新者名が入ってしまっている状態
+            title: item.title || "無題の資料",        // A列: 資料タイトル
+            url: item.url || "",                     // B列: ドライブURL
+            large: item.category || "未分類",         // C列: 大分類
+            medium: item.domain || "全般",           // D列: 中分類
+            keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [], // E列: キーワード
+            desc: item.desc || "説明・概要はありません",  // F列: 概要・特記事項
+            status: item.status || "共有中",          // G列: 公開ステータス
+            date: item.date || "日付不明"             // I列: 更新日
           };
         }).filter(d => d.url && d.url.startsWith("http"));
         
@@ -200,7 +201,7 @@
       if (activeMedium !== "全て" && d.medium !== activeMedium) return false;
       if (activeTags.length > 0 && !activeTags.every(t => d.keywords.includes(t))) return false;
       if (searchQ) {
-        const targetStr = `${d.title} ${d.large} ${d.keywords.join(" ")} ${d.editor}`.toLowerCase();
+        const targetStr = `${d.title} ${d.large} ${d.medium} ${d.desc} ${d.keywords.join(" ")}`.toLowerCase();
         if (!targetStr.includes(searchQ)) return false;
       }
       return true;
@@ -217,18 +218,16 @@
     }
 
     container.innerHTML = docs.map(d => {
-      const displayDate = d.timestamp ? d.timestamp.split(" ")[0] : "日付不明";
-      
       return `
         <div class="doc-card">
           <div class="card-top">
-            <span class="cat-badge" title="${d.medium}">${d.medium}</span>
+            <span class="cat-badge" title="${d.large}">${d.large}</span>
             <div class="doc-title">${escapeHtml(d.title)}</div>
             <div class="doc-meta">
-              <span>📅 ${displayDate}</span>
-              <span>👤 ${escapeHtml(d.editor)}</span>
+              <span>🧭 領域: <b>${escapeHtml(d.medium)}</b></span>
+              <span style="margin-left:8px;">🔄 更新: <b>${d.date}</b></span>
             </div>
-            <div class="doc-desc" style="color:var(--brand); font-weight:bold; font-size:12px; margin-bottom:8px;">${escapeHtml(d.large)}</div>
+            <div class="doc-desc">${escapeHtml(d.desc)}</div>
             <div class="tag-box">
               ${d.keywords.map(k => `<span class="doc-tag">#${escapeHtml(k)}</span>`).join("")}
             </div>
@@ -237,7 +236,7 @@
             <a href="${d.url}" target="_blank" class="btn-view">
               <span>↗️ 資料を閲覧する</span>
             </a>
-            <button class="btn-info" onclick="alert('【資料詳細情報】\\n■ 資料名: ${escapeHtml(d.title)}\\n■ 登録日: ${displayDate}\\n■ 大項目: ${escapeHtml(d.large)}\\n■ 担当者: ${escapeHtml(d.editor)}')">❓</button>
+            <button class="btn-info" onclick="alert('【資料詳細情報】\\n■ 資料名: ${escapeHtml(d.title)}\\n■ 対象領域: ${escapeHtml(d.medium)}\\n■ 更新日: ${d.date}\\n■ 概要:\\n${escapeHtml(d.desc)}')">❓</button>
           </div>
         </div>
       `;
