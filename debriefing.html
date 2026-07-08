@@ -6,54 +6,51 @@
   <title>AW109 デブリーフィング</title>
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: rgba(60,60,67,0.12); }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-    body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--ink); padding-bottom: 80px; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: 56px; padding: 0 16px; background: rgba(242,242,247,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     
     .tab-container { position: fixed; top: 56px; left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; z-index: 99; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
-    .nav-tab { flex: 1; min-width: 80px; text-align: center; padding: 0 8px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
+    .nav-tab { flex: 1; min-width: 75px; text-align: center; padding: 0 4px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
     
     main { margin-top: 100px; padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
-    
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
     
-    input[type="text"], input[type="time"], select, textarea { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 10px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
+    input[type="text"], input[type="time"], textarea { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
     textarea { resize: none; line-height: 1.5; }
-    
-    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .input-row label { font-size: 12px; font-weight: bold; color: var(--sub); width: 80px; flex-shrink: 0; text-align: right; }
     
     .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
     .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
-    .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
     
-    .search-result-item { padding: 12px; border: 1px solid var(--blue); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #fff; transition: 0.2s; }
-    .data-preview { font-size: 12px; background: #f9f9f9; padding: 12px; border-radius: 6px; border-left: 4px solid var(--blue); margin-bottom: 12px; line-height: 1.6; }
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .radio-lbl { display: inline-block; padding: 8px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; font-size: 13px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
+    input[type="radio"], input[type="checkbox"] { display: none; }
+    input[type="radio"]:checked + .radio-lbl, input[type="checkbox"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
+    
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; } 
+    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; } 
+    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
     .acc-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; cursor: pointer; color: var(--ink); }
     .acc-header .arrow { font-size: 12px; color: var(--sub); transition: 0.3s; }
     .acc-header.open .arrow { transform: rotate(180deg); }
     .acc-body { display: none; padding: 12px 0; }
-    .acc-body.open { display: block; animation: fadeIn 0.3s ease; }
+    .acc-body.open { display: block; animation: fadeIn 0.2s ease; }
 
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; } 
-    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); user-select: none; background: var(--bg); transition: 0.15s; } 
-    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
+    .search-result-item { padding: 12px; border: 1px solid var(--blue); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #fff; }
+    .data-preview { font-size: 12px; background: #f9f9f9; padding: 12px; border-radius: 6px; border-left: 4px solid var(--blue); margin-bottom: 12px; line-height: 1.6; }
     
     .eval-block { border: 2px solid var(--blue); border-radius: 8px; padding: 12px; margin-bottom: 16px; background: #fdfdfd; }
     .eval-row { display: flex; align-items: flex-start; margin-bottom: 6px; gap: 4px; }
-    .eval-row span { font-size: 11px; font-weight: bold; width: 30px; padding-top: 6px; color: var(--blue); }
-    
-    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .radio-lbl { display: inline-block; padding: 8px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; font-size: 13px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; }
-    input[type="radio"] { display: none; }
-    input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .eval-row span { font-size: 11px; font-weight: bold; width: 30px; padding-top: 10px; color: var(--blue); }
+
+    .fb-block { background: #f9f9f9; border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
 
     .tab-content { display: none; animation: fadeIn 0.3s ease; } 
     .tab-content.active { display: block; }
@@ -70,13 +67,10 @@
 </head>
 <body>
 
-<datalist id="eval-titles">
-  <option value="事前情報(要請時)"><option value="追加情報(無線等)"><option value="接触時(1次評価)"><option value="現場・救急車内(処置後)"><option value="移動前(現場離脱時)"><option value="搬送中"><option value="最終(病院引継ぎ)">
-</datalist>
 <datalist id="ext-affil-list"></datalist>
 <datalist id="ext-staff-list"></datalist>
 
-<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800; color:var(--ink);">システム起動中...</div></div>
+<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800;" id="loader-text">システム起動中...</div></div>
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
@@ -96,50 +90,93 @@
   <div id="tab-sec1" class="tab-content active">
     <div class="card no-print">
       <div class="section-label">🔍 事案の検索と紐付け</div>
-      <div class="grid-2col"><div class="input-row"><label>要請番号</label><input type="text" id="s-id" placeholder="ID入力"></div><div class="input-row"><label>スタッフ</label><input type="text" id="s-staff" placeholder="Dr/Ns名"></div></div>
-      <button class="btn-blue" id="btn-search" onclick="searchCases()">事案を検索する</button>
-      <div id="search-results-area" style="display:none; margin-top:16px;"></div>
+      <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:13px; font-weight:bold; color:var(--blue);">
+        <input type="checkbox" id="s-today" checked onchange="searchCases()" style="display:block; width:16px; height:16px; margin:0;"> 本日の事案のみ表示
+      </label>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="text" id="s-id" placeholder="要請番号" style="margin:0; flex:1;">
+        <button class="btn-blue" onclick="searchCases()" style="width:80px; padding:0;">検索</button>
+      </div>
+      <div id="search-results-area" style="display:none; margin-top:12px;"></div>
     </div>
 
     <div id="case-data-area" style="display:none;">
       <div class="card">
-        <div class="section-label" style="color:var(--blue); border-bottom-color:var(--line);">📝 事案データ</div>
+        <div class="section-label" style="color:var(--blue); border-bottom-color:var(--line);">📝 紐付けデータ</div>
         <div id="v-fetched-data"></div>
-        <div class="section-label" style="margin-top:16px;">📖 事案の概要（ストーリー）</div>
+        
+        <div class="section-label" style="margin-top:16px;">📖 事案概要・ストーリー</div>
         <textarea id="v-summary" rows="3" placeholder="全体的な流れや背景..."></textarea>
       </div>
 
       <div class="card">
-        <div class="section-label">🏢 開催環境と参加者</div>
-        <div class="grid-2col">
-          <div><label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り場所</label><select id="env-loc" onchange="if(this.value==='その他') document.getElementById('env-loc-other').style.display='block'; else document.getElementById('env-loc-other').style.display='none';"><option value="浜町待機所">浜町待機所</option><option value="運行調整室">運行調整室</option><option value="各自(リモート)">各自(リモート)</option><option value="その他">その他</option></select><input type="text" id="env-loc-other" placeholder="場所を入力" style="display:none; margin-top:4px;"></div>
-          <div><label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り方法</label><select id="env-method" onchange="if(this.value==='その他') document.getElementById('env-method-other').style.display='block'; else document.getElementById('env-method-other').style.display='none';"><option value="対面">対面</option><option value="Zoom">Zoom</option><option value="対面＋Zoom">対面 ＋ Zoom</option><option value="その他">その他</option></select><input type="text" id="env-method-other" placeholder="方法を入力" style="display:none; margin-top:4px;"></div>
-        </div>
-
-        <div style="margin-top:12px;">
-          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">固定参加者</label>
-          <div style="display:flex; flex-wrap:wrap; gap:8px;" id="fixed-pt-container">
-            </div>
-          <div style="margin-top:8px;">
-            <select id="recorder-select" style="font-size:13px; padding:8px;"><option value="">Ns(シート記載者)を選択...</option></select>
-          </div>
-        </div>
-
-        <div style="margin-top:16px; border-top:1px dashed #ccc; padding-top:12px;">
-          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">外部参加者 (消防・救急隊など)</label>
-          <div id="ext-pt-container"></div>
-          <button class="btn-small" style="background:#e3f2fd; color:#0d47a1; margin-top:4px;" onclick="addExtPt()">＋ 外部参加者を追加</button>
+        <div class="section-label">📋 要請種別・疾患</div>
+        <div class="radio-group" style="margin-bottom:16px;">
+          <label><input type="radio" name="req-type" value="現場要請" onchange="toggleReqType()"> <span class="radio-lbl">現場要請</span></label>
+          <label><input type="radio" name="req-type" value="キーワード要請" onchange="toggleReqType()"> <span class="radio-lbl">キーワード要請</span></label>
+          <label><input type="radio" name="req-type" value="施設間要請" onchange="toggleReqType()"> <span class="radio-lbl">施設間要請</span></label>
         </div>
         
-        <div style="margin-top:16px; border-top:1px dashed #ccc; padding-top:12px;">
-          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">OJT (同乗研修)</label>
-          <div id="ojt-pt-container"></div>
-          <button class="btn-small" style="background:#fce4ec; color:#c2185b; margin-top:4px;" onclick="addOjtPt()">＋ OJT参加者を追加</button>
+        <div id="kw-container" style="display:none; margin-bottom:16px; background:#f9f9f9; padding:12px; border-radius:8px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">🔑 キーワード指定</div>
+          <div class="chip-grid" id="chip-container-keyword"></div>
         </div>
 
-        <div style="margin-top:16px;">
-          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block;">その他 (オブザーバー等)</label>
-          <input type="text" id="other-pt" placeholder="自由入力">
+        <div class="acc-header" onclick="toggleAcc(this, 'acc-diagnosis')">🩺 現場診断 (疾患)<span class="arrow">▼</span></div>
+        <div class="acc-body" id="acc-diagnosis">
+          <div class="chip-grid" id="chip-container-diagnosis"></div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <input type="text" id="new-diagnosis" placeholder="リストにない疾患を追加" style="margin:0; flex:1; font-size:13px; padding:8px;">
+            <button class="btn-small" style="background:var(--blue); color:#fff;" onclick="addMasterAndChip('diagnosis', 'new-diagnosis', 'chip-container-diagnosis')">追加</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-label">🏢 環境と参加者</div>
+        
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">振り返り場所</div>
+          <div class="radio-group">
+            <label><input type="radio" name="env-loc" value="浜町待機所" checked> <span class="radio-lbl">浜町待機所</span></label>
+            <label><input type="radio" name="env-loc" value="運行調整室"> <span class="radio-lbl">運行調整室</span></label>
+            <label><input type="radio" name="env-loc" value="各自"> <span class="radio-lbl">各自(リモート)</span></label>
+            <label><input type="radio" name="env-loc" value="その他" onchange="document.getElementById('env-loc-other').focus()"> <span class="radio-lbl">その他</span></label>
+          </div>
+          <input type="text" id="env-loc-other" placeholder="その他の場所" style="margin-top:4px;">
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">振り返り方法</div>
+          <div class="radio-group">
+            <label><input type="radio" name="env-method" value="対面" checked> <span class="radio-lbl">対面</span></label>
+            <label><input type="radio" name="env-method" value="Zoom"> <span class="radio-lbl">Zoom</span></label>
+            <label><input type="radio" name="env-method" value="対面＋Zoom"> <span class="radio-lbl">対面＋Zoom</span></label>
+            <label><input type="radio" name="env-method" value="その他" onchange="document.getElementById('env-method-other').focus()"> <span class="radio-lbl">その他</span></label>
+          </div>
+          <input type="text" id="env-method-other" placeholder="その他の方法" style="margin-top:4px;">
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">固定参加者</div>
+          <div id="fixed-pt-accordions"></div>
+        </div>
+        
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--brand); margin-bottom:8px;">※ このシートの記載者(Ns)</div>
+          <div class="chip-grid" id="recorder-container"></div>
+        </div>
+
+        <div style="border-top:1px dashed var(--line); padding-top:12px; margin-bottom:12px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">外部参加者 (消防・救急隊など)</div>
+          <div id="ext-pt-container"></div>
+          <button class="btn-small" style="background:#e3f2fd; color:#0d47a1;" onclick="addExtPt()">＋ 外部を追加</button>
+        </div>
+        
+        <div style="border-top:1px dashed var(--line); padding-top:12px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">OJT (同乗研修)</div>
+          <div id="ojt-pt-container"></div>
+          <button class="btn-small" style="background:#fce4ec; color:#c2185b;" onclick="addOjtPt()">＋ OJTを追加</button>
         </div>
       </div>
     </div>
@@ -153,325 +190,401 @@
   </div>
 
   <div id="tab-sec3" class="tab-content">
-    <div class="card"><div id="tags-container"></div></div>
+    <div class="card" id="tags-container"></div>
     <button class="btn-next no-print" onclick="switchTab('sec4')">次へ (多職種振り返り) ➔</button>
   </div>
 
   <div id="tab-sec4" class="tab-content">
-    <div class="card">
-      <div class="section-label">🗣️ 誰の視点の振り返りですか？</div>
-      <div class="radio-group">
-        <label><input type="radio" name="prof" value="フライトドクター" checked onchange="changeProf()"> <span class="radio-lbl">Dr</span></label>
-        <label><input type="radio" name="prof" value="フライトナース" onchange="changeProf()"> <span class="radio-lbl">Ns</span></label>
-        <label><input type="radio" name="prof" value="機長・整備士" onchange="changeProf()"> <span class="radio-lbl">機長・整備士</span></label>
-        <label><input type="radio" name="prof" value="CS" onchange="changeProf()"> <span class="radio-lbl">CS</span></label>
-        <label><input type="radio" name="prof" value="消防・救急隊" onchange="changeProf()"> <span class="radio-lbl">消防・救急隊</span></label>
-        <label><input type="radio" name="prof" value="OJT" onchange="changeProf()"> <span class="radio-lbl">OJT</span></label>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <select id="prof-speaker" style="font-size:12px; padding:8px;" onchange="saveFeedback()"><option value="">発言者を特定する（任意）...</option></select>
-      </div>
-
-      <div style="background:#e8f5e9; padding:12px; border-radius:8px; border:1px solid #c8e6c9; margin-bottom:12px;">
-        <div style="font-weight:bold; color:#2e7d32; font-size:13px; margin-bottom:8px;">🟢 Good (良かった点・成功要因)</div>
-        <textarea id="val-good" rows="3" placeholder="Goodポイントを入力..." oninput="saveFeedback()"></textarea>
-      </div>
-      <div style="background:#fffde6; padding:12px; border-radius:8px; border:1px solid #fff59d; margin-bottom:12px;">
-        <div style="font-weight:bold; color:#f57f17; font-size:13px; margin-bottom:8px;">⚠️ Bad / Gap (課題・ギャップ)</div>
-        <textarea id="val-bad" rows="3" placeholder="反省点や課題を入力..." oninput="saveFeedback()"></textarea>
-      </div>
-      <div style="background:#e3f2fd; padding:12px; border-radius:8px; border:1px solid #bbdefb;">
-        <div style="font-weight:bold; color:#1565c0; font-size:13px; margin-bottom:8px;">🚀 Next (次回へのアクションプラン)</div>
-        <textarea id="val-next" rows="3" placeholder="次回からどう改善するか..." oninput="saveFeedback()"></textarea>
-      </div>
-    </div>
-    <button class="btn-next no-print" onclick="switchTab('sec5')">次へ (プレビュー・保存) ➔</button>
+    <div id="feedback-container"></div>
+    <button class="btn-blue" style="background:#10b981;" onclick="addFeedbackBlock()">＋ 振り返りの視点を追加</button>
+    <button class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('sec5')">次へ (プレビュー・保存) ➔</button>
   </div>
 
   <div id="tab-sec5" class="tab-content">
     <div class="card" style="padding: 0;"><div id="print-area"></div></div>
     <div class="no-print">
-      <button class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ この内容でアーカイブ保存</button>
+      <button class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
     </div>
   </div>
+
 </main>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  const TAG_MASTERS = {
-    keyword: { label: "🔑 キーワード要請", items: ["閉じ込められている", "横転している", "車外放出された", "車両の下敷き", "体幹の挟圧", "車体が大きく変形している", "車両同士の正面衝突", "歩行者/自転車が自動車にはねとばされた", "法定速度以上", "バイクと車両の衝突", "運転者がオートバイから放り出された", "2階以上の高さ", "山岳部滑落", "車両落下", "溺れている", "窒息", "生き埋め", "各種事故（列車/バス/航空機/船舶/爆発/落雷）", "撃たれた", "刺された", "殴られて意識が悪い", "全身熱傷", "四肢切断", "40歳以上の胸痛または背部痛", "呼吸困難", "息が苦しい", "息が出来ない", "人が倒れている", "人が突然倒れた", "呼びかけても反応がない", "構語障害", "意識がない", "突然の激しい頭痛", "痙攣", "手足のまひ", "呼吸をしていない", "呼吸が変", "脈が触れない", "様子がおかしい", "手足が急に動かなくなった", "アナフィラキシーショック", "大量吐血", "D-call Net"] },
-    scene: { label: "📍 活動場面", items: ["要請内容から出動前まで", "出動～接触前まで", "接触・現場対応", "搬送", "引き継ぎ", "次事案への準備", "その他"] },
-    practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "患者の安楽", "家族対応", "申し送り", "院内連携"] },
-    disease: { label: "🩺 疾患", items: ["外傷", "心大血管", "脳血管", "急性呼吸不全", "急性腹症", "熱傷", "アナフィラキシー", "小児", "心肺停止", "母子・周産期", "新生児"] },
-    treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] },
-    special: { label: "🚨 特殊ケース", items: ["馬毛島", "緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] },
-    risk: { label: "⚠️ リスク関連", items: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"] }
+  const SCENE_LIST = ["要請内容から出動前まで", "出動～接触前まで", "接触・現場対応", "搬送", "引き継ぎ", "次事案への準備"];
+  const TAG_LISTS = {
+    keyword: ["閉じ込められている", "車外放出された", "山岳部滑落", "溺れている", "CPA", "アナフィラキシーショック", "大量吐血", "D-call Net", "その他"],
+    practice: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"],
+    treatment: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"],
+    special: ["緊急外来搬送", "多数傷病", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"],
+    risk: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"]
   };
 
-  let selectedTags = { keyword: [], scene: [], practice: [], disease: [], treatment: [], special: [], risk: [] };
-  let allCasesData = []; let existingDebriefs = []; let currentCase = null; let evalBlocks = []; 
-  let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[] };
+  let allCasesData = []; let existingDebriefs = []; let currentCase = null; 
+  let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[] };
   
-  const profs = ["フライトドクター", "フライトナース", "機長・整備士", "CS", "消防・救急隊", "OJT"];
-  let feedbackData = {};
-  profs.forEach(p => feedbackData[p] = { good: "", bad: "", next: "", speaker: "" });
+  // 状態管理オブジェクト
+  let sysData = {
+    reqType: "",
+    tags: { keyword:[], diagnosis:[], practice:[], treatment:[], special:[], risk:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[] },
+    evals: [], feedbacks: []
+  };
 
-  window.onload = () => { buildTagUI(); addEvalBlock(); fetchInitData(); };
+  window.onload = async () => {
+    buildTagUI();
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('editId');
+    if(editId) document.getElementById('s-id').value = editId;
+    await fetchInitData();
+    if(editId) searchCases();
+  };
 
   function switchTab(id) {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     event.target.classList.add('active'); document.getElementById('tab-' + id).classList.add('active'); window.scrollTo(0,0);
+    if (id === 'sec4') renderFeedbackBlocks();
     if (id === 'sec5') generatePreview();
-    if (id === 'sec4') updateSpeakerList();
   }
 
-  let extPtCount = 0;
-  function addExtPt(affil = "", name = "") {
+  // --- 共通UIヘルパー ---
+  function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
+  
+  function renderChips(containerId, list, category, isRadio = false) {
+    const box = document.getElementById(containerId); box.innerHTML = "";
+    list.forEach(item => {
+      const isOn = sysData.tags[category] && sysData.tags[category].includes(item);
+      const cls = isOn ? "chip on" : "chip";
+      box.innerHTML += `<div class="${cls}" onclick="toggleChip('${category}', '${item}', ${isRadio})">${item}</div>`;
+    });
+  }
+  function toggleChip(cat, item, isRadio) {
+    if(!sysData.tags[cat]) sysData.tags[cat] = [];
+    if(isRadio) { sysData.tags[cat] = [item]; } 
+    else {
+      if(sysData.tags[cat].includes(item)) sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item);
+      else sysData.tags[cat].push(item);
+    }
+    // 再描画
+    if(cat === 'keyword') renderChips('chip-container-keyword', TAG_LISTS.keyword, 'keyword');
+    else if(cat === 'diagnosis') renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
+    else if(TAG_LISTS[cat]) renderChips(`chip-container-${cat}`, TAG_LISTS[cat], cat);
+    else if(masters[cat]) renderChips(`chip-container-${cat}`, masters[cat], cat);
+    else if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
+  }
+
+  // --- Tab 1: 初期化とマスタ ---
+  async function fetchInitData() {
+    try {
+      const r1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }) });
+      const j1 = await r1.json(); if (j1.status === "success") masters = j1.masters;
+      
+      masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
+      masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
+      
+      // 固定参加者アコーディオンの生成
+      const buildFixedAcc = (cat, label, arr) => `
+        <div class="acc-header" onclick="toggleAcc(this, 'acc-${cat}')">👤 ${label}<span class="arrow">▼</span></div>
+        <div class="acc-body" id="acc-${cat}"><div class="chip-grid" id="chip-container-${cat}"></div></div>`;
+      document.getElementById("fixed-pt-accordions").innerHTML = buildFixedAcc('dr','フライトドクター', masters.dr) + buildFixedAcc('ns','フライトナース', masters.ns) + buildFixedAcc('pilot','機長', masters.pilot) + buildFixedAcc('mechanic','整備士', masters.mechanic) + buildFixedAcc('cs','CS', masters.cs);
+      
+      ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
+      renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
+      renderChips('recorder-container', masters.ns, 'recorder', true);
+      renderChips('chip-container-keyword', TAG_LISTS.keyword, 'keyword');
+
+      const r2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }) });
+      const j2 = await r2.json(); if(j2.status === "success") allCasesData = j2.data;
+
+      const r3 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
+      const j3 = await r3.json(); if(j3.status === "success") existingDebriefs = j3.data;
+
+    } catch(e) {} finally { document.getElementById("global-loader").style.display = "none"; }
+  }
+
+  async function addMasterAndChip(cat, inputId, containerId) {
+    const val = document.getElementById(inputId).value.trim(); if(!val) return;
+    document.getElementById(inputId).value = "追加中...";
+    try {
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: cat, val1: val }) });
+      masters[cat].push(val); sysData.tags[cat].push(val);
+      renderChips(containerId, masters[cat], cat); document.getElementById(inputId).value = "";
+    } catch(e) { alert("エラー"); document.getElementById(inputId).value = ""; }
+  }
+
+  function toggleReqType() {
+    const val = document.querySelector('input[name="req-type"]:checked').value;
+    sysData.reqType = val;
+    document.getElementById('kw-container').style.display = (val === 'キーワード要請') ? 'block' : 'none';
+  }
+
+  // --- 外部・OJT追加 ---
+  function addExtPt(affil="", name="") {
     extPtCount++; const id = `ext-pt-${extPtCount}`;
-    const html = `<div id="${id}" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <input type="text" id="${id}-affil" list="ext-affil-list" placeholder="所属(消防等)" value="${affil}" style="flex:2; margin:0; padding:8px;">
-        <input type="text" id="${id}-name" list="ext-staff-list" placeholder="名前" value="${name}" style="flex:1.5; margin:0; padding:8px;">
-        <button class="btn-small" style="background:var(--blue); color:#fff; padding:8px;" onclick="registerMaster('${id}')">保存</button>
+    const html = `<div id="${id}" class="ext-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
+        <input type="text" class="e-affil" list="ext-affil-list" placeholder="所属" value="${affil}" style="flex:2; margin:0; padding:8px;">
+        <input type="text" class="e-name" list="ext-staff-list" placeholder="名前" value="${name}" style="flex:1.5; margin:0; padding:8px;">
+        <button class="btn-small" style="background:var(--blue); color:#fff; padding:8px;" onclick="regExtMaster(this)">保存</button>
         <button class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:8px;" onclick="document.getElementById('${id}').remove()">✕</button>
       </div>`;
     document.getElementById("ext-pt-container").insertAdjacentHTML('beforeend', html);
   }
-  
-  let ojtPtCount = 0;
-  function addOjtPt(job = "", name = "") {
+  async function regExtMaster(btn) {
+    const row = btn.parentElement; const affil = row.querySelector('.e-affil').value.trim(); const name = row.querySelector('.e-name').value.trim();
+    if(!affil || !name) return; btn.innerText = "⏳"; btn.disabled = true;
+    try {
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_affil", val1: affil }) });
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_staff", val1: name }) });
+      btn.innerText = "✓";
+    } catch(e) { btn.innerText = "✕"; }
+  }
+
+  function addOjtPt(job="", name="") {
     ojtPtCount++; const id = `ojt-pt-${ojtPtCount}`;
-    const html = `<div id="${id}" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <select id="${id}-job" style="flex:1.5; margin:0; padding:8px; font-size:13px;">
-          <option value="Dr" ${job==='Dr'?'selected':''}>Dr</option><option value="Ns" ${job==='Ns'?'selected':''}>Ns</option>
-          <option value="救急隊" ${job==='救急隊'?'selected':''}>救急隊</option><option value="その他" ${job==='その他'?'selected':''}>その他</option>
-        </select>
-        <input type="text" id="${id}-name" placeholder="名前" value="${name}" style="flex:2; margin:0; padding:8px;">
+    const html = `<div id="${id}" class="ojt-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
+        <select class="o-job" style="flex:1.5; margin:0; padding:8px; font-size:13px;"><option value="Dr" ${job==='Dr'?'selected':''}>Dr</option><option value="Ns" ${job==='Ns'?'selected':''}>Ns</option><option value="救急隊" ${job==='救急隊'?'selected':''}>救急隊</option><option value="その他" ${job==='その他'?'selected':''}>その他</option></select>
+        <input type="text" class="o-name" placeholder="名前" value="${name}" style="flex:2; margin:0; padding:8px;">
         <button class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:8px;" onclick="document.getElementById('${id}').remove()">✕</button>
       </div>`;
     document.getElementById("ojt-pt-container").insertAdjacentHTML('beforeend', html);
   }
 
-  async function registerMaster(rowId) {
-    const affil = document.getElementById(`${rowId}-affil`).value.trim(); const name = document.getElementById(`${rowId}-name`).value.trim();
-    if(!affil || !name) return alert("所属と名前を入力してください。");
-    try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_affil", val1: affil }) });
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_staff", val1: name }) });
-      alert(`「${affil}」の「${name}」さんをマスタに登録しました。次回から予測変換に出ます。`);
-    } catch(e) { alert("通信エラーが発生しました。"); }
-  }
-
-  function buildTagUI() {
-    let html = "";
-    Object.keys(TAG_MASTERS).forEach(key => {
-      html += `<div class="acc-header" onclick="toggleAcc(this, 'acc-${key}')">${TAG_MASTERS[key].label}<span class="arrow">▼</span></div><div class="acc-body" id="acc-${key}"><div class="chip-grid">`;
-      TAG_MASTERS[key].items.forEach(item => { html += `<div class="chip" id="chip-${key}-${item}" onclick="toggleTag('${key}', '${item}')">${item}</div>`; });
-      html += `</div></div>`;
-    });
-    document.getElementById("tags-container").innerHTML = html;
-  }
-  function toggleAcc(headerEl, bodyId) { headerEl.classList.toggle('open'); document.getElementById(bodyId).classList.toggle('open'); }
-  function toggleTag(catKey, item) {
-    const el = document.getElementById(`chip-${catKey}-${item}`);
-    if (selectedTags[catKey].includes(item)) { selectedTags[catKey] = selectedTags[catKey].filter(x => x !== item); el.classList.remove("on"); } 
-    else { selectedTags[catKey].push(item); el.classList.add("on"); }
-  }
-
-  function renderEvalBlocks() {
-    document.getElementById("eval-container").innerHTML = evalBlocks.map((ev, index) => `
-      <div class="eval-block">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><div style="font-weight:bold; color:var(--blue);">🩺 評価ポイント #${index+1}</div>${index > 0 ? `<button class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="removeEvalBlock(${ev.id})">削除</button>` : ''}</div>
-        <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" placeholder="評価名(例:1次評価)" list="eval-titles" value="${ev.title}" onchange="updateEval(${ev.id}, 'title', this.value)" style="flex:2; margin:0;"><input type="time" value="${ev.time}" onchange="updateEval(${ev.id}, 'time', this.value)" style="flex:1; margin:0; padding:6px;"></div>
-        <div class="eval-row"><span>A:気道</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'a_g', this.value)" style="border-color:#a5d6a7;">${ev.a_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'a_b', this.value)" style="border-color:#fff59d;">${ev.a_b||''}</textarea></div>
-        <div class="eval-row"><span>B:呼吸</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'b_g', this.value)" style="border-color:#a5d6a7;">${ev.b_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'b_b', this.value)" style="border-color:#fff59d;">${ev.b_b||''}</textarea></div>
-        <div class="eval-row"><span>C:循環</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'c_g', this.value)" style="border-color:#a5d6a7;">${ev.c_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'c_b', this.value)" style="border-color:#fff59d;">${ev.c_b||''}</textarea></div>
-        <div class="eval-row"><span>D:神経</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'd_g', this.value)" style="border-color:#a5d6a7;">${ev.d_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'd_b', this.value)" style="border-color:#fff59d;">${ev.d_b||''}</textarea></div>
-        <div class="eval-row"><span>E:全身</span><textarea rows="1" placeholder="Good" onchange="updateEval(${ev.id}, 'e_g', this.value)" style="border-color:#a5d6a7;">${ev.e_g||''}</textarea><textarea rows="1" placeholder="Bad" onchange="updateEval(${ev.id}, 'e_b', this.value)" style="border-color:#fff59d;">${ev.e_b||''}</textarea></div>
-      </div>
-    `).join("");
-  }
-  function addEvalBlock() { evalBlocks.push({ id: Date.now(), title: "", time: "", a_g:"", a_b:"", b_g:"", b_b:"", c_g:"", c_b:"", d_g:"", d_b:"", e_g:"", e_b:"" }); renderEvalBlocks(); }
-  function removeEvalBlock(id) { evalBlocks = evalBlocks.filter(e => e.id !== id); renderEvalBlocks(); }
-  function updateEval(id, key, val) { const ev = evalBlocks.find(e => e.id === id); if(ev) ev[key] = val; }
-
-  function updateSpeakerList() {
-    const sel = document.getElementById("prof-speaker"); sel.innerHTML = '<option value="">発言者を特定する（任意）...</option>';
-    let pts = [];
-    document.querySelectorAll('input[name="fixed-pt"]:checked').forEach(el => pts.push(el.nextSibling.textContent.trim()));
-    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => { if(el.id.endsWith("-affil")) { const nm = document.getElementById(el.id.replace("-affil", "-name")).value; if(nm) pts.push(nm); } });
-    document.querySelectorAll('[id^="ojt-pt-"]').forEach(el => { if(el.id.endsWith("-name")) { const nm = document.getElementById(el.id).value; if(nm) pts.push(nm + "(OJT)"); } });
-    pts.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
-    const activeProf = document.querySelector('input[name="prof"]:checked').value;
-    sel.value = feedbackData[activeProf].speaker || "";
-  }
-
-  function changeProf() {
-    const p = document.querySelector('input[name="prof"]:checked').value;
-    document.getElementById("val-good").value = feedbackData[p].good;
-    document.getElementById("val-bad").value = feedbackData[p].bad;
-    document.getElementById("val-next").value = feedbackData[p].next;
-    updateSpeakerList();
-  }
-  function saveFeedback() {
-    const p = document.querySelector('input[name="prof"]:checked').value;
-    feedbackData[p].good = document.getElementById("val-good").value;
-    feedbackData[p].bad = document.getElementById("val-bad").value;
-    feedbackData[p].next = document.getElementById("val-next").value;
-    feedbackData[p].speaker = document.getElementById("prof-speaker").value;
-  }
-
-  async function fetchInitData() {
-    try {
-      const res1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }) });
-      const json1 = await res1.json();
-      if (json1.status === "success") {
-        masters = json1.masters;
-        document.getElementById("recorder-select").innerHTML += masters.ns.map(s => `<option value="${s}">${s}</option>`).join("");
-        masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
-        masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
-        
-        let fixedHtml = "";
-        const buildSelect = (label, arr) => `<div style="display:flex;align-items:center;gap:4px;"><label><input type="checkbox" name="fixed-pt" value="${label}"> ${label}</label><select style="width:100px;margin:0;padding:4px;font-size:11px;" onchange="this.previousSibling.checked=true;"><option value="">(名前)</option>${arr.map(x=>`<option value="${x}">${x}</option>`).join('')}</select></div>`;
-        fixedHtml += buildSelect("Dr", masters.dr); fixedHtml += buildSelect("機長", masters.pilot); fixedHtml += buildSelect("整備士", masters.mechanic); fixedHtml += buildSelect("CS", masters.cs);
-        document.getElementById("fixed-pt-container").innerHTML = fixedHtml;
-      }
-      
-      const res2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }) });
-      const json2 = await res2.json(); if (json2.status === "success") allCasesData = json2.data;
-      
-      const res3 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
-      const json3 = await res3.json(); if (json3.status === "success") existingDebriefs = json3.data;
-      
-    } catch(e) {} finally { document.getElementById("global-loader").style.display = "none"; }
-  }
-
+  // --- 事案検索 ---
   function searchCases() {
-    const qId = document.getElementById("s-id").value.trim(); const qStaff = document.getElementById("s-staff").value.trim();
-    const resArea = document.getElementById("search-results-area");
+    const isToday = document.getElementById("s-today").checked;
+    const qId = document.getElementById("s-id").value.trim();
+    const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '/');
+    
     let results = allCasesData.filter(r => {
-      if (!r["id"]) return false; let match = true;
-      if (qId && !String(r["id"]).includes(qId)) match = false;
-      if (qStaff && !String(r.rawData["フライトドクター"]).includes(qStaff) && !String(r.rawData["フライトナース"]).includes(qStaff)) match = false;
-      return match;
-    }).slice(0, 10);
+      if(!r.id) return false;
+      if(isToday && r.date !== todayStr) return false;
+      if(qId && !String(r.id).includes(qId)) return false;
+      return true;
+    }).slice(0, 15);
 
-    if (results.length === 0) resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当なし</div>";
-    else resArea.innerHTML = results.map(r => `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'><b>No.${r.id}</b> ｜ ${r.date}<br><span style="font-size:11px;color:var(--sub);">Dr:${r.rawData["フライトドクター"]} / Ns:${r.rawData["フライトナース"]}</span></div>`).join("");
+    const resArea = document.getElementById("search-results-area");
+    if(results.length === 0) resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当なし</div>";
+    else resArea.innerHTML = results.map(r => `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'><b>No.${r.id}</b> ｜ ${r.date}<br><span style="font-size:12px;color:var(--sub);">出場先: ${r.dest} / Dr:${r.rawData["フライトドクター"]} Ns:${r.rawData["フライトナース"]}</span></div>`).join("");
     resArea.style.display = "block";
   }
 
   function selectCase(rowWrapper) {
     currentCase = rowWrapper.rawData;
     document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
-    const row = currentCase;
     
-    // ★ 過去データの復元チェック
-    const pastDebrief = existingDebriefs.find(d => String(d["要請番号"]) === String(row["要請番号"]));
-    if(pastDebrief && pastDebrief["システムデータ"]) {
-      if(confirm("💡 この事案はすでにデブリーフィングが登録されています。過去のデータを読み込んで上書き編集しますか？")) {
-        restoreSystemData(JSON.parse(pastDebrief["システムデータ"]));
-        document.getElementById("btn-submit").innerText = "💾 過去データを上書き保存";
-        document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
+    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
+    if(past && past["システムデータ"]) {
+      if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
+        restoreSystemData(JSON.parse(past["システムデータ"]));
+        document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       }
     }
-
-    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${row["要請番号"]}</b><br>出場先: ${row["出場先"] || "不明"}<br>Dr: ${row["フライトドクター"] || "-"} / Ns: ${row["フライトナース"] || "-"}</div>`;
+    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
   }
 
   function restoreSystemData(sys) {
+    sysData = sys;
     document.getElementById("v-summary").value = sys.summary || "";
-    document.getElementById("recorder-select").value = sys.recorder || "";
-    document.getElementById("env-loc").value = sys.loc || "浜町待機所";
-    document.getElementById("env-method").value = sys.method || "対面";
-    document.getElementById("other-pt").value = sys.otherPt || "";
+    if(sys.reqType) { document.querySelector(`input[name="req-type"][value="${sys.reqType}"]`).checked = true; toggleReqType(); }
+    if(sys.envLoc) { const el = document.querySelector(`input[name="env-loc"][value="${sys.envLoc}"]`); if(el) el.checked=true; else { document.querySelector(`input[name="env-loc"][value="その他"]`).checked=true; document.getElementById("env-loc-other").value = sys.envLoc; } }
+    if(sys.envMethod) { const el = document.querySelector(`input[name="env-method"][value="${sys.envMethod}"]`); if(el) el.checked=true; else { document.querySelector(`input[name="env-method"][value="その他"]`).checked=true; document.getElementById("env-method-other").value = sys.envMethod; } }
     
-    if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
-    if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
-    if(sys.evalBlocks && sys.evalBlocks.length > 0) { evalBlocks = sys.evalBlocks; renderEvalBlocks(); }
-    if(sys.feedbackData) { feedbackData = sys.feedbackData; changeProf(); }
-    if(sys.tags) {
-      selectedTags = sys.tags;
-      Object.keys(selectedTags).forEach(k => { selectedTags[k].forEach(item => { const el = document.getElementById(`chip-${k}-${item}`); if(el) el.classList.add("on"); }); });
-    }
-  }
-
-  function generatePreview() {
-    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;'>※事案を紐付けしてください。</p>"; return; }
-    
-    let evalHtml = evalBlocks.map(e => {
-      let html = `<div style="margin-bottom:8px;"><b>${e.time||'--:--'} ${e.title||'評価'}</b><br>`;
-      const row = (lbl, g, b) => (g||b) ? `${lbl}: <span style="color:#2e7d32">${g||'-'}</span> / <span style="color:#d32f2f">${b||'-'}</span><br>` : '';
-      html += row('A', e.a_g, e.a_b) + row('B', e.b_g, e.b_b) + row('C', e.c_g, e.c_b) + row('D', e.d_g, e.d_b) + row('E', e.e_g, e.e_b);
-      return html + `</div>`;
-    }).join(""); if(!evalHtml) evalHtml = "記載なし";
-
-    let combined = "";
-    profs.forEach(p => {
-      if(feedbackData[p].good||feedbackData[p].bad||feedbackData[p].next) {
-        let spk = feedbackData[p].speaker ? ` (${feedbackData[p].speaker})` : '';
-        combined += `<div style="margin-bottom:8px; border-bottom:1px dashed #ccc; padding-bottom:8px;"><b>【${p}${spk}】</b><br>`;
-        if(feedbackData[p].good) combined += `<span style="color:#2e7d32">■ Good:</span> ${feedbackData[p].good.replace(/\n/g,'<br>')}<br>`;
-        if(feedbackData[p].bad) combined += `<span style="color:#d32f2f">■ Bad/Gap:</span> ${feedbackData[p].bad.replace(/\n/g,'<br>')}<br>`;
-        if(feedbackData[p].next) combined += `<span style="color:#1565c0">■ Next:</span> ${feedbackData[p].next.replace(/\n/g,'<br>')}</div>`;
+    ['dr','ns','pilot','mechanic','cs','diagnosis','recorder','keyword'].forEach(cat => {
+      if(sysData.tags[cat]) {
+        if(cat==='keyword') renderChips('chip-container-keyword', TAG_LISTS.keyword, 'keyword');
+        else if(cat==='diagnosis') renderChips('chip-container-diagnosis', masters.diagnosis, 'diagnosis');
+        else if(cat==='recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
+        else renderChips(`chip-container-${cat}`, masters[cat], cat);
       }
     });
+
+    document.getElementById("ext-pt-container").innerHTML = ""; if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
+    document.getElementById("ojt-pt-container").innerHTML = ""; if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
+    renderEvalBlocks(); renderFeedbackBlocks();
+  }
+
+  // --- Tab 2: 症例評価 ---
+  function addEvalBlock() {
+    sysData.evals.push({ id: Date.now(), scene: "", sceneOther: "", type: "状況評価", desc: "", response: "", good: "", bad: "", a:"", b:"", c:"", d:"", e:"", f:"" });
+    renderEvalBlocks();
+  }
+  function renderEvalBlocks() {
+    const box = document.getElementById("eval-container"); box.innerHTML = "";
+    sysData.evals.forEach((ev, idx) => {
+      const isMed = ev.type === "病態評価";
+      let html = `<div class="eval-block" id="ev-${ev.id}">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><div style="font-weight:bold; color:var(--blue);">📝 評価ポイント #${idx+1}</div><button class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.evals.splice(${idx},1); renderEvalBlocks()">削除</button></div>
+        
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">活動場面</div>
+        <select onchange="sysData.evals[${idx}].scene=this.value; document.getElementById('ev-sc-oth-${ev.id}').style.display=(this.value==='その他'?'block':'none')" style="margin-bottom:4px; padding:8px;">
+          <option value="">場面を選択...</option>${SCENE_LIST.map(s => `<option value="${s}" ${ev.scene===s?'selected':''}>${s}</option>`).join('')}<option value="その他" ${ev.scene==='その他'?'selected':''}>その他</option>
+        </select>
+        <input type="text" id="ev-sc-oth-${ev.id}" placeholder="その他の場面" value="${ev.sceneOther}" onchange="sysData.evals[${idx}].sceneOther=this.value" style="display:${ev.scene==='その他'?'block':'none'}; padding:8px; margin-bottom:8px;">
+        
+        <div class="radio-group" style="margin-bottom:12px;">
+          <label><input type="radio" name="ev-type-${ev.id}" value="状況評価" ${!isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">状況評価</span></label>
+          <label><input type="radio" name="ev-type-${ev.id}" value="病態評価" ${isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">病態評価</span></label>
+        </div>`;
+
+      if(!isMed) {
+        html += `<textarea rows="2" placeholder="状況 (例: 現場が山間部で接触に時間がかかった)" onchange="sysData.evals[${idx}].desc=this.value">${ev.desc}</textarea>`;
+      } else {
+        html += `<div style="background:#f0f0f0; padding:8px; border-radius:6px; margin-bottom:8px;">
+          <div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px;">ABCDEF 評価内容</div>
+          <div class="eval-row"><span>A</span><input type="text" value="${ev.a}" onchange="sysData.evals[${idx}].a=this.value" style="padding:4px; margin:0;"></div>
+          <div class="eval-row"><span>B</span><input type="text" value="${ev.b}" onchange="sysData.evals[${idx}].b=this.value" style="padding:4px; margin:0;"></div>
+          <div class="eval-row"><span>C</span><input type="text" value="${ev.c}" onchange="sysData.evals[${idx}].c=this.value" style="padding:4px; margin:0;"></div>
+          <div class="eval-row"><span>D</span><input type="text" value="${ev.d}" onchange="sysData.evals[${idx}].d=this.value" style="padding:4px; margin:0;"></div>
+          <div class="eval-row"><span>E</span><input type="text" value="${ev.e}" onchange="sysData.evals[${idx}].e=this.value" style="padding:4px; margin:0;"></div>
+          <div class="eval-row"><span>F</span><input type="text" value="${ev.f}" onchange="sysData.evals[${idx}].f=this.value" style="padding:4px; margin:0;"></div>
+        </div>`;
+      }
+      
+      html += `<textarea rows="2" placeholder="対応・判断 (その時どう動いたか)" onchange="sysData.evals[${idx}].response=this.value">${ev.response}</textarea>
+        <div style="display:flex; gap:8px;">
+          <textarea rows="2" placeholder="Good (良かった点)" onchange="sysData.evals[${idx}].good=this.value" style="border-color:#a5d6a7;">${ev.good}</textarea>
+          <textarea rows="2" placeholder="Bad (課題)" onchange="sysData.evals[${idx}].bad=this.value" style="border-color:#fff59d;">${ev.bad}</textarea>
+        </div></div>`;
+      box.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  // --- Tab 3: タグ付け ---
+  function buildTagUI() {
+    let html = "";
+    ["practice", "treatment", "special", "risk"].forEach(key => {
+      html += `<div class="acc-header" onclick="toggleAcc(this, 'acc-${key}')">${TAG_MASTERS[key].label}<span class="arrow">▼</span></div><div class="acc-body" id="acc-${key}"><div class="chip-grid" id="chip-container-${key}"></div></div>`;
+    });
+    document.getElementById("tags-container").innerHTML = html;
+    ["practice", "treatment", "special", "risk"].forEach(cat => renderChips(`chip-container-${cat}`, TAG_LISTS[cat], cat));
+  }
+
+  // --- Tab 4: 多職種振り返り ---
+  function addFeedbackBlock() {
+    sysData.feedbacks.push({ id: Date.now(), prof: "フライトドクター", name: "", good: "", bad: "", next: "" });
+    renderFeedbackBlocks();
+  }
+  function renderFeedbackBlocks() {
+    const box = document.getElementById("feedback-container"); box.innerHTML = "";
+    
+    // 参加者リストの構築
+    let ptOptions = `<option value="">(名前を指定しない)</option>`;
+    ['dr','ns','pilot','mechanic','cs'].forEach(cat => { if(sysData.tags[cat]) sysData.tags[cat].forEach(n => ptOptions+=`<option value="${n}">${n}</option>`); });
+    document.querySelectorAll('.ext-row').forEach(row => { const a = row.querySelector('.e-affil').value; const n = row.querySelector('.e-name').value; if(a||n) ptOptions+=`<option value="${a} ${n}">${a} ${n}</option>`; });
+    document.querySelectorAll('.ojt-row').forEach(row => { const j = row.querySelector('.o-job').value; const n = row.querySelector('.o-name').value; if(j||n) ptOptions+=`<option value="${n}(OJT)">${n}(OJT)</option>`; });
+
+    sysData.feedbacks.forEach((fb, idx) => {
+      let html = `<div class="fb-block" id="fb-${fb.id}">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><div style="font-weight:bold; color:var(--ink);">🗣️ 振り返り視点 #${idx+1}</div><button class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.feedbacks.splice(${idx},1); renderFeedbackBlocks()">削除</button></div>
+        
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <select onchange="sysData.feedbacks[${idx}].prof=this.value" style="flex:1; padding:8px;">
+            <option value="フライトドクター" ${fb.prof==='フライトドクター'?'selected':''}>Dr</option><option value="フライトナース" ${fb.prof==='フライトナース'?'selected':''}>Ns</option>
+            <option value="機長・整備士" ${fb.prof==='機長・整備士'?'selected':''}>機長・整備士</option><option value="CS" ${fb.prof==='CS'?'selected':''}>CS</option>
+            <option value="消防・救急隊" ${fb.prof==='消防・救急隊'?'selected':''}>消防・救急隊</option><option value="OJT" ${fb.prof==='OJT'?'selected':''}>OJT</option>
+          </select>
+          <select onchange="sysData.feedbacks[${idx}].name=this.value" style="flex:1.5; padding:8px;">
+            ${ptOptions.replace(`value="${fb.name}"`, `value="${fb.name}" selected`)}
+          </select>
+        </div>
+
+        <textarea rows="2" placeholder="🟢 Good (良かった点)" onchange="sysData.feedbacks[${idx}].good=this.value" style="border-color:#a5d6a7;">${fb.good}</textarea>
+        <textarea rows="2" placeholder="⚠️ Bad / Gap (課題)" onchange="sysData.feedbacks[${idx}].bad=this.value" style="border-color:#fff59d;">${fb.bad}</textarea>
+        <textarea rows="2" placeholder="🚀 Next (次回アクション)" onchange="sysData.feedbacks[${idx}].next=this.value" style="border-color:#bbdefb;">${fb.next}</textarea>
+      </div>`;
+      box.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  // --- Tab 5: 保存・プレビュー ---
+  function generatePreview() {
+    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;'>事案を紐付けしてください。</p>"; return; }
+    
+    // データ整理
+    let envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || ""; if(envLoc==='その他') envLoc = document.getElementById("env-loc-other").value;
+    let envMethod = document.querySelector('input[name="env-method"]:checked')?.value || ""; if(envMethod==='その他') envMethod = document.getElementById("env-method-other").value;
+    
+    let ptList = [];
+    ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
+    document.querySelectorAll('.ext-row').forEach(r => ptList.push(`${r.querySelector('.e-affil').value} ${r.querySelector('.e-name').value}`));
+    document.querySelectorAll('.ojt-row').forEach(r => ptList.push(`[OJT]${r.querySelector('.o-job').value} ${r.querySelector('.o-name').value}`));
+    if(document.getElementById("other-pt").value) ptList.push(document.getElementById("other-pt").value);
+
+    let evalHtml = sysData.evals.map((e,i) => {
+      let sc = e.scene==='その他' ? e.sceneOther : e.scene;
+      let html = `<div style="margin-bottom:12px; border-bottom:1px dashed #ccc; padding-bottom:8px;"><b>#${i+1} ${e.type} (${sc||'場面未選択'})</b><br>`;
+      if(e.type === '状況評価') html += `[状況] ${e.desc}<br>`;
+      else html += `[ABCDEF] A:${e.a||'-'} B:${e.b||'-'} C:${e.c||'-'} D:${e.d||'-'} E:${e.e||'-'} F:${e.f||'-'}<br>`;
+      html += `[対応] ${e.response}<br><span style="color:#2e7d32">[Good] ${e.good}</span><br><span style="color:#d32f2f">[Bad] ${e.bad}</span></div>`;
+      return html;
+    }).join("");
+    
+    let fbHtml = sysData.feedbacks.map(f => {
+      let nm = f.name ? `(${f.name})` : '';
+      return `<div style="margin-bottom:8px;"><b>【${f.prof}${nm}】</b><br><span style="color:#2e7d32">G: ${f.good}</span><br><span style="color:#d32f2f">B: ${f.bad}</span><br><span style="color:#1565c0">N: ${f.next}</span></div>`;
+    }).join("");
 
     document.getElementById("print-area").innerHTML = `
       <div class="print-report">
         <h2>AW109 デブリーフィング</h2>
-        <h3>■ 事案概要</h3><div style="padding:8px;">${document.getElementById("v-summary").value.replace(/\n/g, '<br>') || "記載なし"}</div>
-        <h3>■ 症例評価</h3><div style="background:#f9f9f9; padding:8px;">${evalHtml}</div>
-        <h3>■ 振り返り・ギャップ評価</h3><div style="padding:8px;">${combined || "記載なし"}</div>
+        <div style="margin-bottom:8px;"><b>要請:</b> ${sysData.reqType} / <b>診断:</b> ${(sysData.tags.diagnosis||[]).join(", ")}</div>
+        <div style="margin-bottom:8px;"><b>環境:</b> ${envLoc} / ${envMethod}</div>
+        <div style="margin-bottom:8px;"><b>参加者:</b> ${ptList.join(", ")}</div>
+        <h3>■ 概要</h3><div style="padding:4px;">${document.getElementById("v-summary").value.replace(/\n/g,'<br>')}</div>
+        <h3>■ 症例評価</h3><div style="padding:4px;">${evalHtml}</div>
+        <h3>■ 振り返り</h3><div style="padding:4px;">${fbHtml}</div>
       </div>
     `;
   }
 
   async function submitDebriefing() {
-    if (!currentCase) return alert("事案が紐付けられていません。");
-    
-    let evalTextStr = evalBlocks.map(e => `【${e.time||'--:--'} ${e.title||'評価'}】\nA(G:${e.a_g||'-'} B:${e.a_b||'-'})\nB(G:${e.b_g||'-'} B:${e.b_b||'-'})\nC(G:${e.c_g||'-'} B:${e.c_b||'-'})\nD(G:${e.d_g||'-'} B:${e.d_b||'-'})\nE(G:${e.e_g||'-'} B:${e.e_b||'-'})`).join("\n");
+    if (!currentCase) return alert("事案がありません。");
+    const rec = (sysData.tags.recorder && sysData.tags.recorder.length>0) ? sysData.tags.recorder[0] : "";
+    if (!rec) return alert("タブ1で記載者(Ns)を選択してください。");
+
+    // 保存用データの構築
+    sysData.summary = document.getElementById("v-summary").value;
+    sysData.envLoc = document.querySelector('input[name="env-loc"]:checked')?.value; if(sysData.envLoc==='その他') sysData.envLoc = document.getElementById("env-loc-other").value;
+    sysData.envMethod = document.querySelector('input[name="env-method"]:checked')?.value; if(sysData.envMethod==='その他') sysData.envMethod = document.getElementById("env-method-other").value;
+    sysData.otherPt = document.getElementById("other-pt").value;
+    sysData.ext = []; document.querySelectorAll('.ext-row').forEach(r => sysData.ext.push({affil:r.querySelector('.e-affil').value, name:r.querySelector('.e-name').value}));
+    sysData.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sysData.ojt.push({job:r.querySelector('.o-job').value, name:r.querySelector('.o-name').value}));
+
+    let ptList = [];
+    ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
+    sysData.ext.forEach(e => ptList.push(`${e.affil} ${e.name}`)); sysData.ojt.forEach(o => ptList.push(`[OJT]${o.job} ${o.name}`));
+    if(sysData.otherPt) ptList.push(sysData.otherPt);
+
+    let evalTxt = sysData.evals.map((e,i) => {
+      let txt = `【#${i+1} ${e.type}(${e.scene==='その他'?e.sceneOther:e.scene})】\n`;
+      if(e.type==='状況評価') txt+=`状況: ${e.desc}\n`; else txt+=`A:${e.a} B:${e.b} C:${e.c} D:${e.d} E:${e.e} F:${e.f}\n`;
+      return txt + `対応: ${e.response}\nGood: ${e.good}\nBad: ${e.bad}\n`;
+    }).join("\n");
 
     let cg="", cb="";
-    profs.forEach(p => {
-      let spk = feedbackData[p].speaker ? ` (${feedbackData[p].speaker})` : '';
-      if(feedbackData[p].good) cg += `【${p}${spk}】\n${feedbackData[p].good}\n`;
-      if(feedbackData[p].bad||feedbackData[p].next) cb += `【${p}${spk}】\n[Bad] ${feedbackData[p].bad}\n[Next] ${feedbackData[p].next}\n`;
+    sysData.feedbacks.forEach(f => {
+      let nm = f.name ? `(${f.name})` : '';
+      if(f.good) cg += `【${f.prof}${nm}】\n${f.good}\n`;
+      if(f.bad||f.next) cb += `【${f.prof}${nm}】\n[Bad] ${f.bad}\n[Next] ${f.next}\n`;
     });
 
-    let extData = [], ojtData = [];
-    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => { if(el.id.endsWith("-affil")) extData.push({ affil: el.value, name: document.getElementById(el.id.replace("-affil", "-name")).value }); });
-    document.querySelectorAll('[id^="ojt-pt-"]').forEach(el => { if(el.id.endsWith("-job")) ojtData.push({ job: el.value, name: document.getElementById(el.id.replace("-job", "-name")).value }); });
-    
-    let ptList = Array.from(document.querySelectorAll('input[name="fixed-pt"]:checked')).map(el => {
-      let nm = el.nextElementSibling.value; return nm ? `${el.value}(${nm})` : el.value;
-    });
-    extData.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); });
-    ojtData.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
-    const otherPt = document.getElementById("other-pt").value; if(otherPt) ptList.push(otherPt);
-
-    const tagsObj = {}; Object.keys(selectedTags).forEach(k => { tagsObj[k] = selectedTags[k].join(", "); });
-
-    const sysData = {
-      summary: document.getElementById("v-summary").value, recorder: document.getElementById("recorder-select").value,
-      loc: document.getElementById("env-loc").value, method: document.getElementById("env-method").value, otherPt: otherPt,
-      ext: extData, ojt: ojtData, tags: selectedTags, evalBlocks: evalBlocks, feedbackData: feedbackData
-    };
+    const tagsObj = {};
+    ["keyword","practice","treatment","special","risk"].forEach(k => { tagsObj[k] = (sysData.tags[k]||[]).join(", "); });
 
     const payload = {
-      caseId: currentCase["要請番号"], recorder: sysData.recorder, tags: tagsObj, summary: sysData.summary, evalText: evalTextStr,
-      good: cg.trim(), bad: cb.trim(), location: sysData.loc, method: sysData.method, participants: ptList.join(", "), systemData: sysData
+      caseId: currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt,
+      good: cg.trim(), bad: cb.trim(), location: sysData.envLoc, method: sysData.envMethod, participants: ptList.join(", "),
+      systemData: sysData
     };
 
     const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }) });
       const json = await res.json();
-      if (json.status === "success") { alert("アーカイブに保存しました！"); location.reload(); } else alert("エラー: " + json.message);
-    } catch(e) { alert("通信エラー"); } finally { btn.disabled = false; btn.innerText = "✅ 保存"; }
+      if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else alert("エラー");
+    } catch(e) { alert("通信エラー"); } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; }
   }
 </script>
 </body>
