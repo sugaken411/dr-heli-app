@@ -32,7 +32,6 @@
 
     .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
     .doc-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line); position: relative; transition: transform 0.2s; }
-    .doc-card:active { transform: scale(0.98); }
     
     .card-top { margin-bottom: 12px; }
     .cat-badge { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 800; background: #e3f2fd; color: var(--brand); padding: 4px 8px; border-radius: 6px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -61,7 +60,7 @@
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.1</span></div>
+  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.2</span></div>
   <div style="width:60px;"></div>
 </header>
 
@@ -74,7 +73,7 @@
     <div class="filter-section">
       <div class="filter-title">📁 1. 大項目（資料の種類）</div>
       <div class="chip-grid" id="filter-large">
-        <div class="chip active" onclick="setLargeFilter('全て', this)">全て</div>
+        <div class="chip active" onclick="setLargeFilter('全件', this)">全件</div>
       </div>
     </div>
     
@@ -86,7 +85,7 @@
     </div>
     
     <div class="filter-section" style="border-top: 1px dashed var(--line); padding-top: 12px;">
-      <div class="filter-title">＃ 3. キーワード（タグ複数選択可）</div>
+      <div class="filter-title">＃ 3. キーキーワード（タグ複数選択可）</div>
       <div class="chip-grid" id="filter-tags"></div>
     </div>
   </div>
@@ -98,71 +97,52 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // ==========================================
-  // 💡 【重要】フォーム回答シートの列インデックス設定
-  // シートの左端から 0, 1, 2, 3... と数えた列番号を指定します。
-  // スクリーンショットのズレを解消するためのマッピングです。
-  // ==========================================
-  const COL_MAP = {
-    timestamp: 0,   // タイムスタンプ
-    driveUrl: 1,    // GoogleドライブのURL
-    title: 2,       // 資料タイトル（例: "PICU換算表", "メプチン吸入について"）
-    largeCat: 3,    // 大項目（例: "04_院外研修・外部セミナー資料", "07_取扱説明書"）
-    mediumCat: 4,   // 中項目（例: 対象領域など。空欄なら空欄で処理されます）
-    keyword: 5,     // キーワード/タグ（例: "薬剤蘇生換算表", "メプチン吸入の使い方について"）
-    editor: 6       // 更新者・記載者
-  };
-
   let allDocs = [];
-  let activeLarge = "全て";
+  let activeLarge = "全件";
   let activeTags = [];
 
   window.onload = async () => {
     await fetchLibraryData();
   };
 
+  // 🌟 GASとの通信経路・インデックスズレをダブルで修正するコアロジック
   async function fetchLibraryData() {
     try {
-      // システム共有の汎用マスタ兼データ取得APIを利用
       const res = await fetch(GAS_API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_library_data", password: PIN_CODE })
+        body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }) // アクション名をGAS側に完全統一
       });
       const json = await res.json();
       
       if (json.status === "success" && json.data) {
-        // 🌟 COL_MAPに則ってデータを安全にパース
-        allDocs = json.data.map((row, index) => {
-          // 念のため配列の長さが足りない場合の空文字フォールバック
-          const getVal = (colIndex) => (row[colIndex] !== undefined ? String(row[colIndex]).trim() : "");
-          
+        // スプレッドシート（オブジェクト配列）のキーマッピングをフォーム回答形式に強制補正
+        allDocs = json.data.map((item, index) => {
           return {
             id: index,
-            timestamp: getVal(COL_MAP.timestamp),
-            url: getVal(COL_MAP.driveUrl),
-            title: getVal(COL_MAP.title) || "無題の資料",
-            large: getVal(COL_MAP.largeCat) || "その他",
-            medium: getVal(COL_MAP.mediumCat) || "一般",
-            keywords: getVal(COL_MAP.keyword) ? getVal(COL_MAP.keyword).split(/[,，、\s]+/).filter(Boolean) : [],
-            editor: getVal(COL_MAP.editor) || "システム"
+            timestamp: item.title || "日付不明", // ズレによりtitleプロパティに日時が入ってしまっている状態
+            url: item.url || "",
+            title: item.category || "無題の資料", // categoryプロパティにタイトルが入ってしまっている状態
+            large: item.domain || "未分類", // domainプロパティに大項目が入ってしまっている状態
+            medium: "一般", // 中項目はデフォルト配置
+            keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [],
+            editor: item.desc || "システム" // descプロパティに更新者名が入ってしまっている状態
           };
-        }).filter(d => d.url.startsWith("http")); // 有効なURLを持つデータのみに絞り込み
+        }).filter(d => d.url && d.url.startsWith("http"));
         
         buildFilters();
         filterDocs();
       } else {
-        document.getElementById("cards-container").innerHTML = "<p style='color:red; font-weight:bold; text-align:center;'>データ構造の取得に失敗しました</p>";
+        document.getElementById("cards-container").innerHTML = `<p style='color:red; font-weight:bold; text-align:center; padding:20px;'>エラー: ${json.message || "データ同期に失敗しました"}</p>`;
       }
     } catch (e) {
       console.error(e);
-      document.getElementById("cards-container").innerHTML = "<p style='color:red; font-weight:bold; text-align:center;'>通信エラーが発生しました</p>";
+      document.getElementById("cards-container").innerHTML = "<p style='color:red; font-weight:bold; text-align:center; padding:20px;'>通信エラーが発生しました。インターネット接続を確認してください。</p>";
     } finally {
       document.getElementById("global-loader").style.display = "none";
     }
   }
 
-  // フィルター用チップ・セレクトボックスの動的生成
   function buildFilters() {
     const largeSet = new Set();
     const mediumSet = new Set();
@@ -174,21 +154,18 @@
       d.keywords.forEach(k => tagSet.add(k));
     });
 
-    // 大項目フィルター
     const largeBox = document.getElementById("filter-large");
-    largeBox.innerHTML = `<div class="chip active" onclick="setLargeFilter('全て', this)">全て</div>`;
+    largeBox.innerHTML = `<div class="chip active" onclick="setLargeFilter('全件', this)">全件</div>`;
     Array.from(largeSet).sort().forEach(l => {
       largeBox.innerHTML += `<div class="chip" onclick="setLargeFilter('${l}', this)">${l}</div>`;
     });
 
-    // 中項目フィルター
     const mediumSelect = document.getElementById("filter-medium");
     mediumSelect.innerHTML = `<option value="全て">🔄 全ての中項目</option>`;
     Array.from(mediumSet).sort().forEach(m => {
       mediumSelect.innerHTML += `<option value="${m}">${m}</option>`;
     });
 
-    // キーワードタグフィルター
     const tagBox = document.getElementById("filter-tags");
     tagBox.innerHTML = "";
     Array.from(tagSet).sort().forEach(t => {
@@ -214,21 +191,16 @@
     filterDocs();
   }
 
-  // 複合フィルタリング処理
   function filterDocs() {
     const searchQ = document.getElementById("search-input").value.toLowerCase().trim();
     const activeMedium = document.getElementById("filter-medium").value;
 
     const filtered = allDocs.filter(d => {
-      // 大項目マッチ
-      if (activeLarge !== "全て" && d.large !== activeLarge) return false;
-      // 中項目マッチ
+      if (activeLarge !== "全件" && d.large !== activeLarge) return false;
       if (activeMedium !== "全て" && d.medium !== activeMedium) return false;
-      // タグ複数選択マッチ（AND検索）
       if (activeTags.length > 0 && !activeTags.every(t => d.keywords.includes(t))) return false;
-      // フリーワード検索マッチ（タイトル・大・中・キーワード・更新者すべてを対象）
       if (searchQ) {
-        const targetStr = `${d.title} ${d.large} ${d.medium} ${d.keywords.join(" ")} ${d.editor}`.toLowerCase();
+        const targetStr = `${d.title} ${d.large} ${d.keywords.join(" ")} ${d.editor}`.toLowerCase();
         if (!targetStr.includes(searchQ)) return false;
       }
       return true;
@@ -237,7 +209,6 @@
     renderCards(filtered);
   }
 
-  // カード群のレンダリング
   function renderCards(docs) {
     const container = document.getElementById("cards-container");
     if (docs.length === 0) {
@@ -246,7 +217,6 @@
     }
 
     container.innerHTML = docs.map(d => {
-      // タイムスタンプから不要なミリ秒などをトリミングして見やすく整形
       const displayDate = d.timestamp ? d.timestamp.split(" ")[0] : "日付不明";
       
       return `
@@ -258,7 +228,7 @@
               <span>📅 ${displayDate}</span>
               <span>👤 ${escapeHtml(d.editor)}</span>
             </div>
-            <div class="doc-desc">${escapeHtml(d.large)}</div>
+            <div class="doc-desc" style="color:var(--brand); font-weight:bold; font-size:12px; margin-bottom:8px;">${escapeHtml(d.large)}</div>
             <div class="tag-box">
               ${d.keywords.map(k => `<span class="doc-tag">#${escapeHtml(k)}</span>`).join("")}
             </div>
@@ -267,7 +237,7 @@
             <a href="${d.url}" target="_blank" class="btn-view">
               <span>↗️ 資料を閲覧する</span>
             </a>
-            <button class="btn-info" onclick="alert('【資料詳細情報】\\n■ タイトル: ${escapeHtml(d.title)}\\n■ 登録日時: ${d.timestamp}\\n■ 分類: ${escapeHtml(d.large)} / ${escapeHtml(d.medium)}\\n■ 更新者: ${escapeHtml(d.editor)}')">❓</button>
+            <button class="btn-info" onclick="alert('【資料詳細情報】\\n■ 資料名: ${escapeHtml(d.title)}\\n■ 登録日: ${displayDate}\\n■ 大項目: ${escapeHtml(d.large)}\\n■ 担当者: ${escapeHtml(d.editor)}')">❓</button>
           </div>
         </div>
       `;
