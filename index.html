@@ -198,7 +198,7 @@
       line-height: 1.5;
     }
     
-    /* スキーム選択 */
+    /* スキーム・要請形態選択 */
     .scheme-picker {
       display: grid;
       gap: 8px;
@@ -610,7 +610,7 @@
   <div class="hdr-group">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
   </div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.2</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.3</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -619,6 +619,19 @@
 
 <main id="mainScroll">
   <div id="tab-input" class="tab-content active">
+    
+    <div class="card">
+      <div class="card-section">
+        <div class="section-label">📞 要請形態 (任意)</div>
+        <div class="scheme-picker" id="reqTypePicker">
+          <div class="scheme-row-top">
+            <button class="scheme-btn" onclick="setReqType(this,'現場要請')">現場要請</button>
+            <button class="scheme-btn" onclick="setReqType(this,'キーワード要請')">キーワード要請</button>
+            <button class="scheme-btn" onclick="setReqType(this,'施設間要請')">施設間搬送</button>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <div class="card">
       <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
@@ -879,11 +892,12 @@
     line: ["20G","18G","22G","24G","ベニューラ","骨髄針"] 
   };
   
-  // アプリケーションの状態管理
+  // 🌟 バグ修正: valsを完全に空の状態で初期化
   let st = { 
+    reqType: "", // 🌟 新規：要請形態
     scheme: "", 
     times: {}, 
-    vals: { 'カフ有無': 'あり' }, 
+    vals: {}, 
     chips: {}, 
     dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, 
     calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--", mTimeManual:false } 
@@ -958,7 +972,7 @@
       } else if (o.sub === "checks") {
         html += `<div class="sub-panel" id="s-${o.k}"><div class="chip-grid">` + o.opts.map(c => `<div class="chip" id="c-${c}" onclick="tChip('${c}')">${c}</div>`).join("") + `</div></div>`;
       } else if (o.sub === "intubation") {
-        html += `<div class="sub-panel" id="s-${o.k}"><div class="inline-field" style="padding:8px 0;"><span class="field-label" style="font-size:14px;">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; saveState();"><option value="">選択</option>${Array.from({length:14},(_,i)=>(8.5-i*0.5).toFixed(1)).map(v=>`<option>${v}</option>`).join("")}</select></div><div class="inline-field" style="padding:8px 0; border-bottom:0.5px solid var(--line);"><span class="field-label" style="font-size:14px;">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn on" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div><div class="inline-field" style="padding:8px 0; border-bottom:none;"><input type="text" placeholder="フリー詳細" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['気管挿管詳細']=this.value; saveState();"></div></div>`;
+        html += `<div class="sub-panel" id="s-${o.k}"><div class="inline-field" style="padding:8px 0;"><span class="field-label" style="font-size:14px;">サイズ</span><select onchange="st.vals['気管挿管サイズ']=this.value; saveState();"><option value="">選択</option>${Array.from({length:14},(_,i)=>(8.5-i*0.5).toFixed(1)).map(v=>`<option>${v}</option>`).join("")}</select></div><div class="inline-field" style="padding:8px 0; border-bottom:0.5px solid var(--line);"><span class="field-label" style="font-size:14px;">カフ</span><div class="radio-group" style="width:60%;"><div class="radio-btn" id="r-カフ有無-あり" onclick="sRad('カフ有無','あり')">あり</div><div class="radio-btn" id="r-カフ有無-なし" onclick="sRad('カフ有無','なし')">なし</div></div></div><div class="inline-field" style="padding:8px 0; border-bottom:none;"><input type="text" placeholder="フリー詳細" style="width:100%;text-align:left;background:var(--bg);padding:8px;border:none;border-radius:6px;" onchange="st.vals['気管挿管詳細']=this.value; saveState();"></div></div>`;
       } else if (o.sub === "drainage") {
         html += `<div class="sub-panel" id="s-${o.k}"><div style="display:flex; flex-direction:column; gap:8px;">${["1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー"].map(item => `<div style="display:flex; align-items:center; gap:8px;"><div class="chip" id="c-${item}" onclick="tChip('${item}')" style="flex:1;">${item}</div><div class="radio-group" id="rg-${item}" style="display:none; flex:1;"><div class="radio-btn" id="r-${item}本数-1本" onclick="sRad('${item}本数','1本')">1本</div><div class="radio-btn" id="r-${item}本数-2本" onclick="sRad('${item}本数','2本')">2本</div></div></div>`).join("")}</div></div>`;
       }
@@ -972,7 +986,7 @@
     document.getElementById(boxId).innerHTML = arr.map(k => `<div style="width:100%;"><div class="chip" id="c-${k}" onclick="tChip('${k}')">${k}</div><div class="sub-panel" id="s-${k}"><div class="inline-field" style="padding:8px 0; border-bottom:none;"><span style="font-size:13px; color:var(--sub); flex:none; width:40px;">本数</span><div class="radio-group" style="flex:1;">${[1,2,3,4].map(n => `<div class="radio-btn" id="r-${k}本数-${n}本" onclick="sRad('${k}本数','${n}本')" style="padding:6px;">${n}</div>`).join("")}</div></div></div></div>`).join("");
   }
   
-  // チップのON/OFF処理
+  // 🌟 チップのON/OFF処理（カフ有無のバグ修正版）
   function tChip(k) {
     st.chips[k] = !st.chips[k];
     document.getElementById(`c-${k}`).classList.toggle('on', st.chips[k]);
@@ -981,11 +995,23 @@
       sub.style.display = st.chips[k] ? 'block' : 'none';
     }
     
-    // 連動してONにする処理
+    // 連動してONにする処理（気管挿管 ON時）
     if (k === "気管挿管" && st.chips[k]) {
       if (!st.chips["EtCO2"]) tChip("EtCO2");
       if (!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料");
+      
+      // 🌟 ここで初めて初期値をセットする
+      st.vals['カフ有無'] = 'あり';
+      sRad('カフ有無', 'あり');
     }
+    
+    // 🌟 気管挿管 OFF時、カフ有無データを削除する
+    if (k === "気管挿管" && !st.chips[k]) {
+      delete st.vals['カフ有無'];
+      delete st.vals['気管挿管サイズ'];
+      document.querySelectorAll(`[id^="r-カフ有無-"]`).forEach(el => el.classList.remove('on'));
+    }
+    
     if (k === "血ガス" && st.chips[k]) {
       if (!st.chips["静脈血採血"]) tChip("静脈血採血");
     }
@@ -1001,18 +1027,25 @@
   function sRad(key, val) {
     st.vals[key] = val;
     document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => el.classList.remove('on'));
-    document.getElementById(`r-${key}-${val}`).classList.add('on');
+    const rad = document.getElementById(`r-${key}-${val}`);
+    if (rad) rad.classList.add('on');
     saveState();
   }
   
-  // 🌟 スキーム選択とタイムラインのロック処理
+  // 🌟 新規：要請形態の選択
+  function setReqType(btn, type) {
+    st.reqType = type;
+    document.querySelectorAll("#reqTypePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn));
+    saveState();
+  }
+
+  // スキーム選択とタイムラインのロック処理
   function setScheme(btn, s) {
     st.scheme = s;
     document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn));
     
     const medInputs = ["t-接触", "t-病着", "t-終了"];
     if (s === "キャンセル") {
-      // キャンセル時は医療活動タイムラインをすべて無効化
       medInputs.forEach(id => {
         const el = document.getElementById(id);
         if(el) { el.value = ""; el.disabled = true; el.style.opacity = "0.3"; }
@@ -1048,7 +1081,7 @@
     recalcAuto();
   }
 
-  // 🌟 SpO2とモニターのON/OFFタップ復旧
+  // SpO2とモニターのON/OFFタップ復旧
   function tCalc(key) {
     st.calc[key] = !st.calc[key];
     saveState();
@@ -1114,7 +1147,7 @@
     setV("calc-hansho", st.calc.hansho);
     setV("calc-long", st.calc.long);
     
-    // 🌟 モニターとSpO2のUI更新
+    // モニターとSpO2のUI更新
     const mBox = document.getElementById("calc-monitor");
     if(mBox) {
       mBox.classList.toggle('on', st.calc.monitor);
@@ -1225,7 +1258,6 @@
     if (take !== -1 && c !== -1 && c < take) msg.push("・「患者接触」は「初期離陸」以降に設定してください。");
     if (c !== -1 && e !== -1 && e < c) msg.push("・「活動終了」は「患者接触」以降に設定してください。");
     
-    // 🌟 キャンセルの場合は病院到着チェックを除外
     if (st.scheme && st.scheme !== "Iターン救急隊のみ" && st.scheme !== "キャンセル" && c !== -1 && a !== -1 && a < c) {
       msg.push("・「病院到着」は「患者接触」以降に設定してください。");
     }
@@ -1254,7 +1286,7 @@
     
     try { 
       const draft = JSON.parse(str); 
-      if(Object.keys(draft.st.chips).length === 0 && !draft.id && !draft.dest && !draft.st.scheme) return false; 
+      if(Object.keys(draft.st.chips).length === 0 && !draft.id && !draft.dest && !draft.st.scheme && !draft.st.reqType) return false; 
       
       if(!confirm("未送信のデータがあります。復元しますか？")) { 
         localStorage.removeItem("aw109_draft"); 
@@ -1277,6 +1309,11 @@
       
       st = draft.st; 
       
+      // 🌟 新規：要請形態の復元
+      if(st.reqType) {
+        document.querySelectorAll("#reqTypePicker .scheme-btn").forEach(b => b.classList.toggle('active', b.innerText === st.reqType));
+      }
+
       if(st.scheme) {
         document.querySelectorAll("#schemePicker .scheme-btn").forEach(b => b.classList.toggle('active', b.innerText.includes(st.scheme.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込"))));
         const medInputs = ["t-接触", "t-病着", "t-終了"];
@@ -1336,7 +1373,6 @@
     recalcAuto();
     let errs = validateTimeline();
     
-    // 🌟 バグ修正: null参照回避
     const t = (id) => { const el = document.getElementById(id); return el ? el.value : ""; };
     
     ["酸素","圧迫","呼吸器"].forEach(type => {
@@ -1374,6 +1410,7 @@
       <div class="pv-section">
         <div class="pv-title">基本情報</div>
         <div><b>要請番号:</b> <span ${idStyle}>${displayId}</span></div>
+        <div><b>要請形態:</b> ${st.reqType || "未選択"}</div>
         <div><b>日付:</b> ${document.getElementById("v-date").value}</div>
         <div><b>出場先:</b> ${document.getElementById("v-dest").value}</div>
         <div><b>Ｄｒ:</b> ${drVal} / <b>Ｎｓ:</b> ${nsVal}</div>
@@ -1448,7 +1485,7 @@
     document.getElementById("modal-confirm").classList.add("show");
   }
 
-  // 🌟 送信プログレスバーのアニメーション管理
+  // 送信プログレスバーのアニメーション管理
   function startProgress() {
     const btn = document.getElementById("btnSubmit");
     const txt = document.getElementById("btn-text");
@@ -1544,7 +1581,13 @@
       });
       payload[`酸素${i}流量`] = st.vals[`【酸素${i}】流量`] || "";
     }
-    payload["備考"] = document.getElementById("v-biko").value;
+    
+    // 🌟 新規：要請形態を備考の先頭に付与
+    let bikoText = document.getElementById("v-biko").value.trim();
+    if (st.reqType) {
+      bikoText = `【${st.reqType}】\n${bikoText}`;
+    }
+    payload["備考"] = bikoText.trim();
 
     startProgress();
     
@@ -1569,7 +1612,6 @@
       }
       
       if (jsonRes.status === "success") {
-        // 🌟 キャンセルの場合、バックエンドに追撃通信して自動で完了ステータスにする
         if (st.scheme === "キャンセル") {
           try {
             await fetch(GAS_API_URL, {
@@ -1631,6 +1673,7 @@
           document.getElementById("mail-options-box").innerHTML = jsonRes.masters.mailOptions.map(opt => `<label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600;"><input type="checkbox" class="mail-cc-check" value="${opt.email}"><span>${opt.name}</span></label>`).join("");
         }
         
+        // 🌟 Q&A描画
         if (jsonRes.qa) { 
           document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join(""); 
         }
@@ -1648,9 +1691,11 @@
     }
   }
 
+  // 🌟 Q&A送信
   async function submitQA(event) {
     const q = document.getElementById("qa-input").value.trim(); 
     if (!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
       await fetch(GAS_API_URL, { 
         method: "POST", 
@@ -1663,6 +1708,8 @@
       closeModal('qa');
     } catch(e) {
       alert("送信に失敗しました。");
+    } finally {
+      btn.textContent = "送信"; btn.disabled = false;
     }
   }
 </script>
