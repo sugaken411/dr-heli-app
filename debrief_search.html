@@ -5,77 +5,51 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>教育・事案検索コンソール</title>
   <style>
-    :root {
-      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
-      --brand: #d32f2f; --blue: #007aff; --med-blue: #e3f2fd; --line: rgba(60,60,67,0.12);
-    }
+    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: rgba(60,60,67,0.12); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
     body { background: var(--bg); color: var(--ink); padding-bottom: 40px; }
-    
     header { position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 16px; border-bottom: 1px solid var(--line); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
     .hdr-title { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
-    
     main { padding: 16px; max-width: 800px; margin: 0 auto; }
-    
     .filter-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; margin-bottom: 16px; }
     .section-lbl { font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; margin-top: 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
-    
     .cross-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
     .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
-    input[type="date"], select { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--ink); font-weight: 600; outline: none; }
-    
+    input[type="date"], select { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; }
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-    .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
+    .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; background: var(--bg); user-select: none; }
     .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
-    
-    .btn-search { width: 100%; padding: 14px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-
-    .result-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 5px solid var(--blue); transition: 0.2s; }
+    .btn-search { width: 100%; padding: 14px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 15px; cursor: pointer; }
+    .result-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 5px solid var(--blue); }
     .rc-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
-    .rc-id { font-weight: 800; color: var(--blue); font-size: 15px; }
-    .rc-date { color: var(--sub); font-family: monospace; font-weight: bold; }
-    
-    .rc-context { font-size: 13px; color: var(--ink); margin-bottom: 12px; font-weight: 600; line-height: 1.5; background: #f9f9f9; padding: 8px; border-radius: 6px; }
+    .rc-id { font-weight: 800; color: var(--blue); font-size: 15px; } .rc-date { color: var(--sub); font-family: monospace; font-weight: bold; }
+    .rc-context { font-size: 13px; margin-bottom: 12px; line-height: 1.5; background: #f9f9f9; padding: 8px; border-radius: 6px; }
     .rc-staff-line { font-size: 12px; color: var(--sub); margin-bottom: 12px; background: #f0f0f0; padding: 6px 10px; border-radius: 6px; font-weight: 600; }
-    
     .rc-feedback { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .fb-box { padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
-    .fb-good { background: #e8f5e9; border: 1px solid #c8e6c9; }
-    .fb-bad { background: #fffde6; border: 1px solid #fff59d; }
-    .fb-title { font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
-    .fb-good .fb-title { color: #2e7d32; }
-    .fb-bad .fb-title { color: #f57f17; }
-    
-    .rc-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-    .t-chip { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-    .t-gen { background: #e3f2fd; color: #0d47a1; }
-
+    .fb-good { background: #e8f5e9; border: 1px solid #c8e6c9; } .fb-bad { background: #fffde6; border: 1px solid #fff59d; }
+    .fb-title { font-weight: 800; margin-bottom: 4px; } .fb-good .fb-title { color: #2e7d32; } .fb-bad .fb-title { color: #f57f17; }
+    .rc-tags { display: flex; flex-wrap: wrap; gap: 4px; } .t-chip { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; background: #e3f2fd; color: #0d47a1; }
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
-    
     @media (max-width: 600px) { .rc-feedback { grid-template-columns: 1fr; } .cross-grid { grid-template-columns: 1fr; gap: 8px; } }
   </style>
 </head>
 <body>
 
-<div id="global-loader">
-  <div class="spinner"></div>
-  <div style="margin-top:16px; font-weight:800; color:var(--ink);" id="loader-text">データベース同期中...</div>
-</div>
+<div id="global-loader"><div class="spinner"></div><div style="margin-top:16px; font-weight:800;" id="loader-text">データベース同期中...</div></div>
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div class="hdr-title">🧠 教育・事案検索</div>
-  <div style="width:50px;"></div>
+  <div class="hdr-title">🧠 教育・事案検索</div><div style="width:50px;"></div>
 </header>
 
 <main>
   <div class="filter-card">
     <input type="text" id="q-free" class="search-input" placeholder="フリーワード (概要や振り返りから検索)">
-    
     <div class="section-lbl">📅 日付・搭乗スタッフ</div>
     <div class="cross-grid">
       <div class="cross-item"><label>開始日</label><input type="date" id="q-date-start"></div>
@@ -83,15 +57,10 @@
       <div class="cross-item"><label>フライトドクター</label><select id="q-dr"><option value="">全てのドクター</option></select></div>
       <div class="cross-item"><label>フライトナース</label><select id="q-ns"><option value="">全てのナース</option></select></div>
     </div>
-
     <div class="section-lbl">📌 カテゴリ・タグ指定</div>
-    <div class="chip-grid" id="ui-tags">
-      <!-- JSで動的にタグを生成 -->
-    </div>
-    
-    <button class="btn-search" id="btn-run" onclick="executeSearch()">事例を検索する</button>
+    <div class="chip-grid" id="ui-tags"></div>
+    <button class="btn-search" onclick="executeSearch()">事例を検索する</button>
   </div>
-
   <div id="result-count" style="font-weight:bold; font-size:14px; margin-bottom:12px; color:var(--sub);"></div>
   <div id="results-area"></div>
 </main>
@@ -99,17 +68,10 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-
-  let jianData = [];
-  let debriefData = [];
-  let mergedData = [];
-  
-  // デブリーフィングDBにある全タグを抽出してUIを作る用
-  let availableTags = new Set();
+  let mergedData = []; let availableTags = new Set();
 
   window.onload = async () => {
     try {
-      // 1. マスタ取得
       const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }) });
       const jsonInit = await resInit.json();
       if(jsonInit.status === "success" && jsonInit.masters) {
@@ -117,118 +79,60 @@
         jsonInit.masters.ns.forEach(n => document.getElementById("q-ns").innerHTML += `<option value="${n}">${n}</option>`);
       }
 
-      // 2. 事案DB全件取得
       document.getElementById("loader-text").innerText = "事案DBを読み込み中...";
       const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }) });
-      const jsonJian = await resJian.json();
-      if(jsonJian.status === "success") jianData = jsonJian.data;
+      const jianData = (await resJian.json()).data;
 
-      // 3. デブリーフィングDB取得
-      document.getElementById("loader-text").innerText = "振り返りデータを結合中...";
+      document.getElementById("loader-text").innerText = "データを結合中...";
       const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
-      const jsonDeb = await resDeb.json();
-      if(jsonDeb.status === "success") debriefData = jsonDeb.data;
+      const debData = (await resDeb.json()).data;
 
-      // データの結合（ガッチャンコ）
-      debriefData.forEach(d => {
+      debData.forEach(d => {
         const jian = jianData.find(j => j["要請番号"] === d["要請番号"]);
         if(jian) {
-          // タグの抽出
-          const tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["処置"], d["特殊ケース"], d["リスク関連"]]
-                        .map(t => t ? t.split(",") : []).flat().map(t => t.trim()).filter(Boolean);
+          const tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["処置"], d["特殊ケース"], d["リスク関連"]].map(t => t ? t.split(",") : []).flat().map(t => t.trim()).filter(Boolean);
           tags.forEach(t => availableTags.add(t));
-          
-          mergedData.push({
-            id: d["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
-            dr: jian["フライトドクター"], ns: jian["フライトナース"],
-            summary: d["概要"], good: d["Good (良かった点)"], bad: d["Bad/Next (課題・次へ)"],
-            tags: tags
-          });
+          mergedData.push({ id: d["要請番号"], date: jian["日付"], dest: jian["出場先"], dr: jian["フライトドクター"], ns: jian["フライトナース"], summary: d["概要"], good: d["Good (良かった点)"], bad: d["Bad/Next (課題・次へ)"], tags: tags });
         }
       });
       
-      // タグUIの生成
       const uiTags = document.getElementById("ui-tags");
-      Array.from(availableTags).sort().forEach(t => {
-        uiTags.innerHTML += `<div class="chip" onclick="this.classList.toggle('active')">${t}</div>`;
-      });
-
-      // 初回表示
+      Array.from(availableTags).sort().forEach(t => { uiTags.innerHTML += `<div class="chip" onclick="this.classList.toggle('active')">${t}</div>`; });
       executeSearch();
-
-    } catch (e) { alert("データベース同期エラーが発生しました。"); } 
-    finally { document.getElementById("global-loader").style.display = "none"; }
+    } catch (e) { alert("同期エラー"); } finally { document.getElementById("global-loader").style.display = "none"; }
   };
 
   function executeSearch() {
     const freeW = document.getElementById("q-free").value.trim().toLowerCase();
-    const dStart = document.getElementById("q-date-start").value;
-    const dEnd = document.getElementById("q-date-end").value;
-    const dr = document.getElementById("q-dr").value;
-    const ns = document.getElementById("q-ns").value;
-    
-    // 選択されたタグを取得
+    const dStart = document.getElementById("q-date-start").value; const dEnd = document.getElementById("q-date-end").value;
+    const dr = document.getElementById("q-dr").value; const ns = document.getElementById("q-ns").value;
     const activeChips = Array.from(document.querySelectorAll('.chip.active')).map(c => c.innerText);
 
     let results = mergedData.filter(m => {
-      // 日付フィルタ
       let mDate = String(m.date).replace(/\//g, "-");
-      if (dStart && mDate < dStart) return false;
-      if (dEnd && mDate > dEnd) return false;
-      
-      // スタッフフィルタ
-      if (dr && m.dr !== dr) return false;
-      if (ns && m.ns !== ns) return false;
-
-      // タグフィルタ (AND検索：選んだタグ全てが含まれているか)
-      if (activeChips.length > 0) {
-        const hasAllTags = activeChips.every(chip => m.tags.includes(chip));
-        if (!hasAllTags) return false;
-      }
-
-      // フリーワード (概要、Good、Bad内を検索)
-      if (freeW) {
-        const fullText = (m.summary + " " + m.good + " " + m.bad).toLowerCase();
-        if (!fullText.includes(freeW)) return false;
-      }
-
+      if (dStart && mDate < dStart) return false; if (dEnd && mDate > dEnd) return false;
+      if (dr && m.dr !== dr) return false; if (ns && m.ns !== ns) return false;
+      if (activeChips.length > 0 && !activeChips.every(chip => m.tags.includes(chip))) return false;
+      if (freeW && !(m.summary + " " + m.good + " " + m.bad).toLowerCase().includes(freeW)) return false;
       return true;
     });
     
-    // 最新順にソート
     results.sort((a,b) => new Date(b.date) - new Date(a.date));
-
     document.getElementById("result-count").innerText = `検索結果: ${results.length}件`;
     
     const resArea = document.getElementById("results-area");
-    if(results.length === 0) {
-      resArea.innerHTML = "<div style='text-align:center; padding:40px; color:var(--sub);'>条件に一致する事例がありません</div>";
-      return;
-    }
+    if(results.length === 0) { resArea.innerHTML = "<div style='text-align:center; padding:40px; color:var(--sub);'>条件に一致する事例がありません</div>"; return; }
 
     resArea.innerHTML = results.map(r => `
       <div class="result-card">
-        <div class="rc-header">
-          <div class="rc-id">No.${r.id}</div>
-          <div class="rc-date">${r.date} (${r.dest || '不明'})</div>
-        </div>
+        <div class="rc-header"><div class="rc-id">No.${r.id}</div><div class="rc-date">${r.date} (${r.dest || '不明'})</div></div>
         <div class="rc-staff-line">搭乗班 ｜ 👨‍⚕️ Dr. ${r.dr || '-'} / 👩‍⚕️ Ns. ${r.ns || '-'}</div>
         <div class="rc-context">${r.summary || '概要の記載なし'}</div>
-        
         <div class="rc-feedback">
-          <div class="fb-box fb-good">
-            <div class="fb-title">🟢 Good (成功要因)</div>
-            ${r.good || '記載なし'}
-          </div>
-          <div class="fb-box fb-bad">
-            <div class="fb-title">⚠️ Bad / Next (課題)</div>
-            ${r.bad || '記載なし'}
-          </div>
+          <div class="fb-box fb-good"><div class="fb-title">🟢 Good (成功要因)</div>${r.good || '記載なし'}</div>
+          <div class="fb-box fb-bad"><div class="fb-title">⚠️ Bad / Next (課題)</div>${r.bad || '記載なし'}</div>
         </div>
-        
-        <div class="rc-tags">
-          ${r.tags.map(t => `<div class="t-chip t-gen">${t}</div>`).join('')}
-        </div>
+        <div class="rc-tags">${r.tags.map(t => `<div class="t-chip">${t}</div>`).join('')}</div>
       </div>
     `).join("");
   }
