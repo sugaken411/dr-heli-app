@@ -25,10 +25,11 @@
     .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
-    .version-tag { font-size: 10px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     main { padding: 16px; max-width: 900px; margin: 0 auto; }
     
+    /* アラートボックス（重複表示防止ロジック適用） */
     .alert-box { background: #fff9db; border: 1px solid #ffd43b; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; flex-direction: column; gap: 8px; }
     .alert-item { font-size: 14px; font-weight: bold; color: #b08800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
     .alert-item.error { color: var(--brand); }
@@ -48,7 +49,7 @@
     .title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
     .desc { font-size: 12px; color: var(--sub); line-height: 1.4; }
     
-    .card-section { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .card-section { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--line); }
     .section-label { font-size: 14px; font-weight: 800; color: var(--sub); text-transform: uppercase; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
     
     .news-item { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 0.5px solid var(--line); }
@@ -78,7 +79,7 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v9.6</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v11.0</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -89,74 +90,66 @@
   <div id="alert-box" class="alert-box"></div>
 
   <div class="grid-container">
-    <a href="index.html" class="portal-card card-red">
+    <a href="index.html" class="portal-card railroad card-red">
       <div class="icon">🚁</div>
       <div class="card-body">
-        <div class="title">症例登録アプリ</div>
-        <div class="desc">各事案に紐づく実施処置の入力、医療タイムラインの登録を行います。</div>
+        <div class="title" style="color:var(--brand);">症例登録</div>
+        <div class="desc">現場・搬送中の処置・タイムライン・資機材のクイック登録</div>
       </div>
     </a>
-    
-    <a href="search.html" class="portal-card card-blue" id="lnk-search">
+
+    <a href="search.html" class="portal-card railroad card-blue">
       <div class="icon">🔍</div>
       <div class="card-body">
-        <div class="title">事案検索コンソール</div>
-        <div class="desc">過去データの詳細検索・修正、電子カルテ転記完了処理を管理します。</div>
+        <div class="title" style="color:var(--blue);">事案検索コンソール</div>
+        <div class="desc">過去データの検索・修正、電子カルテ転記完了マークの処理</div>
       </div>
     </a>
     
-    <a href="report.html" class="portal-card card-green">
+    <a href="report.html" class="portal-card railroad card-green">
       <div class="icon">📝</div>
       <div class="card-body">
-        <div class="title">業務日報 (浜町日誌)</div>
-        <div class="desc">当直帯の時系列タイムライン文章自動生成・手動修正・印刷を行います。</div>
+        <div class="title" style="color:#10b981;">業務日報 (浜町日誌)</div>
+        <div class="desc">当直帯のタイムライン自動生成・手動修正・印刷管理</div>
       </div>
     </a>
     
-    <a href="library.html" class="portal-card card-purple">
+    <a href="library.html" class="portal-card railroad card-purple">
       <div class="icon">📚</div>
       <div class="card-body">
-        <div class="title">資料集・アーカイブ</div>
-        <div class="desc">ガイドラインや院内自作プロトコルの高速階層ドリルダウン検索（AI分別対応）。</div>
+        <div class="title" style="color:#8b5cf6;">資料集・アーカイブ</div>
+        <div class="desc">公式ガイドラインや院内自作プロトコルの階層型ドリルダウン検索</div>
       </div>
     </a>
 
-    <a href="summary.html" class="portal-card" style="border-left-color:#0ea5e9;">
-      <div class="icon">📊</div>
-      <div class="card-body">
-        <div class="title">統計ダッシュボード</div>
-        <div class="desc">月次集計、スキーム別件数、主要処置の統計などを確認します。</div>
-      </div>
-    </a>
-
-    <a href="debriefing.html" class="portal-card" style="border-left-color: #34c759;">
+    <a href="debriefing.html" class="portal-card railroad" style="border-left-color: #34c759;">
       <div class="icon">🗣️</div>
       <div class="card-body">
-        <div class="title">デブリーフィング</div>
-        <div class="desc">フライト後の活動の振り返り、課題やGoodポイントの共有を行います。</div>
+        <div class="title" style="color:#34c759;">デブリーフィング入力</div>
+        <div class="desc">事案に紐づく多職種振り返り・評価ポイント・Nextアクションの記録</div>
       </div>
     </a>
 
-    <a href="debrief_search.html" class="portal-card card-pink">
+    <a href="debrief_search.html" class="portal-card railroad card-pink">
       <div class="icon">🧠</div>
       <div class="card-body">
-        <div class="title">教育・事案検索 <span style="font-size:10px; background:#ec4899; color:#fff; padding:2px 4px; border-radius:4px;">デモ</span></div>
-        <div class="desc">デブリーフィングを元に、過去の成功事例やヒヤリハットを学びます。</div>
+        <div class="title" style="color:#ec4899;">教育・事案振り返り検索</div>
+        <div class="desc">デブリーフィングを元に、過去の成功事例やヒヤリハットを学習検索</div>
       </div>
     </a>
     
-    <a href="admin.html" class="portal-card" style="border-left-color:#d48806;">
+    <a href="admin.html" class="portal-card railroad" style="border-left-color:#d48806;">
       <div class="icon">⚙️</div>
       <div class="card-body">
-        <div class="title">システム管理コンソール</div>
-        <div class="desc">出場先・医療スタッフ等のマスタ追加、Q&Aの未回答公開処理を行います。</div>
+        <div class="title" style="color:#d48806;">システム管理コンソール</div>
+        <div class="desc">ドクター、ナース、出場先マスタの追加やQ&A未回答処理</div>
       </div>
     </a>
   </div>
 
   <div class="card-section">
     <div class="section-label">📢 最新のお知らせ</div>
-    <div id="news-box" style="font-size:13px; color:var(--sub);">読込中...</div>
+    <div id="news-box" style="font-size:13px; color:var(--sub);">お知らせはありません。</div>
   </div>
 </main>
 
@@ -185,7 +178,6 @@
   window.onload = () => {
     const cachedData = localStorage.getItem("aw109_portal_cache");
     if (cachedData) renderPortal(JSON.parse(cachedData));
-    else document.getElementById("news-box").innerHTML = "初回データを読み込み中...少しお待ちください。";
     fetchInit();
   };
 
@@ -205,15 +197,20 @@
       }
     } catch (e) {
       if(!localStorage.getItem("aw109_portal_cache")) {
-        document.getElementById("news-box").innerHTML = "通信エラーが発生しました。一覧を再読み込みしてください。";
+        document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。画面を再読み込みしてください。";
       }
     } finally {
       document.getElementById("global-loader").style.display = "none";
     }
   }
 
+  // 🌟 ポータル描画（重複バグを根絶するロジック）
   function renderPortal(json) {
     const alertBox = document.getElementById("alert-box");
+    
+    // 毎回中身を完全にクリアしてから組み立てることで重複表示を防ぐ
+    alertBox.innerHTML = ""; 
+    
     if (json.alerts && json.alerts.length > 0) {
       alertBox.style.display = "flex";
       alertBox.innerHTML = json.alerts.map(a => {
@@ -236,21 +233,21 @@
         </div>
       `).join("");
     } else {
-      document.getElementById("news-box").innerHTML = '<p style="font-size:13px; color:var(--sub);">お知らせはありません。</p>';
+      document.getElementById("news-box").innerHTML = '<p style="font-size:13px; color:var(--sub); padding:4px 0;">お知らせはありません。</p>';
     }
 
     if (json.qa) {
       document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `
         <p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p>
         <hr style="border:none;border-top:1px solid var(--line);">
-      `).join("");
+      `).join("") || '<p>公開Q&Aはありません。</p>';
     }
     
     const manualsData = json.manuals || [];
     document.getElementById("manual-list").innerHTML = manualsData.map(item => `
       <p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p>
       <hr style="border:none;border-top:1px solid var(--line);">
-    `).join("");
+    `).join("") || '<p>マニュアルはありません。</p>';
   }
 
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
@@ -271,7 +268,7 @@
         redirect: "follow"
       });
       const json = await res.json();
-      if (json.status === "success") { alert("送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); }
+      if (json.status === "success") { alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); }
     } catch (e) { alert("通信同期エラーが発生しました。"); } finally { btn.textContent = "送信"; btn.disabled = false; }
   }
 </script>
