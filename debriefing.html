@@ -4,54 +4,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 デブリーフィング</title>
-  
   <style>
     :root { 
-      --bg: #f2f2f7; 
-      --card: #ffffff; 
-      --ink: #1c1c1e; 
-      --sub: #8e8e93; 
-      --brand: #d32f2f; 
-      --brand-light: #ffebeb; 
-      --blue: #007aff; 
-      --med-blue: #e3f2fd;
-      --line: rgba(60,60,67,0.12); 
+      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; 
+      --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --line: rgba(60,60,67,0.12); 
     }
-    
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--ink); padding-bottom: 60px; -webkit-font-smoothing: antialiased; }
     
-    header { 
-      position: fixed; top: 0; left: 0; right: 0; height: 56px; padding: 0 16px; 
-      background: rgba(242,242,247,0.95); backdrop-filter: blur(20px); 
-      border-bottom: 1px solid var(--line); display: flex; align-items: center; 
-      justify-content: space-between; z-index: 100; 
-    }
+    header { position: fixed; top: 0; left: 0; right: 0; height: 56px; padding: 0 16px; background: rgba(242,242,247,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
     
-    .tab-container { 
-      position: fixed; top: 56px; left: 0; right: 0; height: 44px; 
-      background: #fff; border-bottom: 1px solid var(--line); display: flex; 
-      overflow-x: auto; z-index: 99; scrollbar-width: none; 
-    }
+    .tab-container { position: fixed; top: 56px; left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; z-index: 99; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
-    .nav-tab { 
-      flex: 1; text-align: center; padding: 0 8px; height: 44px; line-height: 44px; 
-      font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; 
-      border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s;
-    }
+    .nav-tab { flex: 1; text-align: center; padding: 0 8px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
     
-    main { margin-top: 100px; margin-bottom: 60px; padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    main { margin-top: 100px; padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
     
-    input[type="text"], input[type="time"], select, textarea { 
-      width: 100%; border: 1px solid var(--line); font-size: 14px; 
-      background: var(--bg); outline: none; padding: 10px; border-radius: 8px; 
-      margin-bottom: 8px; color: var(--ink); font-weight: 600; 
-    }
+    input[type="text"], input[type="time"], select, textarea { width: 100%; border: 1px solid var(--line); font-size: 14px; background: var(--bg); outline: none; padding: 10px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; }
     textarea { resize: none; line-height: 1.5; }
     
     .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -59,19 +33,12 @@
     .input-row label { font-size: 12px; font-weight: bold; color: var(--sub); width: 80px; flex-shrink: 0; text-align: right; }
     
     .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
-    .btn-blue:disabled { background: var(--sub); cursor: not-allowed; }
     .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
     .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
     
     .search-result-item { padding: 12px; border: 1px solid var(--blue); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #fff; transition: 0.2s; }
-    .search-result-item:hover { background: var(--med-blue); }
-    
     .data-preview { font-size: 12px; background: #f9f9f9; padding: 12px; border-radius: 6px; border-left: 4px solid var(--blue); margin-bottom: 12px; line-height: 1.6; }
-    .preview-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
-    .preview-table th, .preview-table td { border: 1px solid #ccc; padding: 6px; text-align: left; }
-    .preview-table th { background: #e5e5ea; width: 25%; }
-
-    /* 🌟 アコーディオン用のスタイル追加 */
+    
     .acc-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; cursor: pointer; color: var(--ink); }
     .acc-header .arrow { font-size: 12px; color: var(--sub); transition: 0.3s; }
     .acc-header.open .arrow { transform: rotate(180deg); }
@@ -82,12 +49,15 @@
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); user-select: none; background: var(--bg); transition: 0.15s; } 
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
-    /* 🌟 評価ブロック（ABCDEF）のスタイル */
     .eval-block { border: 2px solid var(--blue); border-radius: 8px; padding: 12px; margin-bottom: 16px; background: #fdfdfd; }
-    .eval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .eval-row { display: flex; align-items: flex-start; margin-bottom: 6px; }
     .eval-row span { font-size: 11px; font-weight: bold; width: 30px; padding-top: 6px; color: var(--blue); }
-    .eval-row textarea { margin-bottom: 0; padding: 8px; min-height: 40px; }
+    
+    /* 🌟 ラジオボタンUI（職種別切り替え） */
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .radio-lbl { display: inline-block; padding: 8px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; font-size: 13px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; }
+    input[type="radio"] { display: none; }
+    input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
 
     .tab-content { display: none; animation: fadeIn 0.3s ease; } 
     .tab-content.active { display: block; }
@@ -96,9 +66,6 @@
     .print-report { background: #fff; border: 1px solid #000; padding: 20px; font-size: 12px; line-height: 1.5; color: #000; margin-bottom: 16px; }
     .print-report h2 { text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 12px; font-size: 16px; }
     .print-report h3 { font-size: 13px; background: #eee; padding: 4px 8px; border-left: 4px solid var(--brand); margin-top: 16px; margin-bottom: 8px; }
-    .p-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; } 
-    .p-table th, .p-table td { border: 1px solid #000; padding: 6px; text-align: left; }
-    .p-table th { background: #f0f0f0; width: 20%; }
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -114,10 +81,13 @@
 <body>
 
 <datalist id="eval-titles">
-  <option value="搬入時(1次評価)">
-  <option value="挿管・処置後">
-  <option value="状態急変時">
-  <option value="退室前(最終評価)">
+  <option value="事前情報(要請時)">
+  <option value="追加情報(無線等)">
+  <option value="接触時(1次評価)">
+  <option value="現場・救急車内(処置後)">
+  <option value="移動前(現場離脱時)">
+  <option value="搬送中">
+  <option value="最終(病院引継ぎ)">
 </datalist>
 
 <div id="global-loader">
@@ -127,15 +97,15 @@
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 800; font-size: 16px; text-align:center;">デブリーフィング</div>
+  <div style="font-weight: 800; font-size: 16px;">デブリーフィング</div>
   <button class="hdr-btn no-print" onclick="window.print()">🖨️ 印刷</button>
 </header>
 
 <div class="tab-container no-print">
-  <div class="nav-tab active" onclick="switchTab('sec1')">1.検索・概要</div>
+  <div class="nav-tab active" onclick="switchTab('sec1')">1.事案・環境</div>
   <div class="nav-tab" onclick="switchTab('sec2')">2.症例評価</div>
   <div class="nav-tab" onclick="switchTab('sec3')">3.タグ付け</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.振り返り</div>
+  <div class="nav-tab" onclick="switchTab('sec4')">4.多職種振返り</div>
   <div class="nav-tab" onclick="switchTab('sec5')">5.プレビュー</div>
 </div>
 
@@ -143,7 +113,6 @@
   <div id="tab-sec1" class="tab-content active">
     <div class="card no-print">
       <div class="section-label">🔍 事案の検索と紐付け</div>
-      <p style="font-size:11px; color:var(--sub); margin-bottom:12px;">※空白のまま検索すると直近の事案が表示されます。</p>
       <div class="grid-2col">
         <div class="input-row"><label>要請番号</label><input type="text" id="s-id" placeholder="ID入力"></div>
         <div class="input-row"><label>スタッフ</label><input type="text" id="s-staff" placeholder="Dr/Ns名"></div>
@@ -157,57 +126,107 @@
         <div class="section-label" style="color:var(--blue); border-bottom-color:var(--line);">📝 紐付けられた事案データ</div>
         <div id="v-fetched-data"></div>
         
-        <div class="section-label" style="margin-top:16px;">👤 今回のシート記載者</div>
-        <select id="recorder-select">
-          <option value="">読込中...</option>
-        </select>
-
         <div class="section-label" style="margin-top:16px;">📖 事案の概要（ストーリー）</div>
-        <textarea id="v-summary" rows="4" placeholder="事案の発生から結末までの全体的な流れや背景を記載してください..."></textarea>
+        <textarea id="v-summary" rows="3" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="section-label">🏢 開催環境と参加者</div>
+        
+        <div class="grid-2col">
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り場所</label>
+            <select id="env-loc" onchange="if(this.value==='その他') document.getElementById('env-loc-other').style.display='block'; else document.getElementById('env-loc-other').style.display='none';">
+              <option value="浜町待機所">浜町待機所</option>
+              <option value="運行調整室">運行調整室</option>
+              <option value="各自(リモート)">各自(リモート)</option>
+              <option value="その他">その他</option>
+            </select>
+            <input type="text" id="env-loc-other" placeholder="場所を入力" style="display:none; margin-top:4px;">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:var(--sub);">振り返り方法</label>
+            <select id="env-method" onchange="if(this.value==='その他') document.getElementById('env-method-other').style.display='block'; else document.getElementById('env-method-other').style.display='none';">
+              <option value="対面">対面</option>
+              <option value="Zoom">Zoom</option>
+              <option value="対面＋Zoom">対面 ＋ Zoom</option>
+              <option value="その他">その他</option>
+            </select>
+            <input type="text" id="env-method-other" placeholder="方法を入力" style="display:none; margin-top:4px;">
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">固定参加者</label>
+          <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:13px; font-weight:bold; color:var(--ink);">
+            <label><input type="checkbox" name="fixed-pt" value="Dr"> Dr</label>
+            <label><input type="checkbox" name="fixed-pt" value="Ns" checked> Ns(記載者)</label>
+            <label><input type="checkbox" name="fixed-pt" value="機長"> 機長</label>
+            <label><input type="checkbox" name="fixed-pt" value="整備士"> 整備士</label>
+            <label><input type="checkbox" name="fixed-pt" value="CS"> CS</label>
+          </div>
+          <div style="margin-top:8px;">
+            <select id="recorder-select" style="font-size:13px; padding:8px;"><option value="">Ns(シート記載者)を選択...</option></select>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; border-top:1px dashed #ccc; padding-top:12px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">外部参加者 (消防・救急隊など)</label>
+          <div id="ext-pt-container"></div>
+          <button class="btn-small" style="background:#e3f2fd; color:#0d47a1; margin-top:4px;" onclick="addExtPt()">＋ 外部参加者を追加</button>
+        </div>
+
+        <div style="margin-top:16px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block;">その他 (オブザーバー等)</label>
+          <input type="text" id="other-pt" placeholder="自由入力">
+        </div>
+
       </div>
     </div>
-    
     <button class="btn-next no-print" onclick="switchTab('sec2')">次へ (症例評価) ➔</button>
   </div>
 
   <div id="tab-sec2" class="tab-content">
-    <div id="eval-container">
-      </div>
+    <div id="eval-container"></div>
     <button class="btn-blue" style="background:#8b5cf6;" onclick="addEvalBlock()">＋ 新しい評価ポイントを追加</button>
     <button class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('sec3')">次へ (タグ付け) ➔</button>
   </div>
 
   <div id="tab-sec3" class="tab-content">
     <div class="card">
-      <p style="font-size:11px; color:var(--brand); margin-bottom:12px; font-weight:bold;">※事案を紐付けると、「疾患」や「処置」タグは自動で選択されます。</p>
-      <div id="tags-container">
-        </div>
+      <div id="tags-container"></div>
     </div>
-    <button class="btn-next no-print" onclick="switchTab('sec4')">次へ (振り返り入力) ➔</button>
+    <button class="btn-next no-print" onclick="switchTab('sec4')">次へ (多職種振り返り) ➔</button>
   </div>
 
   <div id="tab-sec4" class="tab-content">
     <div class="card">
-      <div class="section-label" style="color:#065f46; border-bottom-color:#d1fae5;">🟢 Good (良かった点・成功要因)</div>
-      <textarea id="val-good" rows="4" placeholder="例：現場の救急隊との情報共有がスムーズだった。早期の輸液ルート確保が有効だった。"></textarea>
-    </div>
-    <div class="card">
-      <div class="section-label" style="color:#d48806; border-bottom-color:#fef08a;">⚠️ Bad / Gap (想定外の事態・課題)</div>
-      <textarea id="val-bad" rows="4" placeholder="例：機内持ち込み資機材の準備に手間取った。患者の体重評価にズレがあった。"></textarea>
-    </div>
-    <div class="card">
-      <div class="section-label" style="color:var(--brand); border-bottom-color:var(--brand-light);">🎯 次回へのアクションプラン</div>
-      <textarea id="val-action" rows="4" placeholder="例：次回からは〇〇のチェックリストを活用する。チーム内での声出しを徹底する。"></textarea>
+      <div class="section-label">🗣️ 誰の視点の振り返りですか？</div>
+      <div class="radio-group">
+        <label><input type="radio" name="prof" value="フライトドクター" checked onchange="changeProf()"> <span class="radio-lbl">フライトドクター</span></label>
+        <label><input type="radio" name="prof" value="フライトナース" onchange="changeProf()"> <span class="radio-lbl">フライトナース</span></label>
+        <label><input type="radio" name="prof" value="機長・整備士" onchange="changeProf()"> <span class="radio-lbl">機長・整備士</span></label>
+        <label><input type="radio" name="prof" value="CS" onchange="changeProf()"> <span class="radio-lbl">CS</span></label>
+        <label><input type="radio" name="prof" value="消防・救急隊" onchange="changeProf()"> <span class="radio-lbl">消防・救急隊</span></label>
+      </div>
+
+      <div style="background:#e8f5e9; padding:12px; border-radius:8px; border:1px solid #c8e6c9; margin-bottom:12px;">
+        <div style="font-weight:bold; color:#2e7d32; font-size:13px; margin-bottom:8px;">🟢 Good (良かった点・成功要因)</div>
+        <textarea id="val-good" rows="4" placeholder="この職種からのGoodポイントを入力..." oninput="saveFeedback()"></textarea>
+      </div>
+
+      <div style="background:#fffde6; padding:12px; border-radius:8px; border:1px solid #fff59d;">
+        <div style="font-weight:bold; color:#f57f17; font-size:13px; margin-bottom:8px;">⚠️ Bad / Next (課題・次へのアクション)</div>
+        <textarea id="val-bad" rows="4" placeholder="この職種からの反省点や、次回への改善提案を入力..." oninput="saveFeedback()"></textarea>
+      </div>
     </div>
     <button class="btn-next no-print" onclick="switchTab('sec5')">次へ (プレビュー・保存) ➔</button>
   </div>
 
   <div id="tab-sec5" class="tab-content">
     <div class="card" style="padding: 0;">
-      <div id="print-area">
-        </div>
+      <div id="print-area"></div>
     </div>
-    
     <div class="no-print">
       <button class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ この内容でアーカイブ保存</button>
     </div>
@@ -232,41 +251,62 @@
   let selectedTags = { keyword: [], scene: [], practice: [], disease: [], treatment: [], special: [], risk: [] };
   let allCasesData = []; 
   let currentCase = null; 
-  let evalBlocks = []; // 症例評価(ABCDEF)のデータ
+  let evalBlocks = []; 
+  
+  // 🌟 職種別フィードバック用データオブジェクト
+  const profs = ["フライトドクター", "フライトナース", "機長・整備士", "CS", "消防・救急隊"];
+  let feedbackData = {};
+  profs.forEach(p => feedbackData[p] = { good: "", bad: "" });
 
-  // 初期化
   window.onload = () => {
     buildTagUI();
-    addEvalBlock(); // 最初に1つだけ評価ブロックを出しておく
+    addEvalBlock(); 
     fetchInitData();
   };
 
-  // タブの切り替え処理
   function switchTab(id) {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    
     event.target.classList.add('active'); 
     document.getElementById('tab-' + id).classList.add('active'); 
     window.scrollTo(0,0);
-    
-    if (id === 'sec5') {
-      generatePreview();
-    }
+    if (id === 'sec5') generatePreview();
   }
 
-  // 🌟 アコーディオンとタグUIの動的生成
+  // 🌟 外部参加者の動的追加
+  let extPtCount = 0;
+  function addExtPt() {
+    extPtCount++;
+    const id = `ext-pt-${extPtCount}`;
+    const html = `
+      <div id="${id}" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
+        <input type="text" id="${id}-affil" placeholder="所属(例:〇〇消防)" style="flex:2; margin:0; padding:8px;">
+        <input type="text" id="${id}-name" placeholder="名前" style="flex:1.5; margin:0; padding:8px;">
+        <button class="btn-small" style="background:var(--blue); color:#fff; padding:8px;" onclick="registerMaster('${id}')">保存</button>
+        <button class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:8px;" onclick="document.getElementById('${id}').remove()">✕</button>
+      </div>
+    `;
+    document.getElementById("ext-pt-container").insertAdjacentHTML('beforeend', html);
+  }
+
+  // 🌟 外部参加者のマスタ登録送信
+  async function registerMaster(rowId) {
+    const affil = document.getElementById(`${rowId}-affil`).value.trim();
+    const name = document.getElementById(`${rowId}-name`).value.trim();
+    if(!affil || !name) return alert("所属と名前を入力してください。");
+    
+    try {
+      const res1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_affil", val1: affil }), redirect: "follow" });
+      const res2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "ext_staff", val1: name }), redirect: "follow" });
+      alert(`「${affil}」の「${name}」さんをマスタに登録しました。`);
+    } catch(e) { alert("通信エラーが発生しました。"); }
+  }
+
   function buildTagUI() {
     let html = "";
     Object.keys(TAG_MASTERS).forEach(key => {
-      html += `
-        <div class="acc-header" onclick="toggleAcc(this, 'acc-${key}')">
-          ${TAG_MASTERS[key].label}
-          <span class="arrow">▼</span>
-        </div>
-        <div class="acc-body" id="acc-${key}">
-          <div class="chip-grid">
-      `;
+      html += `<div class="acc-header" onclick="toggleAcc(this, 'acc-${key}')">${TAG_MASTERS[key].label}<span class="arrow">▼</span></div>
+               <div class="acc-body" id="acc-${key}"><div class="chip-grid">`;
       TAG_MASTERS[key].items.forEach(item => {
         html += `<div class="chip" id="chip-${key}-${item}" onclick="toggleTag('${key}', '${item}')">${item}</div>`;
       });
@@ -274,36 +314,22 @@
     });
     document.getElementById("tags-container").innerHTML = html;
   }
-
-  // アコーディオン開閉
-  function toggleAcc(headerEl, bodyId) {
-    headerEl.classList.toggle('open');
-    document.getElementById(bodyId).classList.toggle('open');
-  }
-
-  // タグのON/OFF処理
+  function toggleAcc(headerEl, bodyId) { headerEl.classList.toggle('open'); document.getElementById(bodyId).classList.toggle('open'); }
   function toggleTag(catKey, item) {
     const el = document.getElementById(`chip-${catKey}-${item}`);
-    if (selectedTags[catKey].includes(item)) {
-      selectedTags[catKey] = selectedTags[catKey].filter(x => x !== item);
-      el.classList.remove("on");
-    } else {
-      selectedTags[catKey].push(item);
-      el.classList.add("on");
-    }
+    if (selectedTags[catKey].includes(item)) { selectedTags[catKey] = selectedTags[catKey].filter(x => x !== item); el.classList.remove("on"); } 
+    else { selectedTags[catKey].push(item); el.classList.add("on"); }
   }
 
-  // 🌟 症例評価（ABCDEF）ブロックの生成・管理
   function renderEvalBlocks() {
-    const container = document.getElementById("eval-container");
-    container.innerHTML = evalBlocks.map((ev, index) => `
+    document.getElementById("eval-container").innerHTML = evalBlocks.map((ev, index) => `
       <div class="eval-block">
-        <div class="eval-header">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <div style="font-weight:bold; color:var(--blue);">🩺 評価ポイント #${index+1}</div>
           ${index > 0 ? `<button class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="removeEvalBlock(${ev.id})">削除</button>` : ''}
         </div>
         <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <input type="text" placeholder="評価名 (例: 1次評価 / 急変時)" list="eval-titles" value="${ev.title}" onchange="updateEval(${ev.id}, 'title', this.value)" style="flex:2; margin:0;">
+          <input type="text" placeholder="評価名 (例: 1次評価)" list="eval-titles" value="${ev.title}" onchange="updateEval(${ev.id}, 'title', this.value)" style="flex:2; margin:0;">
           <input type="time" value="${ev.time}" onchange="updateEval(${ev.id}, 'time', this.value)" style="flex:1; margin:0; padding:6px;">
         </div>
         <div class="eval-row"><span>A:気道</span><textarea rows="1" onchange="updateEval(${ev.id}, 'a', this.value)">${ev.a}</textarea></div>
@@ -315,234 +341,142 @@
       </div>
     `).join("");
   }
-  
-  function addEvalBlock() { 
-    evalBlocks.push({ id: Date.now(), title: "", time: "", a: "", b: "", c: "", d: "", e: "", f: "" }); 
-    renderEvalBlocks(); 
+  function addEvalBlock() { evalBlocks.push({ id: Date.now(), title: "", time: "", a: "", b: "", c: "", d: "", e: "", f: "" }); renderEvalBlocks(); }
+  function removeEvalBlock(id) { evalBlocks = evalBlocks.filter(e => e.id !== id); renderEvalBlocks(); }
+  function updateEval(id, key, val) { const ev = evalBlocks.find(e => e.id === id); if(ev) ev[key] = val; }
+
+  // 🌟 職種別切り替え時の保存・展開処理
+  function changeProf() {
+    const activeProf = document.querySelector('input[name="prof"]:checked').value;
+    document.getElementById("val-good").value = feedbackData[activeProf].good;
+    document.getElementById("val-bad").value = feedbackData[activeProf].bad;
   }
-  
-  function removeEvalBlock(id) { 
-    evalBlocks = evalBlocks.filter(e => e.id !== id); 
-    renderEvalBlocks(); 
-  }
-  
-  function updateEval(id, key, val) { 
-    const ev = evalBlocks.find(e => e.id === id); 
-    if(ev) ev[key] = val; 
+  function saveFeedback() {
+    const activeProf = document.querySelector('input[name="prof"]:checked').value;
+    feedbackData[activeProf].good = document.getElementById("val-good").value;
+    feedbackData[activeProf].bad = document.getElementById("val-bad").value;
   }
 
-  // GASから全データとスタッフ名を取得
   async function fetchInitData() {
     try {
-      const res1 = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), 
-        redirect: "follow" 
-      });
+      const res1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" });
       const json1 = await res1.json();
-      if (json1.status === "success") {
-        const staffList = [...(json1.masters.dr || []), ...(json1.masters.ns || [])];
-        document.getElementById("recorder-select").innerHTML = `<option value="">選択してください</option>` + staffList.map(s => `<option value="${s}">${s}</option>`).join("");
+      if (json1.status === "success" && json1.masters.ns) {
+        document.getElementById("recorder-select").innerHTML = `<option value="">Ns(シート記載者)を選択...</option>` + json1.masters.ns.map(s => `<option value="${s}">${s}</option>`).join("");
       }
-
-      const res2 = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), 
-        redirect: "follow" 
-      });
+      const res2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
       const json2 = await res2.json();
-      if (json2.status === "success") {
-        allCasesData = json2.data;
-      }
-    } catch(e) {
-      alert("データの取得に失敗しました。電波環境を確認してください。");
-    } finally {
-      document.getElementById("global-loader").style.display = "none";
-    }
+      if (json2.status === "success") allCasesData = json2.data;
+    } catch(e) {} finally { document.getElementById("global-loader").style.display = "none"; }
   }
 
-  // 事案の検索機能
   function searchCases() {
-    const qId = document.getElementById("s-id").value.trim();
-    const qStaff = document.getElementById("s-staff").value.trim();
+    const qId = document.getElementById("s-id").value.trim(); const qStaff = document.getElementById("s-staff").value.trim();
     const resArea = document.getElementById("search-results-area");
-    const btn = document.getElementById("btn-search");
-    
-    btn.textContent = "検索中...";
-    btn.disabled = true;
-
     let results = allCasesData.filter(r => {
-      if (!r["id"]) return false;
-      let match = true;
+      if (!r["id"]) return false; let match = true;
       if (qId && !String(r["id"]).includes(qId)) match = false;
       if (qStaff && !String(r.rawData["フライトドクター"]).includes(qStaff) && !String(r.rawData["フライトナース"]).includes(qStaff)) match = false;
       return match;
-    });
+    }).slice(0, 10);
 
-    results = results.slice(0, 10);
-
-    if (results.length === 0) {
-      resArea.style.display = "block";
-      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当する事案が見つかりません</div>";
-    } else {
-      resArea.style.display = "block";
-      resArea.innerHTML = `<div style="font-size:11px; margin-bottom:8px; color:var(--sub);">対象の事案をタップしてください：</div>` + 
+    if (results.length === 0) resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center;'>該当する事案が見つかりません</div>";
+    else resArea.innerHTML = `<div style="font-size:11px; margin-bottom:8px; color:var(--sub);">対象の事案をタップしてください：</div>` + 
         results.map(r => `
           <div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
             <div style="font-weight:bold; color:var(--blue);">No.${r.id} ｜ ${r.date || "日付不明"}</div>
-            <div style="font-size:12px; color:var(--sub); margin-top:4px;">
-              出場先: ${r.dest || "-"} <br>
-              Dr: ${r.rawData["フライトドクター"] || "-"} / Ns: ${r.rawData["フライトナース"] || "-"}
-            </div>
-          </div>
-        `).join("");
-    }
-    
-    btn.textContent = "事案を検索する";
-    btn.disabled = false;
+            <div style="font-size:12px; color:var(--sub); margin-top:4px;">出場先: ${r.dest || "-"} <br>Dr: ${r.rawData["フライトドクター"] || "-"} / Ns: ${r.rawData["フライトナース"] || "-"}</div>
+          </div>`).join("");
+    resArea.style.display = "block";
   }
 
-  // 事案を選択したときの処理（データ展開と自動タグ付け）
   function selectCase(rowWrapper) {
     currentCase = rowWrapper.rawData;
-    document.getElementById("search-results-area").style.display = "none";
-    document.getElementById("case-data-area").style.display = "block";
-    
+    document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
     const row = currentCase;
     const fmt = (time) => time ? String(time).substring(0, 5) : "--:--";
-    let tlHtml = `
-      <table class="preview-table">
-        <tr><th>要請</th><td>${fmt(row["要請時刻・施設間搬送依頼時刻"])}</td><th>接触</th><td>${fmt(row["接触"])}</td></tr>
-        <tr><th>離陸</th><td>${fmt(row["初期離陸時間"])}</td><th>病着</th><td>${fmt(row["病着"])}</td></tr>
-        <tr><th>着陸</th><td>${fmt(row["最終着陸時間"])}</td><th>終了</th><td>${fmt(row["終了"])}</td></tr>
-      </table>
-    `;
-
-    let procs = [];
-    const supplyKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "1%カルボカイン10ml使用", "28Frトロッカー", "20Frトロッカー", "除細動パッド", "心嚢穿刺・心嚢ドレナージ"];
-    supplyKeys.forEach(k => { if(String(row[k]).includes("◯")) procs.push(k); });
-    TAG_MASTERS.treatment.items.forEach(t => { if(String(row[t]).includes("◯") && !procs.includes(t)) procs.push(t); });
-    let procHtml = procs.length > 0 ? procs.map(p => `・${p}`).join("<br>") : "なし";
+    let tlHtml = `<table class="preview-table"><tr><th>要請</th><td>${fmt(row["要請時刻・施設間搬送依頼時刻"])}</td><th>接触</th><td>${fmt(row["接触"])}</td></tr><tr><th>離陸</th><td>${fmt(row["初期離陸時間"])}</td><th>病着</th><td>${fmt(row["病着"])}</td></tr><tr><th>着陸</th><td>${fmt(row["最終着陸時間"])}</td><th>終了</th><td>${fmt(row["終了"])}</td></tr></table>`;
     
-    document.getElementById("v-fetched-data").innerHTML = `
-      <div class="data-preview">
-        事案No: <b>${row["要請番号"]}</b><br>
-        スキーム: ${row["スキーム選択"] || "未選択"}<br>
-        出場先: ${row["出場先"] || "不明"}<br>
-        Dr: ${row["フライトドクター"] || "-"} / Ns: ${row["フライトナース"] || "-"}<br>
-        <br>
-        <b style="color:var(--ink);">■ タイムライン</b>
-        ${tlHtml}
-        <br>
-        <b style="color:var(--ink);">■ 実施処置・消費資機材</b><br>
-        ${procHtml}
-      </div>
-    `;
+    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">事案No: <b>${row["要請番号"]}</b><br>スキーム: ${row["スキーム選択"] || "未選択"}<br>出場先: ${row["出場先"] || "不明"}<br>Dr: ${row["フライトドクター"] || "-"} / Ns: ${row["フライトナース"] || "-"}<br><br><b style="color:var(--ink);">■ タイムライン</b>${tlHtml}</div>`;
 
-    // 【自動タグ付け】
     TAG_MASTERS.treatment.items.forEach(t => {
-      if (String(row[t]).includes("◯") && !selectedTags.treatment.includes(t)) {
-        toggleTag("treatment", t);
-        // 親のアコーディオンを開いておく
-        document.getElementById("acc-treatment").classList.add("open");
-        document.getElementById("acc-treatment").previousElementSibling.classList.add("open");
-      }
+      if (String(row[t]).includes("◯") && !selectedTags.treatment.includes(t)) { toggleTag("treatment", t); document.getElementById("acc-treatment").classList.add("open"); }
     });
-
     const searchTxt = String(row["備考"] || "") + String(row["出場先"] || "");
     TAG_MASTERS.disease.items.forEach(d => {
-      if (searchTxt.includes(d) && !selectedTags.disease.includes(d)) {
-        toggleTag("disease", d);
-        document.getElementById("acc-disease").classList.add("open");
-        document.getElementById("acc-disease").previousElementSibling.classList.add("open");
-      }
+      if (searchTxt.includes(d) && !selectedTags.disease.includes(d)) { toggleTag("disease", d); document.getElementById("acc-disease").classList.add("open"); }
     });
-
-    alert("💡 事案データの紐付けが完了しました。\n関連する処置や疾患のタグが自動でONになっています。");
+    alert("💡 事案データの紐付けが完了しました。");
   }
 
-  // 🌟 印刷用プレビューの生成
+  // 🌟 プレビュー生成（ガッチャンコ処理を含む）
   function generatePreview() {
-    if (!currentCase) {
-      document.getElementById("print-area").innerHTML = "<p style='text-align:center; color:var(--brand); padding:20px;'>※タブ1で事案を検索・紐付けしてください。</p>";
-      document.getElementById("btn-submit").disabled = true;
-      return;
-    }
+    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center; color:var(--brand); padding:20px;'>※事案を紐付けしてください。</p>"; return; }
     
-    document.getElementById("btn-submit").disabled = false;
     const recorder = document.getElementById("recorder-select").value || "未指定";
     const summaryTxt = document.getElementById("v-summary").value.replace(/\n/g, '<br>') || "記載なし";
     
-    // 評価ブロックの結合
+    let envLoc = document.getElementById("env-loc").value; if(envLoc === "その他") envLoc = document.getElementById("env-loc-other").value;
+    let envMethod = document.getElementById("env-method").value; if(envMethod === "その他") envMethod = document.getElementById("env-method-other").value;
+    
+    let ptList = Array.from(document.querySelectorAll('input[name="fixed-pt"]:checked')).map(el => el.value);
+    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => {
+      if(el.id.endsWith("-affil")) {
+        const affil = document.getElementById(el.id).value; const name = document.getElementById(el.id.replace("-affil", "-name")).value;
+        if(affil || name) ptList.push(`${affil} ${name}`);
+      }
+    });
+    const otherPt = document.getElementById("other-pt").value.trim(); if(otherPt) ptList.push(otherPt);
+    
     let evalHtml = evalBlocks.map(e => {
       if(!e.a && !e.b && !e.c && !e.d && !e.e && !e.f) return "";
       let html = `<div style="margin-bottom:8px;"><b>${e.time||'--:--'} ${e.title||'評価'}</b><br>`;
-      if(e.a) html += `A: ${e.a}<br>`;
-      if(e.b) html += `B: ${e.b}<br>`;
-      if(e.c) html += `C: ${e.c}<br>`;
-      if(e.d) html += `D: ${e.d}<br>`;
-      if(e.e) html += `E: ${e.e}<br>`;
-      if(e.f) html += `F: ${e.f}<br>`;
-      html += `</div>`;
-      return html;
-    }).join("");
-    if(!evalHtml) evalHtml = "記載なし";
+      if(e.a) html += `A: ${e.a}<br>`; if(e.b) html += `B: ${e.b}<br>`; if(e.c) html += `C: ${e.c}<br>`;
+      if(e.d) html += `D: ${e.d}<br>`; if(e.e) html += `E: ${e.e}<br>`; if(e.f) html += `F: ${e.f}<br>`;
+      return html + `</div>`;
+    }).join(""); if(!evalHtml) evalHtml = "記載なし";
 
-    // タグを文字列化
     const tagsStr = Object.keys(TAG_MASTERS).map(k => {
-      if (selectedTags[k].length > 0) {
-        return `<b>${TAG_MASTERS[k].label.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '').trim()}</b>: ${selectedTags[k].join(", ")}`;
-      }
-      return '';
+      return selectedTags[k].length > 0 ? `<b>${TAG_MASTERS[k].label.replace(/[^a-zA-Z]/g, '').trim()}</b>: ${selectedTags[k].join(", ")}` : '';
     }).filter(Boolean).join("<br>");
 
-    const good = document.getElementById("val-good").value.replace(/\n/g, '<br>') || "記載なし";
-    const bad = document.getElementById("val-bad").value.replace(/\n/g, '<br>') || "記載なし";
-    const action = document.getElementById("val-action").value.replace(/\n/g, '<br>') || "記載なし";
+    // 🌟 職種ごとのフィードバックをガッチャンコして表示
+    let combinedGood = "", combinedBad = "";
+    profs.forEach(p => {
+      if(feedbackData[p].good.trim()) combinedGood += `<div style="margin-bottom:6px;"><b>【${p}】</b><br>${feedbackData[p].good.replace(/\n/g, '<br>')}</div>`;
+      if(feedbackData[p].bad.trim()) combinedBad += `<div style="margin-bottom:6px;"><b>【${p}】</b><br>${feedbackData[p].bad.replace(/\n/g, '<br>')}</div>`;
+    });
 
     document.getElementById("print-area").innerHTML = `
       <div class="print-report">
-        <h2>AW109 デブリーフィング・レポート</h2>
+        <h2>AW109 デブリーフィング</h2>
         <table class="p-table">
-          <tr><th>要請番号</th><td>${currentCase["要請番号"]}</td><th>発生日</th><td>${currentCase["日付"] || '-'}</td></tr>
-          <tr><th>スキーム</th><td>${currentCase["スキーム選択"] || '-'}</td><th>出場先</th><td>${currentCase["出場先"] || '-'}</td></tr>
-          <tr><th>Dr / Ns</th><td colspan="3">${currentCase["フライトドクター"] || '-'} / ${currentCase["フライトナース"] || '-'}</td></tr>
-          <tr><th>記録者</th><td colspan="3" style="font-weight:bold; color:var(--blue);">${recorder}</td></tr>
+          <tr><th>事案No.</th><td>${currentCase["要請番号"]}</td><th>日付</th><td>${currentCase["日付"] || '-'}</td></tr>
+          <tr><th>環境/方法</th><td colspan="3">${envLoc} / ${envMethod}</td></tr>
+          <tr><th>参加者</th><td colspan="3">${ptList.join(", ") || "未記入"}</td></tr>
+          <tr><th>記録Ns</th><td colspan="3" style="font-weight:bold; color:var(--blue);">${recorder}</td></tr>
         </table>
         
-        <h3>■ 事案概要・ストーリー</h3>
-        <div style="margin-bottom:12px; line-height:1.6; padding:8px;">${summaryTxt}</div>
-
-        <h3>■ 症例評価 (ABCDEF)</h3>
-        <div style="margin-bottom:12px; line-height:1.6; background:#e8f5e9; padding:8px; border:1px solid #ccc;">${evalHtml}</div>
-        
-        <h3>■ カテゴリ・タグ</h3>
-        <div style="margin-bottom:12px; line-height:1.6; background:#f9f9f9; padding:8px; border:1px solid #ccc;">${tagsStr || "タグ選択なし"}</div>
+        <h3>■ 事案概要</h3><div style="padding:8px;">${summaryTxt}</div>
+        <h3>■ 症例評価 (ABCDEF)</h3><div style="background:#e8f5e9; padding:8px; border:1px solid #ccc;">${evalHtml}</div>
+        <h3>■ カテゴリ・タグ</h3><div style="background:#f9f9f9; padding:8px; border:1px solid #ccc;">${tagsStr || "タグ選択なし"}</div>
         
         <h3>■ 振り返り・ギャップ評価</h3>
         <table class="p-table">
-          <tr><th style="background:#e8f5e9;">Good (良かった点)</th><td>${good}</td></tr>
-          <tr><th style="background:#fffde6;">Bad (課題・想定外)</th><td>${bad}</td></tr>
-          <tr><th style="background:#ffebeb;">次回アクション</th><td style="font-weight:bold; color:var(--brand);">${action}</td></tr>
+          <tr><th style="background:#e8f5e9; width:20%;">Good (成功要因)</th><td>${combinedGood || "記載なし"}</td></tr>
+          <tr><th style="background:#fffde6;">Bad / Next (課題)</th><td>${combinedBad || "記載なし"}</td></tr>
         </table>
       </div>
     `;
   }
 
-  // 🌟 デブリーフィングの送信処理
+  // 🌟 デブリーフィングの送信処理（Q,R,S列含む）
   async function submitDebriefing() {
     if (!currentCase) return alert("事案が紐付けられていません。");
     const recorder = document.getElementById("recorder-select").value;
-    if (!recorder) return alert("タブ1で「記載者」を選択してください。");
+    if (!recorder) return alert("タブ1で「Ns(シート記載者)」を選択してください。");
 
     const summaryTxt = document.getElementById("v-summary").value.trim();
-    const goodTxt = document.getElementById("val-good").value.trim();
-    const badTxtBase = document.getElementById("val-bad").value.trim();
-    const actionTxt = document.getElementById("val-action").value.trim();
-    
-    // 評価テキストの結合
     let evalTextStr = evalBlocks.map(e => {
       if(!e.a && !e.b && !e.c && !e.d && !e.e && !e.f) return "";
       let txt = `【${e.time||'--:--'} ${e.title||'評価'}】\n`;
@@ -551,48 +485,38 @@
       return txt;
     }).filter(Boolean).join("\n");
 
-    let combinedBad = "";
-    if (badTxtBase) combinedBad += `【課題】\n${badTxtBase}\n\n`;
-    if (actionTxt) combinedBad += `【次回アクション】\n${actionTxt}`;
+    let combinedGood = "", combinedBad = "";
+    profs.forEach(p => {
+      if(feedbackData[p].good.trim()) combinedGood += `【${p}】\n${feedbackData[p].good.trim()}\n\n`;
+      if(feedbackData[p].bad.trim()) combinedBad += `【${p}】\n${feedbackData[p].bad.trim()}\n\n`;
+    });
 
-    const tagsObj = {};
-    Object.keys(selectedTags).forEach(k => { tagsObj[k] = selectedTags[k].join(", "); });
+    const tagsObj = {}; Object.keys(selectedTags).forEach(k => { tagsObj[k] = selectedTags[k].join(", "); });
+
+    let envLoc = document.getElementById("env-loc").value; if(envLoc === "その他") envLoc = document.getElementById("env-loc-other").value;
+    let envMethod = document.getElementById("env-method").value; if(envMethod === "その他") envMethod = document.getElementById("env-method-other").value;
+    let ptList = Array.from(document.querySelectorAll('input[name="fixed-pt"]:checked')).map(el => el.value);
+    document.querySelectorAll('[id^="ext-pt-"]').forEach(el => {
+      if(el.id.endsWith("-affil")) {
+        const affil = document.getElementById(el.id).value; const name = document.getElementById(el.id.replace("-affil", "-name")).value;
+        if(affil || name) ptList.push(`${affil} ${name}`);
+      }
+    });
+    const otherPt = document.getElementById("other-pt").value.trim(); if(otherPt) ptList.push(otherPt);
 
     const payload = {
-      caseId: currentCase["要請番号"],
-      recorder: recorder,
-      tags: tagsObj,
-      summary: summaryTxt,
-      evalText: evalTextStr,
-      good: goodTxt,
-      bad: combinedBad.trim()
+      caseId: currentCase["要請番号"], recorder: recorder, tags: tagsObj, summary: summaryTxt, evalText: evalTextStr,
+      good: combinedGood.trim(), bad: combinedBad.trim(),
+      location: envLoc, method: envMethod, participants: ptList.join(", ")
     };
 
-    const btn = document.getElementById("btn-submit");
-    btn.disabled = true;
-    btn.innerText = "送信中... 🚁";
-
+    const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
     try {
-      const res = await fetch(GAS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }),
-        redirect: "follow"
-      });
-      
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
       const json = await res.json();
-      if (json.status === "success") {
-        alert("デブリーフィングシートを保存しました！お疲れ様でした。");
-        location.reload();
-      } else {
-        alert("保存エラー: " + json.message);
-      }
-    } catch(e) {
-      alert("通信に失敗しました。電波環境の良い場所で再度お試しください。");
-    } finally {
-      btn.disabled = false;
-      btn.innerText = "✅ この内容でアーカイブ保存";
-    }
+      if (json.status === "success") { alert("デブリーフィングを保存しました！"); location.reload(); } 
+      else alert("保存エラー: " + json.message);
+    } catch(e) { alert("通信エラーが発生しました。"); } finally { btn.disabled = false; btn.innerText = "✅ この内容でアーカイブ保存"; }
   }
 </script>
 </body>
