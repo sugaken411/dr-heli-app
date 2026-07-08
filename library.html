@@ -60,7 +60,7 @@
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.3</span></div>
+  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.4</span></div>
   <div style="width:60px;"></div>
 </header>
 
@@ -105,7 +105,6 @@
     await fetchLibraryData();
   };
 
-  // 🌟 「資料データベース」タブの真の構造を完全に復元するロジック
   async function fetchLibraryData() {
     try {
       const res = await fetch(GAS_API_URL, {
@@ -116,7 +115,7 @@
       const json = await res.json();
       
       if (json.status === "success" && json.data) {
-        // 🌟 提供されたCSV「資料データベース」の列構造を完全にマッピング
+        // 🌟 正確にマッピングされた本物の「資料データベース」読み込みロジック
         allDocs = json.data.map((item, index) => {
           return {
             id: index,
@@ -126,10 +125,9 @@
             medium: item.domain || "全般",           // D列: 中分類
             keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [], // E列: キーワード
             desc: item.desc || "説明・概要はありません",  // F列: 概要・特記事項
-            status: item.status || "共有中",          // G列: 公開ステータス
             date: item.date || "日付不明"             // I列: 更新日
           };
-        }).filter(d => d.url && d.url.startsWith("http"));
+        });
         
         buildFilters();
         filterDocs();
@@ -225,7 +223,7 @@
             <div class="doc-title">${escapeHtml(d.title)}</div>
             <div class="doc-meta">
               <span>🧭 領域: <b>${escapeHtml(d.medium)}</b></span>
-              <span style="margin-left:8px;">🔄 更新: <b>${d.date}</b></span>
+              <span style="margin-left:12px;">🔄 更新: <b>${d.date}</b></span>
             </div>
             <div class="doc-desc">${escapeHtml(d.desc)}</div>
             <div class="tag-box">
