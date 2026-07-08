@@ -29,7 +29,6 @@
     
     main { padding: 16px; max-width: 900px; margin: 0 auto; }
     
-    /* アラートボックス（重複表示防止ロジック適用） */
     .alert-box { background: #fff9db; border: 1px solid #ffd43b; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; flex-direction: column; gap: 8px; }
     .alert-item { font-size: 14px; font-weight: bold; color: #b08800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
     .alert-item.error { color: var(--brand); }
@@ -37,12 +36,6 @@
     .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .portal-card { background: var(--card); border-radius: 16px; padding: 20px; text-decoration: none; color: var(--ink); display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s ease; border-left: 6px solid var(--sub); }
     .portal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    
-    .card-red { border-left-color: var(--brand); }
-    .card-blue { border-left-color: var(--blue); }
-    .card-green { border-left-color: #10b981; }
-    .card-purple { border-left-color: #8b5cf6; }
-    .card-pink { border-left-color: #ec4899; }
     
     .icon { font-size: 32px; width: 48px; text-align: center; }
     .card-body { flex: 1; }
@@ -79,7 +72,7 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v11.0</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v11.6</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -90,7 +83,7 @@
   <div id="alert-box" class="alert-box"></div>
 
   <div class="grid-container">
-    <a href="index.html" class="portal-card railroad card-red">
+    <a href="index.html" class="portal-card" style="border-left-color: var(--brand);">
       <div class="icon">🚁</div>
       <div class="card-body">
         <div class="title" style="color:var(--brand);">症例登録</div>
@@ -98,7 +91,7 @@
       </div>
     </a>
 
-    <a href="search.html" class="portal-card railroad card-blue">
+    <a href="search.html" class="portal-card" style="border-left-color: var(--blue);">
       <div class="icon">🔍</div>
       <div class="card-body">
         <div class="title" style="color:var(--blue);">事案検索コンソール</div>
@@ -106,7 +99,7 @@
       </div>
     </a>
     
-    <a href="report.html" class="portal-card railroad card-green">
+    <a href="report.html" class="portal-card" style="border-left-color: #10b981;">
       <div class="icon">📝</div>
       <div class="card-body">
         <div class="title" style="color:#10b981;">業務日報 (浜町日誌)</div>
@@ -114,7 +107,7 @@
       </div>
     </a>
     
-    <a href="library.html" class="portal-card railroad card-purple">
+    <a href="library.html" class="portal-card" style="border-left-color: #8b5cf6;">
       <div class="icon">📚</div>
       <div class="card-body">
         <div class="title" style="color:#8b5cf6;">資料集・アーカイブ</div>
@@ -122,7 +115,15 @@
       </div>
     </a>
 
-    <a href="debriefing.html" class="portal-card railroad" style="border-left-color: #34c759;">
+    <a href="summary.html" class="portal-card" style="border-left-color: #0ea5e9;">
+      <div class="icon">📊</div>
+      <div class="card-body">
+        <div class="title" style="color:#0ea5e9;">統計ダッシュボード</div>
+        <div class="desc">月次集計、個人実績、時間帯ヒートマップ、処置ランキング</div>
+      </div>
+    </a>
+
+    <a href="debriefing.html" class="portal-card" style="border-left-color: #34c759;">
       <div class="icon">🗣️</div>
       <div class="card-body">
         <div class="title" style="color:#34c759;">デブリーフィング入力</div>
@@ -130,7 +131,7 @@
       </div>
     </a>
 
-    <a href="debrief_search.html" class="portal-card railroad card-pink">
+    <a href="debrief_search.html" class="portal-card" style="border-left-color: #ec4899;">
       <div class="icon">🧠</div>
       <div class="card-body">
         <div class="title" style="color:#ec4899;">教育・事案振り返り検索</div>
@@ -138,7 +139,7 @@
       </div>
     </a>
     
-    <a href="admin.html" class="portal-card railroad" style="border-left-color:#d48806;">
+    <a href="admin.html" class="portal-card" style="border-left-color:#d48806;">
       <div class="icon">⚙️</div>
       <div class="card-body">
         <div class="title" style="color:#d48806;">システム管理コンソール</div>
@@ -204,11 +205,8 @@
     }
   }
 
-  // 🌟 ポータル描画（重複バグを根絶するロジック）
   function renderPortal(json) {
     const alertBox = document.getElementById("alert-box");
-    
-    // 毎回中身を完全にクリアしてから組み立てることで重複表示を防ぐ
     alertBox.innerHTML = ""; 
     
     if (json.alerts && json.alerts.length > 0) {
