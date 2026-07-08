@@ -9,12 +9,25 @@
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --brand: #d32f2f; --line: rgba(60,60,67,0.12); }
     body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--ink); margin: 0; padding: 0; }
+    
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-group { display: flex; gap: 12px; } .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .title-box { text-align: center; font-weight: 800; font-size: 16px; } .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    .hdr-group { display: flex; gap: 12px; } 
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .title-box { text-align: center; font-weight: 800; font-size: 16px; } 
+    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    
     main { margin-top: calc(56px + env(safe-area-inset-top)); padding: 16px; max-width: 900px; margin-left: auto; margin-right: auto; padding-bottom: 80px; }
     .hidden { display: none !important; }
-    @media print { @page { size: portrait; margin: 5mm; } body { background: white; transform: scale(0.65); transform-origin: top left; width: 153%; height: 100%; -webkit-print-color-adjust: exact; margin-top: 0; } header { display: none !important; } main { margin-top: 0; padding: 0; } .no-print { display: none !important; } #entry-form-container { display: none !important; } }
+    
+    @media print { 
+      @page { size: portrait; margin: 5mm; } 
+      body { background: white; transform: scale(0.65); transform-origin: top left; width: 153%; height: 100%; -webkit-print-color-adjust: exact; margin-top: 0; } 
+      header { display: none !important; } 
+      main { margin-top: 0; padding: 0; } 
+      .no-print { display: none !important; } 
+      #entry-form-container { display: none !important; } 
+    }
+    
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -22,11 +35,11 @@
 </head>
 <body>
 
-  <div id="global-loader" class="hidden"><div class="spinner"></div><div class="mt-4 font-bold" style="color: var(--ink);">データを通信中...</div></div>
+  <div id="global-loader" class="hidden"><div class="spinner"></div><div class="mt-4 font-bold" style="color: var(--ink);" id="loader-text">データを通信中...</div></div>
 
   <header class="no-print">
     <div class="hdr-group"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v4.1</span></div>
+    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.0</span></div>
     <div class="hdr-group"><button class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
   </header>
 
@@ -49,11 +62,22 @@
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-5 no-print">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="space-y-4">
-          <div><label class="block text-xs font-bold text-slate-500 mb-1">日付</label><input type="date" id="info-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="calculateSun(); syncFromDb(false);"></div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">日付</label>
+            <input type="date" id="info-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="calculateSun(); syncFromDb(false);">
+          </div>
           <div id="sun-display" class="flex gap-3 text-xs bg-amber-50 px-3 py-2.5 rounded-lg border border-amber-100 text-amber-800 font-medium"></div>
           <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-xs font-bold text-slate-500 mb-1">記載者 (Ns)</label><select id="info-nurse" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-nurse', 'info-nurse-other'); updatePrintHeader();"></select><input type="text" id="info-nurse-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();"></div>
-            <div><label class="block text-xs font-bold text-slate-500 mb-1">担当医師</label><select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-doctor', 'info-doctor-other'); updatePrintHeader();"></select><input type="text" id="info-doctor-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();"></div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1">記載者 (Ns)</label>
+              <select id="info-nurse" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-nurse', 'info-nurse-other'); updatePrintHeader();"></select>
+              <input type="text" id="info-nurse-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1">担当医師</label>
+              <select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-doctor', 'info-doctor-other'); updatePrintHeader();"></select>
+              <input type="text" id="info-doctor-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
+            </div>
           </div>
         </div>
         <div class="md:col-span-2">
@@ -76,11 +100,11 @@
       </div>
       <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
         <div class="md:col-span-3"><label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label><select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700"><option value="mission">🚁 ヘリ活動(実施)</option><option value="cancel">⚠️ キャンセル</option><option value="inspection">⚙️ 始業点検</option><option value="inspection_end">🛠️ 終業点検</option><option value="assistant">🏃 補助者</option><option value="management">📁 管理</option><option value="group">👥 グループ</option><option value="other">💼 その他</option></select></div>
-        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">事案No</label><input type="text" id="event-no" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
+        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">事案No</label><input type="tel" inputmode="numeric" id="event-no" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold" oninput="toHalfWidth(this)"></div>
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label><input type="time" id="event-start" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">終了時間</label><input type="time" id="event-end" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
         <div class="md:col-span-2 flex items-center h-10 px-2 bg-white rounded-lg border border-slate-300 mb-[1px]"><label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer w-full justify-center"><input type="checkbox" id="event-continuous" class="w-4 h-4 text-blue-600"> 連続出動</label></div>
-        <div class="md:col-span-12 mt-2"><label class="block text-xs font-bold text-slate-500 mb-1">内容</label><div class="flex gap-3"><input type="text" id="event-desc" placeholder="活動内容..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-medium" onkeydown="if(event.key==='Enter') saveEvent()"><button id="btn-save" onclick="saveEvent()" class="text-white font-bold px-8 py-2.5 rounded-lg whitespace-nowrap hover:opacity-90 shadow-sm" style="background-color: var(--blue);">追加する</button></div></div>
+        <div class="md:col-span-12 mt-2"><label class="block text-xs font-bold text-slate-500 mb-1">内容</label><div class="flex gap-3"><input type="text" id="event-desc" placeholder="活動内容..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-medium" oninput="toHalfWidth(this)" onkeydown="if(event.key==='Enter') saveEvent()"><button id="btn-save" onclick="saveEvent()" class="text-white font-bold px-8 py-2.5 rounded-lg whitespace-nowrap hover:opacity-90 shadow-sm" style="background-color: var(--blue);">追加する</button></div></div>
       </div>
     </div>
 
@@ -131,26 +155,44 @@
     let events = []; let editingId = null; 
     let tempAutoEvents = []; let tempManualEvents = [];
 
-    window.onload = () => { document.getElementById('info-date').value = new Date().toISOString().split('T')[0]; drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); fetchInit(); };
+    // 全角半角自動補正
+    function toHalfWidth(ele) {
+      let val = ele.value;
+      val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });
+      ele.value = val;
+    }
+
+    window.onload = () => { 
+      document.getElementById('info-date').value = new Date().toISOString().split('T')[0]; 
+      drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); fetchInit(); 
+    };
 
     async function fetchInit() {
-      showLoader(true);
+      showLoader(true, "システム起動中...");
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }) });
         const json = await res.json();
-        if (json.status === "success") { populateSelect('info-nurse', json.masters.ns || []); populateSelect('info-doctor', json.masters.dr || []); await syncFromDb(false); }
+        if (json.status === "success") { 
+          populateSelect('info-nurse', json.masters.ns || []); 
+          populateSelect('info-doctor', json.masters.dr || []); 
+          await syncFromDb(false); 
+        }
       } catch(e) {} finally { showLoader(false); }
     }
 
+    // 🌟 事案DBとの双方向同期ロジック（過去データの復元完全対応）
     async function syncFromDb(force) {
-      showLoader(true); const dateVal = document.getElementById('info-date').value;
+      showLoader(true, "データを同期中..."); 
+      const dateVal = document.getElementById('info-date').value;
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force }) });
         const json = await res.json();
         
         if (json.status === "success") {
           const data = json.data;
+          
           if (force) {
+            // 手動追加のイベントと、自動取得（事案DB）のイベントを分ける
             tempManualEvents = events.filter(e => !String(e.id).startsWith("auto-"));
             tempAutoEvents = (data.events || []).filter(e => String(e.id).startsWith("auto-"));
             
@@ -163,10 +205,31 @@
             if (hasOverlap) { document.getElementById('sync-modal').classList.remove('hidden'); showLoader(false); return; } 
             else { events = [...tempManualEvents, ...tempAutoEvents]; alert("事案データを取り込みました。"); }
           } else {
-            const setIfNotSelected = (selId, othId, val) => { const sel = document.getElementById(selId); if (val && (!sel.value || sel.value === '')) { if ([...sel.options].some(o => o.value === val)) { sel.value = val; } else { sel.value = 'その他'; document.getElementById(othId).value = val; document.getElementById(othId).classList.remove('hidden'); } } };
-            setIfNotSelected('info-nurse', 'info-nurse-other', data.recorder); setIfNotSelected('info-doctor', 'info-doctor-other', data.doctor);
+            // 🌟 初回読み込み or 過去日付の選択時（データの完全復元）
+            const setIfNotSelected = (selId, othId, val) => { 
+              const sel = document.getElementById(selId); 
+              if (val) { 
+                if ([...sel.options].some(o => o.value === val)) { sel.value = val; document.getElementById(othId).classList.add('hidden'); } 
+                else { sel.value = 'その他'; document.getElementById(othId).value = val; document.getElementById(othId).classList.remove('hidden'); } 
+              } else {
+                sel.value = ""; document.getElementById(othId).classList.add('hidden');
+              }
+            };
+            setIfNotSelected('info-nurse', 'info-nurse-other', data.recorder); 
+            setIfNotSelected('info-doctor', 'info-doctor-other', data.doctor);
+            
             document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false);
-            if (data.hamamachiReason) { data.hamamachiReason.split(',').forEach(r => { const cb = document.querySelector(`input[name="reason"][value="${r.trim()}"]`); if(cb) cb.checked = true; }); }
+            document.getElementById('info-remarks').value = ""; // 備考のクリア
+            
+            if (data.hamamachiReason) { 
+              let others = [];
+              data.hamamachiReason.split(',').forEach(r => { 
+                const cb = document.querySelector(`input[name="reason"][value="${r.trim()}"]`); 
+                if(cb) cb.checked = true; 
+                else others.push(r.trim());
+              }); 
+              if(others.length > 0) document.getElementById('info-remarks').value = others.join(", ");
+            }
             events = data.events || [];
           }
           updatePrintHeader(); render();
@@ -183,11 +246,11 @@
       const dateVal = document.getElementById('info-date').value;
       const nsVal = document.getElementById('info-nurse').value === 'その他' ? document.getElementById('info-nurse-other').value : document.getElementById('info-nurse').value;
       const drVal = document.getElementById('info-doctor').value === 'その他' ? document.getElementById('info-doctor-other').value : document.getElementById('info-doctor').value;
-      if (!nsVal || !drVal) return alert("記載者と医師を入力してください。");
+      if (!nsVal || !drVal) return alert("記載者と担当医師を選択・入力してください。");
       const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
       const otherReason = document.getElementById('info-remarks').value.trim(); if(otherReason) reasons.push(otherReason);
       
-      showLoader(true);
+      showLoader(true, "保存中...");
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }) });
         const json = await res.json(); if (json.status === "success") alert("保存しました！"); else alert("エラー: " + json.message);
@@ -196,14 +259,19 @@
 
     function updatePrintHeader() {
       document.getElementById('print-date').innerText = document.getElementById('info-date').value;
-      const ns = document.getElementById('info-nurse').value; document.getElementById('print-ns').innerText = ns === 'その他' ? document.getElementById('info-nurse-other').value : ns;
-      const dr = document.getElementById('info-doctor').value; document.getElementById('print-dr').innerText = dr === 'その他' ? document.getElementById('info-doctor-other').value : dr;
+      const ns = document.getElementById('info-nurse').value; document.getElementById('print-ns').innerText = ns === 'その他' ? document.getElementById('info-nurse-other').value : ns || "未入力";
+      const dr = document.getElementById('info-doctor').value; document.getElementById('print-dr').innerText = dr === 'その他' ? document.getElementById('info-doctor-other').value : dr || "未入力";
       const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
       const other = document.getElementById('info-remarks').value.trim(); if(other) reasons.push(other);
       document.getElementById('print-reason').innerText = reasons.join(', ') || '特になし';
     }
 
-    function showLoader(show) { const loader = document.getElementById('global-loader'); if (show) loader.classList.remove('hidden'); else loader.classList.add('hidden'); }
+    function showLoader(show, text="データを通信中...") { 
+      const loader = document.getElementById('global-loader'); 
+      if (show) { document.getElementById('loader-text').innerText = text; loader.classList.remove('hidden'); } 
+      else { loader.classList.add('hidden'); } 
+    }
+    
     function populateSelect(id, array) { const sel = document.getElementById(id); sel.innerHTML = `<option value="">-- 選択 --</option>`; array.forEach(name => sel.innerHTML += `<option value="${name}">${name}</option>`); sel.innerHTML += `<option value="その他">その他(手入力)</option>`; }
     function toggleCustomInput(sId, iId) { const sel = document.getElementById(sId); const inp = document.getElementById(iId); if (sel.value === 'その他') { inp.classList.remove('hidden'); inp.focus(); } else { inp.classList.add('hidden'); inp.value = ''; } updatePrintHeader(); }
     
@@ -256,9 +324,9 @@
         listHtml += `
           <tr class="hover:bg-slate-50 border-b border-slate-100 ${editingId === ev.id ? 'bg-amber-50' : ''}">
             <td class="px-4 py-2"><span class="px-2 py-1 rounded text-xs font-bold text-white ${cat.color}">${cat.label}</span></td>
-            <td class="px-4 py-2 font-mono">${ev.no || '-'}</td>
-            <td class="px-4 py-2 font-mono">${ev.start} - ${ev.end}</td>
-            <td class="px-4 py-2">${dur}m</td>
+            <td class="px-4 py-2 font-mono text-center">${ev.no || '-'}</td>
+            <td class="px-4 py-2 font-mono text-center">${ev.start} - ${ev.end}</td>
+            <td class="px-4 py-2 font-mono text-center">${dur}m</td>
             <td class="px-4 py-2 truncate max-w-[200px]">${ev.desc}</td>
             <td class="px-4 py-2 text-center no-print">
               <button onclick="editEvent('${ev.id}')" class="text-blue-600 font-bold text-xs bg-blue-50 px-2 py-1 rounded mr-1">修正</button>
@@ -271,8 +339,16 @@
     }
 
     function saveEvent() {
-      const cat = document.getElementById('event-cat').value; const no = document.getElementById('event-no').value.trim(); const start = document.getElementById('event-start').value; const end = document.getElementById('event-end').value; const desc = document.getElementById('event-desc').value.trim(); const cont = document.getElementById('event-continuous').checked;
-      if (!start || !end) return alert("時間を入力してください。"); if (timeToMins(start) >= timeToMins(end)) return alert("終了時間が不正です。");
+      const cat = document.getElementById('event-cat').value; 
+      const no = document.getElementById('event-no').value.trim(); 
+      const start = document.getElementById('event-start').value; 
+      const end = document.getElementById('event-end').value; 
+      const desc = document.getElementById('event-desc').value.trim(); 
+      const cont = document.getElementById('event-continuous').checked;
+      
+      if (!start || !end) return alert("時間を入力してください。"); 
+      if (timeToMins(start) >= timeToMins(end)) return alert("終了時間が不正です。");
+      
       const newEv = { id: editingId ? editingId : Date.now().toString(), cat, no, start, end, desc, cont };
       if (editingId) events = events.map(e => e.id === editingId ? newEv : e); else events.push(newEv);
       cancelEdit(); render();
@@ -290,7 +366,7 @@
     }
 
     function deleteEvent(id) { if(confirm("削除しますか？")) { events = events.filter(e => e.id !== id); if (editingId === id) cancelEdit(); render(); } }
-    function resetAll() { if(confirm("リセットしますか？")) { events = []; document.getElementById('info-nurse').value = ''; document.getElementById('info-doctor').value = ''; document.getElementById('info-remarks').value = ''; document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false); cancelEdit(); updatePrintHeader(); } }
+    function resetAll() { if(confirm("画面上の入力内容をすべてリセットしますか？")) { events = []; document.getElementById('info-nurse').value = ''; document.getElementById('info-doctor').value = ''; document.getElementById('info-remarks').value = ''; document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false); cancelEdit(); updatePrintHeader(); render(); } }
   </script>
 </body>
 </html>
