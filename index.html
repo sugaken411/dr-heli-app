@@ -105,7 +105,7 @@
     .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 16px; font-weight: 600; flex: 1; }
     
-    select, input[type="number"], input[type="text"], input[type="date"], input[type="email"], input[type="time"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
+    select, input[type="text"], input[type="date"], input[type="email"], input[type="time"], input[type="tel"], input[inputmode="numeric"], input[inputmode="decimal"] { text-align: right; font-size: 16px; border: none; background: transparent; color: var(--blue); outline: none; flex: 1; margin-left: 10px; font-weight: 600; }
     input[type="time"] { color: var(--ink); background: var(--bg); padding: 6px 10px; border-radius: 6px; max-width: 110px; text-align: center; }
     textarea { width: 100%; border: none; font-size: 15px; background: transparent; outline: none; resize: none; color: var(--ink); line-height: 1.5; }
     
@@ -203,7 +203,7 @@
   <div class="hdr-group">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
   </div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.5</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v11.0</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -265,11 +265,11 @@
     <div class="card">
       <div class="card-section" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span class="field-label" style="font-size: 16px; font-weight: 600; flex: 1;">要請番号</span>
-        <input id="v-id" type="number" inputmode="numeric" placeholder="未入力で仮ID" style="text-align: right; font-weight: 600;" oninput="saveState()">
+        <input id="v-id" type="tel" inputmode="numeric" placeholder="未入力で仮ID" style="text-align: right; font-weight: 600;" oninput="toHalfWidth(this); saveState();">
         <label style="font-size:14px; font-weight:500; display:flex; align-items:center; gap:4px; margin-left: 12px;">
           <input type="checkbox" id="chk-edaban" onchange="toggleEdaban()" style="width:18px;height:18px;">枝番
         </label>
-        <input type="number" id="v-edaban" inputmode="numeric" placeholder="枝" style="display:none; width:50px; text-align:center; background:var(--bg); border-radius:6px;" oninput="saveState()">
+        <input type="tel" id="v-edaban" inputmode="numeric" placeholder="枝" style="display:none; width:50px; text-align:center; background:var(--bg); border-radius:6px;" oninput="toHalfWidth(this); saveState();">
       </div>
       
       <div class="inline-field" onclick="document.getElementById('v-date').showPicker()">
@@ -524,7 +524,7 @@
   // 🌟 マスタ連携用変数
   let masters = { keyword: [], diagnosis: [], dr: [], ns: [], dest: [], mailOptions: [] };
   
-  // 🌟 状態管理（バグ修正済み：valsは空で初期化）
+  // 🌟 状態管理（valsは空で初期化）
   let st = { 
     reqType: "",
     scheme: "", 
@@ -535,6 +535,15 @@
     dyn: { 酸素:0, 圧迫:0, 呼吸器:0 }, 
     calc: { oshin:false, hansho:false, long:false, monitor:true, spo2:true, mTime:"--:--", mTimeManual:false } 
   };
+
+  // 全角半角自動補正
+  function toHalfWidth(ele) {
+    let val = ele.value;
+    val = val.replace(/[０-９]/g, function(s) {
+      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+    ele.value = val;
+  }
 
   window.onload = () => {
     buildLines(STRUCT.line, "box-line");
@@ -621,11 +630,11 @@
     if (k === "気管挿管" && st.chips[k]) {
       if (!st.chips["EtCO2"]) tChip("EtCO2");
       if (!st.chips["人工呼吸器管理料"]) tChip("人工呼吸器管理料");
-      // 🌟 気管挿管ON時にカフありをセット
+      // 気管挿管ON時にカフありをセット
       st.vals['カフ有無'] = 'あり'; sRad('カフ有無', 'あり');
     }
     if (k === "気管挿管" && !st.chips[k]) {
-      // 🌟 気管挿管OFF時にカフデータを完全消去
+      // 気管挿管OFF時にカフデータを完全消去
       delete st.vals['カフ有無']; delete st.vals['気管挿管サイズ'];
       document.querySelectorAll(`[id^="r-カフ有無-"]`).forEach(el => el.classList.remove('on'));
     }
@@ -640,6 +649,7 @@
     st.vals[key] = val;
     document.querySelectorAll(`[id^="r-${key}-"]`).forEach(el => {
       el.classList.remove('on');
+      // 色付け復元用
       if(key==='骨髄針サイズ') el.style.borderWidth = "1px";
     });
     const rad = document.getElementById(`r-${key}-${val}`);
@@ -785,8 +795,8 @@
       h += `
         <div style="background:#f9f9f9; padding:8px; border-radius:8px;">
           <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">濃度(%)</div><input type="number" id="v-【${type}${i}】濃度" value="100" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" onchange="st.vals['【${type}${i}】濃度']=this.value; saveState();"></div>
-            <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">流量(L/min)</div><input type="number" id="v-【${type}${i}】流量" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" onchange="st.vals['【${type}${i}】流量']=this.value; saveState();"></div>
+            <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">濃度(%)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】濃度" value="100" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】濃度']=this.value; saveState();"></div>
+            <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">流量(L/min)</div><input type="tel" inputmode="decimal" id="v-【${type}${i}】流量" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】流量']=this.value; saveState();"></div>
           </div>
           <div class="radio-group">
             <label><input type="radio" name="dev-o2-${i}" value="鼻カヌラ" onchange="sRad('【酸素${i}】デバイス','鼻カヌラ')"> <span class="radio-lbl" style="font-size:11px; padding:4px 8px;">鼻カヌラ</span></label>
@@ -798,8 +808,8 @@
     } else if (type === "呼吸器") {
       h += `
         <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">FiO2(%)</div><input type="number" id="v-【${type}${i}】濃度" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px; border:1px solid #ccc;" onchange="st.vals['【${type}${i}】濃度']=this.value; saveState();"></div>
-          <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">流量(L/min)</div><input type="number" id="v-【${type}${i}】流量" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px; border:1px solid #ccc;" onchange="st.vals['【${type}${i}】流量']=this.value; saveState();"></div>
+          <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">FiO2(%)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】濃度" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px; border:1px solid #ccc;" oninput="toHalfWidth(this); st.vals['【${type}${i}】濃度']=this.value; saveState();"></div>
+          <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">流量(L/min)</div><input type="tel" inputmode="decimal" id="v-【${type}${i}】流量" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px; border:1px solid #ccc;" oninput="toHalfWidth(this); st.vals['【${type}${i}】流量']=this.value; saveState();"></div>
         </div>
         <div class="acc-header" onclick="toggleAcc('acc-vent-${i}')" style="background:#e3f2fd; color:#0d47a1; font-size:13px; padding:8px; border-radius:6px; margin-bottom:4px;">🤖 モード・詳細設定を開く <span class="arrow">▼</span></div>
         <div class="acc-body" id="acc-vent-${i}" style="background:#f9f9f9; padding:8px; border-radius:6px;">
@@ -810,20 +820,20 @@
             <label><input type="radio" name="mode-vent-${i}" value="NPPV/CPAP" onchange="changeVentMode(${i}, 'NPPV/CPAP')"> <span class="radio-lbl" style="font-size:11px; padding:4px 8px;">NPPV/CPAP</span></label>
           </div>
           <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <div style="flex:1; display:none;" id="box-${i}-vt"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">Vt(mL)</div><input type="number" id="v-【${type}${i}】Vt" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" onchange="st.vals['【${type}${i}】Vt']=this.value; saveState();"></div>
-            <div style="flex:1; display:none;" id="box-${i}-pc"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">PC(cmH2O)</div><input type="number" id="v-【${type}${i}】PC" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" onchange="st.vals['【${type}${i}】PC']=this.value; saveState();"></div>
-            <div style="flex:1; display:none;" id="box-${i}-ps"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">PS(cmH2O)</div><input type="number" id="v-【${type}${i}】PS" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" onchange="st.vals['【${type}${i}】PS']=this.value; saveState();"></div>
+            <div style="flex:1; display:none;" id="box-${i}-vt"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">Vt(mL)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】Vt" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】Vt']=this.value; saveState();"></div>
+            <div style="flex:1; display:none;" id="box-${i}-pc"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">PC(cmH2O)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】PC" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】PC']=this.value; saveState();"></div>
+            <div style="flex:1; display:none;" id="box-${i}-ps"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">PS(cmH2O)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】PS" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】PS']=this.value; saveState();"></div>
           </div>
           <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">PEEP</div><input type="number" id="v-【${type}${i}】PEEP" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" onchange="st.vals['【${type}${i}】PEEP']=this.value; saveState();"></div>
-            <div style="flex:1; display:none;" id="box-${i}-rr"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">RR(回/分)</div><input type="number" id="v-【${type}${i}】RR" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" onchange="st.vals['【${type}${i}】RR']=this.value; saveState();"></div>
+            <div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">PEEP</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】PEEP" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】PEEP']=this.value; saveState();"></div>
+            <div style="flex:1; display:none;" id="box-${i}-rr"><div style="font-size:11px; font-weight:bold; color:var(--sub); text-align:center;">RR(回/分)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】RR" style="background:#fff; width:100%; text-align:center; padding:6px; font-size:14px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】RR']=this.value; saveState();"></div>
           </div>
           <div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px; padding-top:4px; border-top:1px dashed #ccc;">実測値 (任意)</div>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <div><div style="font-size:10px; color:var(--sub);">EtCO2</div><input type="number" id="v-【${type}${i}】EtCO2" style="background:#fff; width:100%; padding:6px; font-size:13px;" onchange="st.vals['【${type}${i}】EtCO2']=this.value; saveState();"></div>
-            <div><div style="font-size:10px; color:var(--sub);">Vte(mL)</div><input type="number" id="v-【${type}${i}】Vte" style="background:#fff; width:100%; padding:6px; font-size:13px;" onchange="st.vals['【${type}${i}】Vte']=this.value; saveState();"></div>
-            <div><div style="font-size:10px; color:var(--sub);">MV(L/min)</div><input type="number" id="v-【${type}${i}】MV" style="background:#fff; width:100%; padding:6px; font-size:13px;" onchange="st.vals['【${type}${i}】MV']=this.value; saveState();"></div>
-            <div><div style="font-size:10px; color:var(--sub);">PIP(cmH2O)</div><input type="number" id="v-【${type}${i}】PIP" style="background:#fff; width:100%; padding:6px; font-size:13px;" onchange="st.vals['【${type}${i}】PIP']=this.value; saveState();"></div>
+            <div><div style="font-size:10px; color:var(--sub);">EtCO2</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】EtCO2" style="background:#fff; width:100%; padding:6px; font-size:13px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】EtCO2']=this.value; saveState();"></div>
+            <div><div style="font-size:10px; color:var(--sub);">Vte(mL)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】Vte" style="background:#fff; width:100%; padding:6px; font-size:13px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】Vte']=this.value; saveState();"></div>
+            <div><div style="font-size:10px; color:var(--sub);">MV(L/min)</div><input type="tel" inputmode="decimal" id="v-【${type}${i}】MV" style="background:#fff; width:100%; padding:6px; font-size:13px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】MV']=this.value; saveState();"></div>
+            <div><div style="font-size:10px; color:var(--sub);">PIP(cmH2O)</div><input type="tel" inputmode="numeric" id="v-【${type}${i}】PIP" style="background:#fff; width:100%; padding:6px; font-size:13px;" oninput="toHalfWidth(this); st.vals['【${type}${i}】PIP']=this.value; saveState();"></div>
           </div>
         </div>`;
     }
@@ -1006,7 +1016,7 @@
     
     const idStyle = displayId.includes("(仮)") ? `style="color:var(--brand); font-weight:800;"` : ``;
     let drVal = document.getElementById("v-dr").value; if(drVal === "その他" || drVal === "") drVal = document.getElementById("v-dr-other").value || st.vals['cacheDr'] || "";
-    let nsVal = document.getElementById("v-ns").value; if(nsVal === "その他" || nsVal === "") nsVal = document.getElementById("v-ns-other").value || st.vals['cacheNs'] || "";
+    let nsVal = document.getElementById("v-ns").value; if(nsVal === "other"||nsVal==="その他") nsVal = document.getElementById("v-ns-other").value || st.vals['cacheNs'] || "";
 
     let s = `
       <div class="pv-section">
@@ -1049,7 +1059,7 @@
         let sT = t(`t-【${type}${i}】開始`), eT = t(`t-【${type}${i}】終了`);
         if (sT || eT) {
           // メールのプレビューには必須項目だけ（PEEPやモードは出さない）
-          s += `<li class="pv-li">${type}${i} (${sT||'--:--'}〜${eT||'--:--'}) ${st.vals[`【${type}${i}】濃度`]?`[濃度:${st.vals[`【${type}${i}】濃度`]}%]`:''} ${st.vals[`【${type}${i}】流量`]?`[流量:${st.vals[`【${type}${i}】流量`]}]`:''}</li>`;
+          s += `<li class="pv-li">${type}${i} (${sT||'--:--'}〜${eT||'--:--'}) ${st.vals[`【${type}${i}】濃度`]?`[濃度:${st.vals[`【${type}${i}】濃度`]}%]`:''} ${st.vals[`【${type}${i}】流量`]?`[流量/設定:${st.vals[`【${type}${i}】流量`]}]`:''}</li>`;
           hasDyn = true;
         }
       }
@@ -1187,7 +1197,6 @@
         if (masters.keyword && masters.keyword.length > 0) {
           renderTags('chip-container-keyword', masters.keyword, 'keyword');
         } else {
-          // マスタが空の場合のフォールバック
           masters.keyword = ["閉じ込められている", "車外放出された", "山岳部滑落", "溺れている", "CPA", "アナフィラキシーショック", "大量吐血", "D-call Net", "その他"];
           renderTags('chip-container-keyword', masters.keyword, 'keyword');
         }
