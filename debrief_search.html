@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>教育・事案検索コンソール</title>
+  <style>
+    :root {
+      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
+      --brand: #d32f2f; --blue: #007aff; --med-blue: #e3f2fd; --line: rgba(60,60,67,0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--ink); }
+    
+    header {
+      position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+      padding: 16px; border-bottom: 1px solid var(--line); z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .hdr-title { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .ai-badge { background: linear-gradient(135deg, #007aff, #34c759); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+    
+    main { padding: 16px; max-width: 800px; margin: 0 auto; }
+    
+    /* 検索フィルター枠 */
+    .filter-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; margin-bottom: 12px; }
+    
+    .section-lbl { font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; }
+    
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; }
+    .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .chip.active-disease { background: #ff9800; color: #fff; border-color: #ff9800; }
+    .chip.active-proc { background: #34c759; color: #fff; border-color: #34c759; }
+    
+    .btn-search { width: 100%; padding: 12px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 14px; cursor: pointer; }
+
+    /* 検索結果（教育カード） */
+    .result-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--blue); cursor: pointer; transition: 0.2s; }
+    .result-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+    
+    .rc-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .rc-id { font-weight: 800; color: var(--blue); font-size: 15px; }
+    .rc-date { color: var(--sub); font-family: monospace; }
+    
+    .rc-context { font-size: 13px; color: var(--ink); margin-bottom: 12px; font-weight: 600; }
+    
+    .rc-feedback { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .fb-box { padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.5; }
+    .fb-good { background: #e8f5e9; border: 1px solid #c8e6c9; }
+    .fb-bad { background: #fffde6; border: 1px solid #fff59d; }
+    .fb-title { font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    .fb-good .fb-title { color: #2e7d32; }
+    .fb-bad .fb-title { color: #f57f17; }
+    
+    .rc-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .t-chip { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .t-disease { background: #fff3e0; color: #e65100; }
+    .t-proc { background: #e8f5e9; color: #1b5e20; }
+    .t-key { background: #e3f2fd; color: #0d47a1; }
+
+    /* モバイル最適化 */
+    @media (max-width: 600px) {
+      .rc-feedback { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-title">🧠 教育・事案検索コンソール <span class="ai-badge">デモ版</span></div>
+</header>
+
+<main>
+  <!-- 検索フィルター -->
+  <div class="filter-card">
+    <input type="text" class="search-input" placeholder="フリーワード (例: コミュニケーション, 輸液ルート)">
+    
+    <div class="section-lbl">📌 疾患・病態で絞り込む</div>
+    <div class="chip-grid">
+      <div class="chip active-disease">外傷</div>
+      <div class="chip">心大血管</div>
+      <div class="chip active-disease">小児</div>
+      <div class="chip">熱傷</div>
+    </div>
+    
+    <div class="section-lbl">💉 処置で絞り込む</div>
+    <div class="chip-grid">
+      <div class="chip active-proc">気管挿管</div>
+      <div class="chip">胸腔ドレナージ</div>
+      <div class="chip">ターニケット</div>
+    </div>
+    
+    <div class="section-lbl">🔑 キーワード・課題</div>
+    <div class="chip-grid">
+      <div class="chip active">車外放出</div>
+      <div class="chip">コミュニケーションエラー</div>
+      <div class="chip">多数傷病</div>
+    </div>
+    
+    <button class="btn-search">事例を検索する (3件ヒット)</button>
+  </div>
+
+  <!-- 検索結果 1 -->
+  <div class="result-card">
+    <div class="rc-header">
+      <div class="rc-id">No.260701-01</div>
+      <div class="rc-date">2026/07/01 (〇〇消防本部)</div>
+    </div>
+    <div class="rc-context">乗用車単独事故。後部座席から車外放出された小児（5歳）の事案。</div>
+    
+    <div class="rc-feedback">
+      <div class="fb-box fb-good">
+        <div class="fb-title">🟢 Good</div>
+        現場到着前から救急隊と小児用資機材のサイズ共有ができており、接触後スムーズに気管挿管へ移行できた。
+      </div>
+      <div class="fb-box fb-bad">
+        <div class="fb-title">⚠️ Bad / Next</div>
+        家族（同乗の母親）がパニック状態であり、インフォームド・コンセントに時間を要した。次回は早期に支援隊へ家族対応を依頼する。
+      </div>
+    </div>
+    
+    <div class="rc-tags">
+      <div class="t-chip t-disease">外傷</div><div class="t-chip t-disease">小児</div>
+      <div class="t-chip t-proc">気管挿管</div>
+      <div class="t-chip t-key">車外放出</div><div class="t-chip t-key">家族対応</div>
+    </div>
+  </div>
+
+  <!-- 検索結果 2 -->
+  <div class="result-card" style="border-left-color: var(--brand);">
+    <div class="rc-header">
+      <div class="rc-id">No.260615-03</div>
+      <div class="rc-date">2026/06/15 (△△消防組合)</div>
+    </div>
+    <div class="rc-context">重症頭部外傷の小児。機内での急激なSpO2低下と不穏状態。</div>
+    
+    <div class="rc-feedback">
+      <div class="fb-box fb-good">
+        <div class="fb-title">🟢 Good</div>
+        機内での急変時、DrとNsの役割分担が瞬時に行われ、冷静に鎮静と気道確保の再評価を実施できた。
+      </div>
+      <div class="fb-box fb-bad">
+        <div class="fb-title">⚠️ Bad / Next</div>
+        機内ノイズにより、一時的に指示の声が通らない場面があった（コミュニケーションエラー）。インカムを用いたクローズドループ・コミュニケーションを再徹底する。
+      </div>
+    </div>
+    
+    <div class="rc-tags">
+      <div class="t-chip t-disease">外傷</div><div class="t-chip t-disease">小児</div>
+      <div class="t-chip t-proc">気管挿管</div>
+      <div class="t-chip t-key">コミュニケーションエラー</div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>
