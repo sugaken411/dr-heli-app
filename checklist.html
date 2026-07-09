@@ -15,20 +15,21 @@
     .nav-tab { flex: 1; text-align: center; line-height: 44px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
 
-    main { margin-top: calc(110px + var(--safe-top)); padding: 16px; max-width: 700px; margin-left: auto; margin-right: auto; }
+    main { margin-top: calc(110px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
-    /* 🌟 横スクロール対応メニュー */
-    .type-picker-wrapper { margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; margin-left:-8px; margin-right:-8px; padding-left:8px; padding-right:8px; }
-    .type-picker { display: inline-flex; background: #e5e5ea; border-radius: 8px; padding: 4px; gap: 4px; min-width: max-content; }
-    .type-btn { padding: 8px 12px; font-size: 13px; font-weight: 800; color: var(--sub); border-radius: 6px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-    .type-btn.active { background: #fff; color: var(--ink); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    /* 🌟 PC・タブレット・スマホすべてで見切れないレスポンシブなピルメニュー */
+    .type-picker-wrapper { margin-bottom: 16px; width: 100%; }
+    .type-picker { display: flex; flex-wrap: wrap; background: transparent; gap: 8px; }
+    .type-btn { flex: 1 1 calc(25% - 8px); min-width: 100px; text-align: center; padding: 12px 6px; font-size: 13px; font-weight: 800; color: var(--sub); background: #e5e5ea; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: normal; line-height: 1.3; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2px solid transparent; }
+    .type-btn.active { background: #fff; color: var(--blue); border-color: var(--blue); box-shadow: 0 4px 12px rgba(0,122,255,0.15); }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
     .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; position: sticky; top: calc(100px + var(--safe-top)); z-index: 10; }
     
     .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
     .chk-row:last-child { border-bottom: none; }
-    .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+    /* 🌟 項目名が長い場合に見切れないようにする */
+    .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.5; word-break: break-all; overflow-wrap: break-word; }
     
     .toggle-group { display: flex; gap: 8px; }
     .tgl-btn { flex: 1; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; }
@@ -82,7 +83,7 @@
   <header class="no-print">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div style="font-weight:900; font-size:16px; user-select:none;" onclick="secretCommand()">
-      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.4</span>
+      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.5</span>
     </div>
     <button class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
   </header>
@@ -103,9 +104,12 @@
         <div class="type-btn" id="btn-type-fn-other" onclick="switchType('FN(その他)')">📋 FN(その他)</div>
         <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
         <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
+        <div class="type-btn" id="btn-type-kigen" onclick="switchType('期限切れ')">📅 期限確認</div>
+        <div class="type-btn" id="btn-type-board" onclick="switchType('バックボード')">🛏️ ボード管理</div>
       </div>
     </div>
 
+    <!-- 🌟 入力タブ -->
     <div id="tab-input" class="tab-content active">
       <div class="card" style="padding: 16px;">
         <div style="display:flex; gap:12px; margin-bottom:12px;">
@@ -132,6 +136,7 @@
       </div>
     </div>
 
+    <!-- 🌟 履歴タブ -->
     <div id="tab-history" class="tab-content">
       <h2 class="hidden print:block text-center" style="font-size:18px; margin-bottom:16px;" id="print-title">点検履歴</h2>
       <div class="card">
@@ -155,7 +160,6 @@
     let currentData = {}; 
     let errorDetails = {}; 
 
-    // 💡 隠しコマンド（トリプルクリック）の実装
     let tapCount = 0; let tapTimer;
     function secretCommand() {
       tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 600); 
@@ -195,11 +199,11 @@
       currentType = type;
       document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
       
-      // ボタンのIDマッピング
       const btnMap = {
         'ME': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli',
         'FN(開始前)': 'btn-type-fn-start', 'FN(終了後)': 'btn-type-fn-end', 'FN(その他)': 'btn-type-fn-other',
-        'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki'
+        'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki',
+        '期限切れ': 'btn-type-kigen', 'バックボード': 'btn-type-board'
       };
       if(btnMap[type]) document.getElementById(btnMap[type]).classList.add("active");
       
@@ -222,12 +226,10 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          // ⚠️ マスタ名は括弧などを除外したベース名でGASに投げる
           body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: currentType.replace(/\(.*\)/, '') })
         });
         const json = await res.json();
         if (json.status === "success") {
-          // ⚠️ FNチェックの場合、選択された時間帯（大分類）だけを抽出する
           if (currentType.startsWith('FN')) {
             const timeZone = currentType.replace('FN(', '').replace(')', '');
             checklistItems = json.items.filter(it => it.category === `運航${timeZone}` || it.category === timeZone);
@@ -240,7 +242,7 @@
           json.nsList.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
           renderChecklist();
         } else {
-          alert(`マスタ読込エラー: ${json.message}\n※スプレッドシートに「${currentType.replace(/\(.*\)/, '')}点検マスタ」が存在するか確認してください。`);
+          alert(`マスタ読込エラー: ${json.message}\n※スプレッドシートにマスタが存在するか確認してください。`);
         }
       } catch(e) { alert("通信エラーが発生しました。"); } finally { hideLoader(); }
     }
@@ -268,7 +270,7 @@
           html += `<div class="chk-row">
             <div class="chk-title">${it.name} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div>`;
             
-          // 💡 入力タイプが「◯/✕」以外（自由記述・数値入力など）の場合の処理
+          // 💡 入力タイプが自由記述の場合はテキストボックスに
           if (it.inputType === "◯/✕") {
             html += `
               <div class="toggle-group">
@@ -347,7 +349,6 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          // ⚠️ 履歴保存時も、ベースのシート名（FNチェックデータなど）に送る
           body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: currentType.replace(/\(.*\)/, ''), data: payload })
         });
         const json = await res.json();
