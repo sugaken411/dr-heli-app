@@ -5,319 +5,68 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AW109 事案検索コンソール</title>
   <style>
-    /* 基本デザイン・カラー定義 */
     :root {
-      --bg: #f2f2f7;
-      --brand: #d32f2f;
-      --ink: #1c1c1e;
-      --sub: #8e8e93;
-      --blue: #007aff;
-      --line: rgba(60,60,67,0.12);
-      --card: #ffffff;
+      --bg: #f2f2f7; --brand: #d32f2f; --ink: #1c1c1e; --sub: #8e8e93;
+      --blue: #007aff; --line: rgba(60,60,67,0.12); --card: #ffffff;
     }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
     
-    body {
-      font-family: -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    header { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; }
+    .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; }
+    .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
     
-    header {
-      background: #fff;
-      padding: 12px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #ccc;
-      flex-shrink: 0;
-    }
+    main { padding: 20px; flex: 1; overflow-y: auto; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     
-    .hdr-btn {
-      background: none;
-      border: none;
-      color: var(--blue);
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-    }
+    input, select, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+    button { background: var(--blue); color: #fff; border: none; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+    button:hover { opacity: 0.8; }
+    .filter-btn { background: #e5e5ea; color: var(--ink); margin-right: 8px; margin-bottom: 8px; }
     
-    .timer-badge {
-      background: #e5e5ea;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-family: monospace;
-      font-weight: bold;
-      font-size: 14px;
-      color: var(--ink);
-    }
+    .res-item { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.2s; }
+    .res-item:hover { border-color: var(--blue); }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     
-    main {
-      padding: 20px;
-      flex: 1;
-      overflow-y: auto;
-    }
-    
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    
-    input, select, button, textarea {
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    
-    button {
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      transition: opacity 0.2s;
-    }
-    
-    button:hover {
-      opacity: 0.8;
-    }
-    
-    .filter-btn {
-      background: #e5e5ea;
-      color: var(--ink);
-      margin-right: 8px;
-      margin-bottom: 8px;
-    }
-    
-    .res-item {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    
-    .res-item:hover {
-      border-color: var(--blue);
-    }
-    
-    .badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    
-    .cross-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .cross-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .cross-item label {
-      font-size: 12px;
-      font-weight: bold;
-      color: var(--sub);
-    }
-    .cross-item input, .cross-item select {
-      width: 100%;
-    }
+    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .cross-item { display: flex; flex-direction: column; gap: 4px; }
+    .cross-item label { font-size: 12px; font-weight: bold; color: var(--sub); }
+    .cross-item input, .cross-item select { width: 100%; }
 
-    /* モーダル群 */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 9000;
-    }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 20px; z-index: 9000; }
+    .modal.show { display: flex; }
+    .modal-box { background: #fff; width: 100%; max-width: 650px; max-height: 85vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; }
+    .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; color: var(--ink); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     
-    .modal.show {
-      display: flex;
-    }
-    
-    .modal-box {
-      background: #fff;
-      width: 100%;
-      max-width: 650px;
-      max-height: 85vh;
-      overflow-y: auto;
-      border-radius: 12px;
-      padding: 20px;
-      position: relative;
-    }
-    
-    .modal-close {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin-top: 16px;
-      background: #e5e5ea;
-      color: var(--ink);
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    
-    .form-group {
-      margin-bottom: 12px;
-    }
-    
-    .form-group label {
-      display: block;
-      font-weight: bold;
-      font-size: 12px;
-      margin-bottom: 4px;
-      color: var(--sub);
-    }
-    
-    .form-group input, .form-group textarea, .form-group select {
-      width: 100%;
-    }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px; color: var(--sub); }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; }
 
-    .scheme-picker {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      background: var(--bg);
-      padding: 8px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-    .scheme-btn {
-      background: #fff;
-      color: var(--sub);
-      border: 1px solid #ccc;
-      padding: 8px 4px;
-      font-size: 12px;
-      border-radius: 6px;
-      transition: 0.2s;
-    }
-    .scheme-btn.active {
-      background: var(--card);
-      color: var(--brand);
-      border-color: var(--brand);
-      box-shadow: 0 2px 4px rgba(211,47,47,0.2);
-    }
+    .scheme-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--bg); padding: 8px; border-radius: 8px; margin-bottom: 12px; }
+    .scheme-btn { background: #fff; color: var(--sub); border: 1px solid #ccc; padding: 8px 4px; font-size: 12px; border-radius: 6px; transition: 0.2s; }
+    .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); }
 
-    /* 選択式コンテナ用 */
-    .supply-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 6px;
-    }
-    .supply-row label {
-      font-size: 13px;
-      font-weight: bold;
-      color: var(--ink);
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-    }
-    .supply-row input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      margin: 0;
-    }
-    .supply-row select {
-      width: 80px;
-      padding: 6px;
-      font-size: 13px;
-    }
+    .supply-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #fff; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 6px; }
+    .supply-row label { font-size: 13px; font-weight: bold; color: var(--ink); margin: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .supply-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
+    .supply-row select { width: 80px; padding: 6px; font-size: 13px; }
     
-    .edit-section-title {
-      background: #e3f2fd;
-      color: #0d47a1;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: bold;
-      margin-top: 20px;
-      margin-bottom: 12px;
-      border: 1px solid #bbdefb;
-    }
+    .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; }
 
-    /* ダイナミック項目のグリッド */
-    .dyn-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      background: #f9f9f9;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      border: 1px solid #eee;
-    }
-    .dyn-grid input {
-      font-size: 12px;
-      padding: 6px;
-    }
+    .dyn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; }
+    .dyn-grid input { font-size: 12px; padding: 6px; }
 
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; }
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
     
-    #login-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     
-    #global-loader {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.9);
-      z-index: 9998;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(0,122,255,0.2);
-      border-top: 4px solid var(--blue);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    /* 🌟 インテリジェントローダー */
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
     
     @media print {
       body * { visibility: hidden; }
@@ -341,9 +90,11 @@
     </div>
   </div>
 
+  <!-- 🌟 インテリジェントローダー -->
   <div id="global-loader">
     <div class="spinner"></div>
-    <div style="margin-top:16px; font-weight:bold; color:var(--ink);">通信中...</div>
+    <div class="loader-text" id="loader-main-text">通信中...</div>
+    <div class="loader-subtext" id="loader-sub-text">データベースに接続しています</div>
   </div>
 
   <header>
@@ -352,7 +103,7 @@
       <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v11.0</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v11.1</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -562,36 +313,35 @@
   let filteredData = [];
   let masters = { keyword: [], diagnosis: [], dr: [], ns: [] };
   
-  // モーダル編集時の一時保持用
   let currentEditSysData = { tags: { keyword: [], diagnosis: [] } };
 
   let lockTime = 600; 
   let timerInterval;
   
-  function resetTimer() { lockTime = 600; updateTimerDisplay(); }
-  function updateTimerDisplay() { 
-    const m = String(Math.floor(lockTime / 60)).padStart(2, '0'); 
-    const s = String(lockTime % 60).padStart(2, '0'); 
-    document.getElementById("lock-timer").textContent = `${m}:${s}`; 
+  // 🌟 ローダー＆エラー送信制御
+  let loaderTimer1, loaderTimer2;
+  function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
+    const loader = document.getElementById("global-loader");
+    document.getElementById("loader-main-text").innerText = msg1;
+    document.getElementById("loader-sub-text").innerHTML = msg2;
+    loader.style.display = "flex";
+    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
-  function startTimer() { 
-    updateTimerDisplay(); 
-    timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); 
-    ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); 
-  }
+  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
+  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索コンソール(search.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
 
-  function toHalfWidth(ele) {
-    let val = ele.value;
-    val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });
-    ele.value = val;
-  }
+  function resetTimer() { lockTime = 600; updateTimerDisplay(); }
+  function updateTimerDisplay() { const m = String(Math.floor(lockTime / 60)).padStart(2, '0'); const s = String(lockTime % 60).padStart(2, '0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
+  function startTimer() { updateTimerDisplay(); timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); }
+
+  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
 
   function checkLogin() {
     const input = document.getElementById("login-pin").value;
     if(input === "5740") {
       activePin = input; 
       document.getElementById("login-overlay").style.display = "none"; 
-      document.getElementById("global-loader").style.display = "flex"; 
       startTimer(); 
       fetchInit(); 
     } else { 
@@ -603,44 +353,52 @@
   function openModal(id) { document.getElementById(id).classList.add('show'); resetTimer(); }
   function closeModal(id) { document.getElementById(id || 'detail-modal').classList.remove('show'); resetTimer(); }
 
-  function toggleComp() {
-    const isDaiko = document.querySelector('input[name="comp-who"]:checked').value === "代行";
-    document.getElementById("comp-name").style.display = isDaiko ? "block" : "none";
-  }
-
-  function toggleEditWho() {
-    const isDaiko = document.querySelector('input[name="edit-who"]:checked').value === "代行";
-    document.getElementById("edit-person").style.display = isDaiko ? "block" : "none";
-  }
-
-  function formatKatakana(input) { 
-    let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); input.value = val; 
-  }
+  function toggleComp() { const isDaiko = document.querySelector('input[name="comp-who"]:checked').value === "代行"; document.getElementById("comp-name").style.display = isDaiko ? "block" : "none"; }
+  function toggleEditWho() { const isDaiko = document.querySelector('input[name="edit-who"]:checked').value === "代行"; document.getElementById("edit-person").style.display = isDaiko ? "block" : "none"; }
+  function formatKatakana(input) { let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); input.value = val; }
 
   function quickFilter(type) {
     ["q-id", "q-date-start", "q-date-end", "q-month", "q-status", "q-dest", "q-dr", "q-ns"].forEach(id => document.getElementById(id).value = "");
     if (type === '未完了') { document.getElementById("q-status").value = "未完了"; } 
-    else if (type === '本日') { 
-      const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; 
-      document.getElementById("q-date-start").value = today; document.getElementById("q-date-end").value = today; 
-    }
+    else if (type === '本日') { const d = new Date(); const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; document.getElementById("q-date-start").value = today; document.getElementById("q-date-end").value = today; }
     fetchData();
   }
 
   function clearDateRange() { document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = ""; }
   function clearMonth() { document.getElementById("q-month").value = ""; }
 
+  async function fetchInit() {
+    showLoader("マスタデータ同期中...", "システムを初期化しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: activePin, app_name: "検索" }), redirect: "follow" });
+      const jsonRes = await res.json();
+      if (jsonRes.status === "success") {
+        if (jsonRes.masters) {
+          masters = jsonRes.masters;
+          const destOpts = '<option value="">全出場先</option>' + masters.dest.map(v => `<option value="${v}">${v}</option>`).join("");
+          document.getElementById("q-dest").innerHTML = destOpts; 
+          document.getElementById("edit-dest").innerHTML = destOpts.replace("全出場先", "選択...");
+          
+          document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + masters.dr.map(v => `<option value="${v}">${v}</option>`).join("");
+          document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
+          
+          const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...masters.dr, ...masters.ns])].map(v => `<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
+          document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
+        }
+        if (jsonRes.qa) { document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>'; }
+        const manualsData = jsonRes.manuals || []; document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>マニュアルはありません。</p>';
+        
+        const urlParams = new URLSearchParams(window.location.search); if (urlParams.get('auto_filter') === 'uncompleted') { document.getElementById('q-status').value = '未完了'; fetchData(); }
+      } else { throw new Error(jsonRes.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+  }
+
   async function fetchData() {
     document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">検索中...🔍</p>';
+    showLoader("データ検索中...", "事案データベースに接続しています");
     
-    const qId = document.getElementById("q-id").value.trim(); 
-    const dStart = document.getElementById("q-date-start").value; 
-    const dEnd = document.getElementById("q-date-end").value; 
-    const dMonth = document.getElementById("q-month").value;
-    const stVal = document.getElementById("q-status").value; 
-    const destVal = document.getElementById("q-dest").value; 
-    const drVal = document.getElementById("q-dr").value; 
-    const nsVal = document.getElementById("q-ns").value;
+    const qId = document.getElementById("q-id").value.trim(); const dStart = document.getElementById("q-date-start").value; const dEnd = document.getElementById("q-date-end").value; const dMonth = document.getElementById("q-month").value;
+    const stVal = document.getElementById("q-status").value; const destVal = document.getElementById("q-dest").value; const drVal = document.getElementById("q-dr").value; const nsVal = document.getElementById("q-ns").value;
     
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: activePin }), redirect: "follow" });
@@ -648,8 +406,6 @@
       
       if(json.status === "success") {
         allData = json.data;
-        
-        // 要請番号リストの補助ドロップダウン構築
         const idListArea = document.getElementById("q-id-list"); idListArea.innerHTML = "";
         allData.slice(-30).reverse().forEach(r => { if(r["要請番号"]) idListArea.innerHTML += `<option value="${r["要請番号"]}">`; });
 
@@ -675,9 +431,8 @@
         });
         
         document.getElementById("result-count").innerText = `検索結果: ${filteredData.length} 件`;
-        if (filteredData.length === 0) { document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">データが見つかりません。</p>'; return; }
+        if (filteredData.length === 0) { document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">データが見つかりません。</p>'; hideLoader(); return; }
         
-        // 🌟 接触［時間］の明文化表記
         document.getElementById("results").innerHTML = filteredData.map(r => {
           const isDone = (r["ステータス"] || "").includes("完了") && !(r["ステータス"] || "").includes("未完了");
           const isKari = String(r["要請番号"] || "").includes("(仮)");
@@ -699,299 +454,130 @@
             <div style="font-size:12px; color:var(--sub);"><b>接触［${String(cntTime).substring(0,5)}］</b> ｜ <b>病着:</b> ${String(r["病着"]||"--:--").substring(0,5)} ｜ <b>終了:</b> ${String(r["終了"]||"--:--").substring(0,5)}</div>
           </div>`;
         }).join("");
-      }
-    } catch(e) { document.getElementById("results").innerHTML = `<p style="text-align:center; color:red;">通信エラーが発生しました。</p>`; }
+      } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); document.getElementById("results").innerHTML = `<p style="text-align:center; color:red;">通信エラーが発生しました。</p>`; } finally { hideLoader(); }
   }
 
-  function setEditScheme(btn, s) {
-    document.getElementById("edit-scheme").value = s;
-    document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn));
-  }
+  function setEditScheme(btn, s) { document.getElementById("edit-scheme").value = s; document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); }
+  function toggleEditChip(cat, item) { if(!currentEditSysData.tags[cat]) currentEditSysData.tags[cat] = []; if(currentEditSysData.tags[cat].includes(item)) { currentEditSysData.tags[cat] = currentEditSysData.tags[cat].filter(x => x !== item); } else { currentEditSysData.tags[cat].push(item); } renderEditChips('edit-chip-keyword', masters.keyword, 'keyword'); renderEditChips('edit-chip-diagnosis', masters.diagnosis, 'diagnosis'); }
+  function renderEditChips(containerId, list, cat) { const box = document.getElementById(containerId); box.innerHTML = ""; list.forEach(item => { const isOn = currentEditSysData.tags[cat] && currentEditSysData.tags[cat].includes(item); box.innerHTML += `<div class="${isOn?'chip on':'chip'}" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`; }); }
 
-  // 🌟 チップのトグル処理（修正画面用）
-  function toggleEditChip(cat, item) {
-    if(!currentEditSysData.tags[cat]) currentEditSysData.tags[cat] = [];
-    if(currentEditSysData.tags[cat].includes(item)) {
-      currentEditSysData.tags[cat] = currentEditSysData.tags[cat].filter(x => x !== item);
-    } else {
-      currentEditSysData.tags[cat].push(item);
-    }
-    renderEditChips('edit-chip-keyword', masters.keyword, 'keyword');
-    renderEditChips('edit-chip-diagnosis', masters.diagnosis, 'diagnosis');
-  }
-
-  function renderEditChips(containerId, list, cat) {
-    const box = document.getElementById(containerId); box.innerHTML = "";
-    list.forEach(item => {
-      const isOn = currentEditSysData.tags[cat] && currentEditSysData.tags[cat].includes(item);
-      box.innerHTML += `<div class="${isOn?'chip on':'chip'}" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`;
-    });
-  }
-
-  // 🌟 詳細画面（モーダル）を開く処理・全項目展開
   function openDetail(row) {
     document.getElementById("edit-old-id").value = row["要請番号"]; 
-    
-    const idEl = document.getElementById("edit-id");
-    idEl.value = row["要請番号"];
-    idEl.style.color = row["要請番号"].includes("(仮)") ? "var(--brand)" : "var(--ink)";
-    idEl.style.fontWeight = row["要請番号"].includes("(仮)") ? "bold" : "normal";
+    const idEl = document.getElementById("edit-id"); idEl.value = row["要請番号"]; idEl.style.color = row["要請番号"].includes("(仮)") ? "var(--brand)" : "var(--ink)"; idEl.style.fontWeight = row["要請番号"].includes("(仮)") ? "bold" : "normal";
 
-    let dVal = row["日付"] || "";
-    if (dVal) {
-      dVal = dVal.replace(/[\/\.]/g, "-");
-      let parts = dVal.split("-");
-      if (parts.length === 3) document.getElementById("edit-date").value = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-      else document.getElementById("edit-date").value = dVal;
-    } else { document.getElementById("edit-date").value = ""; }
-
-    document.getElementById("edit-dest").value = row["出場先"] || ""; 
-    document.getElementById("edit-dr").value = row["フライトドクター"] || ""; 
-    document.getElementById("edit-ns").value = row["フライトナース"] || "";
+    let dVal = row["日付"] || ""; if (dVal) { dVal = dVal.replace(/[\/\.]/g, "-"); let parts = dVal.split("-"); if (parts.length === 3) document.getElementById("edit-date").value = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`; else document.getElementById("edit-date").value = dVal; } else { document.getElementById("edit-date").value = ""; }
+    document.getElementById("edit-dest").value = row["出場先"] || ""; document.getElementById("edit-dr").value = row["フライトドクター"] || ""; document.getElementById("edit-ns").value = row["フライトナース"] || "";
     
-    // システムデータの復元（チップ展開用）
     currentEditSysData = { tags: { keyword: [], diagnosis: [] } };
-    if(row["システムデータ"]) {
-      try { 
-        const json = JSON.parse(row["システムデータ"]); 
-        if(json.tags) {
-          if(json.tags.keyword) currentEditSysData.tags.keyword = json.tags.keyword;
-          if(json.tags.diagnosis) currentEditSysData.tags.diagnosis = json.tags.diagnosis;
-        }
-      } catch(e){}
-    }
-    // もし現場診断データがカンマ区切りで直接入っている場合のフォールバック
-    if(currentEditSysData.tags.diagnosis.length === 0 && row["現場診断"]) {
-      currentEditSysData.tags.diagnosis = row["現場診断"].split(",").map(d => d.trim()).filter(Boolean);
-    }
+    if(row["システムデータ"]) { try { const json = JSON.parse(row["システムデータ"]); if(json.tags) { if(json.tags.keyword) currentEditSysData.tags.keyword = json.tags.keyword; if(json.tags.diagnosis) currentEditSysData.tags.diagnosis = json.tags.diagnosis; } } catch(e){} }
+    if(currentEditSysData.tags.diagnosis.length === 0 && row["現場診断"]) { currentEditSysData.tags.diagnosis = row["現場診断"].split(",").map(d => d.trim()).filter(Boolean); }
     
-    renderEditChips('edit-chip-keyword', masters.keyword, 'keyword');
-    renderEditChips('edit-chip-diagnosis', masters.diagnosis, 'diagnosis');
+    renderEditChips('edit-chip-keyword', masters.keyword, 'keyword'); renderEditChips('edit-chip-diagnosis', masters.diagnosis, 'diagnosis');
     
-    // スキーム
-    const schemeVal = row["スキーム選択"] || "";
-    document.getElementById("edit-scheme").value = schemeVal;
-    document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => {
-      b.classList.toggle('active', schemeVal && b.innerText.includes(schemeVal.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込")));
-    });
+    const schemeVal = row["スキーム選択"] || ""; document.getElementById("edit-scheme").value = schemeVal;
+    document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => { b.classList.toggle('active', schemeVal && b.innerText.includes(schemeVal.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込"))); });
     
-    // タイムライン
     const fmtTime = (t) => t ? String(t).substring(0, 5) : "";
-    document.getElementById("edit-request").value = fmtTime(row["要請時刻・施設間搬送依頼時刻"]); 
-    document.getElementById("edit-takeoff").value = fmtTime(row["初期離陸時間"]); 
-    document.getElementById("edit-landing").value = fmtTime(row["最終着陸時間"]); 
-    document.getElementById("edit-contact").value = fmtTime(row["接触"]); 
-    document.getElementById("edit-arrival").value = fmtTime(row["病着"]); 
-    document.getElementById("edit-end").value = fmtTime(row["終了"]);
+    document.getElementById("edit-request").value = fmtTime(row["要請時刻・施設間搬送依頼時刻"]); document.getElementById("edit-takeoff").value = fmtTime(row["初期離陸時間"]); document.getElementById("edit-landing").value = fmtTime(row["最終着陸時間"]); document.getElementById("edit-contact").value = fmtTime(row["接触"]); document.getElementById("edit-arrival").value = fmtTime(row["病着"]); document.getElementById("edit-end").value = fmtTime(row["終了"]);
     
-    // 備考・履歴
-    document.getElementById("edit-biko").value = row["備考"] || "";
-    document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
+    document.getElementById("edit-biko").value = row["備考"] || ""; document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
     
-    // 処置・資機材
-    let supplyHtml = "";
-    const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
-    lineKeys.forEach(k => {
-      let v = String(row[k] || ""); let isChecked = v.includes("◯") ? "checked" : "";
-      let numMatch = v.match(/\d+本/); let num = numMatch ? numMatch[0] : "1本";
-      supplyHtml += `
-        <div class="supply-row">
-          <label><input type="checkbox" id="edit-chk-${k}" ${isChecked}> ${k}</label>
-          <select id="edit-sel-${k}">
-            <option value="1本" ${num==='1本'?'selected':''}>1本</option><option value="2本" ${num==='2本'?'selected':''}>2本</option>
-            <option value="3本" ${num==='3本'?'selected':''}>3本</option><option value="4本" ${num==='4本'?'selected':''}>4本</option>
-          </select>
-        </div>`;
-    });
+    let supplyHtml = ""; const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
+    lineKeys.forEach(k => { let v = String(row[k] || ""); let isChecked = v.includes("◯") ? "checked" : ""; let numMatch = v.match(/\d+本/); let num = numMatch ? numMatch[0] : "1本"; supplyHtml += `<div class="supply-row"><label><input type="checkbox" id="edit-chk-${k}" ${isChecked}> ${k}</label><select id="edit-sel-${k}"><option value="1本" ${num==='1本'?'selected':''}>1本</option><option value="2本" ${num==='2本'?'selected':''}>2本</option><option value="3本" ${num==='3本'?'selected':''}>3本</option><option value="4本" ${num==='4本'?'selected':''}>4本</option></select></div>`; });
     const chkOnlyKeys = [{ key: "1%カルボカイン10ml使用", label: "カルボカイン" }, { key: "除細動パッド", label: "除細動パッド" }, { key: "心嚢穿刺・心嚢ドレナージ", label: "心嚢ドレナージ" }];
-    chkOnlyKeys.forEach(obj => {
-      let v = String(row[obj.key] || ""); let isChecked = (v.includes("◯") || v.includes("キット")) ? "checked" : "";
-      supplyHtml += `<div class="supply-row" style="justify-content: flex-start;"><label><input type="checkbox" id="edit-chk-${obj.key}" ${isChecked}> ${obj.label}</label></div>`;
-    });
+    chkOnlyKeys.forEach(obj => { let v = String(row[obj.key] || ""); let isChecked = (v.includes("◯") || v.includes("キット")) ? "checked" : ""; supplyHtml += `<div class="supply-row" style="justify-content: flex-start;"><label><input type="checkbox" id="edit-chk-${obj.key}" ${isChecked}> ${obj.label}</label></div>`; });
     document.getElementById("edit-supply-container").innerHTML = supplyHtml;
 
-    // 🌟 ダイナミックデータ（酸素・呼吸器・CPR）の編集UI生成
     let dynHtml = "";
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       dynHtml += `<div style="font-size:13px; font-weight:bold; margin-top:8px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:8px;">${type}</div>`;
       for(let i=1; i<=5; i++) {
-        let s = row[`${type}${i}開始`] || ""; let e = row[`${type}${i}終了`] || "";
-        let f1 = row[`${type}${i}FiO2`] || row[`${type}${i}流量`] || "";
-        
+        let s = row[`${type}${i}開始`] || ""; let e = row[`${type}${i}終了`] || ""; let f1 = row[`${type}${i}FiO2`] || row[`${type}${i}流量`] || "";
         if(s || e || f1) {
-          dynHtml += `<div class="dyn-grid">
-            <div><label style="font-size:10px; color:var(--sub);">開始</label><input type="time" id="edit-dyn-${type}${i}-start" value="${fmtTime(s)}"></div>
-            <div><label style="font-size:10px; color:var(--sub);">終了</label><input type="time" id="edit-dyn-${type}${i}-end" value="${fmtTime(e)}"></div>`;
-          
-          if(type === '酸素' || type === '呼吸器') {
-            dynHtml += `<div><label style="font-size:10px; color:var(--sub);">FiO2(%)</label><input type="text" id="edit-dyn-${type}${i}-fio2" value="${row[`${type}${i}FiO2`]||''}" oninput="toHalfWidth(this)"></div>
-                        <div><label style="font-size:10px; color:var(--sub);">流量/設定</label><input type="text" id="edit-dyn-${type}${i}-flow" value="${row[`${type}${i}流量`]||''}" oninput="toHalfWidth(this)"></div>`;
-          }
+          dynHtml += `<div class="dyn-grid"><div><label style="font-size:10px; color:var(--sub);">開始</label><input type="time" id="edit-dyn-${type}${i}-start" value="${fmtTime(s)}"></div><div><label style="font-size:10px; color:var(--sub);">終了</label><input type="time" id="edit-dyn-${type}${i}-end" value="${fmtTime(e)}"></div>`;
+          if(type === '酸素' || type === '呼吸器') { dynHtml += `<div><label style="font-size:10px; color:var(--sub);">FiO2(%)</label><input type="text" id="edit-dyn-${type}${i}-fio2" value="${row[`${type}${i}FiO2`]||''}" oninput="toHalfWidth(this)"></div><div><label style="font-size:10px; color:var(--sub);">流量/設定</label><input type="text" id="edit-dyn-${type}${i}-flow" value="${row[`${type}${i}流量`]||''}" oninput="toHalfWidth(this)"></div>`; }
           dynHtml += `</div>`;
         }
       }
     });
     document.getElementById("edit-dynamic-container").innerHTML = dynHtml || "<div style='font-size:12px; color:var(--sub);'>記録なし</div>";
     
-    // 完了・本人代行の設定
     const isDone = (row["ステータス"] || "").includes("完了") && !(row["ステータス"] || "").includes("未完了");
-    document.getElementById("btn-complete").style.display = isDone ? "none" : "block";
-    document.getElementById("complete-box").style.display = isDone ? "none" : "block";
+    document.getElementById("btn-complete").style.display = isDone ? "none" : "block"; document.getElementById("complete-box").style.display = isDone ? "none" : "block";
     
-    document.querySelector('input[name="comp-who"][value="本人"]').checked = true;
-    document.querySelector('input[name="edit-who"][value="本人"]').checked = true;
-    toggleComp(); toggleEditWho();
-    document.getElementById("comp-name").value = "";
-    document.getElementById("edit-person").value = row["フライトナース"] || "";
-    
+    document.querySelector('input[name="comp-who"][value="本人"]').checked = true; document.querySelector('input[name="edit-who"][value="本人"]').checked = true; toggleComp(); toggleEditWho();
+    document.getElementById("comp-name").value = ""; document.getElementById("edit-person").value = row["フライトナース"] || "";
     openModal("detail-modal");
   }
 
   async function deleteRecord() {
     const p = prompt("この事案データを完全に削除しますか？\n実行するにはアクセスコードを入力してください。");
     if (p !== activePin) { if (p !== null) alert("パスワードが一致しません。削除は中止されました。"); return; }
-    const id = document.getElementById("edit-old-id").value; document.getElementById("global-loader").style.display = "flex";
+    const id = document.getElementById("edit-old-id").value; 
+    showLoader("削除処理中...", "データベースからレコードを削除しています");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_record", password: activePin, id: id }), redirect: "follow" });
       const json = await res.json();
-      if (json.status === "success") { alert("事案を削除しました。"); closeModal('detail-modal'); fetchData(); } else { alert("エラー: " + json.message); }
-    } catch(e) { alert("通信エラーが発生しました。"); } finally { document.getElementById("global-loader").style.display = "none"; }
+      if (json.status === "success") { alert("事案を削除しました。"); closeModal('detail-modal'); fetchData(); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   async function markComplete() {
-    const id = document.getElementById("edit-old-id").value;
-    const type = document.querySelector('input[name="comp-who"]:checked').value;
-    let who = type;
-    if (type === "代行") { const name = document.getElementById("comp-name").value.trim(); if(!name) return alert("代行入力者の名前を入力してください。"); who = "代行: " + name; }
-    else { who = document.getElementById("edit-ns").value || "本人"; }
-
+    const id = document.getElementById("edit-old-id").value; const type = document.querySelector('input[name="comp-who"]:checked').value; let who = type;
+    if (type === "代行") { const name = document.getElementById("comp-name").value.trim(); if(!name) return alert("代行入力者の名前を入力してください。"); who = "代行: " + name; } else { who = document.getElementById("edit-ns").value || "本人"; }
     if (!confirm(`事案 [ ${id} ] を完了にしますか？\n（記録: ${who}）`)) return;
-    const btn = document.getElementById("btn-complete"); btn.innerText = "処理中..."; btn.disabled = true;
-    
+    showLoader("完了処理中...", "電子カルテの完了ステータスを更新しています");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_status", password: activePin, id: id, who: who }), redirect: "follow" });
       const json = await res.json();
-      if (json.status === "success") { alert("完了しました！"); closeModal('detail-modal'); fetchData(); } else { alert("エラー: " + json.message); }
-    } catch(e) { alert("通信エラーが発生しました。"); }
-    btn.innerText = "✅ 完了状態にする"; btn.disabled = false;
+      if (json.status === "success") { alert("完了しました！"); closeModal('detail-modal'); fetchData(); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   async function saveRecord() {
-    let editor = document.getElementById("edit-person").value.trim(); 
-    const editType = document.querySelector('input[name="edit-who"]:checked').value;
+    let editor = document.getElementById("edit-person").value.trim(); const editType = document.querySelector('input[name="edit-who"]:checked').value;
     if (editType === "本人") editor = document.getElementById("edit-ns").value || "担当Ns";
     if(!editor) return alert("「修正担当者名」を入力するか、フライトNsを選択してください。");
-    
-    const oldId = document.getElementById("edit-old-id").value; 
-    const newId = document.getElementById("edit-id").value.trim();
+    const oldId = document.getElementById("edit-old-id").value; const newId = document.getElementById("edit-id").value.trim();
     if(!confirm(`データを上書きしてよろしいですか？`)) return;
     
-    const btn = event.target; btn.innerText = "保存中..."; btn.disabled = true;
+    let payload = { "要請番号": newId, "日付": document.getElementById("edit-date").value, "出場先": document.getElementById("edit-dest").value, "スキーム選択": document.getElementById("edit-scheme").value, "フライトドクター": document.getElementById("edit-dr").value, "フライトナース": document.getElementById("edit-ns").value, "要請時刻・施設間搬送依頼時刻": document.getElementById("edit-request").value, "初期離陸時間": document.getElementById("edit-takeoff").value, "最終着陸時間": document.getElementById("edit-landing").value, "接触": document.getElementById("edit-contact").value, "病着": document.getElementById("edit-arrival").value, "終了": document.getElementById("edit-end").value, "備考": document.getElementById("edit-biko").value, "現場診断": (currentEditSysData.tags.diagnosis||[]).join(", ") };
+    const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
+    lineKeys.forEach(k => { const chk = document.getElementById(`edit-chk-${k}`); const sel = document.getElementById(`edit-sel-${k}`); if (chk && chk.checked) payload[k] = "◯ " + sel.value; else payload[k] = ""; });
+    if (document.getElementById("edit-chk-1%カルボカイン10ml使用").checked) payload["1%カルボカイン10ml使用"] = "◯"; else payload["1%カルボカイン10ml使用"] = "";
+    if (document.getElementById("edit-chk-除細動パッド").checked) payload["除細動パッド"] = "◯"; else payload["除細動パッド"] = "";
+    if (document.getElementById("edit-chk-心嚢穿刺・心嚢ドレナージ").checked) payload["心嚢穿刺・心嚢ドレナージ"] = "キット"; else payload["心嚢穿刺・心嚢ドレナージ"] = "";
     
-    try {
-      let payload = { 
-        "要請番号": newId, "日付": document.getElementById("edit-date").value, "出場先": document.getElementById("edit-dest").value, 
-        "スキーム選択": document.getElementById("edit-scheme").value, "フライトドクター": document.getElementById("edit-dr").value, 
-        "フライトナース": document.getElementById("edit-ns").value, "要請時刻・施設間搬送依頼時刻": document.getElementById("edit-request").value, 
-        "初期離陸時間": document.getElementById("edit-takeoff").value, "最終着陸時間": document.getElementById("edit-landing").value, 
-        "接触": document.getElementById("edit-contact").value, "病着": document.getElementById("edit-arrival").value, "終了": document.getElementById("edit-end").value,
-        "備考": document.getElementById("edit-biko").value, 
-        "现场診断": (currentEditSysData.tags.diagnosis||[]).join(", "),
-        "現場診断": (currentEditSysData.tags.diagnosis||[]).join(", ")
-      };
-      
-      const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
-      lineKeys.forEach(k => { const chk = document.getElementById(`edit-chk-${k}`); const sel = document.getElementById(`edit-sel-${k}`); if (chk && chk.checked) payload[k] = "◯ " + sel.value; else payload[k] = ""; });
-      if (document.getElementById("edit-chk-1%カルボカイン10ml使用").checked) payload["1%カルボカイン10ml使用"] = "◯"; else payload["1%カルボカイン10ml使用"] = "";
-      if (document.getElementById("edit-chk-除細動パッド").checked) payload["除細動パッド"] = "◯"; else payload["除細動パッド"] = "";
-      if (document.getElementById("edit-chk-心嚢穿刺・心嚢ドレナージ").checked) payload["心嚢穿刺・心嚢ドレナージ"] = "キット"; else payload["心嚢穿刺・心嚢ドレナージ"] = "";
-      
-      // ダイナミックデータの抽出
-      ["酸素", "呼吸器", "圧迫"].forEach(type => {
-        for(let i=1; i<=5; i++) {
-          const s = document.getElementById(`edit-dyn-${type}${i}-start`); const e = document.getElementById(`edit-dyn-${type}${i}-end`);
-          if(s) payload[`${type}${i}開始`] = s.value;
-          if(e) payload[`${type}${i}終了`] = e.value;
-          if(type === '酸素' || type === '呼吸器') {
-            const f = document.getElementById(`edit-dyn-${type}${i}-fio2`); const fl = document.getElementById(`edit-dyn-${type}${i}-flow`);
-            if(f) payload[`${type}${i}FiO2`] = f.value;
-            if(fl) payload[`${type}${i}流量`] = fl.value;
-          }
-        }
-      });
-      
-      // 裏システムデータの同期・保存
-      payload["システムデータ"] = JSON.stringify({
-        reqType: rowReqTypeExtract(payload["備考"]),
-        scheme: payload["スキーム選択"],
-        times: {},
-        vals: { '備考': payload["備考"] },
-        chips: {},
-        tags: currentEditSysData.tags,
-        dyn: { 酸素: 5, 圧迫: 5, 呼吸器: 5 },
-        calc: { oshin: true, hansho: true, long: true, monitor: true, spo2: true, mTime: "--:--", mTimeManual: false }
-      });
+    ["酸素", "呼吸器", "圧迫"].forEach(type => { for(let i=1; i<=5; i++) { const s = document.getElementById(`edit-dyn-${type}${i}-start`); const e = document.getElementById(`edit-dyn-${type}${i}-end`); if(s) payload[`${type}${i}開始`] = s.value; if(e) payload[`${type}${i}終了`] = e.value; if(type === '酸素' || type === '呼吸器') { const f = document.getElementById(`edit-dyn-${type}${i}-fio2`); const fl = document.getElementById(`edit-dyn-${type}${i}-flow`); if(f) payload[`${type}${i}FiO2`] = f.value; if(fl) payload[`${type}${i}流量`] = fl.value; } } });
+    
+    const biko = payload["備考"] || "";
+    payload["システムデータ"] = JSON.stringify({ reqType: String(biko).includes("【現場要請】")?"現場要請":String(biko).includes("【キーワード要請】")?"キーワード要請":String(biko).includes("【施設間要請】")?"施設間要請":"", scheme: payload["スキーム選択"], times: {}, vals: { '備考': biko }, chips: {}, tags: currentEditSysData.tags, dyn: { 酸素: 5, 圧迫: 5, 呼吸器: 5 }, calc: { oshin: true, hansho: true, long: true, monitor: true, spo2: true, mTime: "--:--", mTimeManual: false } });
 
+    showLoader("上書き保存中...", "データを更新しています");
+    try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_record", password: activePin, old_id: oldId, editor: editor, data: payload }), redirect: "follow" });
       const json = await res.json();
-      
-      if(json.status === "success") { alert("上書き保存しました。"); closeModal('detail-modal'); fetchData(); } 
-      else { alert("エラー: " + json.message); }
-    } catch(e) { alert("通信エラーが発生しました。"); }
-    btn.innerText = "💾 上書き保存"; btn.disabled = false;
-  }
-
-  function rowReqTypeExtract(biko) {
-    if(String(biko).includes("【現場要請】")) return "現場要請";
-    if(String(biko).includes("【キーワード要請】")) return "キーワード要請";
-    if(String(biko).includes("【施設間要請】")) return "施設間要請";
-    return "";
+      if(json.status === "success") { alert("上書き保存しました。"); closeModal('detail-modal'); fetchData(); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   async function sendEmail() {
     const id = document.getElementById("edit-id").value;
     if(!confirm(`事案 [ ${id} ] の内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
-    const btn = document.getElementById("btn-email"); btn.innerText = "送信中..."; btn.disabled = true;
+    showLoader("メール送信中...", "関係各所に送信しています");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "send_email", password: activePin, id: id }), redirect: "follow" });
       const json = await res.json();
-      if (json.status === "success") { alert("メールを送信しました！"); } else { alert("エラー: " + json.message); }
-    } catch(e) { alert("通信エラーが発生しました。"); }
-    btn.innerText = "📧 メール再送"; btn.disabled = false;
+      if (json.status === "success") { alert("メールを送信しました！"); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   function exportCSV() {
     if(filteredData.length === 0) return alert("データがありません。");
-    const headers = Object.keys(filteredData[0]); let csvContent = headers.join(",") + "\n";
+    const headers = Object.keys(filteredData[0]); let csvContent = "\uFEFF" + headers.join(",") + "\n";
     filteredData.forEach(row => { csvContent += headers.map(h => `"${String(row[h] || "").replace(/"/g, '""')}"`).join(",") + "\n"; });
-    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" }); 
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `AW109_Data_${new Date().getTime()}.csv`; a.click();
-  }
-
-  async function fetchInit() {
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: activePin, app_name: "検索" }), redirect: "follow" });
-      const jsonRes = await res.json();
-      if (jsonRes.status === "success") {
-        if (jsonRes.masters) {
-          masters = jsonRes.masters;
-          const destOpts = '<option value="">全出場先</option>' + masters.dest.map(v => `<option value="${v}">${v}</option>`).join("");
-          document.getElementById("q-dest").innerHTML = destOpts; 
-          document.getElementById("edit-dest").innerHTML = destOpts.replace("全出場先", "選択...");
-          
-          document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + masters.dr.map(v => `<option value="${v}">${v}</option>`).join("");
-          document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
-          
-          const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...masters.dr, ...masters.ns])].map(v => `<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
-          document.getElementById("edit-dr").innerHTML = staffEditOpts; 
-          document.getElementById("edit-ns").innerHTML = staffEditOpts;
-        }
-        if (jsonRes.qa) { document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>'; }
-        const manualsData = jsonRes.manuals || []; document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>マニュアルはありません。</p>';
-        
-        const urlParams = new URLSearchParams(window.location.search); if (urlParams.get('auto_filter') === 'uncompleted') { document.getElementById('q-status').value = '未完了'; fetchData(); }
-      } else { alert("初期設定データの取得に失敗しました。"); }
-    } catch(e) { console.error(e); alert("通信エラーが発生しました。"); } finally { document.getElementById("global-loader").style.display = "none"; }
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `AW109_Data_${new Date().getTime()}.csv`; a.click();
   }
 
   async function submitQA(event) {
@@ -1000,9 +586,8 @@
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: activePin, question: q, source: "検索コンソール" }), redirect: "follow" });
       const jsonRes = await res.json();
-      if(jsonRes.status === "success") { alert("送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } else { alert("エラー: " + jsonRes.message); }
-    } catch(e) { alert("通信エラーが発生しました。"); }
-    btn.textContent = "送信する ✉️"; btn.disabled = false;
+      if(jsonRes.status === "success") { alert("送信しました。管理者に通知されました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } else { throw new Error(jsonRes.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { btn.textContent = "送信する ✉️"; btn.disabled = false; }
   }
 </script>
 </body>
