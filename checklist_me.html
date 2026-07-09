@@ -20,7 +20,6 @@
     .chk-row:last-child { border-bottom: none; }
     .chk-title { font-size: 15px; font-weight: 700; color: var(--ink); }
     
-    /* ◯/✕トグルボタン */
     .toggle-group { display: flex; gap: 8px; }
     .tgl-btn { flex: 1; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; }
     .tgl-btn.ok.active { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
@@ -72,7 +71,6 @@
       </div>
     </div>
 
-    <!-- 🌟 秒速で終わる「一括OK」ボタン -->
     <button class="btn-all-ok" onclick="setAllOk()">✅ すべて異常なし (一括チェック)</button>
 
     <div id="checklist-container"></div>
@@ -95,8 +93,8 @@
     const PIN_CODE = "5740";
     
     let checklistItems = [];
-    let currentData = {}; // key: index, val: result
-    let errorDetails = {}; // key: index, val: text
+    let currentData = {}; 
+    let errorDetails = {}; 
 
     window.onload = () => {
       const now = new Date();
@@ -191,12 +189,10 @@
       }
     }
 
-    // 🌟 1タップで全項目をOKにする魔法のボタン
     function setAllOk() {
       checklistItems.forEach((item, i) => {
         if(item.inputType === "◯/✕") setVal(i, '◯');
       });
-      // 画面下部にスクロールして保存ボタンを見せる
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
