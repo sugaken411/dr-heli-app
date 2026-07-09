@@ -17,26 +17,30 @@
 
     main { margin-top: calc(110px + var(--safe-top)); padding: 16px; max-width: 700px; margin-left: auto; margin-right: auto; }
     
-    .type-picker { display: flex; background: #e5e5ea; border-radius: 8px; padding: 4px; margin-bottom: 16px; gap: 4px; }
-    .type-btn { flex: 1; text-align: center; padding: 8px 4px; font-size: 12px; font-weight: 800; color: var(--sub); border-radius: 6px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    /* 🌟 横スクロール対応メニュー */
+    .type-picker-wrapper { margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; margin-left:-8px; margin-right:-8px; padding-left:8px; padding-right:8px; }
+    .type-picker { display: inline-flex; background: #e5e5ea; border-radius: 8px; padding: 4px; gap: 4px; min-width: max-content; }
+    .type-btn { padding: 8px 12px; font-size: 13px; font-weight: 800; color: var(--sub); border-radius: 6px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
     .type-btn.active { background: #fff; color: var(--ink); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
-    .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+    .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; position: sticky; top: calc(100px + var(--safe-top)); z-index: 10; }
     
-    .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+    .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
     .chk-row:last-child { border-bottom: none; }
     .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; }
     
     .toggle-group { display: flex; gap: 8px; }
-    .tgl-btn { flex: 1; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; }
+    .tgl-btn { flex: 1; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; }
     .tgl-btn.ok.active { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
     .tgl-btn.ng.active { background: #ffebee; color: #c62828; border-color: #ef5350; }
     
-    .text-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; box-sizing: border-box; font-weight:600;}
-    .error-reason { display: none; margin-top: 8px; }
+    .text-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; box-sizing: border-box; font-weight:600; color:var(--ink); }
+    .text-input:focus { border-color: var(--blue); background: #fff; }
+    .error-reason { display: none; margin-top: 4px; }
     
-    .btn-submit { width: 100%; padding: 16px; background: var(--blue); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+    .btn-submit { width: 100%; padding: 16px; background: var(--blue); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0,122,255,0.3); transition:0.2s; }
+    .btn-submit:active { transform:scale(0.98); }
 
     .history-item { padding: 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
     .history-item:last-child { border-bottom: none; }
@@ -57,12 +61,13 @@
 
     @media print {
       body { background: #fff; }
-      header, .tab-container, .type-picker, .no-print { display: none !important; }
+      header, .tab-container, .type-picker-wrapper, .no-print { display: none !important; }
       main { margin-top: 0; padding: 0; max-width: 100%; }
-      .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom:20px; }
       #tab-history { display: block !important; }
       #tab-input { display: none !important; }
       details[open] summary ~ * { display: block; }
+      details { break-inside: avoid; }
     }
   </style>
 </head>
@@ -77,7 +82,7 @@
   <header class="no-print">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div style="font-weight:900; font-size:16px; user-select:none;" onclick="secretCommand()">
-      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.3</span>
+      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.4</span>
     </div>
     <button class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
   </header>
@@ -88,10 +93,17 @@
   </div>
 
   <main>
-    <div class="type-picker no-print">
-      <div class="type-btn active" id="btn-type-me" onclick="switchType('ME')">🔌 ME機器</div>
-      <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
-      <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
+    <div class="type-picker-wrapper no-print">
+      <div class="type-picker">
+        <div class="type-btn active" id="btn-type-me" onclick="switchType('ME')">🔌 ME機器</div>
+        <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
+        <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
+        <div class="type-btn" id="btn-type-fn-start" onclick="switchType('FN(開始前)')">📋 FN(開始前)</div>
+        <div class="type-btn" id="btn-type-fn-end" onclick="switchType('FN(終了後)')">📋 FN(終了後)</div>
+        <div class="type-btn" id="btn-type-fn-other" onclick="switchType('FN(その他)')">📋 FN(その他)</div>
+        <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
+        <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
+      </div>
     </div>
 
     <div id="tab-input" class="tab-content active">
@@ -114,7 +126,7 @@
           <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">全体特記事項 (引き継ぎ事項・補充報告など)</label>
           <textarea id="c-remarks" rows="3" class="text-input" placeholder="例：吸引器の予備バッテリーを1本補充しました。"></textarea>
           <div style="margin-top:16px; padding-top:16px; border-top:1px dashed #ccc; text-align:center;">
-            <button class="btn-submit" id="btn-save" onclick="submitChecklist()">点検を完了・保存する</button>
+            <button class="btn-submit" id="btn-save" onclick="submitChecklist()">点検データを保存する</button>
           </div>
         </div>
       </div>
@@ -136,7 +148,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
     
-    let currentType = "ME"; // 'ME', 'ナースバック', 'ヘリ内'
+    let currentType = "ME"; 
     let currentMainTab = "input"; 
     
     let checklistItems = [];
@@ -144,23 +156,16 @@
     let errorDetails = {}; 
 
     // 💡 隠しコマンド（トリプルクリック）の実装
-    let tapCount = 0;
-    let tapTimer;
+    let tapCount = 0; let tapTimer;
     function secretCommand() {
-      tapCount++;
-      clearTimeout(tapTimer);
-      tapTimer = setTimeout(() => { tapCount = 0; }, 600); // 0.6秒以内に3回タップ
+      tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 600); 
       if (tapCount >= 3) {
-        tapCount = 0;
-        setAllOk(); // 一括チェック実行
+        tapCount = 0; setAllOk();
         alert("🤫 シークレット機能：\n全項目を一括で「異常なし」に設定しました。");
       }
     }
 
-    window.onload = () => {
-      resetTime();
-      loadDataForCurrentView();
-    };
+    window.onload = () => { resetTime(); loadDataForCurrentView(); };
 
     function resetTime() {
       const now = new Date();
@@ -189,9 +194,14 @@
     function switchType(type) {
       currentType = type;
       document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
-      if(type === 'ME') document.getElementById("btn-type-me").classList.add("active");
-      else if(type === 'ナースバック') document.getElementById("btn-type-ns").classList.add("active");
-      else if(type === 'ヘリ内') document.getElementById("btn-type-heli").classList.add("active");
+      
+      // ボタンのIDマッピング
+      const btnMap = {
+        'ME': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli',
+        'FN(開始前)': 'btn-type-fn-start', 'FN(終了後)': 'btn-type-fn-end', 'FN(その他)': 'btn-type-fn-other',
+        'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki'
+      };
+      if(btnMap[type]) document.getElementById(btnMap[type]).classList.add("active");
       
       document.getElementById("print-title").innerText = `【${type}】 点検履歴`;
       resetTime();
@@ -199,33 +209,38 @@
     }
 
     function loadDataForCurrentView() {
-      if (currentMainTab === "input") {
-        fetchMaster();
-      } else {
-        fetchHistory();
-      }
+      if (currentMainTab === "input") fetchMaster();
+      else fetchHistory();
     }
 
     // ---------------------------------
     // 📝 入力画面の処理
     // ---------------------------------
     async function fetchMaster() {
-      showLoader(`${currentType}マスタ読込中...`, "点検項目を生成しています");
+      showLoader(`${currentType} マスタ読込中...`, "点検項目を生成しています");
       currentData = {}; errorDetails = {};
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: currentType })
+          // ⚠️ マスタ名は括弧などを除外したベース名でGASに投げる
+          body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: currentType.replace(/\(.*\)/, '') })
         });
         const json = await res.json();
         if (json.status === "success") {
-          checklistItems = json.items;
+          // ⚠️ FNチェックの場合、選択された時間帯（大分類）だけを抽出する
+          if (currentType.startsWith('FN')) {
+            const timeZone = currentType.replace('FN(', '').replace(')', '');
+            checklistItems = json.items.filter(it => it.category === `運航${timeZone}` || it.category === timeZone);
+          } else {
+            checklistItems = json.items;
+          }
+
           const sel = document.getElementById("c-staff");
           sel.innerHTML = '<option value="">選択してください...</option>';
           json.nsList.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
           renderChecklist();
         } else {
-          alert(`マスタ読込エラー: ${json.message}`);
+          alert(`マスタ読込エラー: ${json.message}\n※スプレッドシートに「${currentType.replace(/\(.*\)/, '')}点検マスタ」が存在するか確認してください。`);
         }
       } catch(e) { alert("通信エラーが発生しました。"); } finally { hideLoader(); }
     }
@@ -235,6 +250,11 @@
       container.innerHTML = "";
       document.getElementById("c-remarks").value = "";
       
+      if(checklistItems.length === 0) {
+        container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--sub);">表示する点検項目がありません。</div>`;
+        return;
+      }
+
       const grouped = {};
       checklistItems.forEach((item, i) => {
         if(!grouped[item.category]) grouped[item.category] = [];
@@ -248,6 +268,7 @@
           html += `<div class="chk-row">
             <div class="chk-title">${it.name} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div>`;
             
+          // 💡 入力タイプが「◯/✕」以外（自由記述・数値入力など）の場合の処理
           if (it.inputType === "◯/✕") {
             html += `
               <div class="toggle-group">
@@ -255,10 +276,10 @@
                 <div class="tgl-btn ng" id="btn-ng-${idx}" onclick="setVal(${idx}, '✕')">✕ 異常あり</div>
               </div>
               <div class="error-reason" id="err-box-${idx}">
-                <input type="text" class="text-input" placeholder="異常の詳細・対応を入力..." id="err-txt-${idx}" onchange="errorDetails[${idx}]=this.value" style="border-color:var(--brand); background:var(--brand-light);">
+                <input type="text" class="text-input" placeholder="異常の詳細、または対象外の理由を入力..." id="err-txt-${idx}" onchange="errorDetails[${idx}]=this.value" style="border-color:var(--brand); background:var(--brand-light);">
               </div>`;
           } else {
-            html += `<input type="text" class="text-input" placeholder="数値を入力..." onchange="setVal(${idx}, this.value)">`;
+            html += `<input type="text" class="text-input" placeholder="テキストや数値を入力..." onchange="setVal(${idx}, this.value)">`;
           }
           html += `</div>`;
         });
@@ -273,19 +294,13 @@
         document.getElementById(`btn-ok-${idx}`).classList.toggle('active', val === '◯');
         document.getElementById(`btn-ng-${idx}`).classList.toggle('active', val === '✕');
         const errBox = document.getElementById(`err-box-${idx}`);
-        if (val === '✕') {
-          errBox.style.display = 'block';
-        } else {
-          errBox.style.display = 'none';
-          document.getElementById(`err-txt-${idx}`).value = "";
-          delete errorDetails[idx];
-        }
+        if (val === '✕') { errBox.style.display = 'block'; } 
+        else { errBox.style.display = 'none'; document.getElementById(`err-txt-${idx}`).value = ""; delete errorDetails[idx]; }
       }
     }
 
-    // 裏ワザから呼ばれる関数
     function setAllOk() {
-      checklistItems.forEach((item, i) => { if(item.inputType === "◯/✕") setVal(i, '◯'); });
+      checklistItems.forEach((item, i) => { if(item.inputType === "◯/✕") setVal(item.originalIndex, '◯'); });
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
@@ -294,18 +309,25 @@
       if(!staff) return alert("点検者 (Ns) を選択してください。");
 
       let missing = [];
-      checklistItems.forEach((item, i) => { if(item.required && !currentData[i]) missing.push(`[${item.category}] ${item.name}`); });
+      checklistItems.forEach(item => { 
+        if(item.required && !currentData[item.originalIndex]) missing.push(`[${item.category}] ${item.name}`); 
+      });
       if(missing.length > 0) return alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`);
 
       let judgment = "異常なし"; let errorList = [];
-      checklistItems.forEach((item, i) => {
-        if (currentData[i] === "✕") { judgment = "異常あり"; errorList.push(`${item.category} - ${item.name} (${errorDetails[i] || '詳細未記入'})`); }
+      checklistItems.forEach(item => {
+        let val = currentData[item.originalIndex];
+        if (val === "✕") { 
+          judgment = "異常あり"; 
+          errorList.push(`${item.category} - ${item.name} (${errorDetails[item.originalIndex] || '詳細未記入'})`); 
+        }
       });
 
       let rawJson = {};
-      checklistItems.forEach((item, i) => {
-        rawJson[`${item.category}_${item.name}`] = currentData[i] || "";
-        if(errorDetails[i]) rawJson[`${item.category}_${item.name}_詳細`] = errorDetails[i];
+      checklistItems.forEach(item => {
+        let idx = item.originalIndex;
+        rawJson[`${item.category}_${item.name}`] = currentData[idx] || "";
+        if(errorDetails[idx]) rawJson[`${item.category}_${item.name}_詳細`] = errorDetails[idx];
       });
       rawJson["全体特記事項"] = document.getElementById("c-remarks").value;
 
@@ -317,7 +339,7 @@
         rawJson: rawJson
       };
 
-      if(!confirm(`総合判定: ${judgment}\n【${currentType}】の点検データを保存しますか？`)) return;
+      if(!confirm(`総合判定: ${judgment}\n【${currentType}】のデータを保存しますか？`)) return;
 
       const btn = document.getElementById("btn-save"); btn.innerText = "保存中..."; btn.disabled = true;
       showLoader("データ保存中...", "データベースに書き込んでいます");
@@ -325,7 +347,8 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: currentType, data: payload })
+          // ⚠️ 履歴保存時も、ベースのシート名（FNチェックデータなど）に送る
+          body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: currentType.replace(/\(.*\)/, ''), data: payload })
         });
         const json = await res.json();
         if (json.status === "success") {
@@ -333,22 +356,22 @@
           switchMainTab('history'); 
         } else { throw new Error(json.message); }
       } catch(e) { alert("通信エラーが発生しました。"); } finally {
-        btn.innerText = "点検を完了・保存する"; btn.disabled = false; hideLoader();
+        btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader();
       }
     }
 
     // ---------------------------------
-    // 🔍 履歴画面の処理（アコーディオン詳細表示を追加）
+    // 🔍 履歴画面の処理
     // ---------------------------------
     async function fetchHistory() {
-      showLoader(`${currentType}履歴 読込中...`, "データベースから最新の記録を取得しています");
+      showLoader(`${currentType} 履歴読込中...`, "データベースから最新の記録を取得しています");
       const container = document.getElementById("history-container");
       container.innerHTML = "";
       
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: currentType })
+          body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: currentType.replace(/\(.*\)/, '') })
         });
         const json = await res.json();
         
@@ -362,13 +385,8 @@
             const isOk = h.judgment === "異常なし";
             const badgeClass = isOk ? "h-ok" : "h-ng";
             const badgeText = isOk ? "✅ 異常なし" : "⚠️ 異常あり";
+            const remarks = h.rawJson["全体特記事項"] ? `<div class="h-remarks">💬 連絡事項：<br>${h.rawJson["全体特記事項"]}</div>` : "";
             
-            // 💡 特記事項（引き継ぎ事項）の表示強調
-            const remarks = h.rawJson["全体特記事項"] 
-              ? `<div class="h-remarks">💬 連絡事項：<br>${h.rawJson["全体特記事項"]}</div>` 
-              : "";
-            
-            // 💡 保存された全データを一覧化（アコーディオンの中身）
             let detailsHtml = '<div style="margin-top:8px; font-size:12px; color:var(--ink); background:#f9f9f9; padding:8px; border-radius:6px; border:1px solid #e5e5ea; display:grid; gap:4px;">';
             for(let key in h.rawJson) {
               if(key !== "全体特記事項" && !key.endsWith("_詳細")) {
