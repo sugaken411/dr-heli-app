@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>AW109 症例登録</title>
+  <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A109E_Power_Helicopter.jpg/180px-A109E_Power_Helicopter.jpg">
   <style>
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
+    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --med-blue-text: #1565c0; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); padding-bottom: calc(80px + var(--safe-bot)); -webkit-font-smoothing: antialiased; }
     
@@ -15,28 +18,33 @@
     
     .tab-container { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; z-index: 99; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
-    .nav-tab { flex: 1; min-width: 70px; text-align: center; padding: 0 4px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
+    .nav-tab { flex: 1; min-width: 75px; text-align: center; padding: 0 4px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
     .nav-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
     
     main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
-    /* インテリジェントローダー */
-    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    /* 🌟 インテリジェントローダー */
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
     .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 16px; }
-    .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;}
     
-    input[type="text"], input[type="tel"], input[type="time"], input[type="date"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 16px; background: var(--bg); outline: none; padding: 14px 12px; border-radius: 8px; margin-bottom: 8px; color: var(--ink); font-weight: 600; box-sizing: border-box; }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 6px; }
+    input[type="text"], input[type="tel"], input[type="time"], input[type="date"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 16px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; color: var(--ink); font-weight: 600; box-sizing: border-box; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); background: #fff; }
     textarea { resize: vertical; min-height: 80px; }
     
-    .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
-    .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+    .btn-next { background: var(--brand); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 16px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); transition: 0.2s; }
+    .btn-next:active { transform: scale(0.98); }
+    .btn-small { background: var(--blue); color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
-    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    /* トグル・ラジオ・チップ UI */
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
     .radio-lbl { display: inline-block; padding: 10px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; font-size: 14px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
     input[type="radio"], input[type="checkbox"] { display: none; }
     input[type="radio"]:checked + .radio-lbl, input[type="checkbox"]:checked + .radio-lbl { background: var(--brand); color: #fff; border-color: var(--brand); }
@@ -45,427 +53,581 @@
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 10px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; } 
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
-    .acc-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; cursor: pointer; color: var(--ink); }
-    .acc-header .arrow { font-size: 12px; color: var(--sub); transition: 0.3s; }
-    .acc-header.open .arrow { transform: rotate(180deg); }
-    .acc-body { display: none; padding: 12px 0; }
-    .acc-body.open { display: block; animation: fadeIn 0.2s ease; }
-
-    .tab-content { display: none; animation: fadeIn 0.3s ease; } 
+    /* 処置の詳細アコーディオン */
+    .proc-item { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+    .chk-label { display: block; padding: 14px 16px; background: var(--bg); font-weight: bold; font-size: 15px; color: var(--ink); cursor: pointer; user-select: none; }
+    .chk-label input { display: none; }
+    .chk-label.active { background: var(--med-blue); color: var(--med-blue-text); border-bottom: 1px solid var(--line); }
+    .proc-details { padding: 16px; background: #fff; display: none; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    
+    .tab-content { display: none; animation: fadeIn 0.2s ease; }
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.show { display: flex; }
-    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
-    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<datalist id="dest-list"></datalist>
-
-<div id="global-loader">
-  <div class="spinner"></div>
-  <div class="loader-text" id="loader-main-text">マスタ同期中...</div>
-  <div class="loader-subtext" id="loader-sub-text">データベースに接続しています</div>
-</div>
-
-<header>
-  <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">症例登録 <span class="version-tag">v12.1</span></div>
-  <div style="display:flex; gap:12px;">
-    <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div class="loader-text" id="loader-main">読み込み中...</div>
+    <div class="loader-subtext" id="loader-sub">データベースに接続しています</div>
   </div>
-</header>
 
-<div class="tab-container">
-  <div class="nav-tab active" onclick="switchTab('sec1')">1.基本</div>
-  <div class="nav-tab" onclick="switchTab('sec2')">2.時間</div>
-  <div class="nav-tab" onclick="switchTab('sec3')">3.処置</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.特記</div>
-  <div class="nav-tab" onclick="switchTab('sec5')">5.送信</div>
-</div>
+  <header>
+    <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+    <div style="font-weight:900; font-size:16px;">新規事案登録 <span class="version-tag">v2.1</span></div>
+    <div style="width: 60px;"></div>
+  </header>
 
-<main>
-  <div id="tab-sec1" class="tab-content active">
-    <div class="card">
-      <div class="section-label">🚁 出場基本情報</div>
-      <label style="font-size:12px; font-weight:bold; color:var(--sub);">日付</label>
-      <input type="date" id="t-date">
-      
-      <label style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:8px;">要請番号 (自動発番不可)</label>
-      <input type="tel" inputmode="numeric" id="t-no" placeholder="例: 12345" oninput="toHalfWidth(this)">
-      
-      <label style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:8px;">スキーム選択</label>
-      <div class="radio-group" style="margin-top:4px;">
-        <label><input type="radio" name="scheme" value="Uターン救急隊"><span class="radio-lbl">Uターン救急隊</span></label>
-        <label><input type="radio" name="scheme" value="Iターン救急隊"><span class="radio-lbl">Iターン救急隊</span></label>
-        <label><input type="radio" name="scheme" value="Iターン救急隊のみ"><span class="radio-lbl">I隊のみ(Dr接触無)</span></label>
-        <label><input type="radio" name="scheme" value="現場Uターン救急隊"><span class="radio-lbl">現場Uターン救急隊</span></label>
-        <label><input type="radio" name="scheme" value="現場Uターンヘリ"><span class="radio-lbl">現場Uターンヘリ</span></label>
-        <label><input type="radio" name="scheme" value="施設間搬送"><span class="radio-lbl">施設間搬送</span></label>
-        <label><input type="radio" name="scheme" value="キャンセル"><span class="radio-lbl">キャンセル</span></label>
-        <label><input type="radio" name="scheme" value="その他"><span class="radio-lbl">その他</span></label>
-      </div>
-      
-      <label style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:8px;">要請形態</label>
-      <div class="radio-group" style="margin-top:4px;">
-        <label><input type="radio" name="req-type" value="現場要請" onchange="toggleReqType()"><span class="radio-lbl">現場要請</span></label>
-        <label><input type="radio" name="req-type" value="キーワード要請" onchange="toggleReqType()"><span class="radio-lbl">キーワード要請</span></label>
-        <label><input type="radio" name="req-type" value="施設間搬送" onchange="toggleReqType()"><span class="radio-lbl">施設間搬送</span></label>
-      </div>
+  <div class="tab-container" id="tabs">
+    <div class="nav-tab active" onclick="switchTab('tab1')">① 基本・時間</div>
+    <div class="nav-tab" onclick="switchTab('tab2')">② 算定・保険</div>
+    <div class="nav-tab" onclick="switchTab('tab3')">③ 処置・資機材</div>
+    <div class="nav-tab" onclick="switchTab('tab4')">④ 備考・送信</div>
+  </div>
 
-      <div id="kw-container" style="display:none; margin-top:8px; padding:12px; background:#f9f9f9; border-radius:8px;">
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">🔑 キーワード指定</div>
-        <div class="chip-grid" id="chip-container-keyword"></div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="section-label">🏥 出場先・スタッフ</div>
-      <label style="font-size:12px; font-weight:bold; color:var(--sub);">出場先 (市区町村・施設名)</label>
-      <input type="text" id="t-dest" list="dest-list" placeholder="例: 鹿児島市 / 〇〇病院">
+  <main>
+    <form id="record-form">
       
-      <label style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:8px;">フライトドクター (主担当)</label>
-      <select id="t-dr"></select>
-      
-      <label style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:8px;">フライトナース</label>
-      <select id="t-ns"></select>
-    </div>
-
-    <div class="card">
-      <div class="section-label">🩺 現場診断 (病名・外傷)</div>
-      <div class="chip-grid" id="chip-container-diagnosis" style="margin-bottom:12px;"></div>
-      
-      <div class="acc-header" onclick="toggleAcc(this, 'acc-diag-gen')" style="background:#e3f2fd; color:#0d47a1; padding:8px 12px; border-radius:8px; border:none; margin-bottom:8px; font-size:13px;">➕ 新しい病名を作成・追加する<span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-diag-gen" style="background:#f9f9f9; padding:12px; border-radius:8px;">
-        <select id="diag-category" style="margin-bottom:8px; font-size:14px; padding:10px;">
-          <option value="">大項目から絞り込む...</option>
-          <option value="心停止">心停止</option><option value="ショック">ショック</option><option value="内因性疾患">内因性疾患</option><option value="外因性疾患">外因性疾患</option>
-          <option value="小児内科疾患">小児内科疾患</option><option value="産婦人科">特殊疾患（産婦人科）</option><option value="中毒">特殊疾患（中毒）</option><option value="熱傷">特殊疾患（熱傷）</option><option value="精神科">特殊疾患（精神科）</option>
-        </select>
-        <input type="text" id="diag-name" placeholder="病名を入力" style="margin-bottom:8px;">
-        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; font-size:14px; font-weight:bold;">
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-right" style="width:18px;height:18px;"> 右</label>
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-left" style="width:18px;height:18px;"> 左</label>
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-both" style="width:18px;height:18px;"> 両側</label>
-          <span style="color:#ccc;">|</span>
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="diag-doubt" style="width:18px;height:18px;"> 疑い</label>
+      <div id="tab1" class="tab-content active">
+        <div class="card">
+          <div class="section-label">基本情報</div>
+          <div class="input-group">
+            <label>要請番号 (必須)</label>
+            <input type="tel" id="p-id" placeholder="例: 1234">
+          </div>
+          <div class="input-group">
+            <label>日付 (必須)</label>
+            <input type="date" id="p-date">
+          </div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>フライトドクター</label>
+              <select id="p-dr"><option value="">選択...</option></select>
+            </div>
+            <div class="input-group">
+              <label>フライトナース</label>
+              <select id="p-ns"><option value="">選択...</option></select>
+            </div>
+          </div>
+          <div class="input-group">
+            <label style="display:flex; justify-content:space-between; align-items:center;">
+              出場先 (消防本部等)
+              <button type="button" class="btn-small" onclick="addMaster('dest', '出場先')">＋追加</button>
+            </label>
+            <input type="text" id="p-dest" list="dl-dest" placeholder="入力または選択...">
+            <datalist id="dl-dest"></datalist>
+          </div>
         </div>
-        <button class="btn-small" style="background:var(--blue); color:#fff; width:100%; padding:12px; font-size:14px;" onclick="generateDiagnosis()">＋ この病名で確定・マスタ追加</button>
-      </div>
-    </div>
-    <button class="btn-next" onclick="switchTab('sec2')">次へ (タイムライン) ➔</button>
-  </div>
 
-  <div id="tab-sec2" class="tab-content">
-    <div class="card">
-      <div class="section-label">⏱️ タイムライン (コロン無しで入力可: 例 1234)</div>
-      
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <label style="font-size:12px; font-weight:bold; color:var(--sub);">要請/依頼時刻</label>
-        <button class="btn-small" onclick="document.getElementById('t-req').value = getNow()">現在時刻</button>
-      </div>
-      <input type="tel" inputmode="numeric" id="t-req" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)">
-      
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
-        <label style="font-size:12px; font-weight:bold; color:var(--sub);">初期離陸</label>
-        <button class="btn-small" onclick="document.getElementById('t-tk1').value = getNow()">現在時刻</button>
-      </div>
-      <input type="tel" inputmode="numeric" id="t-tk1" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)">
-      
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
-        <label style="font-size:12px; font-weight:bold; color:var(--brand);">接触</label>
-        <button class="btn-small" style="background:#ffcdd2; color:#c62828;" onclick="document.getElementById('t-cnt').value = getNow()">現在時刻</button>
-      </div>
-      <input type="tel" inputmode="numeric" id="t-cnt" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)">
-
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
-        <label style="font-size:12px; font-weight:bold; color:var(--blue);">病着</label>
-        <button class="btn-small" style="background:#bbdefb; color:#1565c0;" onclick="document.getElementById('t-hosp').value = getNow()">現在時刻</button>
-      </div>
-      <input type="tel" inputmode="numeric" id="t-hosp" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)">
-
-      <div class="acc-header" onclick="toggleAcc(this, 'acc-time-more')" style="margin-top:16px;">➕ 詳細タイムラインを開く <span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-time-more">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <div><label style="font-size:11px;font-weight:bold;color:var(--sub);">初期着陸</label><input type="tel" inputmode="numeric" id="t-ld1" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div>
-          <div><label style="font-size:11px;font-weight:bold;color:var(--sub);">現発</label><input type="tel" inputmode="numeric" id="t-dep" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div>
-          <div><label style="font-size:11px;font-weight:bold;color:var(--sub);">最終離陸</label><input type="tel" inputmode="numeric" id="t-tk2" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div>
-          <div><label style="font-size:11px;font-weight:bold;color:var(--sub);">最終着陸</label><input type="tel" inputmode="numeric" id="t-ld2" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div>
+        <div class="card">
+          <div class="section-label">スキーム (必須)</div>
+          <div class="radio-group">
+            <label><input type="radio" name="scheme" value="現場要請" onchange="updateTimelineUI()"> <span class="radio-lbl">現場要請</span></label>
+            <label><input type="radio" name="scheme" value="施設間搬送" onchange="updateTimelineUI()"> <span class="radio-lbl">施設間搬送</span></label>
+            <label><input type="radio" name="scheme" value="救急車同乗" onchange="updateTimelineUI()"> <span class="radio-lbl">救急車同乗</span></label>
+            <label><input type="radio" name="scheme" value="上空キャンセル" onchange="updateTimelineUI()"> <span class="radio-lbl">上空キャンセル</span></label>
+            <label><input type="radio" name="scheme" value="現場キャンセル" onchange="updateTimelineUI()"> <span class="radio-lbl">現場キャンセル</span></label>
+            <label><input type="radio" name="scheme" value="天候不良キャンセル" onchange="updateTimelineUI()"> <span class="radio-lbl">天候不良キャンセル</span></label>
+            <label><input type="radio" name="scheme" value="その他" onchange="updateTimelineUI()"> <span class="radio-lbl">その他</span></label>
+          </div>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">事案終了</label>
-          <button class="btn-small" onclick="document.getElementById('t-end').value = getNow()">現在時刻</button>
+
+        <div class="card">
+          <div class="section-label">タイムライン</div>
+          <div class="grid-2">
+            <div class="input-group" id="box-req">
+              <label id="lbl-req">要請時刻</label>
+              <input type="time" id="t-req">
+            </div>
+            <div class="input-group" id="box-dep1">
+              <label>初期離陸</label>
+              <input type="time" id="t-dep1">
+            </div>
+            <div class="input-group" id="box-arr1">
+              <label>現場/病院着陸</label>
+              <input type="time" id="t-arr1">
+            </div>
+            <div class="input-group" id="box-contact">
+              <label>接触</label>
+              <input type="time" id="t-contact">
+            </div>
+            <div class="input-group" id="box-dep2">
+              <label>現場/病院離陸</label>
+              <input type="time" id="t-dep2">
+            </div>
+            <div class="input-group" id="box-arr2">
+              <label>病着</label>
+              <input type="time" id="t-arr2" onchange="calcMonitorTime()">
+            </div>
+            <div class="input-group" id="box-end">
+              <label>終了 (基地帰投等)</label>
+              <input type="time" id="t-end" onchange="calcMonitorTime()">
+            </div>
+          </div>
         </div>
-        <input type="tel" inputmode="numeric" id="t-end" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)">
+        <button type="button" class="btn-next" onclick="switchTab('tab2')">次へ: ② 算定・保険</button>
       </div>
-    </div>
-    
-    <div class="card">
-      <div class="section-label">💰 算定情報</div>
-      <div class="radio-group">
-        <label><input type="checkbox" id="c-oushin" value="◯"><span class="radio-lbl">往診料</span></label>
-        <label><input type="checkbox" id="c-hansou" value="◯"><span class="radio-lbl">搬送料</span></label>
-        <label><input type="checkbox" id="c-long" value="◯"><span class="radio-lbl">搬送(長時間)</span></label>
-      </div>
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <div style="flex:1;">
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">モニター時間 (分)</label>
-          <input type="tel" inputmode="numeric" id="t-moni" placeholder="例: 45" oninput="toHalfWidth(this)">
+
+      <div id="tab2" class="tab-content">
+        <div class="card">
+          <div class="section-label">算定 (時間・往診)</div>
+          <div class="grid-2">
+            <div class="input-group">
+              <label>往診料</label>
+              <select id="p-oushin">
+                <option value="">--</option>
+                <option value="往診料">往診料</option>
+                <option value="往診料(深夜)">往診料(深夜)</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>搬送料</label>
+              <select id="p-hansou">
+                <option value="">--</option>
+                <option value="搬送料">搬送料</option>
+                <option value="搬送料(新生児)">搬送料(新生児)</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>搬送料 (長時間)</label>
+              <select id="p-hansou-long">
+                <option value="">--</option>
+                <option value="30分">30分</option>
+                <option value="1時間">1時間</option>
+                <option value="1時間30分">1時間30分</option>
+                <option value="2時間">2時間</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>モニター算定時間</label>
+              <input type="text" id="p-monitor" placeholder="自動計算または手入力">
+            </div>
+          </div>
+          <div class="input-group">
+            <label>SpO2 (経皮的動脈血酸素飽和度測定)</label>
+            <div class="radio-group">
+              <label><input type="radio" name="spo2" value="あり"> <span class="radio-lbl">あり (1日1回)</span></label>
+              <label><input type="radio" name="spo2" value="なし"> <span class="radio-lbl">なし</span></label>
+            </div>
+          </div>
         </div>
-        <div style="flex:1;">
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">SpO2算定日数</label>
-          <input type="tel" inputmode="numeric" id="t-spo2" placeholder="通常1" oninput="toHalfWidth(this)">
+
+        <div class="card">
+          <div class="section-label" style="justify-content:flex-start;">
+            現場診断名 / キーワード
+            <button type="button" class="btn-small" style="margin-left:auto;" onclick="addMaster('diagnosis', '現場診断')">＋病名追加</button>
+          </div>
+          <div class="input-group">
+            <label>現場診断</label>
+            <input type="text" id="p-diag" list="dl-diag" placeholder="入力または選択...">
+            <datalist id="dl-diag"></datalist>
+          </div>
+          <div class="input-group">
+            <label style="display:flex; justify-content:space-between; align-items:center;">
+              要請キーワード
+              <button type="button" class="btn-small" onclick="addMaster('keyword', 'キーワード')">＋追加</button>
+            </label>
+            <input type="text" id="p-keyword" list="dl-key" placeholder="入力または選択...">
+            <datalist id="dl-key"></datalist>
+          </div>
+        </div>
+        <button type="button" class="btn-next" onclick="switchTab('tab3')">次へ: ③ 処置・資機材</button>
+      </div>
+
+      <div id="tab3" class="tab-content">
+        <div style="font-size:12px; color:var(--sub); margin-bottom:12px; font-weight:bold;">
+          ※実施した処置をタップし、詳細・使用資機材を入力してください。算定コストに直結します。
+        </div>
+
+        <div class="card">
+          <div class="section-label">A・B : 気道・呼吸</div>
+          
+          <div class="proc-item">
+            <label class="chk-label"><input type="checkbox" id="proc-o2" onchange="toggleProc('o2-details', this)"> 💨 酸素投与</label>
+            <div id="o2-details" class="proc-details">
+              <div class="grid-2">
+                <div class="input-group">
+                  <label>デバイス</label>
+                  <select id="o2-device">
+                    <option value="">選択...</option>
+                    <option value="鼻カヌラ">鼻カヌラ</option>
+                    <option value="酸素マスク">酸素マスク</option>
+                    <option value="リザーバーマスク">リザーバーマスク</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label>流量 (L/min)</label>
+                  <input type="tel" id="o2-flow" placeholder="例: 10">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="proc-item">
+            <label class="chk-label"><input type="checkbox" id="proc-bvm" onchange="toggleProc('bvm-details', this)"> 🌬️ BVM (用手換気)</label>
+            <div id="bvm-details" class="proc-details">
+              <div class="input-group">
+                <label>使用マスク</label>
+                <select id="bvm-type">
+                  <option value="成人用">成人用</option>
+                  <option value="小児用">小児用</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="proc-item">
+            <label class="chk-label"><input type="checkbox" id="proc-intub" onchange="toggleProc('intub-details', this)"> ⚕️ 気管挿管</label>
+            <div id="intub-details" class="proc-details">
+              <div class="grid-2">
+                <div class="input-group">
+                  <label>チューブサイズ (Fr)</label>
+                  <input type="tel" id="intub-size" placeholder="例: 7.5">
+                </div>
+                <div class="input-group">
+                  <label>固定位置 (cm)</label>
+                  <input type="tel" id="intub-pos" placeholder="例: 22">
+                </div>
+              </div>
+              <div class="input-group">
+                <label>使用デバイス</label>
+                <select id="intub-device">
+                  <option value="マッキントッシュ">マッキントッシュ</option>
+                  <option value="エアウェイスコープ(AWS)">エアウェイスコープ(AWS)</option>
+                  <option value="マックビデオ(McGRATH)">McGRATH</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="proc-item">
+            <label class="chk-label"><input type="checkbox" id="proc-vent" onchange="toggleProc('vent-details', this)"> 🤖 人工呼吸器 (モナール)</label>
+            <div id="vent-details" class="proc-details">
+              <div class="grid-2">
+                <div class="input-group"><label>モード</label><input type="text" id="vent-mode" placeholder="SIMV等"></div>
+                <div class="input-group"><label>FiO2 (%)</label><input type="tel" id="vent-fio2"></div>
+                <div class="input-group"><label>PEEP</label><input type="tel" id="vent-peep"></div>
+                <div class="input-group"><label>換気回数</label><input type="tel" id="vent-rr"></div>
+                <div class="input-group"><label>一回換気量(Vt)</label><input type="tel" id="vent-vt"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chip-grid">
+            <div class="chip" onclick="this.classList.toggle('on')">吸引</div>
+            <div class="chip" onclick="this.classList.toggle('on')">胃管挿入</div>
+            <div class="chip" onclick="this.classList.toggle('on')">胸腔穿刺/ドレナージ</div>
+            <div class="chip" onclick="this.classList.toggle('on')">NPPV使用</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-label">C : 循環</div>
+
+          <div class="proc-item">
+            <label class="chk-label"><input type="checkbox" id="proc-iv" onchange="toggleProc('iv-details', this)"> 💉 静脈路確保 (IV)</label>
+            <div id="iv-details" class="proc-details">
+              <div class="grid-2">
+                <div class="input-group">
+                  <label>留置針サイズ</label>
+                  <select id="iv-gauge">
+                    <option value="18G">18G</option>
+                    <option value="20G" selected>20G (デフォルト)</option>
+                    <option value="22G">22G</option>
+                    <option value="24G">24G</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label>部位</label>
+                  <input type="text" id="iv-loc" placeholder="右前腕など">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="proc-item">
+            <label class="chk-label"><input type="checkbox" id="proc-io" onchange="toggleProc('io-details', this)"> 🦴 骨髄路確保 (IO / B.I.G)</label>
+            <div id="io-details" class="proc-details">
+              <div class="grid-2">
+                <div class="input-group">
+                  <label>骨髄針カラー (種類)</label>
+                  <select id="io-color">
+                    <option value="">選択...</option>
+                    <option value="赤色(小児用)">🔴 赤色 (小児用)</option>
+                    <option value="青色(成人用)">🔵 青色 (成人用)</option>
+                    <option value="黄色(大型/肥満)">🟡 黄色 (EZ-IO等)</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label>穿刺部位</label>
+                  <select id="io-loc">
+                    <option value="右脛骨">右脛骨</option>
+                    <option value="左脛骨">左脛骨</option>
+                    <option value="右上腕骨">右上腕骨</option>
+                    <option value="左上腕骨">左上腕骨</option>
+                  </select>
+                </div>
+              </div>
+              <label style="font-size:12px; display:block; margin-top:8px;"><input type="checkbox" id="io-flush"> 局麻・生食フラッシュ実施</label>
+            </div>
+          </div>
+
+          <div class="chip-grid">
+            <div class="chip" onclick="this.classList.toggle('on')">除細動 (DC)</div>
+            <div class="chip" onclick="this.classList.toggle('on')">心肺蘇生 (CPR)</div>
+            <div class="chip" onclick="this.classList.toggle('on')">12誘導心電図</div>
+            <div class="chip" onclick="this.classList.toggle('on')">超音波 (エコー)</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-label">D・E : 外傷・固定・その他</div>
+          <div class="chip-grid">
+            <div class="chip" onclick="this.classList.toggle('on')">バックボード固定</div>
+            <div class="chip" onclick="this.classList.toggle('on')">頸椎カラー</div>
+            <div class="chip" onclick="this.classList.toggle('on')">サムスリング (骨盤)</div>
+            <div class="chip" onclick="this.classList.toggle('on')">シーネ固定</div>
+            <div class="chip" onclick="this.classList.toggle('on')">創傷処置 (ガーゼ/圧迫)</div>
+            <div class="chip" onclick="this.classList.toggle('on')">ターニケット (止血帯)</div>
+            <div class="chip" onclick="this.classList.toggle('on')">保温 (アルミブランケット)</div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-next" onclick="switchTab('tab4')">次へ: ④ 備考・送信</button>
+      </div>
+
+      <div id="tab4" class="tab-content">
+        <div class="card">
+          <div class="section-label">備考・特記事項</div>
+          <div class="input-group">
+            <textarea id="p-memo" placeholder="現場の状況、引き継ぎ事項、エラー内容など自由に記入してください。"></textarea>
+          </div>
+          
+          <div style="padding: 12px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; margin-top: 12px;">
+            <label style="font-weight:bold; color: #e65100; font-size: 14px; display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="p-stock-flag" style="display:inline-block; width:18px; height:18px;">
+              ヘリ機内の在庫・資機材を使用・消費した
+            </label>
+            <div style="font-size:11px; color:#ef6c00; margin-top:4px; margin-left:26px;">※浜町待機所や基地での補充が必要な場合チェック。</div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-next" id="btn-submit" onclick="submitData()" style="padding:20px; font-size:18px; border-radius:16px;">
+          🚀 事案データを送信・登録する
+        </button>
+        <div style="text-align:center; font-size:11px; color:var(--sub); margin-top:12px;">
+          ※送信後、自動で基地病院等へ速報メールが送信されます。<br>
+          ※キャンセルを選択した場合は、自動的にステータスが完了になります。
         </div>
       </div>
-    </div>
-    <button class="btn-next" onclick="switchTab('sec3')">次へ (実施処置) ➔</button>
-  </div>
+    </form>
+  </main>
 
-  <div id="tab-sec3" class="tab-content">
-    <div class="card">
-      <div class="section-label">💉 実施処置（タップで◯になります）</div>
-      <div class="chip-grid">
-        <div class="chip" onclick="this.classList.toggle('on')">気管挿管</div>
-        <div class="chip" onclick="this.classList.toggle('on')">心エコー</div>
-        <div class="chip" onclick="this.classList.toggle('on')">FAST</div>
-        <div class="chip" onclick="this.classList.toggle('on')">胸腔ドレナージ</div>
-        <div class="chip" onclick="this.classList.toggle('on')">EtCO2</div>
-        <div class="chip" onclick="this.classList.toggle('on')">骨髄針</div>
-        <div class="chip" onclick="this.classList.toggle('on')">12誘導心電図</div>
-        <div class="chip" onclick="this.classList.toggle('on')">人工呼吸器管理料</div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="section-label">⚡ 酸素・CPR・除細動 (時刻と回数)</div>
-      <div class="acc-header" onclick="toggleAcc(this, 'acc-proc-cpr')">🩸 CPR・除細動 <span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-proc-cpr">
-        <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">圧迫①開始</label><input type="tel" inputmode="numeric" id="p-cpr1" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">圧迫②開始</label><input type="tel" inputmode="numeric" id="p-cpr2" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div></div>
-        <div style="display:flex; gap:8px;"><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">除細動①</label><input type="tel" inputmode="numeric" id="p-def1" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">除細動②</label><input type="tel" inputmode="numeric" id="p-def2" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">ショック回数</label><input type="tel" inputmode="numeric" id="p-defCount" placeholder="回" oninput="toHalfWidth(this)"></div></div>
-      </div>
-      
-      <div class="acc-header" onclick="toggleAcc(this, 'acc-proc-o2')" style="margin-top:8px;">💨 酸素投与・気道確保 <span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-proc-o2">
-        <label style="font-size:11px;font-weight:bold;color:var(--sub);">酸素デバイス詳細 (例: カヌラ 2L/min)</label>
-        <input type="text" id="p-o2-dev" placeholder="デバイスや流量を記述">
-        <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">酸素①開始</label><input type="tel" inputmode="numeric" id="p-o21" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">酸素②開始</label><input type="tel" inputmode="numeric" id="p-o22" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div></div>
-        <div style="display:flex; gap:8px;"><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">挿管①</label><input type="tel" inputmode="numeric" id="p-tub1" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">挿管②</label><input type="tel" inputmode="numeric" id="p-tub2" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">挿管回数</label><input type="tel" inputmode="numeric" id="p-tubCount" placeholder="回" oninput="toHalfWidth(this)"></div></div>
-      </div>
-      
-      <div class="acc-header" onclick="toggleAcc(this, 'acc-proc-iv')" style="margin-top:8px;">💧 輸液・薬剤投与 <span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-proc-iv">
-        <div style="display:flex; gap:8px;"><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">静脈路確保①</label><input type="tel" inputmode="numeric" id="p-iv1" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div><div style="flex:1;"><label style="font-size:11px;font-weight:bold;color:var(--sub);">静脈路確保②</label><input type="tel" inputmode="numeric" id="p-iv2" placeholder="00:00" oninput="formatTime(this)" onblur="formatTimeFix(this)"></div></div>
-        <label style="font-size:11px;font-weight:bold;color:var(--sub);margin-top:8px;">投与した薬剤（カンマ区切りで入力可）</label>
-        <input type="text" id="p-meds" placeholder="例: アドレナリン1mg, ロクロニウム50mg">
-      </div>
-    </div>
-    <button class="btn-next" onclick="switchTab('sec4')">次へ (備考・定型文) ➔</button>
-  </div>
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+    const PIN_CODE = "5740";
 
-  <div id="tab-sec4" class="tab-content">
-    <div class="card">
-      <div class="section-label">📝 備考・概要 (自由記述)</div>
-      <div style="display:flex; gap:8px; margin-bottom:8px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none;" id="phrase-box"></div>
-      <textarea id="t-note" rows="5" placeholder="事案の概要や特記事項、申し送り事項を入力"></textarea>
-    </div>
-
-    <div class="card" style="border: 2px solid var(--brand);">
-      <div class="section-label" style="color:var(--brand);">📦 ヘリ機内在庫の消費（重要）</div>
-      <div style="font-size:12px; color:var(--sub); margin-bottom:12px;">※ 機内の資機材や薬剤を消費した場合、補充漏れを防ぐためにチェックを入れてください。電子カルテ担当者に赤字でアラートされます。</div>
-      <label><input type="checkbox" id="c-heli-stock" value="⚠️機内在庫消費あり"><span class="radio-lbl" style="border-color:var(--brand); color:var(--brand); font-weight:900;">🚨 ヘリ機内在庫の消費・補充が必要</span></label>
-    </div>
-    <button class="btn-next" onclick="switchTab('sec5'); buildPreview();">次へ (送信前確認) ➔</button>
-  </div>
-
-  <div id="tab-sec5" class="tab-content">
-    <div class="card" style="background:#f9f9f9;">
-      <div class="section-label">👀 送信内容のプレビュー</div>
-      <div id="preview-box" style="font-size:14px; line-height:1.6;"></div>
-    </div>
-    
-    <div class="card">
-      <div class="section-label">✉️ クラーク・電子カルテ担当者への通知先</div>
-      <div id="mail-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-    </div>
-
-    <button id="btn-submit" onclick="submitData()" style="width:100%; padding:16px; background:var(--brand); color:#fff; border:none; border-radius:12px; font-weight:900; font-size:18px; margin-top:16px; box-shadow:0 4px 12px rgba(211,47,47,0.3);">🚀 送信する (完了)</button>
-  </div>
-</main>
-
-<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('manual')">
-  <div class="modal-box">
-    <h3 style="margin-top:0;">📖 取扱説明書 (現場入力アプリ)</h3>
-    <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
-    <button class="modal-close" onclick="closeModal('manual')">閉じる</button>
-  </div>
-</div>
-
-<script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
-  
-  let masters = { dest:[], dr:[], ns:[], mailOptions:[], phrases:[], diagnosis:[], keyword:[] };
-  let sysDataTags = { diagnosis: [], keyword: [] };
-  
-  let loaderTimer1, loaderTimer2;
-  function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
-    document.getElementById("global-loader").style.display = "flex";
-    document.getElementById("loader-main-text").innerText = msg1;
-    document.getElementById("loader-sub-text").innerHTML = msg2;
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>データは消えません。電波の良い所で再送信してください。</span>"; }, 15000);
-  }
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "症例登録(index.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
-
-  function getNow() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ":" + String(d.getMinutes()).padStart(2,'0'); }
-  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
-  function formatTime(ele) { toHalfWidth(ele); let val = ele.value.replace(/[^0-9]/g, ''); if (val.length >= 3) { val = val.slice(0, 2) + ':' + val.slice(2, 4); } ele.value = val; }
-  function formatTimeFix(ele) { let val = ele.value; if(val.length === 4 && !val.includes(':')) { ele.value = val.slice(0, 2) + ':' + val.slice(2, 4); } }
-  function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
-  function toggleReqType() { const val = document.querySelector('input[name="req-type"]:checked')?.value; document.getElementById('kw-container').style.display = (val === 'キーワード要請') ? 'block' : 'none'; }
-  function insertPhrase(text) { const tArea = document.getElementById("t-note"); tArea.value += (tArea.value ? "\n" : "") + text; }
-
-  function switchTab(id) {
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active'); document.getElementById('tab-' + id).classList.add('active'); window.scrollTo(0,0);
-  }
-
-  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
-  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
-
-  window.onload = async () => {
-    document.getElementById("t-date").value = new Date().toISOString().split('T')[0];
-    showLoader("マスタ同期中...", "最新のリストを取得しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") {
-        masters = json.masters;
-        masters.dest.forEach(d => document.getElementById("dest-list").innerHTML += `<option value="${d}">`);
-        
-        let drHtml = "<option value=''>選択してください</option>"; masters.dr.forEach(d => drHtml += `<option value="${d}">${d}</option>`); document.getElementById("t-dr").innerHTML = drHtml;
-        let nsHtml = "<option value=''>選択してください</option>"; masters.ns.forEach(n => nsHtml += `<option value="${n}">${n}</option>`); document.getElementById("t-ns").innerHTML = nsHtml;
-        
-        let mailHtml = ""; masters.mailOptions.forEach((m, i) => { mailHtml += `<label style="display:flex; align-items:center; gap:8px; padding:12px; background:var(--bg); border:1px solid var(--line); border-radius:8px;"><input type="checkbox" class="mail-cb" value="${m.email}" style="width:20px;height:20px;margin:0;" ${i===0?'checked':''}> <span style="font-weight:bold;font-size:14px;">${m.name}</span></label>`; });
-        document.getElementById("mail-list").innerHTML = mailHtml;
-        
-        let pbox = document.getElementById("phrase-box"); masters.phrases.forEach(p => { pbox.innerHTML += `<button class="btn-small" style="white-space:nowrap; border:1px solid var(--line);" onclick="insertPhrase('${p}')">${p}</button>`; });
-        
-        if(!masters.keyword || masters.keyword.length===0) masters.keyword = ["閉じ込められている", "車外放出された", "山岳部滑落", "その他"];
-        renderChips('chip-container-keyword', masters.keyword, 'keyword');
-        
-        if (json.manuals) document.getElementById("manual-list").innerHTML = json.manuals.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>マニュアルはありません。</p>';
-      } else { throw new Error(json.message); }
-    } catch (e) {
-      document.getElementById("loader-text").innerText = "オフライン起動";
-      alert("通信エラーのためマスタが取得できませんでした。手入力で登録を進めてください。");
-      sendErrorLog(e.toString());
-    } finally { hideLoader(); }
-  };
-
-  function renderChips(containerId, list, category) {
-    const box = document.getElementById(containerId); box.innerHTML = "";
-    list.forEach(item => { const isOn = sysDataTags[category] && sysDataTags[category].includes(item); box.innerHTML += `<div class="${isOn ? "chip on" : "chip"}" onclick="toggleChip('${category}', '${item}')">${item}</div>`; });
-  }
-  
-  function toggleChip(cat, item) {
-    if(!sysDataTags[cat]) sysDataTags[cat] = [];
-    if(sysDataTags[cat].includes(item)) sysDataTags[cat] = sysDataTags[cat].filter(x => x !== item); else sysDataTags[cat].push(item);
-    if(cat === 'keyword') renderChips('chip-container-keyword', masters.keyword, 'keyword');
-    else if(cat === 'diagnosis') renderChips('chip-container-diagnosis', sysDataTags.diagnosis, 'diagnosis');
-  }
-
-  async function generateDiagnosis() {
-    const name = document.getElementById("diag-name").value.trim(); if(!name) return;
-    const isRight = document.getElementById("diag-right").checked, isLeft = document.getElementById("diag-left").checked, isBoth = document.getElementById("diag-both").checked, isDoubt = document.getElementById("diag-doubt").checked;
-    let prefix = ""; if(isBoth || (isRight && isLeft)) prefix = "両側"; else if(isRight) prefix = "右"; else if(isLeft) prefix = "左";
-    const finalName = `${prefix}${name}${isDoubt ? "疑い" : ""}`;
-    if(!sysDataTags.diagnosis.includes(finalName)) sysDataTags.diagnosis.push(finalName);
-    renderChips('chip-container-diagnosis', sysDataTags.diagnosis, 'diagnosis');
-    document.getElementById("diag-name").value = ""; document.getElementById("diag-right").checked=false; document.getElementById("diag-left").checked=false; document.getElementById("diag-both").checked=false; document.getElementById("diag-doubt").checked=false;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: finalName }) }); } catch(e){}
-  }
-
-  function buildPreview() {
-    const req = document.querySelector('input[name="req-type"]:checked')?.value || "";
-    const kwStr = req === 'キーワード要請' ? `\n🔑 [${sysDataTags.keyword.join(",")}]` : "";
-    let html = `<b>要請番号:</b> ${document.getElementById("t-no").value || "未入力"}<br><b>出場先:</b> ${document.getElementById("t-dest").value || "未入力"}<br><b>Dr/Ns:</b> ${document.getElementById("t-dr").value} / ${document.getElementById("t-ns").value}<br><b>スキーム:</b> ${document.querySelector('input[name="scheme"]:checked')?.value || "未選択"}<br><b>形態:</b> ${req}${kwStr}<br><br><b>診断:</b> ${(sysDataTags.diagnosis||[]).join(", ")}<br>`;
-    if (document.getElementById("c-heli-stock").checked) html += `<br><span style="color:var(--brand);font-weight:bold;">🚨 ヘリ機内在庫消費あり</span>`;
-    document.getElementById("preview-box").innerHTML = html;
-  }
-
-  async function submitData() {
-    const yoseiNo = document.getElementById("t-no").value.trim();
-    if (!yoseiNo) return alert("要請番号は必須です！");
-    
-    showLoader("データ送信中...", "電子カルテ連携用データを生成・送信しています");
-
-    const appData = {};
-    appData["日付"] = document.getElementById("t-date").value;
-    appData["要請番号"] = yoseiNo;
-    appData["スキーム選択"] = document.querySelector('input[name="scheme"]:checked')?.value || "";
-    appData["要請・搬送依頼形態"] = document.querySelector('input[name="req-type"]:checked')?.value || "";
-    appData["出場先"] = document.getElementById("t-dest").value.trim();
-    appData["フライトドクター"] = document.getElementById("t-dr").value;
-    appData["フライトナース"] = document.getElementById("t-ns").value;
-    
-    appData["要請時刻・施設間搬送依頼時刻"] = document.getElementById("t-req").value;
-    appData["初期離陸時間"] = document.getElementById("t-tk1").value;
-    appData["初期着陸時間"] = document.getElementById("t-ld1").value;
-    appData["接触"] = document.getElementById("t-cnt").value;
-    appData["現場出発時間"] = document.getElementById("t-dep").value;
-    appData["最終離陸時間"] = document.getElementById("t-tk2").value;
-    appData["病着"] = document.getElementById("t-hosp").value;
-    appData["最終着陸時間"] = document.getElementById("t-ld2").value;
-    appData["終了"] = document.getElementById("t-end").value;
-
-    appData["往診料"] = document.getElementById("c-oushin").checked ? "◯" : "";
-    appData["搬送料"] = document.getElementById("c-hansou").checked ? "◯" : "";
-    appData["搬送料（長時間）"] = document.getElementById("c-long").checked ? "◯" : "";
-    appData["モニター算定時間"] = document.getElementById("t-moni").value;
-    appData["経皮的酸素飽和度"] = document.getElementById("t-spo2").value;
-
-    document.querySelectorAll('.chip.on').forEach(c => { const txt = c.innerText; if(!txt.includes("右") && !txt.includes("左") && !txt.includes("疑い") && !masters.keyword.includes(txt)) appData[txt] = "◯"; });
-    
-    appData["圧迫1開始"] = document.getElementById("p-cpr1").value; appData["圧迫2開始"] = document.getElementById("p-cpr2").value;
-    appData["除細動1"] = document.getElementById("p-def1").value; appData["除細動2"] = document.getElementById("p-def2").value; appData["除細動回数"] = document.getElementById("p-defCount").value;
-    appData["酸素1開始"] = document.getElementById("p-o21").value; appData["酸素2開始"] = document.getElementById("p-o22").value; appData["酸素デバイス詳細"] = document.getElementById("p-o2-dev").value;
-    appData["挿管1"] = document.getElementById("p-tub1").value; appData["挿管2"] = document.getElementById("p-tub2").value; appData["挿管回数"] = document.getElementById("p-tubCount").value;
-    appData["静脈路確保1"] = document.getElementById("p-iv1").value; appData["静脈路確保2"] = document.getElementById("p-iv2").value;
-    appData["投与薬剤"] = document.getElementById("p-meds").value;
-
-    appData["現場診断"] = (sysDataTags.diagnosis||[]).join(", ");
-    appData["備考"] = document.getElementById("t-note").value;
-    appData["ヘリ在庫フラグ"] = document.getElementById("c-heli-stock").checked ? "⚠️機内在庫消費あり" : "";
-    
-    appData["システムデータ"] = JSON.stringify({ tags: sysDataTags, isDraft: false });
-
-    let ccEmails = []; document.querySelectorAll('.mail-cb:checked').forEach(cb => ccEmails.push(cb.value));
-
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "submit", password: PIN_CODE, data: appData, cc_emails: ccEmails }), redirect: "follow"
-      });
-      const json = await res.json();
-      if (json.status === "success") {
-        alert("✅ 登録が完了しました！"); location.reload();
-      } else {
-        throw new Error(json.message);
-      }
-    } catch (e) {
-      document.getElementById("loader-text").innerText = "送信エラー";
-      alert("通信に失敗しました。入力データは消えませんので、電波の良い場所で再度「送信する」を押してください。\n\n詳細: " + e.message);
-      sendErrorLog(e.toString());
-    } finally {
-      hideLoader();
+    function showLoader(m1, m2) {
+      document.getElementById("loader-main").innerText = m1; document.getElementById("loader-sub").innerText = m2;
+      document.getElementById("global-loader").style.display = "flex";
     }
-  }
-</script>
+    function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+
+    window.onload = () => {
+      document.getElementById("p-date").value = new Date().toISOString().split('T')[0];
+      fetchInit();
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleProc(id, cb) {
+      document.getElementById(id).style.display = cb.checked ? "block" : "none";
+      cb.parentElement.classList.toggle("active", cb.checked);
+    }
+
+    // タイムラインの表示制御
+    function updateTimelineUI() {
+      const scheme = document.querySelector('input[name="scheme"]:checked')?.value || "";
+      const isFac = scheme === "施設間搬送";
+      const isCan = scheme.includes("キャンセル");
+      
+      document.getElementById("lbl-req").innerText = isFac ? "施設間搬送依頼時刻" : "要請時刻";
+      
+      document.getElementById("box-arr1").style.display = isCan ? "none" : "block";
+      document.getElementById("box-contact").style.display = isCan ? "none" : "block";
+      document.getElementById("box-dep2").style.display = isCan ? "none" : "block";
+      document.getElementById("box-arr2").style.display = isCan ? "none" : "block";
+    }
+
+    function calcMonitorTime() {
+      const c = document.getElementById("t-contact").value;
+      let e = document.getElementById("t-arr2").value || document.getElementById("t-end").value;
+      if (c && e) {
+        let dc = new Date("1970-01-01T" + c + ":00");
+        let de = new Date("1970-01-01T" + e + ":00");
+        if (de < dc) de.setDate(de.getDate() + 1);
+        let diffMin = Math.floor((de - dc) / 60000);
+        if (diffMin > 0) {
+          let h = Math.floor(diffMin / 60); let m = diffMin % 60;
+          document.getElementById("p-monitor").value = (h > 0 ? h + "時間" : "") + m + "分";
+        }
+      }
+    }
+
+    function fetchInit() {
+      showLoader("システム起動中...", "マスタデータを読み込んでいます");
+      fetch(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE })
+      }).then(r => r.json()).then(res => {
+        if (res.status === "success") {
+          const m = res.masters;
+          const populate = (id, arr) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = "";
+            arr.forEach(a => { if(a) el.innerHTML += `<option value="${a}">${a}</option>`; });
+          };
+          populate("p-dr", ["", ...m.dr]);
+          populate("p-ns", ["", ...m.ns]);
+          populate("dl-dest", m.dest);
+          populate("dl-diag", m.diagnosis);
+          populate("dl-key", m.keyword);
+        }
+        hideLoader();
+      }).catch(e => { alert("通信エラー"); hideLoader(); });
+    }
+
+    // 🌟 マスタ追加機能 (病名やキーワードを現場から即時追加)
+    function addMaster(type, title) {
+      const val = prompt(`新しい「${title}」をマスタに追加します。\n追加する名称を入力してください。`);
+      if (!val) return;
+      
+      showLoader("マスタ追加中...", "データベースを更新しています");
+      fetch(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: type, val1: val })
+      }).then(r => r.json()).then(json => {
+        if (json.status === "success") {
+          alert(`「${val}」を登録しました！`);
+          fetchInit(); // リストを再取得して反映
+        } else { alert("エラー: " + json.message); hideLoader(); }
+      }).catch(e => { alert("通信エラー"); hideLoader(); });
+    }
+
+    // 🌟 送信処理
+    function submitData() {
+      const yoseiNo = document.getElementById("p-id").value.trim();
+      const scheme = document.querySelector('input[name="scheme"]:checked')?.value;
+      if (!yoseiNo) return alert("要請番号を入力してください。");
+      if (!scheme) return alert("スキームを選択してください。");
+
+      // 収集
+      let d = {
+        "要請番号": yoseiNo,
+        "日付": document.getElementById("p-date").value,
+        "フライトドクター": document.getElementById("p-dr").value,
+        "フライトナース": document.getElementById("p-ns").value,
+        "出場先": document.getElementById("p-dest").value,
+        "スキーム選択": scheme,
+        "要請時刻・施設間搬送依頼時刻": document.getElementById("t-req").value,
+        "初期離陸時間": document.getElementById("t-dep1").value,
+        "最終着陸時間": document.getElementById("t-arr1").value,
+        "接触": document.getElementById("t-contact").value,
+        "病着": document.getElementById("t-arr2").value,
+        "終了": document.getElementById("t-end").value,
+        "往診料": document.getElementById("p-oushin").value,
+        "搬送料": document.getElementById("p-hansou").value,
+        "搬送料（長時間）": document.getElementById("p-hansou-long").value,
+        "モニター算定時間": document.getElementById("p-monitor").value,
+        "経皮的酸素飽和度": document.querySelector('input[name="spo2"]:checked')?.value || "",
+        "現場診断": document.getElementById("p-diag").value,
+        "キーワード要請": document.getElementById("p-keyword").value,
+        "備考": document.getElementById("p-memo").value,
+        "ヘリ在庫フラグ": document.getElementById("p-stock-flag").checked ? "消費あり" : ""
+      };
+
+      // 🌟 キャンセルのステータス自動判定
+      if (scheme.includes("キャンセル")) {
+        d["ステータス"] = "◯ カルテ完了 (自動)";
+      } else {
+        d["ステータス"] = "⚠️ 未完了(現場入力)";
+      }
+
+      // 処置データの収集
+      let procs = [];
+      document.querySelectorAll('.chip.on').forEach(el => procs.push(el.innerText));
+      d["簡易処置リスト"] = procs.join(", ");
+
+      if (document.getElementById("proc-o2").checked) {
+        d["酸素投与"] = "あり";
+        d["【酸素】デバイス"] = document.getElementById("o2-device").value;
+        d["【酸素】流量"] = document.getElementById("o2-flow").value;
+      }
+      if (document.getElementById("proc-bvm").checked) {
+        d["BVM換気"] = "あり";
+        d["【BVM】サイズ"] = document.getElementById("bvm-type").value;
+      }
+      if (document.getElementById("proc-intub").checked) {
+        d["気管挿管"] = "あり";
+        d["【挿管】チューブサイズ"] = document.getElementById("intub-size").value;
+        d["【挿管】固定位置"] = document.getElementById("intub-pos").value;
+        d["【挿管】デバイス"] = document.getElementById("intub-device").value;
+      }
+      if (document.getElementById("proc-vent").checked) {
+        d["人工呼吸器"] = "あり";
+        d["【呼器】モード"] = document.getElementById("vent-mode").value;
+        d["【呼器】FiO2"] = document.getElementById("vent-fio2").value;
+        d["【呼器】PEEP"] = document.getElementById("vent-peep").value;
+        d["【呼器】換気回数"] = document.getElementById("vent-rr").value;
+        d["【呼器】Vt"] = document.getElementById("vent-vt").value;
+      }
+      if (document.getElementById("proc-iv").checked) {
+        d["静脈路確保"] = "あり";
+        d["【IV】ゲージ"] = document.getElementById("iv-gauge").value;
+        d["【IV】部位"] = document.getElementById("iv-loc").value;
+      }
+      if (document.getElementById("proc-io").checked) {
+        d["骨髄路確保"] = "あり";
+        d["【IO】針カラー"] = document.getElementById("io-color").value;
+        d["【IO】部位"] = document.getElementById("io-loc").value;
+        d["【IO】フラッシュ"] = document.getElementById("io-flush").checked ? "実施" : "未実施";
+      }
+
+      if(!confirm(`要請No.${yoseiNo} のデータを送信し、速報メールを配信しますか？`)) return;
+
+      const btn = document.getElementById("btn-submit");
+      btn.innerText = "送信中..."; btn.disabled = true;
+      showLoader("データ送信中...", "データベースに書き込み、メールを配信しています");
+
+      fetch(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "submit", password: PIN_CODE, data: d })
+      }).then(r => r.json()).then(res => {
+        if (res.status === "success") {
+          alert("事案データの登録とメール送信が完了しました！");
+          location.href = "portal.html";
+        } else {
+          alert("エラーが発生しました: " + res.message);
+          btn.innerText = "🚀 事案データを送信・登録する"; btn.disabled = false;
+          hideLoader();
+        }
+      }).catch(e => {
+        alert("通信エラーが発生しました。");
+        btn.innerText = "🚀 事案データを送信・登録する"; btn.disabled = false;
+        hideLoader();
+      });
+    }
+  </script>
 </body>
 </html>
