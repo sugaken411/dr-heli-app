@@ -81,7 +81,7 @@
   <header class="no-print">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div style="font-weight:900; font-size:16px; user-select:none;" onclick="secretCommand()">
-      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.6</span>
+      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.7</span>
     </div>
     <button class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
   </header>
@@ -98,13 +98,11 @@
         <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
         <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
         
-        <div class="type-btn" id="btn-type-fn-start" onclick="switchType('始業点検(Ns)')">📋 始業(Ns)</div>
-        <div class="type-btn" id="btn-type-fn-end" onclick="switchType('終業点検(Ns)')">📋 終業(Ns)</div>
-        <div class="type-btn" id="btn-type-fn-other" onclick="switchType('定期点検(Ns)')">📅 定期(Ns)</div>
+        <div class="type-btn" id="btn-type-daily" onclick="switchType('日常点検')">📋 日常点検(Ns)</div>
+        <div class="type-btn" id="btn-type-periodic" onclick="switchType('定期点検')">📅 定期点検(Ns)</div>
         
         <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
         <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
-        <div class="type-btn" id="btn-type-kigen" onclick="switchType('期限切れ')">📅 期限確認</div>
       </div>
     </div>
 
@@ -198,8 +196,8 @@
       
       const btnMap = {
         'ME': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli',
-        '始業点検(Ns)': 'btn-type-fn-start', '終業点検(Ns)': 'btn-type-fn-end', '定期点検(Ns)': 'btn-type-fn-other',
-        'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki', '期限切れ': 'btn-type-kigen'
+        '日常点検': 'btn-type-daily', '定期点検': 'btn-type-periodic',
+        'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki'
       };
       if(btnMap[type]) document.getElementById(btnMap[type]).classList.add("active");
       
@@ -213,36 +211,17 @@
       else fetchHistory();
     }
 
-    // ---------------------------------
-    // 📝 入力画面の処理
-    // ---------------------------------
     async function fetchMaster() {
       showLoader(`${currentType} マスタ読込中...`, "点検項目を生成しています");
       currentData = {}; errorDetails = {};
       try {
-        // ⚠️ Nsの始業・終業は、スプレッドシート上は「FNチェックマスタ」から引く
-        const sheetNameMap = {
-          '始業点検(Ns)': 'FNチェック', '終業点検(Ns)': 'FNチェック', '定期点検(Ns)': 'FNチェック'
-        };
-        const reqType = sheetNameMap[currentType] || currentType;
-
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: reqType })
+          body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: currentType })
         });
         const json = await res.json();
         if (json.status === "success") {
-          
-          if (currentType === '始業点検(Ns)') {
-            checklistItems = json.items.filter(it => it.category === '始業点検');
-          } else if (currentType === '終業点検(Ns)') {
-            checklistItems = json.items.filter(it => it.category === '終業点検');
-          } else if (currentType === '定期点検(Ns)') {
-            checklistItems = json.items.filter(it => it.category === '定期点検');
-          } else {
-            checklistItems = json.items;
-          }
-
+          checklistItems = json.items;
           const sel = document.getElementById("c-staff");
           sel.innerHTML = '<option value="">選択してください...</option>';
           json.nsList.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
@@ -352,12 +331,9 @@
       showLoader("データ保存中...", "データベースに書き込んでいます");
 
       try {
-        const sheetNameMap = { '始業点検(Ns)': 'FNチェック', '終業点検(Ns)': 'FNチェック', '定期点検(Ns)': 'FNチェック' };
-        const reqType = sheetNameMap[currentType] || currentType;
-
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload })
+          body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: currentType, data: payload })
         });
         const json = await res.json();
         if (json.status === "success") {
@@ -369,37 +345,25 @@
       }
     }
 
-    // ---------------------------------
-    // 🔍 履歴画面の処理
-    // ---------------------------------
     async function fetchHistory() {
       showLoader(`${currentType} 履歴読込中...`, "データベースから最新の記録を取得しています");
       const container = document.getElementById("history-container");
       container.innerHTML = "";
       
       try {
-        const sheetNameMap = { '始業点検(Ns)': 'FNチェック', '終業点検(Ns)': 'FNチェック', '定期点検(Ns)': 'FNチェック' };
-        const reqType = sheetNameMap[currentType] || currentType;
-
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: reqType })
+          body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: currentType })
         });
         const json = await res.json();
         
         if (json.status === "success") {
-          // 履歴もフィルタリング（FNの場合）
-          let filteredHistory = json.history;
-          if (currentType === '始業点検(Ns)') filteredHistory = json.history.filter(h => JSON.stringify(h.rawJson).includes('始業点検'));
-          else if (currentType === '終業点検(Ns)') filteredHistory = json.history.filter(h => JSON.stringify(h.rawJson).includes('終業点検'));
-          else if (currentType === '定期点検(Ns)') filteredHistory = json.history.filter(h => JSON.stringify(h.rawJson).includes('定期点検'));
-
-          if(filteredHistory.length === 0) {
+          if(json.history.length === 0) {
             container.innerHTML = `<div style="padding:30px; text-align:center; color:var(--sub); font-weight:bold;">履歴がありません。</div>`;
             return;
           }
           
-          filteredHistory.forEach(h => {
+          json.history.forEach(h => {
             const isOk = h.judgment === "異常なし";
             const badgeClass = isOk ? "h-ok" : "h-ng";
             const badgeText = isOk ? "✅ 異常なし" : "⚠️ 異常あり";
@@ -408,11 +372,6 @@
             let detailsHtml = '<div style="margin-top:8px; font-size:12px; color:var(--ink); background:#f9f9f9; padding:8px; border-radius:6px; border:1px solid #e5e5ea; display:grid; gap:4px;">';
             for(let key in h.rawJson) {
               if(key !== "全体特記事項" && !key.endsWith("_詳細")) {
-                // 絞り込み表示
-                if (currentType === '始業点検(Ns)' && !key.startsWith('始業点検')) continue;
-                if (currentType === '終業点検(Ns)' && !key.startsWith('終業点検')) continue;
-                if (currentType === '定期点検(Ns)' && !key.startsWith('定期点検')) continue;
-
                 let val = h.rawJson[key];
                 let detailText = h.rawJson[key + "_詳細"] ? ` <span style="color:#c62828; font-weight:bold;">(${h.rawJson[key + "_詳細"]})</span>` : "";
                 detailsHtml += `<div><span style="color:var(--sub);">・${key.replace('_', '：')}</span> <b>${val}</b>${detailText}</div>`;
