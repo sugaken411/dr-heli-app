@@ -5,141 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 システム管理</title>
   <style>
-    /* 基本デザイン変数 */
-    :root {
-      --bg: #f2f2f7;
-      --card: #ffffff;
-      --brand: #d32f2f;
-      --ink: #1c1c1e;
-      --sub: #8e8e93;
-      --blue: #007aff;
-      --line: rgba(60,60,67,0.12);
-    }
+    :root { --bg: #f2f2f7; --card: #ffffff; --brand: #d32f2f; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --line: rgba(60,60,67,0.12); }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
     
-    body {
-      font-family: -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
-    }
+    header { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--line); flex-shrink: 0; position: sticky; top: 0; z-index: 100; }
+    .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; }
+    .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
     
-    header {
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(20px);
-      padding: 12px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 0.5px solid var(--line);
-      flex-shrink: 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
+    main { padding: 20px; flex: 1; overflow-y: auto; max-width: 800px; margin: 0 auto; width: 100%; }
     
-    .hdr-btn {
-      background: none;
-      border: none;
-      color: var(--blue);
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-    }
+    .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--line); }
     
-    .timer-badge {
-      background: #e5e5ea;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-family: monospace;
-      font-weight: bold;
-      font-size: 14px;
-      color: var(--ink);
-    }
+    input, select, textarea { padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; background: var(--bg); color: var(--ink); font-weight: 600; outline: none; }
     
-    main {
-      padding: 20px;
-      flex: 1;
-      overflow-y: auto;
-      max-width: 800px;
-      margin: 0 auto;
-      width: 100%;
-    }
-    
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      border: 1px solid var(--line);
-    }
-    
-    input, select, textarea {
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      box-sizing: border-box;
-      background: var(--bg);
-      color: var(--ink);
-      font-weight: 600;
-      outline: none;
-    }
-    
-    button.btn-primary {
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-      transition: opacity 0.2s;
-    }
+    button.btn-primary { background: var(--blue); color: #fff; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: opacity 0.2s; }
     button.btn-primary:hover { opacity: 0.8; }
     
-    /* オーバーレイ */
-    #login-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+    #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
     
-    #global-loader {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.95);
-      z-index: 9998;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(0,122,255,0.2);
-      border-top: 4px solid var(--blue);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    /* 🌟 インテリジェントローダー */
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
   </style>
 </head>
 <body>
@@ -154,16 +43,18 @@
     </div>
   </div>
 
+  <!-- 🌟 インテリジェントローダー -->
   <div id="global-loader">
     <div class="spinner"></div>
-    <div style="margin-top:16px; font-weight:bold; color:var(--ink);">システム通信中...</div>
+    <div class="loader-text" id="loader-main-text">通信中...</div>
+    <div class="loader-subtext" id="loader-sub-text">システムに接続しています</div>
   </div>
 
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v11.0</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v11.1</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -223,22 +114,25 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_ADMIN = "9999"; 
   
-  // オートロック機能
   let lockTime = 600; 
   let timerInterval;
-  
-  function toHalfWidth(ele) {
-    let val = ele.value;
-    val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });
-    ele.value = val;
-  }
 
-  function resetTimer() { lockTime = 600; updateTimerDisplay(); }
-  function updateTimerDisplay() { 
-    const m = String(Math.floor(lockTime/60)).padStart(2,'0'); 
-    const s = String(lockTime%60).padStart(2,'0'); 
-    document.getElementById("lock-timer").textContent = `${m}:${s}`; 
+  // 🌟 ローダー＆エラー送信制御
+  let loaderTimer1, loaderTimer2;
+  function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
+    const loader = document.getElementById("global-loader");
+    document.getElementById("loader-main-text").innerText = msg1;
+    document.getElementById("loader-sub-text").innerHTML = msg2;
+    loader.style.display = "flex";
+    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
+  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
+  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(admin.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+
+  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
+  function resetTimer() { lockTime = 600; updateTimerDisplay(); }
+  function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
   
   function startTimer() { 
     updateTimerDisplay(); 
@@ -250,7 +144,6 @@
     const input = document.getElementById("login-pin").value;
     if(input === PIN_ADMIN) { 
       document.getElementById("login-overlay").style.display = "none"; 
-      document.getElementById("global-loader").style.display = "flex"; 
       startTimer(); 
       fetchInit(); 
     } else { 
@@ -259,14 +152,12 @@
     }
   }
   
-  // 初期データの取得と画面描画
   async function fetchInit() {
+    showLoader("システム情報取得中...", "未回答のQ&Aリストを確認しています");
     try {
       const res = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_init", password: PIN_ADMIN, app_name: "管理" }), 
-        redirect: "follow" 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "fetch_init", password: PIN_ADMIN, app_name: "管理" }), redirect: "follow" 
       });
       const jsonRes = await res.json();
       
@@ -276,7 +167,7 @@
         
         if (unanswered.length > 0) {
           qaBox.innerHTML = unanswered.map((item, i) => `
-            <div style="background:var(--bg); padding:16px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line);">
+            <div style="background:var(--bg); padding:16px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue); border:1px solid var(--line);">
               <div style="font-size:11px; color:var(--sub); margin-bottom:6px; font-weight:bold;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
               <div style="color:var(--ink); font-size:14px; font-weight:bold; margin-bottom:12px; line-height:1.4;">Q. ${item.q.replace(/\n/g, '<br>')}</div>
               <textarea id="ans-${i}" rows="3" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px; margin-bottom:8px; font-size:13px; background:#fff;"></textarea>
@@ -287,46 +178,42 @@
           qaBox.innerHTML = '<div style="text-align:center; padding:30px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">未回答の質問・要望はありません。</div>';
         }
       } else {
-        alert("データの取得に失敗しました。");
+        throw new Error(jsonRes.message);
       }
     } catch(e) { 
-      console.error(e);
+      sendErrorLog(e.toString());
       alert("通信エラーが発生しました。");
     } finally {
-      document.getElementById("global-loader").style.display = "none";
+      hideLoader();
     }
   }
   
-  // Q&Aの回答を送信
   async function answerQA(qText, textareaId) {
     const ans = document.getElementById(textareaId).value.trim(); 
     if(!ans) return alert("回答を入力してください");
     
-    document.getElementById("global-loader").style.display = "flex";
+    showLoader("回答を送信中...", "Q&Aデータベースを更新しています");
     
     try {
       const res = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "answer_question", password: PIN_ADMIN, q: qText, a: ans }),
-        redirect: "follow"
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "answer_question", password: PIN_ADMIN, q: qText, a: ans }), redirect: "follow"
       });
       const jsonRes = await res.json();
       
       if(jsonRes.status === "success") {
         alert("回答を公開しました。");
-        fetchInit(); // リストを再取得して更新
+        fetchInit(); 
       } else {
-        alert("エラー: " + jsonRes.message);
-        document.getElementById("global-loader").style.display = "none";
+        throw new Error(jsonRes.message);
       }
     } catch(e) { 
+      sendErrorLog(e.toString());
       alert("通信エラーが発生しました。"); 
-      document.getElementById("global-loader").style.display = "none"; 
+      hideLoader();
     }
   }
   
-  // マスタデータの追加
   async function addMaster() {
     const type = document.getElementById("add-type").value; 
     const val1 = document.getElementById("add-val1").value.trim(); 
@@ -335,42 +222,32 @@
     if (!val1) return alert("登録する名称（値1）を入力してください。");
     if (type === 'mail' && !val2) return alert("メールアドレス（値2）を入力してください。");
     
-    const btn = event.target; 
-    btn.disabled = true; 
-    btn.innerText = "追加中...";
-    document.getElementById("global-loader").style.display = "flex";
+    showLoader("マスタデータ追加中...", "システム全体へ即時反映させています");
     
     try {
       const res = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2 }), 
-        redirect: "follow" 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2 }), redirect: "follow" 
       });
       const json = await res.json();
       
       if (json.status === "success") { 
         alert("マスタデータベースに正常に追加しました。"); 
         document.getElementById("add-val1").value = ""; 
-        document.getElementById("add-val2").value = ""; 
-        fetchInit(); 
-      } else { 
-        alert("エラー: " + json.message); 
+      } else {
+        throw new Error(json.message);
       }
     } catch(e) { 
+      sendErrorLog(e.toString());
       alert("通信エラーが発生しました。"); 
     } finally {
-      btn.disabled = false; 
-      btn.innerText = "＋ マスタデータベースに追加";
-      document.getElementById("global-loader").style.display = "none";
+      hideLoader();
     }
   }
   
-  // マスタ追加画面の入力枠の表示切替
   document.getElementById("add-type").addEventListener('change', (e) => { 
     document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; 
   });
-  
 </script>
 </body>
 </html>
