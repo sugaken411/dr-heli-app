@@ -11,10 +11,17 @@
       --line: rgba(60,60,67,0.12);
       --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
     }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(20px + var(--safe-bot)); }
     
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    header {
+      position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top));
+      padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px;
+      background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between; z-index: 100;
+    }
+    
     .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
@@ -35,6 +42,7 @@
     
     .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .portal-card { background: var(--card); border-radius: 16px; padding: 20px; text-decoration: none; color: var(--ink); display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s ease; border-left: 6px solid var(--sub); }
+    .portal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .icon { font-size: 32px; width: 48px; text-align: center; }
     .card-body { flex: 1; }
     .title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
@@ -57,15 +65,14 @@
 </head>
 <body>
 
-<div id="global-loader">
+<div id="global-loader" style="display:none;">
   <div class="spinner"></div>
-  <div class="loader-text" id="loader-main-text">起動中...</div>
-  <div class="loader-subtext" id="loader-sub-text">最新の業務データを同期しています</div>
+  <div style="font-weight:bold; font-size:12px; color:var(--blue);">最新データを同期中...</div>
 </div>
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.1</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.2</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -92,19 +99,19 @@
       </div>
     </a>
     
+    <a href="management.html" class="portal-card" style="border-left-color: #f59e0b;">
+      <div class="icon">📅</div>
+      <div class="card-body">
+        <div class="title" style="color:#f59e0b;">統括・業務管理</div>
+        <div class="desc">管理用カレンダー、日々の出動状況と待機理由の月間一覧</div>
+      </div>
+    </a>
+
     <a href="report.html" class="portal-card" style="border-left-color: #10b981;">
       <div class="icon">📝</div>
       <div class="card-body">
         <div class="title" style="color:#10b981;">業務日報 (浜町日誌)</div>
         <div class="desc">当直帯のタイムライン自動生成・手動修正・印刷管理</div>
-      </div>
-    </a>
-    
-    <a href="library.html" class="portal-card" style="border-left-color: #8b5cf6;">
-      <div class="icon">📚</div>
-      <div class="card-body">
-        <div class="title" style="color:#8b5cf6;">資料集・アーカイブ</div>
-        <div class="desc">公式ガイドラインや院内自作プロトコルの階層型ドリルダウン検索</div>
       </div>
     </a>
 
@@ -113,6 +120,14 @@
       <div class="card-body">
         <div class="title" style="color:#0ea5e9;">JSAMS 統計ダッシュボード</div>
         <div class="desc">月次集計、個人実績、時間帯ヒートマップ、処置ランキング</div>
+      </div>
+    </a>
+    
+    <a href="library.html" class="portal-card" style="border-left-color: #8b5cf6;">
+      <div class="icon">📚</div>
+      <div class="card-body">
+        <div class="title" style="color:#8b5cf6;">資料集・アーカイブ</div>
+        <div class="desc">公式ガイドラインや院内自作プロトコルの階層型ドリルダウン検索</div>
       </div>
     </a>
 
