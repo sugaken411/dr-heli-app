@@ -28,18 +28,26 @@
       #entry-form-container { display: none !important; } 
     }
     
-    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    /* インテリジェントローダー */
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
   </style>
 </head>
 <body>
 
-  <div id="global-loader" class="hidden"><div class="spinner"></div><div class="mt-4 font-bold" style="color: var(--ink);" id="loader-text">データを通信中...</div></div>
+  <!-- 🌟 インテリジェントローダー -->
+  <div id="global-loader" class="hidden">
+    <div class="spinner"></div>
+    <div class="loader-text" id="loader-main-text">データを通信中...</div>
+    <div class="loader-subtext" id="loader-sub-text">データベースに接続しています</div>
+  </div>
 
   <header class="no-print">
     <div class="hdr-group"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.0</span></div>
+    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.1</span></div>
     <div class="hdr-group"><button class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
   </header>
 
@@ -154,13 +162,27 @@
 
     let events = []; let editingId = null; 
     let tempAutoEvents = []; let tempManualEvents = [];
-
-    // 全角半角自動補正
-    function toHalfWidth(ele) {
-      let val = ele.value;
-      val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); });
-      ele.value = val;
+    
+    // 🌟 インテリジェントローダー制御
+    let loaderTimer1, loaderTimer2;
+    function showLoader(show, msg1="通信中...", msg2="データベースに接続しています") { 
+      const loader = document.getElementById('global-loader'); 
+      if (show) { 
+        document.getElementById('loader-main-text').innerText = msg1; 
+        document.getElementById('loader-sub-text').innerHTML = msg2;
+        loader.classList.remove('hidden'); 
+        loader.style.display = "flex";
+        loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+        loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+      } else { 
+        clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
+        loader.classList.add('hidden'); 
+        loader.style.display = "none";
+      } 
     }
+    function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "浜町日誌(report.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+
+    function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
 
     window.onload = () => { 
       document.getElementById('info-date').value = new Date().toISOString().split('T')[0]; 
@@ -168,7 +190,7 @@
     };
 
     async function fetchInit() {
-      showLoader(true, "システム起動中...");
+      showLoader(true, "システム起動中...", "マスタデータを取得しています");
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }) });
         const json = await res.json();
@@ -176,13 +198,12 @@
           populateSelect('info-nurse', json.masters.ns || []); 
           populateSelect('info-doctor', json.masters.dr || []); 
           await syncFromDb(false); 
-        }
-      } catch(e) {} finally { showLoader(false); }
+        } else { throw new Error(json.message); }
+      } catch(e) { sendErrorLog(e.toString()); alert("初期通信エラーが発生しました。"); } finally { showLoader(false); }
     }
 
-    // 🌟 事案DBとの双方向同期ロジック（過去データの復元完全対応）
     async function syncFromDb(force) {
-      showLoader(true, "データを同期中..."); 
+      showLoader(true, "データを同期中...", "事案データベースからデータを取得しています"); 
       const dateVal = document.getElementById('info-date').value;
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force }) });
@@ -190,9 +211,7 @@
         
         if (json.status === "success") {
           const data = json.data;
-          
           if (force) {
-            // 手動追加のイベントと、自動取得（事案DB）のイベントを分ける
             tempManualEvents = events.filter(e => !String(e.id).startsWith("auto-"));
             tempAutoEvents = (data.events || []).filter(e => String(e.id).startsWith("auto-"));
             
@@ -205,36 +224,29 @@
             if (hasOverlap) { document.getElementById('sync-modal').classList.remove('hidden'); showLoader(false); return; } 
             else { events = [...tempManualEvents, ...tempAutoEvents]; alert("事案データを取り込みました。"); }
           } else {
-            // 🌟 初回読み込み or 過去日付の選択時（データの完全復元）
             const setIfNotSelected = (selId, othId, val) => { 
               const sel = document.getElementById(selId); 
               if (val) { 
                 if ([...sel.options].some(o => o.value === val)) { sel.value = val; document.getElementById(othId).classList.add('hidden'); } 
                 else { sel.value = 'その他'; document.getElementById(othId).value = val; document.getElementById(othId).classList.remove('hidden'); } 
-              } else {
-                sel.value = ""; document.getElementById(othId).classList.add('hidden');
-              }
+              } else { sel.value = ""; document.getElementById(othId).classList.add('hidden'); }
             };
             setIfNotSelected('info-nurse', 'info-nurse-other', data.recorder); 
             setIfNotSelected('info-doctor', 'info-doctor-other', data.doctor);
             
             document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false);
-            document.getElementById('info-remarks').value = ""; // 備考のクリア
+            document.getElementById('info-remarks').value = "";
             
             if (data.hamamachiReason) { 
               let others = [];
-              data.hamamachiReason.split(',').forEach(r => { 
-                const cb = document.querySelector(`input[name="reason"][value="${r.trim()}"]`); 
-                if(cb) cb.checked = true; 
-                else others.push(r.trim());
-              }); 
+              data.hamamachiReason.split(',').forEach(r => { const cb = document.querySelector(`input[name="reason"][value="${r.trim()}"]`); if(cb) cb.checked = true; else others.push(r.trim()); }); 
               if(others.length > 0) document.getElementById('info-remarks').value = others.join(", ");
             }
             events = data.events || [];
           }
           updatePrintHeader(); render();
-        }
-      } catch(e) {} finally { showLoader(false); }
+        } else { throw new Error(json.message); }
+      } catch(e) { sendErrorLog(e.toString()); alert("同期エラーが発生しました。"); } finally { showLoader(false); }
     }
 
     function resolveSync(choice) {
@@ -250,11 +262,11 @@
       const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
       const otherReason = document.getElementById('info-remarks').value.trim(); if(otherReason) reasons.push(otherReason);
       
-      showLoader(true, "保存中...");
+      showLoader(true, "保存中...", "日誌データを更新しています");
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }) });
-        const json = await res.json(); if (json.status === "success") alert("保存しました！"); else alert("エラー: " + json.message);
-      } catch(e) {} finally { showLoader(false); }
+        const json = await res.json(); if (json.status === "success") alert("保存しました！"); else throw new Error(json.message);
+      } catch(e) { sendErrorLog(e.toString()); alert("保存エラーが発生しました。"); } finally { showLoader(false); }
     }
 
     function updatePrintHeader() {
@@ -264,12 +276,6 @@
       const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
       const other = document.getElementById('info-remarks').value.trim(); if(other) reasons.push(other);
       document.getElementById('print-reason').innerText = reasons.join(', ') || '特になし';
-    }
-
-    function showLoader(show, text="データを通信中...") { 
-      const loader = document.getElementById('global-loader'); 
-      if (show) { document.getElementById('loader-text').innerText = text; loader.classList.remove('hidden'); } 
-      else { loader.classList.add('hidden'); } 
     }
     
     function populateSelect(id, array) { const sel = document.getElementById(id); sel.innerHTML = `<option value="">-- 選択 --</option>`; array.forEach(name => sel.innerHTML += `<option value="${name}">${name}</option>`); sel.innerHTML += `<option value="その他">その他(手入力)</option>`; }
