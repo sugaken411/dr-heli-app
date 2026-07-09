@@ -17,9 +17,9 @@
 
     main { margin-top: calc(110px + var(--safe-top)); padding: 16px; max-width: 700px; margin-left: auto; margin-right: auto; }
     
-    /* 種類切替ピル */
-    .type-picker { display: flex; background: #e5e5ea; border-radius: 8px; padding: 4px; margin-bottom: 16px; }
-    .type-btn { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 700; color: var(--sub); border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    /* 種類切替ピル (3種類に拡張) */
+    .type-picker { display: flex; background: #e5e5ea; border-radius: 8px; padding: 4px; margin-bottom: 16px; gap: 4px; }
+    .type-btn { flex: 1; text-align: center; padding: 8px 4px; font-size: 12px; font-weight: 800; color: var(--sub); border-radius: 6px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
     .type-btn.active { background: #fff; color: var(--ink); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
@@ -77,7 +77,7 @@
 
   <header class="no-print">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div style="font-weight:900; font-size:16px;">統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.0</span></div>
+    <div style="font-weight:900; font-size:16px;">統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.2</span></div>
     <button class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
   </header>
 
@@ -90,6 +90,7 @@
     <div class="type-picker no-print">
       <div class="type-btn active" id="btn-type-me" onclick="switchType('ME')">🔌 ME機器</div>
       <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
+      <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
     </div>
 
     <div id="tab-input" class="tab-content active">
@@ -135,8 +136,8 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
     
-    let currentType = "ME"; // 'ME' or 'ナースバック'
-    let currentMainTab = "input"; // 'input' or 'history'
+    let currentType = "ME"; // 'ME', 'ナースバック', 'ヘリ内'
+    let currentMainTab = "input"; 
     
     let checklistItems = [];
     let currentData = {}; 
@@ -173,10 +174,12 @@
 
     function switchType(type) {
       currentType = type;
-      document.getElementById("btn-type-me").classList.toggle("active", type === "ME");
-      document.getElementById("btn-type-ns").classList.toggle("active", type === "ナースバック");
+      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+      if(type === 'ME') document.getElementById("btn-type-me").classList.add("active");
+      else if(type === 'ナースバック') document.getElementById("btn-type-ns").classList.add("active");
+      else if(type === 'ヘリ内') document.getElementById("btn-type-heli").classList.add("active");
       
-      document.getElementById("print-title").innerText = `【${type}機器】 点検履歴`;
+      document.getElementById("print-title").innerText = `【${type}】 点検履歴`;
       resetTime();
       loadDataForCurrentView();
     }
