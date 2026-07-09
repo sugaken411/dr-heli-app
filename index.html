@@ -23,7 +23,6 @@
     
     main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
-    /* 🌟 インテリジェントローダー */
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -43,7 +42,6 @@
     .btn-next:active { transform: scale(0.98); }
     .btn-small { background: var(--blue); color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
-    /* トグル・ラジオ・チップ UI */
     .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
     .radio-lbl { display: inline-block; padding: 10px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; font-size: 14px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
     input[type="radio"], input[type="checkbox"] { display: none; }
@@ -53,7 +51,6 @@
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 10px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; } 
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
-    /* 処置の詳細アコーディオン */
     .proc-item { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
     .chk-label { display: block; padding: 14px 16px; background: var(--bg); font-weight: bold; font-size: 15px; color: var(--ink); cursor: pointer; user-select: none; }
     .chk-label input { display: none; }
@@ -61,7 +58,6 @@
     .proc-details { padding: 16px; background: #fff; display: none; }
     
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
     
     .tab-content { display: none; animation: fadeIn 0.2s ease; }
     .tab-content.active { display: block; }
@@ -78,7 +74,7 @@
 
   <header>
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div style="font-weight:900; font-size:16px;">新規事案登録 <span class="version-tag">v2.1</span></div>
+    <div style="font-weight:900; font-size:16px;">新規事案登録 <span class="version-tag">v2.0</span></div>
     <div style="width: 60px;"></div>
   </header>
 
@@ -240,7 +236,7 @@
 
       <div id="tab3" class="tab-content">
         <div style="font-size:12px; color:var(--sub); margin-bottom:12px; font-weight:bold;">
-          ※実施した処置をタップし、詳細・使用資機材を入力してください。算定コストに直結します。
+          ※実施した処置をタップし、詳細を入力してください。算定コストに直結します。
         </div>
 
         <div class="card">
@@ -350,7 +346,7 @@
           </div>
 
           <div class="proc-item">
-            <label class="chk-label"><input type="checkbox" id="proc-io" onchange="toggleProc('io-details', this)"> 🦴 骨髄路確保 (IO / B.I.G)</label>
+            <label class="chk-label"><input type="checkbox" id="proc-io" onchange="toggleProc('io-details', this)"> 🦴 骨髄路確保 (IO / EZ-IO)</label>
             <div id="io-details" class="proc-details">
               <div class="grid-2">
                 <div class="input-group">
@@ -359,7 +355,7 @@
                     <option value="">選択...</option>
                     <option value="赤色(小児用)">🔴 赤色 (小児用)</option>
                     <option value="青色(成人用)">🔵 青色 (成人用)</option>
-                    <option value="黄色(大型/肥満)">🟡 黄色 (EZ-IO等)</option>
+                    <option value="黄色(肥満/大型)">🟡 黄色 (肥満/大型)</option>
                   </select>
                 </div>
                 <div class="input-group">
@@ -525,14 +521,13 @@
       }).catch(e => { alert("通信エラー"); hideLoader(); });
     }
 
-    // 🌟 送信処理
+    // 🌟 送信処理 (2段階送信ロジックの完全復活)
     function submitData() {
       const yoseiNo = document.getElementById("p-id").value.trim();
       const scheme = document.querySelector('input[name="scheme"]:checked')?.value;
       if (!yoseiNo) return alert("要請番号を入力してください。");
       if (!scheme) return alert("スキームを選択してください。");
 
-      // 収集
       let d = {
         "要請番号": yoseiNo,
         "日付": document.getElementById("p-date").value,
@@ -557,14 +552,6 @@
         "ヘリ在庫フラグ": document.getElementById("p-stock-flag").checked ? "消費あり" : ""
       };
 
-      // 🌟 キャンセルのステータス自動判定
-      if (scheme.includes("キャンセル")) {
-        d["ステータス"] = "◯ カルテ完了 (自動)";
-      } else {
-        d["ステータス"] = "⚠️ 未完了(現場入力)";
-      }
-
-      // 処置データの収集
       let procs = [];
       document.querySelectorAll('.chip.on').forEach(el => procs.push(el.innerText));
       d["簡易処置リスト"] = procs.join(", ");
@@ -604,19 +591,41 @@
         d["【IO】フラッシュ"] = document.getElementById("io-flush").checked ? "実施" : "未実施";
       }
 
+      // 🌟 キャンセルの場合はステータスを完了として送信
+      const isCancel = scheme.includes("キャンセル");
+      if (isCancel) {
+        d["ステータス"] = "◯ カルテ完了 (キャンセル)";
+      }
+
       if(!confirm(`要請No.${yoseiNo} のデータを送信し、速報メールを配信しますか？`)) return;
 
       const btn = document.getElementById("btn-submit");
       btn.innerText = "送信中..."; btn.disabled = true;
       showLoader("データ送信中...", "データベースに書き込み、メールを配信しています");
 
+      // 1回目の通信：事案データの登録＆メール送信
       fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "submit", password: PIN_CODE, data: d })
       }).then(r => r.json()).then(res => {
         if (res.status === "success") {
-          alert("事案データの登録とメール送信が完了しました！");
-          location.href = "portal.html";
+          // 2回目の通信（キャンセルの場合のみ）：ステータス更新を確実に行う連動ロジック
+          if (isCancel) {
+            showLoader("ステータス更新中...", "キャンセル事案の完了処理を行っています");
+            fetch(GAS_API_URL, {
+              method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: yoseiNo, who: "自動(キャンセル)" })
+            }).then(() => {
+              alert("事案登録とキャンセル完了処理が完了しました！");
+              location.href = "portal.html";
+            }).catch(() => {
+              alert("事案登録は完了しましたが、ステータス更新に失敗しました。管理コンソールから確認してください。");
+              location.href = "portal.html";
+            });
+          } else {
+            alert("事案データの登録とメール送信が完了しました！\n（カルテ代行入力後、メールのリンクから完了処理を行ってください）");
+            location.href = "portal.html";
+          }
         } else {
           alert("エラーが発生しました: " + res.message);
           btn.innerText = "🚀 事案データを送信・登録する"; btn.disabled = false;
