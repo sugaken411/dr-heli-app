@@ -6,58 +6,55 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>AW109 症例登録</title>
-  <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A109E_Power_Helicopter.jpg/180px-A109E_Power_Helicopter.jpg">
   <style>
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --med-blue-text: #1565c0; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
+    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); padding-bottom: calc(80px + var(--safe-bot)); -webkit-font-smoothing: antialiased; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
-    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     .tab-container { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; z-index: 99; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
     .nav-tab { flex: 1; min-width: 75px; text-align: center; padding: 0 4px; height: 44px; line-height: 44px; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.2s; }
     .nav-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
     
-    main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 600px; margin-left: auto; margin-right: auto; }
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
-    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
+    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 16px; }
-    .section-label { font-size: 13px; font-weight: 800; color: var(--sub); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;}
+    .section-label { font-size: 14px; font-weight: 800; color: var(--ink); margin-bottom: 16px; border-bottom: 2px solid var(--blue); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;}
     
+    /* 🌟 縦スクロールを前提とした入力レイアウト */
     .input-group { margin-bottom: 16px; }
     .input-group label { display: block; font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 6px; }
-    input[type="text"], input[type="tel"], input[type="time"], input[type="date"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 16px; background: var(--bg); outline: none; padding: 12px; border-radius: 8px; color: var(--ink); font-weight: 600; box-sizing: border-box; }
-    input:focus, select:focus, textarea:focus { border-color: var(--blue); background: #fff; }
+    input[type="text"], input[type="tel"], input[type="time"], input[type="date"], textarea, select { width: 100%; border: 1px solid #c7c7cc; font-size: 16px; background: #fff; outline: none; padding: 14px; border-radius: 8px; color: var(--ink); font-weight: 600; box-sizing: border-box; appearance: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.2); }
     textarea { resize: vertical; min-height: 80px; }
     
     .btn-next { background: var(--brand); color: #fff; border: none; padding: 16px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 16px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); transition: 0.2s; }
     .btn-next:active { transform: scale(0.98); }
-    .btn-small { background: var(--blue); color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
+    .btn-small { background: var(--blue); color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
     
     .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
-    .radio-lbl { display: inline-block; padding: 10px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; font-size: 14px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
+    .radio-lbl { display: inline-block; padding: 12px 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: bold; color: var(--sub); cursor: pointer; user-select: none; width: 100%; text-align: center;}
     input[type="radio"], input[type="checkbox"] { display: none; }
-    input[type="radio"]:checked + .radio-lbl, input[type="checkbox"]:checked + .radio-lbl { background: var(--brand); color: #fff; border-color: var(--brand); }
+    input[type="radio"]:checked + .radio-lbl { background: var(--med-blue); color: var(--blue); border-color: var(--blue); }
     
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; } 
-    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 10px 14px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; } 
-    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
+    /* 簡易処置チップ */
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; } 
+    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 12px 16px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); user-select: none; } 
+    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
     
-    .proc-item { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
-    .chk-label { display: block; padding: 14px 16px; background: var(--bg); font-weight: bold; font-size: 15px; color: var(--ink); cursor: pointer; user-select: none; }
-    .chk-label input { display: none; }
-    .chk-label.active { background: var(--med-blue); color: var(--med-blue-text); border-bottom: 1px solid var(--line); }
-    .proc-details { padding: 16px; background: #fff; display: none; }
-    
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    /* 処置の詳細トグル (縦並び) */
+    .proc-item { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px; background: var(--bg); }
+    .chk-label { display: block; padding: 16px; font-weight: bold; font-size: 15px; color: var(--ink); cursor: pointer; user-select: none; }
+    .chk-label input[type="checkbox"] { display: inline-block; width: 18px; height: 18px; margin-right: 8px; vertical-align: middle; }
+    .proc-details { padding: 16px; background: #fff; border-top: 1px solid var(--line); display: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
     
     .tab-content { display: none; animation: fadeIn 0.2s ease; }
     .tab-content.active { display: block; }
@@ -74,7 +71,7 @@
 
   <header>
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div style="font-weight:900; font-size:16px;">新規事案登録 <span class="version-tag">v2.0</span></div>
+    <div style="font-weight:900; font-size:16px;">新規事案登録</div>
     <div style="width: 60px;"></div>
   </header>
 
@@ -99,15 +96,13 @@
             <label>日付 (必須)</label>
             <input type="date" id="p-date">
           </div>
-          <div class="grid-2">
-            <div class="input-group">
-              <label>フライトドクター</label>
-              <select id="p-dr"><option value="">選択...</option></select>
-            </div>
-            <div class="input-group">
-              <label>フライトナース</label>
-              <select id="p-ns"><option value="">選択...</option></select>
-            </div>
+          <div class="input-group">
+            <label>フライトドクター</label>
+            <select id="p-dr"><option value="">選択...</option></select>
+          </div>
+          <div class="input-group">
+            <label>フライトナース</label>
+            <select id="p-ns"><option value="">選択...</option></select>
           </div>
           <div class="input-group">
             <label style="display:flex; justify-content:space-between; align-items:center;">
@@ -117,97 +112,94 @@
             <input type="text" id="p-dest" list="dl-dest" placeholder="入力または選択...">
             <datalist id="dl-dest"></datalist>
           </div>
-        </div>
-
-        <div class="card">
-          <div class="section-label">スキーム (必須)</div>
-          <div class="radio-group">
-            <label><input type="radio" name="scheme" value="現場要請" onchange="updateTimelineUI()"> <span class="radio-lbl">現場要請</span></label>
-            <label><input type="radio" name="scheme" value="施設間搬送" onchange="updateTimelineUI()"> <span class="radio-lbl">施設間搬送</span></label>
-            <label><input type="radio" name="scheme" value="救急車同乗" onchange="updateTimelineUI()"> <span class="radio-lbl">救急車同乗</span></label>
-            <label><input type="radio" name="scheme" value="上空キャンセル" onchange="updateTimelineUI()"> <span class="radio-lbl">上空キャンセル</span></label>
-            <label><input type="radio" name="scheme" value="現場キャンセル" onchange="updateTimelineUI()"> <span class="radio-lbl">現場キャンセル</span></label>
-            <label><input type="radio" name="scheme" value="天候不良キャンセル" onchange="updateTimelineUI()"> <span class="radio-lbl">天候不良キャンセル</span></label>
-            <label><input type="radio" name="scheme" value="その他" onchange="updateTimelineUI()"> <span class="radio-lbl">その他</span></label>
+          <div class="input-group">
+            <label>スキーム (必須)</label>
+            <select id="p-scheme" onchange="updateTimelineUI()">
+              <option value="">選択してください...</option>
+              <option value="現場要請">現場要請</option>
+              <option value="施設間搬送">施設間搬送</option>
+              <option value="救急車同乗">救急車同乗</option>
+              <option value="キャンセル(上空)">キャンセル(上空)</option>
+              <option value="キャンセル(現場)">キャンセル(現場)</option>
+              <option value="キャンセル(天候不良)">キャンセル(天候不良)</option>
+              <option value="その他">その他</option>
+            </select>
           </div>
         </div>
 
-        <div class="card">
-          <div class="section-label">タイムライン</div>
-          <div class="grid-2">
-            <div class="input-group" id="box-req">
-              <label id="lbl-req">要請時刻</label>
-              <input type="time" id="t-req">
-            </div>
-            <div class="input-group" id="box-dep1">
-              <label>初期離陸</label>
-              <input type="time" id="t-dep1">
-            </div>
-            <div class="input-group" id="box-arr1">
-              <label>現場/病院着陸</label>
-              <input type="time" id="t-arr1">
-            </div>
-            <div class="input-group" id="box-contact">
-              <label>接触</label>
-              <input type="time" id="t-contact">
-            </div>
-            <div class="input-group" id="box-dep2">
-              <label>現場/病院離陸</label>
-              <input type="time" id="t-dep2">
-            </div>
-            <div class="input-group" id="box-arr2">
-              <label>病着</label>
-              <input type="time" id="t-arr2" onchange="calcMonitorTime()">
-            </div>
-            <div class="input-group" id="box-end">
-              <label>終了 (基地帰投等)</label>
-              <input type="time" id="t-end" onchange="calcMonitorTime()">
-            </div>
+        <div class="card" id="box-aviation">
+          <div class="section-label">🚁 航空タイムライン</div>
+          <div class="input-group" id="box-req">
+            <label id="lbl-req">要請時刻</label>
+            <input type="time" id="t-req">
+          </div>
+          <div class="input-group" id="box-dep1">
+            <label>初期離陸時間</label>
+            <input type="time" id="t-dep1">
+          </div>
+          <div class="input-group" id="box-arr1">
+            <label>最終着陸時間 (帰投など)</label>
+            <input type="time" id="t-arr1">
           </div>
         </div>
+
+        <div class="card" id="box-medical">
+          <div class="section-label">⚕️ 医療タイムライン</div>
+          <div class="input-group" id="box-contact">
+            <label>接触時間</label>
+            <input type="time" id="t-contact">
+          </div>
+          <div class="input-group" id="box-hosp">
+            <label>病着時間</label>
+            <input type="time" id="t-hosp" onchange="calcMonitorTime()">
+          </div>
+          <div class="input-group" id="box-end">
+            <label>終了時間</label>
+            <input type="time" id="t-end" onchange="calcMonitorTime()">
+          </div>
+        </div>
+
         <button type="button" class="btn-next" onclick="switchTab('tab2')">次へ: ② 算定・保険</button>
       </div>
 
       <div id="tab2" class="tab-content">
         <div class="card">
           <div class="section-label">算定 (時間・往診)</div>
-          <div class="grid-2">
-            <div class="input-group">
-              <label>往診料</label>
-              <select id="p-oushin">
-                <option value="">--</option>
-                <option value="往診料">往診料</option>
-                <option value="往診料(深夜)">往診料(深夜)</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>搬送料</label>
-              <select id="p-hansou">
-                <option value="">--</option>
-                <option value="搬送料">搬送料</option>
-                <option value="搬送料(新生児)">搬送料(新生児)</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>搬送料 (長時間)</label>
-              <select id="p-hansou-long">
-                <option value="">--</option>
-                <option value="30分">30分</option>
-                <option value="1時間">1時間</option>
-                <option value="1時間30分">1時間30分</option>
-                <option value="2時間">2時間</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>モニター算定時間</label>
-              <input type="text" id="p-monitor" placeholder="自動計算または手入力">
-            </div>
+          <div class="input-group">
+            <label>往診料</label>
+            <select id="p-oushin">
+              <option value="">--</option>
+              <option value="往診料">往診料</option>
+              <option value="往診料(深夜)">往診料(深夜)</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>搬送料</label>
+            <select id="p-hansou">
+              <option value="">--</option>
+              <option value="搬送料">搬送料</option>
+              <option value="搬送料(新生児)">搬送料(新生児)</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>搬送料 (長時間)</label>
+            <select id="p-hansou-long">
+              <option value="">--</option>
+              <option value="30分">30分</option>
+              <option value="1時間">1時間</option>
+              <option value="1時間30分">1時間30分</option>
+              <option value="2時間">2時間</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>モニター算定時間</label>
+            <input type="text" id="p-monitor" placeholder="自動計算または手入力">
           </div>
           <div class="input-group">
             <label>SpO2 (経皮的動脈血酸素飽和度測定)</label>
-            <div class="radio-group">
-              <label><input type="radio" name="spo2" value="あり"> <span class="radio-lbl">あり (1日1回)</span></label>
-              <label><input type="radio" name="spo2" value="なし"> <span class="radio-lbl">なし</span></label>
+            <div style="display:flex; gap:8px;">
+              <label style="flex:1;"><input type="radio" name="spo2" value="あり"> <span class="radio-lbl">あり (1日1回)</span></label>
+              <label style="flex:1;"><input type="radio" name="spo2" value="なし"> <span class="radio-lbl">なし</span></label>
             </div>
           </div>
         </div>
@@ -235,36 +227,34 @@
       </div>
 
       <div id="tab3" class="tab-content">
-        <div style="font-size:12px; color:var(--sub); margin-bottom:12px; font-weight:bold;">
-          ※実施した処置をタップし、詳細を入力してください。算定コストに直結します。
+        <div style="font-size:13px; color:var(--sub); margin-bottom:16px; font-weight:bold;">
+          ※実施した処置にチェックを入れ、詳細を入力してください。（縦スクロール）
         </div>
 
         <div class="card">
           <div class="section-label">A・B : 気道・呼吸</div>
           
           <div class="proc-item">
-            <label class="chk-label"><input type="checkbox" id="proc-o2" onchange="toggleProc('o2-details', this)"> 💨 酸素投与</label>
+            <label class="chk-label"><input type="checkbox" id="proc-o2" onchange="toggleProc('o2-details', this)">💨 酸素投与</label>
             <div id="o2-details" class="proc-details">
-              <div class="grid-2">
-                <div class="input-group">
-                  <label>デバイス</label>
-                  <select id="o2-device">
-                    <option value="">選択...</option>
-                    <option value="鼻カヌラ">鼻カヌラ</option>
-                    <option value="酸素マスク">酸素マスク</option>
-                    <option value="リザーバーマスク">リザーバーマスク</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <label>流量 (L/min)</label>
-                  <input type="tel" id="o2-flow" placeholder="例: 10">
-                </div>
+              <div class="input-group">
+                <label>デバイス</label>
+                <select id="o2-device">
+                  <option value="">選択...</option>
+                  <option value="鼻カヌラ">鼻カヌラ</option>
+                  <option value="酸素マスク">酸素マスク</option>
+                  <option value="リザーバーマスク">リザーバーマスク</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>流量 (L/min)</label>
+                <input type="tel" id="o2-flow" placeholder="例: 10">
               </div>
             </div>
           </div>
 
           <div class="proc-item">
-            <label class="chk-label"><input type="checkbox" id="proc-bvm" onchange="toggleProc('bvm-details', this)"> 🌬️ BVM (用手換気)</label>
+            <label class="chk-label"><input type="checkbox" id="proc-bvm" onchange="toggleProc('bvm-details', this)">🌬️ BVM (用手換気)</label>
             <div id="bvm-details" class="proc-details">
               <div class="input-group">
                 <label>使用マスク</label>
@@ -277,17 +267,15 @@
           </div>
 
           <div class="proc-item">
-            <label class="chk-label"><input type="checkbox" id="proc-intub" onchange="toggleProc('intub-details', this)"> ⚕️ 気管挿管</label>
+            <label class="chk-label"><input type="checkbox" id="proc-intub" onchange="toggleProc('intub-details', this)">⚕️ 気管挿管</label>
             <div id="intub-details" class="proc-details">
-              <div class="grid-2">
-                <div class="input-group">
-                  <label>チューブサイズ (Fr)</label>
-                  <input type="tel" id="intub-size" placeholder="例: 7.5">
-                </div>
-                <div class="input-group">
-                  <label>固定位置 (cm)</label>
-                  <input type="tel" id="intub-pos" placeholder="例: 22">
-                </div>
+              <div class="input-group">
+                <label>チューブサイズ (Fr)</label>
+                <input type="tel" id="intub-size" placeholder="例: 7.5">
+              </div>
+              <div class="input-group">
+                <label>固定位置 (cm)</label>
+                <input type="tel" id="intub-pos" placeholder="例: 22">
               </div>
               <div class="input-group">
                 <label>使用デバイス</label>
@@ -301,15 +289,13 @@
           </div>
 
           <div class="proc-item">
-            <label class="chk-label"><input type="checkbox" id="proc-vent" onchange="toggleProc('vent-details', this)"> 🤖 人工呼吸器 (モナール)</label>
+            <label class="chk-label"><input type="checkbox" id="proc-vent" onchange="toggleProc('vent-details', this)">🤖 人工呼吸器 (モナール)</label>
             <div id="vent-details" class="proc-details">
-              <div class="grid-2">
-                <div class="input-group"><label>モード</label><input type="text" id="vent-mode" placeholder="SIMV等"></div>
-                <div class="input-group"><label>FiO2 (%)</label><input type="tel" id="vent-fio2"></div>
-                <div class="input-group"><label>PEEP</label><input type="tel" id="vent-peep"></div>
-                <div class="input-group"><label>換気回数</label><input type="tel" id="vent-rr"></div>
-                <div class="input-group"><label>一回換気量(Vt)</label><input type="tel" id="vent-vt"></div>
-              </div>
+              <div class="input-group"><label>モード</label><input type="text" id="vent-mode" placeholder="SIMV等"></div>
+              <div class="input-group"><label>FiO2 (%)</label><input type="tel" id="vent-fio2"></div>
+              <div class="input-group"><label>PEEP</label><input type="tel" id="vent-peep"></div>
+              <div class="input-group"><label>換気回数</label><input type="tel" id="vent-rr"></div>
+              <div class="input-group"><label>一回換気量(Vt)</label><input type="tel" id="vent-vt"></div>
             </div>
           </div>
           
@@ -325,50 +311,50 @@
           <div class="section-label">C : 循環</div>
 
           <div class="proc-item">
-            <label class="chk-label"><input type="checkbox" id="proc-iv" onchange="toggleProc('iv-details', this)"> 💉 静脈路確保 (IV)</label>
+            <label class="chk-label"><input type="checkbox" id="proc-iv" onchange="toggleProc('iv-details', this)">💉 静脈路確保 (IV)</label>
             <div id="iv-details" class="proc-details">
-              <div class="grid-2">
-                <div class="input-group">
-                  <label>留置針サイズ</label>
-                  <select id="iv-gauge">
-                    <option value="18G">18G</option>
-                    <option value="20G" selected>20G (デフォルト)</option>
-                    <option value="22G">22G</option>
-                    <option value="24G">24G</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <label>部位</label>
-                  <input type="text" id="iv-loc" placeholder="右前腕など">
-                </div>
+              <div class="input-group">
+                <label>留置針サイズ</label>
+                <select id="iv-gauge">
+                  <option value="18G">18G</option>
+                  <option value="20G" selected>20G (デフォルト)</option>
+                  <option value="22G">22G</option>
+                  <option value="24G">24G</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label>部位</label>
+                <input type="text" id="iv-loc" placeholder="右前腕など">
               </div>
             </div>
           </div>
 
           <div class="proc-item">
-            <label class="chk-label"><input type="checkbox" id="proc-io" onchange="toggleProc('io-details', this)"> 🦴 骨髄路確保 (IO / EZ-IO)</label>
+            <label class="chk-label"><input type="checkbox" id="proc-io" onchange="toggleProc('io-details', this)">🦴 骨髄路確保 (IO / B.I.G)</label>
             <div id="io-details" class="proc-details">
-              <div class="grid-2">
-                <div class="input-group">
-                  <label>骨髄針カラー (種類)</label>
-                  <select id="io-color">
-                    <option value="">選択...</option>
-                    <option value="赤色(小児用)">🔴 赤色 (小児用)</option>
-                    <option value="青色(成人用)">🔵 青色 (成人用)</option>
-                    <option value="黄色(肥満/大型)">🟡 黄色 (肥満/大型)</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <label>穿刺部位</label>
-                  <select id="io-loc">
-                    <option value="右脛骨">右脛骨</option>
-                    <option value="左脛骨">左脛骨</option>
-                    <option value="右上腕骨">右上腕骨</option>
-                    <option value="左上腕骨">左上腕骨</option>
-                  </select>
-                </div>
+              <div class="input-group">
+                <label>骨髄針カラー (種類)</label>
+                <select id="io-color">
+                  <option value="">選択...</option>
+                  <option value="赤色(小児用)">🔴 赤色 (小児用)</option>
+                  <option value="青色(成人用)">🔵 青色 (成人用)</option>
+                  <option value="黄色(肥満/大型)">🟡 黄色 (肥満/大型)</option>
+                </select>
               </div>
-              <label style="font-size:12px; display:block; margin-top:8px;"><input type="checkbox" id="io-flush"> 局麻・生食フラッシュ実施</label>
+              <div class="input-group">
+                <label>穿刺部位</label>
+                <select id="io-loc">
+                  <option value="右脛骨">右脛骨</option>
+                  <option value="左脛骨">左脛骨</option>
+                  <option value="右上腕骨">右上腕骨</option>
+                  <option value="左上腕骨">左上腕骨</option>
+                </select>
+              </div>
+              <div style="margin-top:8px;">
+                <label style="font-size:14px; font-weight:bold; display:flex; align-items:center; gap:8px;">
+                  <input type="checkbox" id="io-flush" style="width:20px; height:20px; display:block;"> 局麻・生食フラッシュ実施
+                </label>
+              </div>
             </div>
           </div>
 
@@ -403,19 +389,19 @@
             <textarea id="p-memo" placeholder="現場の状況、引き継ぎ事項、エラー内容など自由に記入してください。"></textarea>
           </div>
           
-          <div style="padding: 12px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; margin-top: 12px;">
-            <label style="font-weight:bold; color: #e65100; font-size: 14px; display:flex; align-items:center; gap:8px;">
-              <input type="checkbox" id="p-stock-flag" style="display:inline-block; width:18px; height:18px;">
-              ヘリ機内の在庫・資機材を使用・消費した
+          <div style="padding: 16px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px; margin-top: 12px;">
+            <label style="font-weight:bold; color: #e65100; font-size: 15px; display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="p-stock-flag" style="display:inline-block; width:20px; height:20px;">
+              ヘリ機内の在庫・資機材を使用した
             </label>
-            <div style="font-size:11px; color:#ef6c00; margin-top:4px; margin-left:26px;">※浜町待機所や基地での補充が必要な場合チェック。</div>
+            <div style="font-size:12px; color:#ef6c00; margin-top:6px; margin-left:28px;">※浜町待機所や基地での補充が必要な場合チェック。</div>
           </div>
         </div>
 
         <button type="button" class="btn-next" id="btn-submit" onclick="submitData()" style="padding:20px; font-size:18px; border-radius:16px;">
-          🚀 事案データを送信・登録する
+          🚀 登録・メール送信
         </button>
-        <div style="text-align:center; font-size:11px; color:var(--sub); margin-top:12px;">
+        <div style="text-align:center; font-size:12px; color:var(--sub); margin-top:16px; line-height: 1.5;">
           ※送信後、自動で基地病院等へ速報メールが送信されます。<br>
           ※キャンセルを選択した場合は、自動的にステータスが完了になります。
         </div>
@@ -448,26 +434,23 @@
 
     function toggleProc(id, cb) {
       document.getElementById(id).style.display = cb.checked ? "block" : "none";
-      cb.parentElement.classList.toggle("active", cb.checked);
     }
 
-    // タイムラインの表示制御
+    // 🌟 タイムラインの表示制御
     function updateTimelineUI() {
-      const scheme = document.querySelector('input[name="scheme"]:checked')?.value || "";
+      const scheme = document.getElementById("p-scheme").value;
       const isFac = scheme === "施設間搬送";
       const isCan = scheme.includes("キャンセル");
       
       document.getElementById("lbl-req").innerText = isFac ? "施設間搬送依頼時刻" : "要請時刻";
       
-      document.getElementById("box-arr1").style.display = isCan ? "none" : "block";
-      document.getElementById("box-contact").style.display = isCan ? "none" : "block";
-      document.getElementById("box-dep2").style.display = isCan ? "none" : "block";
-      document.getElementById("box-arr2").style.display = isCan ? "none" : "block";
+      // キャンセル時は医療タイムラインを非表示にする
+      document.getElementById("box-medical").style.display = isCan ? "none" : "block";
     }
 
     function calcMonitorTime() {
       const c = document.getElementById("t-contact").value;
-      let e = document.getElementById("t-arr2").value || document.getElementById("t-end").value;
+      let e = document.getElementById("t-hosp").value || document.getElementById("t-end").value;
       if (c && e) {
         let dc = new Date("1970-01-01T" + c + ":00");
         let de = new Date("1970-01-01T" + e + ":00");
@@ -504,7 +487,6 @@
       }).catch(e => { alert("通信エラー"); hideLoader(); });
     }
 
-    // 🌟 マスタ追加機能 (病名やキーワードを現場から即時追加)
     function addMaster(type, title) {
       const val = prompt(`新しい「${title}」をマスタに追加します。\n追加する名称を入力してください。`);
       if (!val) return;
@@ -516,15 +498,14 @@
       }).then(r => r.json()).then(json => {
         if (json.status === "success") {
           alert(`「${val}」を登録しました！`);
-          fetchInit(); // リストを再取得して反映
+          fetchInit(); 
         } else { alert("エラー: " + json.message); hideLoader(); }
       }).catch(e => { alert("通信エラー"); hideLoader(); });
     }
 
-    // 🌟 送信処理 (2段階送信ロジックの完全復活)
     function submitData() {
       const yoseiNo = document.getElementById("p-id").value.trim();
-      const scheme = document.querySelector('input[name="scheme"]:checked')?.value;
+      const scheme = document.getElementById("p-scheme").value;
       if (!yoseiNo) return alert("要請番号を入力してください。");
       if (!scheme) return alert("スキームを選択してください。");
 
@@ -539,7 +520,7 @@
         "初期離陸時間": document.getElementById("t-dep1").value,
         "最終着陸時間": document.getElementById("t-arr1").value,
         "接触": document.getElementById("t-contact").value,
-        "病着": document.getElementById("t-arr2").value,
+        "病着": document.getElementById("t-hosp").value,
         "終了": document.getElementById("t-end").value,
         "往診料": document.getElementById("p-oushin").value,
         "搬送料": document.getElementById("p-hansou").value,
@@ -591,11 +572,8 @@
         d["【IO】フラッシュ"] = document.getElementById("io-flush").checked ? "実施" : "未実施";
       }
 
-      // 🌟 キャンセルの場合はステータスを完了として送信
       const isCancel = scheme.includes("キャンセル");
-      if (isCancel) {
-        d["ステータス"] = "◯ カルテ完了 (キャンセル)";
-      }
+      if (isCancel) { d["ステータス"] = "◯ カルテ完了 (キャンセル)"; }
 
       if(!confirm(`要請No.${yoseiNo} のデータを送信し、速報メールを配信しますか？`)) return;
 
@@ -603,13 +581,11 @@
       btn.innerText = "送信中..."; btn.disabled = true;
       showLoader("データ送信中...", "データベースに書き込み、メールを配信しています");
 
-      // 1回目の通信：事案データの登録＆メール送信
       fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "submit", password: PIN_CODE, data: d })
       }).then(r => r.json()).then(res => {
         if (res.status === "success") {
-          // 2回目の通信（キャンセルの場合のみ）：ステータス更新を確実に行う連動ロジック
           if (isCancel) {
             showLoader("ステータス更新中...", "キャンセル事案の完了処理を行っています");
             fetch(GAS_API_URL, {
@@ -628,12 +604,12 @@
           }
         } else {
           alert("エラーが発生しました: " + res.message);
-          btn.innerText = "🚀 事案データを送信・登録する"; btn.disabled = false;
+          btn.innerText = "🚀 登録・メール送信"; btn.disabled = false;
           hideLoader();
         }
       }).catch(e => {
         alert("通信エラーが発生しました。");
-        btn.innerText = "🚀 事案データを送信・登録する"; btn.disabled = false;
+        btn.innerText = "🚀 登録・メール送信"; btn.disabled = false;
         hideLoader();
       });
     }
