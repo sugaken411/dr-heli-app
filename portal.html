@@ -29,7 +29,6 @@
     
     main { padding: 16px; max-width: 900px; margin: 0 auto; }
     
-    /* インテリジェントローダー */
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -72,7 +71,7 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.4</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.5</span></div>
   <div class="hdr-group">
     <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
     <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
@@ -184,7 +183,6 @@
     <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
     <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
     <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
-    
     <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
     <button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
   </div>
@@ -192,6 +190,7 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  const PIN_CODE = "5740"; // 🌟 追加: 通信エラー解消のため
 
   let loaderTimer1, loaderTimer2;
   function showLoader() {
@@ -211,7 +210,13 @@
   async function fetchInit() {
     showLoader();
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", app_name: "ポータル" }), redirect: "follow" });
+      // 🌟 修正: 通信時に password (PIN_CODE) を渡すようにして認証エラーを回避
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "ポータル" }), 
+        redirect: "follow" 
+      });
       const json = await res.json();
       if (json.status === "success") { localStorage.setItem("aw109_portal_cache", JSON.stringify(json)); renderPortal(json); }
       else { throw new Error(json.message); }
@@ -240,12 +245,17 @@
   function openModal(id) { document.getElementById(id).classList.add('show'); }
   function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-  // ⚠️ 修正箇所：引数を (event) で受け取り、エラーを回避する
   async function submitQA(event) {
     const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", question: q, source: "ポータル" }), redirect: "follow" });
+      // 🌟 修正: 通信時に password (PIN_CODE) を渡すようにして認証エラーを回避
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "ポータル" }), 
+        redirect: "follow" 
+      });
       const json = await res.json(); if (json.status === "success") { alert("要望を送信しました。管理者に通知されました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } else { throw new Error(json.message); }
     } catch (e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
   }
