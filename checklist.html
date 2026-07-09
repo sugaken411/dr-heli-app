@@ -17,13 +17,16 @@
 
     main { margin-top: calc(110px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
+    /* 🌟 ピルメニュー：点検済みアイテムには緑の枠とチェックマークが付きます */
     .type-picker-wrapper { margin-bottom: 16px; width: 100%; }
     .type-picker { display: flex; flex-wrap: wrap; background: transparent; gap: 8px; }
-    .type-btn { flex: 1 1 calc(25% - 8px); min-width: 100px; text-align: center; padding: 12px 6px; font-size: 13px; font-weight: 800; color: var(--sub); background: #e5e5ea; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: normal; line-height: 1.3; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2px solid transparent; }
+    .type-btn { flex: 1 1 calc(25% - 8px); min-width: 100px; text-align: center; padding: 12px 6px; font-size: 13px; font-weight: 800; color: var(--sub); background: #e5e5ea; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: normal; line-height: 1.3; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2px solid transparent; position: relative; }
     .type-btn.active { background: #fff; color: var(--blue); border-color: var(--blue); box-shadow: 0 4px 12px rgba(0,122,255,0.15); }
+    .type-btn.completed { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
+    .type-btn.completed::after { content: "✅"; position: absolute; top: -6px; right: -6px; font-size: 12px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
-    .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; position: sticky; top: calc(100px + var(--safe-top)); z-index: 10; }
+    .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; justify-content: space-between; position: sticky; top: calc(100px + var(--safe-top)); z-index: 10; flex-wrap: wrap; gap: 8px; }
     
     .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
     .chk-row:last-child { border-bottom: none; }
@@ -34,7 +37,10 @@
     .tgl-btn.ok.active { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
     .tgl-btn.ng.active { background: #ffebee; color: #c62828; border-color: #ef5350; }
     
-    .text-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; box-sizing: border-box; font-weight:600; color:var(--ink); }
+    /* 🌟 見切れ防止のため box-sizing と max-width を徹底 */
+    .input-group { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+    .input-group > div { flex: 1 1 120px; }
+    .text-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; box-sizing: border-box; font-weight:600; color:var(--ink); max-width:100%; }
     .text-input:focus { border-color: var(--blue); background: #fff; }
     .error-reason { display: none; margin-top: 4px; }
     
@@ -81,7 +87,7 @@
   <header class="no-print">
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div style="font-weight:900; font-size:16px; user-select:none;" onclick="secretCommand()">
-      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v1.7</span>
+      統合チェックリスト <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v2.0</span>
     </div>
     <button class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
   </header>
@@ -97,10 +103,8 @@
         <div class="type-btn active" id="btn-type-me" onclick="switchType('ME')">🔌 ME機器</div>
         <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
         <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
-        
         <div class="type-btn" id="btn-type-daily" onclick="switchType('日常点検')">📋 日常点検(Ns)</div>
         <div class="type-btn" id="btn-type-periodic" onclick="switchType('定期点検')">📅 定期点検(Ns)</div>
-        
         <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
         <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
       </div>
@@ -108,13 +112,13 @@
 
     <div id="tab-input" class="tab-content active">
       <div class="card" style="padding: 16px;">
-        <div style="display:flex; gap:12px; margin-bottom:12px;">
-          <div style="flex:1;"><label style="font-size:11px; font-weight:bold; color:var(--sub);">日付</label><input type="date" id="c-date" class="text-input" style="padding:10px;"></div>
-          <div style="flex:1;"><label style="font-size:11px; font-weight:bold; color:var(--sub);">時間</label><input type="time" id="c-time" class="text-input" style="padding:10px;"></div>
+        <div class="input-group">
+          <div><label style="font-size:11px; font-weight:bold; color:var(--sub);">日付</label><input type="date" id="c-date" class="text-input"></div>
+          <div><label style="font-size:11px; font-weight:bold; color:var(--sub);">時間</label><input type="time" id="c-time" class="text-input"></div>
         </div>
         <div>
           <label style="font-size:11px; font-weight:bold; color:var(--sub);">点検者 (Ns)</label>
-          <select id="c-staff" class="text-input" style="padding:10px;"><option value="">選択してください...</option></select>
+          <select id="c-staff" class="text-input"><option value="">選択してください...</option></select>
         </div>
       </div>
 
@@ -135,9 +139,17 @@
     <div id="tab-history" class="tab-content">
       <h2 class="hidden print:block text-center" style="font-size:18px; margin-bottom:16px;" id="print-title">点検履歴</h2>
       <div class="card">
-        <div class="card-header" style="justify-content:space-between;">
-          <span>📋 過去の点検履歴 (最新50件)</span>
-          <button class="hdr-btn no-print" onclick="fetchHistory()" style="font-size:12px;">🔄 更新</button>
+        <div class="card-header">
+          <span>📋 点検履歴</span>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="hist-filter" onchange="applyHistoryFilter()" class="text-input" style="padding:6px 12px; width:auto; font-size:12px; margin:0;">
+              <option value="all">すべて</option>
+              <option value="today">本日</option>
+              <option value="week">過去7日間</option>
+              <option value="month">過去30日間</option>
+            </select>
+            <button class="hdr-btn no-print" onclick="fetchHistory()" style="font-size:12px;">🔄 更新</button>
+          </div>
         </div>
         <div id="history-container"></div>
       </div>
@@ -154,17 +166,22 @@
     let checklistItems = [];
     let currentData = {}; 
     let errorDetails = {}; 
+    let allHistoryData = []; // フィルター用に全データを保持
 
     let tapCount = 0; let tapTimer;
     function secretCommand() {
-      tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 600); 
+      tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 1000); 
       if (tapCount >= 3) {
         tapCount = 0; setAllOk();
         alert("🤫 シークレット機能：\n全項目を一括で「異常なし」に設定しました。");
       }
     }
 
-    window.onload = () => { resetTime(); loadDataForCurrentView(); };
+    window.onload = () => { 
+      resetTime(); 
+      fetchChecklistStatus(); // 初期ロード時に全点検の完了状況を取得
+      loadDataForCurrentView(); 
+    };
 
     function resetTime() {
       const now = new Date();
@@ -177,6 +194,29 @@
       document.getElementById("global-loader").style.display = "flex";
     }
     function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+
+    // 🌟 今日の点検が終わっているかチェックし、ピルに緑の完了マークをつける
+    async function fetchChecklistStatus() {
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE })
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          const btnMap = {
+            'ME': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli',
+            '日常点検': 'btn-type-daily', '定期点検': 'btn-type-periodic',
+            'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki'
+          };
+          for (const [type, isCompleted] of Object.entries(json.data)) {
+            if (isCompleted && btnMap[type]) {
+              document.getElementById(btnMap[type]).classList.add("completed");
+            }
+          }
+        }
+      } catch(e) { console.log(e); }
+    }
 
     function switchMainTab(tab) {
       currentMainTab = tab;
@@ -255,7 +295,13 @@
           html += `<div class="chk-row">
             <div class="chk-title">${it.name} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div>`;
             
-          if (it.inputType === "◯/✕") {
+          // 🌟 修正：「自由」か「数値」という文字が含まれていない限り、すべて◯/✕ボタンにする（鉄壁のルール）
+          const inputTypeStr = String(it.inputType || "").trim();
+          const isTextField = inputTypeStr.includes("自由") || inputTypeStr.includes("数値");
+
+          if (isTextField) {
+            html += `<input type="text" class="text-input" placeholder="テキストや数値を入力..." onchange="setVal(${idx}, this.value)">`;
+          } else {
             html += `
               <div class="toggle-group">
                 <div class="tgl-btn ok" id="btn-ok-${idx}" onclick="setVal(${idx}, '◯')">◯ 異常なし</div>
@@ -264,8 +310,6 @@
               <div class="error-reason" id="err-box-${idx}">
                 <input type="text" class="text-input" placeholder="異常の詳細、または対象外の理由を入力..." id="err-txt-${idx}" onchange="errorDetails[${idx}]=this.value" style="border-color:var(--brand); background:var(--brand-light);">
               </div>`;
-          } else {
-            html += `<input type="text" class="text-input" placeholder="テキストや数値を入力..." onchange="setVal(${idx}, this.value)">`;
           }
           html += `</div>`;
         });
@@ -276,7 +320,10 @@
 
     function setVal(idx, val) {
       currentData[idx] = val;
-      if (checklistItems[idx].inputType === "◯/✕") {
+      const inputTypeStr = String(checklistItems[idx].inputType || "").trim();
+      const isTextField = inputTypeStr.includes("自由") || inputTypeStr.includes("数値");
+
+      if (!isTextField) {
         document.getElementById(`btn-ok-${idx}`).classList.toggle('active', val === '◯');
         document.getElementById(`btn-ng-${idx}`).classList.toggle('active', val === '✕');
         const errBox = document.getElementById(`err-box-${idx}`);
@@ -286,7 +333,11 @@
     }
 
     function setAllOk() {
-      checklistItems.forEach((item, i) => { if(item.inputType === "◯/✕") setVal(item.originalIndex, '◯'); });
+      checklistItems.forEach(item => { 
+        const inputTypeStr = String(item.inputType || "").trim();
+        const isTextField = inputTypeStr.includes("自由") || inputTypeStr.includes("数値");
+        if(!isTextField) setVal(item.originalIndex, '◯'); 
+      });
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
@@ -338,6 +389,7 @@
         const json = await res.json();
         if (json.status === "success") {
           alert("点検を完了しました！\n" + (judgment === "異常あり" ? "※異常内容は管理者に自動でメール通知されました。" : ""));
+          fetchChecklistStatus(); // 色を更新
           switchMainTab('history'); 
         } else { throw new Error(json.message); }
       } catch(e) { alert("通信エラーが発生しました。"); } finally {
@@ -349,6 +401,7 @@
       showLoader(`${currentType} 履歴読込中...`, "データベースから最新の記録を取得しています");
       const container = document.getElementById("history-container");
       container.innerHTML = "";
+      allHistoryData = []; // 初期化
       
       try {
         const res = await fetch(GAS_API_URL, {
@@ -358,44 +411,71 @@
         const json = await res.json();
         
         if (json.status === "success") {
-          if(json.history.length === 0) {
-            container.innerHTML = `<div style="padding:30px; text-align:center; color:var(--sub); font-weight:bold;">履歴がありません。</div>`;
-            return;
-          }
-          
-          json.history.forEach(h => {
-            const isOk = h.judgment === "異常なし";
-            const badgeClass = isOk ? "h-ok" : "h-ng";
-            const badgeText = isOk ? "✅ 異常なし" : "⚠️ 異常あり";
-            const remarks = h.rawJson["全体特記事項"] ? `<div class="h-remarks">💬 連絡事項：<br>${h.rawJson["全体特記事項"]}</div>` : "";
-            
-            let detailsHtml = '<div style="margin-top:8px; font-size:12px; color:var(--ink); background:#f9f9f9; padding:8px; border-radius:6px; border:1px solid #e5e5ea; display:grid; gap:4px;">';
-            for(let key in h.rawJson) {
-              if(key !== "全体特記事項" && !key.endsWith("_詳細")) {
-                let val = h.rawJson[key];
-                let detailText = h.rawJson[key + "_詳細"] ? ` <span style="color:#c62828; font-weight:bold;">(${h.rawJson[key + "_詳細"]})</span>` : "";
-                detailsHtml += `<div><span style="color:var(--sub);">・${key.replace('_', '：')}</span> <b>${val}</b>${detailText}</div>`;
-              }
-            }
-            detailsHtml += '</div>';
-            
-            container.innerHTML += `
-              <div class="history-item">
-                <div class="h-head">
-                  <span class="h-meta">${h.date} ${h.time} ｜ Ns: ${h.staff}</span>
-                  <span class="h-badge ${badgeClass}">${badgeText}</span>
-                </div>
-                ${!isOk ? `<div class="h-err"><b>異常報告：</b><br>${h.errorItems}</div>` : ''}
-                ${remarks}
-                <details style="margin-top:8px; cursor:pointer;">
-                  <summary style="font-size:12px; color:var(--blue); font-weight:bold; outline:none; user-select:none;">▶ 全項目の詳細データを見る</summary>
-                  ${detailsHtml}
-                </details>
-              </div>
-            `;
-          });
+          allHistoryData = json.history;
+          applyHistoryFilter(); // デフォルト表示（すべて）
         } else { alert(`履歴の取得に失敗しました: ${json.message}`); }
       } catch(e) { alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+    }
+
+    // 🌟 履歴のフィルター（期間絞り込み）機能
+    function applyHistoryFilter() {
+      const filter = document.getElementById("hist-filter").value;
+      const container = document.getElementById("history-container");
+      container.innerHTML = "";
+      
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      let filtered = allHistoryData.filter(h => {
+        if(filter === "all") return true;
+        const hDate = new Date(h.date.replace(/-/g, '/'));
+        if(isNaN(hDate.getTime())) return true;
+        
+        const diffTime = Math.abs(now - hDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        
+        if(filter === "today") return hDate.getTime() === now.getTime();
+        if(filter === "week") return diffDays <= 7;
+        if(filter === "month") return diffDays <= 30;
+        return true;
+      });
+
+      if(filtered.length === 0) {
+        container.innerHTML = `<div style="padding:30px; text-align:center; color:var(--sub); font-weight:bold;">該当する履歴がありません。</div>`;
+        return;
+      }
+      
+      filtered.forEach(h => {
+        const isOk = h.judgment === "異常なし";
+        const badgeClass = isOk ? "h-ok" : "h-ng";
+        const badgeText = isOk ? "✅ 異常なし" : "⚠️ 異常あり";
+        const remarks = h.rawJson["全体特記事項"] ? `<div class="h-remarks">💬 連絡事項：<br>${h.rawJson["全体特記事項"]}</div>` : "";
+        
+        let detailsHtml = '<div style="margin-top:8px; font-size:12px; color:var(--ink); background:#f9f9f9; padding:8px; border-radius:6px; border:1px solid #e5e5ea; display:grid; gap:4px;">';
+        for(let key in h.rawJson) {
+          if(key !== "全体特記事項" && !key.endsWith("_詳細")) {
+            let val = h.rawJson[key];
+            let detailText = h.rawJson[key + "_詳細"] ? ` <span style="color:#c62828; font-weight:bold;">(${h.rawJson[key + "_詳細"]})</span>` : "";
+            detailsHtml += `<div><span style="color:var(--sub);">・${key.replace('_', '：')}</span> <b>${val}</b>${detailText}</div>`;
+          }
+        }
+        detailsHtml += '</div>';
+        
+        container.innerHTML += `
+          <div class="history-item">
+            <div class="h-head">
+              <span class="h-meta">${h.date} ${h.time} ｜ Ns: ${h.staff}</span>
+              <span class="h-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            ${!isOk ? `<div class="h-err"><b>異常報告：</b><br>${h.errorItems}</div>` : ''}
+            ${remarks}
+            <details style="margin-top:8px; cursor:pointer;">
+              <summary style="font-size:12px; color:var(--blue); font-weight:bold; outline:none; user-select:none;">▶ 全項目の詳細データを見る</summary>
+              ${detailsHtml}
+            </details>
+          </div>
+        `;
+      });
     }
   </script>
 </body>
