@@ -4,11 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 統計・BIダッシュボード</title>
-  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
   <style>
-    /* 🌟 システム完全統一カラー・変数 */
     :root {
       --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
       --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd;
@@ -20,7 +17,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
     
-    /* 🌟 統一固定ヘッダー */
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -29,16 +25,16 @@
     
     main { margin-top: calc(56px + var(--safe-top)); padding: 16px; max-width: 1200px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
 
-    /* ローディング画面 */
+    /* 🌟 インテリジェント・ローダー */
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* カード・UI部品 */
+    .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
+    
     .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--line); }
     .card-title { font-size: 14px; font-weight: 800; color: var(--sub); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; text-transform: uppercase; }
     
-    /* フィルターUI */
     .filter-section { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; background: #fffdf0; border: 2px solid #ffcc00; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
     .filter-group { display: flex; flex-direction: column; gap: 4px; }
     .filter-group label { font-size: 11px; font-weight: bold; color: #d48806; }
@@ -48,7 +44,6 @@
     .date-input, .staff-select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; }
     .csv-btn { padding: 10px 16px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; margin-left: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
-    /* KPIサマリー */
     .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
     @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(5, 1fr); } }
     .kpi-box { background: var(--bg); padding: 16px; border-radius: 12px; text-align: center; border: 1px solid var(--line); position: relative; overflow: hidden; }
@@ -58,27 +53,21 @@
     
     .kpi-value.blue { color: var(--blue); } .kpi-value.red { color: var(--brand); } .kpi-value.green { color: var(--green); } .kpi-value.orange { color: var(--orange); } .kpi-value.purple { color: var(--purple); }
 
-    /* チャートコンテナ */
     .chart-container { position: relative; height: 260px; width: 100%; }
     .chart-container-large { position: relative; height: 320px; width: 100%; }
 
-    /* リストテーブル */
     .ranking-list { list-style: none; margin: 0; padding: 0; }
     .ranking-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid var(--line); }
     .ranking-item:last-child { border-bottom: none; }
     .ranking-rank { font-size: 14px; font-weight: 900; color: var(--sub); width: 24px; }
     .ranking-name { font-size: 14px; font-weight: 700; color: var(--ink); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ranking-count { font-size: 14px; font-weight: 800; color: var(--blue); background: var(--med-blue); padding: 4px 12px; border-radius: 12px; }
-    .ranking-count.green-badge { color: #065f46; background: #d1fae5; }
-    .ranking-count.purple-badge { color: #5b21b6; background: #ede9fe; }
-    .ranking-count.pink-badge { color: #9d174d; background: #fce7f3; }
-
+    
     .grid-2col { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
     @media (min-width: 768px) { .grid-2col { grid-template-columns: repeat(2, 1fr); } }
     .grid-3col { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
     @media (min-width: 1024px) { .grid-3col { grid-template-columns: repeat(3, 1fr); } }
     
-    /* 印刷用スタイル */
     @media print {
       body { background: #fff; }
       body * { visibility: hidden; }
@@ -93,21 +82,21 @@
 
   <div id="global-loader">
     <div class="spinner"></div>
-    <div style="margin-top:16px; font-weight:800; color:var(--ink);">全データをAI集計中...</div>
+    <div class="loader-text" id="loader-main-text">データ集計中...</div>
+    <div class="loader-subtext" id="loader-sub-text">データベースに接続しています</div>
   </div>
 
   <header class="no-print">
     <div class="hdr-group">
       <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div class="title-box">統計・BIダッシュボード <span class="version-tag">v11.0</span></div>
+    <div class="title-box">JSAMS レジストリ・ダッシュボード <span class="version-tag">v12.0</span></div>
     <div class="hdr-group">
       <button class="hdr-btn" onclick="window.print()">🖨️ レポート印刷</button>
     </div>
   </header>
 
   <main id="printable-area">
-    
     <div class="filter-section no-print">
       <div class="filter-group" style="flex: 1 1 100%;">
         <label>📅 集計期間の指定</label>
@@ -124,12 +113,12 @@
         </div>
       </div>
       <div class="filter-group">
-        <label>👨‍⚕️ 個人実績フィルター (Dr/Ns)</label>
+        <label>👨‍⚕️ 個人・チーム実績フィルター</label>
         <select id="filter-staff" class="staff-select" onchange="applyFilters()">
           <option value="">全員 (チーム全体)</option>
         </select>
       </div>
-      <button class="csv-btn" onclick="exportCSV()">📥 統計CSV出力</button>
+      <button class="csv-btn" onclick="exportCSV()">📥 JSAMS統計CSV出力</button>
     </div>
 
     <div class="kpi-grid">
@@ -138,7 +127,7 @@
         <div><span class="kpi-value blue" id="kpi-total">0</span><span class="kpi-unit">件</span></div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">実出動 (キャンセル除く)</div>
+        <div class="kpi-label">実出動 (Uターン除く)</div>
         <div><span class="kpi-value green" id="kpi-actual">0</span><span class="kpi-unit">件</span></div>
       </div>
       <div class="kpi-box">
@@ -157,23 +146,23 @@
 
     <div class="grid-2col">
       <div class="card">
-        <div class="card-title">📈 出動件数の推移</div>
+        <div class="card-title">📈 スキーム別 出動推移</div>
         <div class="chart-container-large">
           <canvas id="trendChart"></canvas>
         </div>
       </div>
       
       <div class="card">
-        <div class="card-title">⏰ 時間帯別 要請ヒートマップ</div>
+        <div class="card-title">⏱️ 時間散布図 (要請〜接触 vs 現場滞在)</div>
         <div class="chart-container-large">
-          <canvas id="timeHeatmapChart"></canvas>
+          <canvas id="scatterChart"></canvas>
         </div>
       </div>
     </div>
 
     <div class="grid-3col">
       <div class="card">
-        <div class="card-title">🩺 現場診断 (疾患・外傷) TOP10</div>
+        <div class="card-title">🩺 現場診断 (疾患分類) TOP10</div>
         <ul class="ranking-list" id="diag-list"></ul>
       </div>
 
@@ -183,23 +172,10 @@
       </div>
       
       <div class="card">
-        <div class="card-title">🚁 スキーム別 割合</div>
-        <div class="chart-container">
-          <canvas id="schemeChart"></canvas>
+        <div class="card-title">🕸️ 主要処置 レーダープロファイル</div>
+        <div class="chart-container" style="height: 280px;">
+          <canvas id="radarChart"></canvas>
         </div>
-        <div style="text-align:center; font-size:12px; color:var(--sub); margin-top:12px;" id="scheme-labels"></div>
-      </div>
-    </div>
-
-    <div class="grid-2col">
-      <div class="card">
-        <div class="card-title">🏥 要請元・出場先 TOP10</div>
-        <ul class="ranking-list" id="dest-list"></ul>
-      </div>
-
-      <div class="card">
-        <div class="card-title">💉 主要処置・資機材 実施数</div>
-        <ul class="ranking-list" id="proc-list"></ul>
       </div>
     </div>
     
@@ -218,19 +194,46 @@
   </main>
 
 <script>
-  // メインGAS API URL
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   
   let allData = [];
   let filteredData = [];
   let chartInstances = {}; 
+  
+  // 🌟 インテリジェント・ローダーの制御
+  let loaderTimer1, loaderTimer2;
+  function showLoader() {
+    document.getElementById("global-loader").style.display = "flex";
+    document.getElementById("loader-main-text").innerText = "データ集計中...";
+    document.getElementById("loader-sub-text").innerText = "大規模データベースに接続しています";
+    
+    loaderTimer1 = setTimeout(() => {
+      document.getElementById("loader-sub-text").innerText = "データ量が多いか、電波が弱い可能性があります。もう少しお待ちください...";
+    }, 5000);
+    
+    loaderTimer2 = setTimeout(() => {
+      document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信に異常に時間がかかっています。<br>フリーズしている場合はリロードしてください。</span>";
+    }, 15000);
+  }
+  
+  function hideLoader() {
+    clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
+    document.getElementById("global-loader").style.display = "none";
+  }
+
+  // 🌟 エラー自動送信ロジック
+  function sendErrorLog(errMsg) {
+    fetch(GAS_API_URL, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "error_log", source: "ダッシュボード", errorMsg: errMsg, userAgent: navigator.userAgent })
+    });
+  }
 
   window.onload = () => { fetchData(); };
 
-  // 🌟 GASから全データを一括取得
   async function fetchData() {
-    document.getElementById("global-loader").style.display = "flex";
+    showLoader();
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -241,272 +244,159 @@
       if (json.status === "success") {
         allData = json.data;
         populateStaffFilter();
-        setDateFilter('thisMonth'); // 初期表示は今月
-      } else { alert("データの取得に失敗しました。"); }
-    } catch (e) { alert("通信エラーが発生しました。"); } 
-    finally { document.getElementById("global-loader").style.display = "none"; }
+        setDateFilter('thisMonth');
+      } else {
+        alert("データの取得に失敗しました。");
+        sendErrorLog("Fetch Status Error: " + json.message);
+      }
+    } catch (e) {
+      document.getElementById("loader-text").innerText = "通信エラーが発生しました";
+      alert("通信エラーが発生しました。システム管理者に自動報告を行いました。");
+      sendErrorLog(e.toString());
+    } finally {
+      hideLoader();
+    }
   }
 
-  // 🌟 スタッフフィルターの選択肢を生成
   function populateStaffFilter() {
     let staffSet = new Set();
-    allData.forEach(r => {
-      if(r["フライトドクター"]) staffSet.add(r["フライトドクター"]);
-      if(r["フライトナース"]) staffSet.add(r["フライトナース"]);
-    });
+    allData.forEach(r => { if(r["フライトドクター"]) staffSet.add(r["フライトドクター"]); if(r["フライトナース"]) staffSet.add(r["フライトナース"]); });
     const sel = document.getElementById("filter-staff");
     Array.from(staffSet).sort().forEach(s => { if(s && s!=="その他") sel.innerHTML += `<option value="${s}">${s}</option>`; });
   }
 
-  // 🌟 日付フィルター
   function setDateFilter(type) {
-    const startInput = document.getElementById("filter-start");
-    const endInput = document.getElementById("filter-end");
-    const d = new Date();
+    const startInput = document.getElementById("filter-start"); const endInput = document.getElementById("filter-end");
+    const d = new Date(); document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
     
-    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    
-    if (type === 'thisMonth') {
-      document.getElementById("btn-this-month").classList.add("active");
-      startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-      endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`;
-    } else if (type === 'lastMonth') {
-      document.getElementById("btn-last-month").classList.add("active");
-      const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1);
-      startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`;
-      endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`;
-    } else if (type === 'thisYear') {
-      document.getElementById("btn-this-year").classList.add("active");
-      startInput.value = `${d.getFullYear()}-01-01`;
-      endInput.value = `${d.getFullYear()}-12-31`;
-    } else if (type === 'all') {
-      document.getElementById("btn-all").classList.add("active");
-      startInput.value = ""; endInput.value = "";
-    }
+    if (type === 'thisMonth') { document.getElementById("btn-this-month").classList.add("active"); startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`; } 
+    else if (type === 'lastMonth') { document.getElementById("btn-last-month").classList.add("active"); const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1); startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`; } 
+    else if (type === 'thisYear') { document.getElementById("btn-this-year").classList.add("active"); startInput.value = `${d.getFullYear()}-01-01`; endInput.value = `${d.getFullYear()}-12-31`; } 
+    else if (type === 'all') { document.getElementById("btn-all").classList.add("active"); startInput.value = ""; endInput.value = ""; }
     applyFilters();
   }
 
-  // 🌟 絞り込みと描画のハブ
   function applyFilters() {
-    const startStr = document.getElementById("filter-start").value;
-    const endStr = document.getElementById("filter-end").value;
-    const staffFilter = document.getElementById("filter-staff").value;
-    
+    const startStr = document.getElementById("filter-start").value; const endStr = document.getElementById("filter-end").value; const staffFilter = document.getElementById("filter-staff").value;
     filteredData = allData.filter(row => {
-      // 日付フィルタ
       let dateVal = row["日付"] ? String(row["日付"]).replace(/\//g, "-") : "";
-      if (startStr && dateVal < startStr) return false;
-      if (endStr && dateVal > endStr) return false;
-      
-      // 個人実績フィルタ (DrまたはNsに名前が含まれていればOK)
-      if (staffFilter) {
-        if (row["フライトドクター"] !== staffFilter && row["フライトナース"] !== staffFilter) return false;
-      }
+      if (startStr && dateVal < startStr) return false; if (endStr && dateVal > endStr) return false;
+      if (staffFilter && row["フライトドクター"] !== staffFilter && row["フライトナース"] !== staffFilter) return false;
       return true;
     });
-    
     renderDashboard();
   }
 
-  // 数字のアニメーション
   function animateValue(id, start, end, duration) {
     if(start === end) { document.getElementById(id).innerText = end; return; }
     let range = end - start; let current = start; let increment = end > start ? 1 : -1;
-    let stepTime = Math.abs(Math.floor(duration / range));
-    if(stepTime < 5) stepTime = 5;
-    let obj = document.getElementById(id);
-    let timer = setInterval(function() {
-      current += increment; obj.innerText = current;
-      if (current == end) clearInterval(timer);
-    }, stepTime);
+    let stepTime = Math.abs(Math.floor(duration / range)); if(stepTime < 5) stepTime = 5;
+    let obj = document.getElementById(id); let timer = setInterval(function() { current += increment; obj.innerText = current; if (current == end) clearInterval(timer); }, stepTime);
+  }
+
+  // 時間の分換算ヘルパー
+  function timeToMins(tStr) {
+    if(!tStr) return 0;
+    let parts = tStr.split(":");
+    if(parts.length < 2) return 0;
+    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
   }
 
   function renderDashboard() {
-    // 1. KPIの計算
-    let total = filteredData.length;
-    let cancel = 0;
-    let intubation = 0;
+    let total = filteredData.length; let cancel = 0; let intubation = 0;
     let totalMedTime = 0; let medTimeCount = 0;
+    let scatterData = []; // 散布図用データ
     
     filteredData.forEach(r => {
-      const st = String(r["ステータス"] || "");
+      const st = String(r["ステータス"] || ""); const scheme = String(r["スキーム選択"] || "");
       if (st.includes("キャンセル")) cancel++;
       if (String(r["気管挿管"] || "").includes("◯")) intubation++;
       
-      // 平均接触〜病着時間の計算
-      if(r["接触"] && r["病着"] && !st.includes("キャンセル") && r["スキーム選択"] !== "Iターン救急隊のみ") {
-        let cMins = parseInt(r["接触"].split(":")[0])*60 + parseInt(r["接触"].split(":")[1]);
-        let aMins = parseInt(r["病着"].split(":")[0])*60 + parseInt(r["病着"].split(":")[1]);
-        let diff = aMins - cMins; if(diff < 0) diff += 1440;
-        if(diff > 0 && diff < 180) { totalMedTime += diff; medTimeCount++; } // 異常値排除
+      let tReq = timeToMins(r["要請時刻・施設間搬送依頼時刻"]);
+      let tCont = timeToMins(r["接触"]);
+      let tHosp = timeToMins(r["病着"]);
+      
+      if(tCont && tHosp && !st.includes("キャンセル") && scheme !== "Iターン救急隊のみ") {
+        let diffMed = tHosp - tCont; if(diffMed < 0) diffMed += 1440;
+        if(diffMed > 0 && diffMed < 180) { totalMedTime += diffMed; medTimeCount++; }
+      }
+      
+      // 散布図用データ（要請〜接触 vs 接触〜病着）
+      if(tReq && tCont && tHosp && !st.includes("キャンセル")) {
+        let reqToCont = tCont - tReq; if(reqToCont < 0) reqToCont += 1440;
+        let contToHosp = tHosp - tCont; if(contToHosp < 0) contToHosp += 1440;
+        if(reqToCont < 120 && contToHosp < 180) {
+          scatterData.push({ x: reqToCont, y: contToHosp, scheme: scheme });
+        }
       }
     });
     
     let actual = total - cancel; 
-    let cancelRate = total > 0 ? Math.round((cancel / total) * 100) : 0;
-    let intubationRate = actual > 0 ? Math.round((intubation / actual) * 100) : 0;
-    let avgMedTime = medTimeCount > 0 ? Math.round(totalMedTime / medTimeCount) : 0;
+    animateValue("kpi-total", 0, total, 500); animateValue("kpi-actual", 0, actual, 500);
+    animateValue("kpi-cancel-rate", 0, total > 0 ? Math.round((cancel / total) * 100) : 0, 500);
+    animateValue("kpi-time-med", 0, medTimeCount > 0 ? Math.round(totalMedTime / medTimeCount) : 0, 500);
+    animateValue("kpi-intubation", 0, actual > 0 ? Math.round((intubation / actual) * 100) : 0, 500);
     
-    animateValue("kpi-total", 0, total, 500);
-    animateValue("kpi-actual", 0, actual, 500);
-    animateValue("kpi-cancel-rate", 0, cancelRate, 500);
-    animateValue("kpi-time-med", 0, avgMedTime, 500);
-    animateValue("kpi-intubation", 0, intubationRate, 500);
-    
-    // 2. スキーム別集計
-    let schemeCounts = {};
-    filteredData.forEach(r => {
-      const sc = String(r["スキーム選択"] || "未選択").trim();
-      if (!schemeCounts[sc]) schemeCounts[sc] = 0; schemeCounts[sc]++;
-    });
-    drawSchemeChart(schemeCounts);
-    
-    // 3. 出動推移集計
+    // トレンドチャート
     let trendCounts = {};
     filteredData.forEach(r => {
-      let d = String(r["日付"] || "不明"); let key = d.substring(0, 7); // YYYY-MM
-      if (!trendCounts[key]) trendCounts[key] = { total: 0, actual: 0 };
+      let key = String(r["日付"] || "不明").substring(0, 7); if (!trendCounts[key]) trendCounts[key] = { total: 0, actual: 0 };
       trendCounts[key].total++; if (!String(r["ステータス"]).includes("キャンセル")) trendCounts[key].actual++;
     });
     drawTrendChart(trendCounts);
 
-    // 4. 時間帯ヒートマップ集計
+    // 時間帯ヒートマップ
     let hourCounts = new Array(24).fill(0);
-    filteredData.forEach(r => {
-      let t = r["要請時刻・施設間搬送依頼時刻"] || r["初期離陸時間"];
-      if(t) { let h = parseInt(t.split(":")[0]); if(!isNaN(h)) hourCounts[h]++; }
-    });
+    filteredData.forEach(r => { let t = r["要請時刻・施設間搬送依頼時刻"] || r["初期離陸時間"]; if(t) { let h = parseInt(t.split(":")[0]); if(!isNaN(h)) hourCounts[h]++; } });
     drawTimeHeatmapChart(hourCounts);
     
-    // 5. 新機能：診断・キーワードのタグ抽出とランキング
+    // 診断・キーワードランキング
     let diagCounts = {}; let kwCounts = {};
     filteredData.forEach(r => {
-      if(r["システムデータ"]) {
-        try {
-          const sys = JSON.parse(r["システムデータ"]);
-          if(sys.tags && sys.tags.diagnosis) sys.tags.diagnosis.forEach(d => { diagCounts[d] = (diagCounts[d]||0)+1; });
-          if(sys.tags && sys.tags.keyword) sys.tags.keyword.forEach(k => { kwCounts[k] = (kwCounts[k]||0)+1; });
-        } catch(e){}
-      }
-      // 古いデータのフォールバック
+      if(r["システムデータ"]) { try { const sys = JSON.parse(r["システムデータ"]); if(sys.tags && sys.tags.diagnosis) sys.tags.diagnosis.forEach(d => { diagCounts[d] = (diagCounts[d]||0)+1; }); if(sys.tags && sys.tags.keyword) sys.tags.keyword.forEach(k => { kwCounts[k] = (kwCounts[k]||0)+1; }); } catch(e){} }
       if(r["現場診断"]) r["現場診断"].split(",").map(x=>x.trim()).forEach(d => { if(d) diagCounts[d] = (diagCounts[d]||0)+1; });
     });
-    renderList("diag-list", diagCounts, 10, "purple-badge");
-    renderList("kw-list", kwCounts, 10, "pink-badge");
+    renderList("diag-list", diagCounts, 10, "color:#5b21b6; background:#ede9fe;");
+    renderList("kw-list", kwCounts, 10, "color:#9d174d; background:#fce7f3;");
 
-    // 6. 既存ランキング計算
-    renderList("dest-list", countKey(filteredData, "出場先"), 10);
+    // 処置レーダーチャート
+    const radarProcs = ["気管挿管", "心エコー", "胸腔ドレナージ", "EtCO2", "骨髄針", "人工呼吸器管理料"];
+    let radarCounts = radarProcs.map(p => { let c=0; filteredData.forEach(r=>{ if(String(r[p]||"").includes("◯")) c++; }); return actual>0 ? Math.round((c/actual)*100) : 0; });
+    drawRadarChart(radarProcs, radarCounts);
+
     renderList("dr-list", countKey(filteredData, "フライトドクター"), 10);
     renderList("ns-list", countKey(filteredData, "フライトナース"), 10);
-    
-    // 7. 処置・資機材集計
-    renderProcList();
   }
 
-  function countKey(data, keyName) {
-    let counts = {};
-    data.forEach(r => {
-      const val = String(r[keyName] || "不明").trim();
-      if (val === "" || val === "不明") return;
-      if (!counts[val]) counts[val] = 0; counts[val]++;
-    });
-    return counts;
-  }
-
-  function renderList(elementId, countsObj, limit, badgeClass="blue") {
+  function countKey(data, keyName) { let counts = {}; data.forEach(r => { const val = String(r[keyName] || "不明").trim(); if (val === "" || val === "不明") return; if (!counts[val]) counts[val] = 0; counts[val]++; }); return counts; }
+  function renderList(elementId, countsObj, limit, badgeStyle="color:var(--blue); background:var(--med-blue);") {
     const sorted = Object.entries(countsObj).sort((a, b) => b[1] - a[1]).slice(0, limit);
     const ul = document.getElementById(elementId);
-    if (sorted.length === 0) {
-      ul.innerHTML = "<li class='ranking-item'><span class='ranking-name' style='color:var(--sub);'>データなし</span></li>";
-      return;
-    }
-    ul.innerHTML = sorted.map((item, i) => `
-      <li class="ranking-item">
-        <span class="ranking-rank">${i+1}</span>
-        <span class="ranking-name">${item[0]}</span>
-        <span class="ranking-count ${badgeClass}">${item[1]}件</span>
-      </li>
-    `).join("");
-  }
-
-  function renderProcList() {
-    const targetProcs = ["気管挿管", "心エコー", "FAST", "胸腔ドレナージ", "EtCO2", "人工呼吸器管理料", "12誘導心電図", "骨髄針"];
-    let procCounts = {};
-    targetProcs.forEach(p => procCounts[p] = 0);
-    procCounts["CPR (胸骨圧迫)"] = 0;
-    procCounts["酸素投与 (デバイス問わず)"] = 0;
-    
-    filteredData.forEach(r => {
-      targetProcs.forEach(p => { if (String(r[p] || "").includes("◯")) procCounts[p]++; });
-      if (String(r["圧迫1開始"] || "").trim() !== "") procCounts["CPR (胸骨圧迫)"]++;
-      if (String(r["酸素1開始"] || "").trim() !== "") procCounts["酸素投与 (デバイス問わず)"]++;
-    });
-    
-    const sorted = Object.entries(procCounts).sort((a, b) => b[1] - a[1]);
-    document.getElementById("proc-list").innerHTML = sorted.map((item, i) => `
-      <li class="ranking-item">
-        <span class="ranking-rank">${i+1}</span>
-        <span class="ranking-name">${item[0]}</span>
-        <span class="ranking-count green-badge">${item[1]}件</span>
-      </li>
-    `).join("");
-  }
-
-  // --- Chart.js 描画 ---
-  function drawSchemeChart(dataObj) {
-    const ctx = document.getElementById('schemeChart').getContext('2d');
-    if (chartInstances['scheme']) chartInstances['scheme'].destroy();
-    
-    const labels = Object.keys(dataObj); const data = Object.values(dataObj);
-    const colors = ['#007aff', '#34c759', '#ff9500', '#5856d6', '#ff2d55', '#8e8e93'];
-    
-    chartInstances['scheme'] = new Chart(ctx, {
-      type: 'doughnut',
-      data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 2, borderColor: '#ffffff' }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' }
-    });
-    
-    // カスタム凡例
-    document.getElementById("scheme-labels").innerHTML = labels.map((lbl, i) => `<span style="display:inline-block; margin:0 6px;"><span style="display:inline-block; width:10px; height:10px; background:${colors[i%colors.length]}; border-radius:50%; margin-right:4px;"></span>${lbl} (${data[i]})</span>`).join("");
+    if (sorted.length === 0) { ul.innerHTML = "<li class='ranking-item'><span class='ranking-name' style='color:var(--sub);'>データなし</span></li>"; return; }
+    ul.innerHTML = sorted.map((item, i) => `<li class="ranking-item"><span class="ranking-rank">${i+1}</span><span class="ranking-name">${item[0]}</span><span class="ranking-count" style="${badgeStyle}">${item[1]}件</span></li>`).join("");
   }
 
   function drawTrendChart(dataObj) {
-    const ctx = document.getElementById('trendChart').getContext('2d');
-    if (chartInstances['trend']) chartInstances['trend'].destroy();
-    
+    const ctx = document.getElementById('trendChart').getContext('2d'); if (chartInstances['trend']) chartInstances['trend'].destroy();
     const sortedKeys = Object.keys(dataObj).sort();
-    const labels = sortedKeys;
-    const totalData = sortedKeys.map(k => dataObj[k].total);
-    const actualData = sortedKeys.map(k => dataObj[k].actual);
-    
-    chartInstances['trend'] = new Chart(ctx, {
-      type: 'bar',
-      data: { labels: labels, datasets: [ { label: '実出動件数', data: actualData, backgroundColor: '#007aff', borderRadius: 4 }, { label: '総要請件数 (キャンセル含)', data: totalData, backgroundColor: '#e5e5ea', borderRadius: 4 } ] },
-      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } }, plugins: { legend: { position: 'top' } } }
-    });
+    chartInstances['trend'] = new Chart(ctx, { type: 'bar', data: { labels: sortedKeys, datasets: [ { label: '実出動件数', data: sortedKeys.map(k => dataObj[k].actual), backgroundColor: '#007aff', borderRadius: 4 }, { label: '総要請 (キャンセル含)', data: sortedKeys.map(k => dataObj[k].total), backgroundColor: '#e5e5ea', borderRadius: 4 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } });
   }
 
   function drawTimeHeatmapChart(hourCounts) {
-    const ctx = document.getElementById('timeHeatmapChart').getContext('2d');
-    if (chartInstances['heatmap']) chartInstances['heatmap'].destroy();
-    
-    const labels = Array.from({length: 24}, (_, i) => `${i}時`);
-    chartInstances['heatmap'] = new Chart(ctx, {
-      type: 'bar',
-      data: { labels: labels, datasets: [{ label: '要請件数', data: hourCounts, backgroundColor: '#ff9500', borderRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
-    });
+    const ctx = document.getElementById('timeHeatmapChart').getContext('2d'); if (chartInstances['heatmap']) chartInstances['heatmap'].destroy();
+    chartInstances['heatmap'] = new Chart(ctx, { type: 'bar', data: { labels: Array.from({length: 24}, (_, i) => `${i}時`), datasets: [{ label: '要請件数', data: hourCounts, backgroundColor: '#ff9500', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } } });
   }
 
-  // 🌟 CSV出力機能
+  function drawRadarChart(labels, data) {
+    const ctx = document.getElementById('radarChart').getContext('2d'); if (chartInstances['radar']) chartInstances['radar'].destroy();
+    chartInstances['radar'] = new Chart(ctx, { type: 'radar', data: { labels: labels, datasets: [{ label: '実施率 (%)', data: data, backgroundColor: 'rgba(52, 199, 89, 0.2)', borderColor: '#34c759', pointBackgroundColor: '#34c759' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, suggestedMin: 0, suggestedMax: 100 } }, plugins: { legend: { display: false } } } });
+  }
+
   function exportCSV() {
     if (filteredData.length === 0) return alert("データがありません。");
-    const headers = Object.keys(filteredData[0]);
-    let csvContent = headers.join(",") + "\n";
+    const headers = Object.keys(filteredData[0]); let csvContent = headers.join(",") + "\n";
     filteredData.forEach(row => { csvContent += headers.map(h => `"${String(row[h] || "").replace(/"/g, '""')}"`).join(",") + "\n"; });
-    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob); link.download = `AW109_Dashboard_${document.getElementById("filter-start").value || "All"}.csv`; link.click();
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `JSAMS_Registry_${document.getElementById("filter-start").value || "All"}.csv`; link.click();
   }
 </script>
 </body>
