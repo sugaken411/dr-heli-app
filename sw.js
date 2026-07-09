@@ -1,18 +1,19 @@
-const CACHE_NAME = 'aw109-cache-v11.0'; // 🌟 バージョンを上げて古いキャッシュを破壊
+const CACHE_NAME = 'aw109-cache-v12.1'; // バージョンを上げて古いキャッシュを破壊
 const urlsToCache = [
   './',
   './index.html',
   './search.html',
+  './report.html',
   './debriefing.html',
   './debrief_search.html',
-  './report.html',
   './library.html',
   './summary.html',
-  './portal.html',
   './admin.html',
+  './portal.html',
   './manifest.json',
+  'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdn.tailwindcss.com'
+  'https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js'
 ];
 
 self.addEventListener('install', event => {
@@ -38,7 +39,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // POSTリクエストやAPIへの通信はキャッシュせずスルー
+  // POSTリクエストやAPIへの通信はキャッシュせずスルー（常に最新を取得）
   if (event.request.method !== 'GET' || event.request.url.includes('script.google.com')) {
     return;
   }
