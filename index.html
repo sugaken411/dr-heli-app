@@ -110,7 +110,7 @@
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -119,13 +119,13 @@
 
 <div id="global-loader">
   <div class="spinner"></div>
-  <div class="loader-text" id="loader-main">準備中...</div>
-  <div class="loader-subtext" id="loader-sub">データベースに接続しています</div>
+  <div style="font-size:16px; font-weight:800; color:var(--ink); margin-bottom:8px;" id="loader-main">準備中...</div>
+  <div style="font-size:13px; font-weight:600; color:var(--sub);" id="loader-sub">データベースに接続しています</div>
 </div>
 
 <header>
   <div class="hdr-group"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.5</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.6</span></div>
   <div class="hdr-group"><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
 </header>
 
@@ -337,7 +337,7 @@
           
           <label class="proc-lbl"><input type="checkbox" id="chk-shock" onchange="toggleBox('box-shock-det', this.checked)">除細動（ショック）</label>
           <div id="box-shock-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
-            <label style="font-size:13px; font-weight:bold;"><input type="checkbox" id="chk-shock-pad" onchange="autoStock('除細動パッド')"> 除細動パッドを使用</label>
+            <label style="font-size:13px; font-weight:bold;"><input type="checkbox" id="chk-shock-pad" onchange="if(this.checked) autoStock('除細動パッド')"> 除細動パッドを使用</label>
             <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
               <span style="font-size:12px; font-weight:bold; color:var(--sub);">ショック回数:</span>
               <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #ccc; border-radius:4px;"> 回
@@ -429,7 +429,6 @@
     <div class="card" style="background:transparent; box-shadow:none; border:none;">
       <button type="button" class="submit-btn" style="background:var(--blue);" onclick="switchTab('send'); buildPreview();">次へ (プレビュー・送信確認) ➔</button>
     </div>
-
   </div>
   
   <div id="tab-send" class="tab-content">
@@ -493,7 +492,10 @@
   };
 
   window.onload = () => {
-    document.getElementById("v-date").value = new Date().toISOString().split('T')[0];
+    // 日付に自動で今日の日付をセット（仮ID用）
+    const now = new Date();
+    const jst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
+    document.getElementById("v-date").value = `${jst.getFullYear()}-${String(jst.getMonth()+1).padStart(2,'0')}-${String(jst.getDate()).padStart(2,'0')}`;
     fetchInit();
   };
 
@@ -505,9 +507,8 @@
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
-  // 🌟 エラーログ送信機能
   function sendErrorLog(errMsg) {
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "症例登録(v10.5)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {}
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "症例登録(v10.6)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {}
   }
 
   function switchTab(tab) {
@@ -520,13 +521,11 @@
 
   function toggleBox(id, isShow) { document.getElementById(id).style.display = isShow ? "block" : "none"; }
   
-  // 🌟 自動チェックとフラグONのロジック
   function toggleAcc(id, autoCheckId = null) {
     const el = document.getElementById(id);
     const isOpen = el.classList.toggle('open'); 
     el.previousElementSibling.classList.toggle('open');
 
-    // 展開した瞬間に自動チェックを入れる
     if(autoCheckId && isOpen) {
       document.getElementById(autoCheckId).checked = true;
       if (autoCheckId === 'chk-intub') {
@@ -562,7 +561,6 @@
     document.getElementById('box-keyword').style.display = (val === 'キーワード要請') ? 'block' : 'none';
   }
 
-  // スキーム選択と算定フラグの自動連動
   function setScheme(val) {
     state.scheme = val;
     document.querySelectorAll('[id^="sch-"]').forEach(el => el.classList.remove('active'));
@@ -574,7 +572,6 @@
     document.getElementById('card-med-time').style.display = isCan ? "none" : "block";
     document.getElementById('card-calc').style.display = isCan ? "none" : "block";
 
-    // Iターン救急隊とキャンセル時は病着を無効化
     const isIamb = (val === 'Iターン救急隊');
     const tHosp = document.getElementById("t-hosp");
     const boxHosp = document.getElementById("box-hosp-time");
@@ -607,7 +604,6 @@
     if(type === 'med') { document.getElementById("t-contact").value=""; document.getElementById("t-hosp").value=""; document.getElementById("t-end").value=""; document.getElementById("l-monitor").innerText="--:--"; }
   }
 
-  // 🌟 長時間加算（30分）とSpO2の自動点灯機能
   function calcMonitor() {
     const c = document.getElementById("t-contact").value;
     let e = document.getElementById("t-hosp").value || document.getElementById("t-end").value;
@@ -628,7 +624,6 @@
     }
   }
 
-  // ダイナミック入力
   function addDyn(type) {
     const box = document.getElementById(`dyn-${type}`);
     const id = Date.now();
@@ -684,7 +679,6 @@
     document.getElementById('lbl-cpr-total').innerText = total;
   }
 
-  // --- 通信関連 ---
   async function fetchInit() {
     showLoader("システム起動中...", "マスタデータを読み込んでいます");
     try {
@@ -722,11 +716,20 @@
     } catch(e) { alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
-  // 🌟 エラーを握りつぶさない安全なデータ収集
+  // 🌟 安全にデータを収集するロジック
   function getCollectData() {
-    let finalId = document.getElementById("v-id").value || "";
+    let rawId = document.getElementById("v-id").value.trim();
+    
+    // 🌟 未入力の場合は自動的に仮IDを生成する（これが解決策です！）
+    if (!rawId) {
+      const d = new Date();
+      const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000);
+      rawId = "仮" + String(jst.getMonth()+1).padStart(2,'0') + String(jst.getDate()).padStart(2,'0') + String(jst.getHours()).padStart(2,'0') + String(jst.getMinutes()).padStart(2,'0');
+    }
+    
+    let finalId = rawId;
     if(document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value) {
-      finalId = `${finalId}-0${document.getElementById("v-edaban").value}`;
+      finalId = `${rawId}-0${document.getElementById("v-edaban").value}`;
     }
 
     let erText = "";
@@ -839,7 +842,6 @@
     return d;
   }
 
-  // 🌟 安全にプレビューを構築するロジック
   function buildPreview() {
     try {
       document.getElementById("preview-error").style.display = "none";
