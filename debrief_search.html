@@ -30,7 +30,6 @@
     .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
     input[type="date"], input[type="month"], select, input[type="tel"] { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; background: #fff; color: var(--ink); font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
     
-    /* 🌟 タグのカテゴリ分けUI */
     .tag-category-title { font-size: 11px; font-weight: bold; color: var(--ink); margin-bottom: 6px; margin-top: 12px; }
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
@@ -82,7 +81,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.7</span></div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.8</span></div>
   <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
@@ -104,7 +103,6 @@
       <div class="cross-item"><label>外部参加者 (消防・救急等)</label><select id="q-ext"><option value="">全て</option></select></div>
     </div>
 
-    <!-- 🌟 タグをカテゴリ別に美しく整理 -->
     <div class="section-lbl">📌 カテゴリ・タグ指定 (クロス検索)
       <button type="button" class="hdr-btn" style="font-size:11px;" onclick="clearTags()">クリア</button>
     </div>
@@ -128,7 +126,6 @@
   <div id="results-area"></div>
 </main>
 
-<!-- Q&Aモーダル等は省略せず記載 -->
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
@@ -143,20 +140,27 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_debrief_cache_v117";
+  const CACHE_KEY = "aw109_debrief_cache_v118";
+
+  // エラー監視
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail); return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+  });
 
   let mergedData = []; 
   let tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
 
-  // 🌟 NTSと実務のマスター定義（検索の分類用）
   const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
   const PRACTICE_LIST = ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り", "バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"];
   const DISEASE_MAIN = ["1外傷", "2心大血管", "3脳血管", "4心肺停止(CPA)", "5その他"];
   const SCENE_LIST = ["① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"];
 
   function showLoader(msg1, msg2) {
-    document.getElementById("loader-main-text").innerText = msg1;
-    document.getElementById("loader-sub-text").innerHTML = msg2;
+    document.getElementById("loader-main-text").innerText = msg1; document.getElementById("loader-sub-text").innerHTML = msg2;
     document.getElementById("global-loader").style.display = "flex";
   }
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
@@ -166,16 +170,18 @@
   function clearTags() { document.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active')); executeSearch(); }
   function clearDateRange() { document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = ""; }
   function clearMonth() { document.getElementById("q-month").value = ""; }
+  
+  function sendErrorLog(errMsg) { 
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v11.8)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+  }
 
   window.onload = async () => {
-    // 🌟 キャッシュ機能で超高速起動
     const cachedStr = localStorage.getItem(CACHE_KEY);
     if(cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
         document.getElementById("sync-status").innerText = `データ状態: ${cacheObj.timestamp} 時点のキャッシュを表示中 (裏側で最新データを同期しています...)`;
         buildUIFromData(cacheObj.data, cacheObj.masters);
-        // 裏で非同期に最新を取得
         fetchLatestData(true);
       } catch(e) { fetchLatestData(false); }
     } else {
@@ -199,13 +205,11 @@
       debData.forEach(d => {
         const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
         if(jian) {
-          // ズレを修正したデータ構造からタグを抽出
           let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"]]
                         .map(t => t ? String(t).split(",") : []).flat().map(t => t.trim()).filter(Boolean);
           
           let diagStr = jian["現場診断"] || ""; let diagArr = diagStr.split(",").map(x => x.trim()).filter(Boolean);
           diagArr.forEach(t => tags.push(t));
-
           const uniqueTags = [...new Set(tags)];
           
           newData.push({
@@ -219,10 +223,7 @@
         }
       });
       
-      const cacheObj = {
-        timestamp: Utilities_formatDate(new Date()),
-        data: newData, masters: jsonInit.masters
-      };
+      const cacheObj = { timestamp: Utilities_formatDate(new Date()), data: newData, masters: jsonInit.masters };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
       
       if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
@@ -231,6 +232,7 @@
       document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
 
     } catch (e) { 
+      sendErrorLog(e.toString());
       if(!isBackground) alert("データベース同期エラーが発生しました。"); 
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
     } finally { 
@@ -238,29 +240,23 @@
     }
   }
 
-  function Utilities_formatDate(date) {
-    return `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-  }
+  function Utilities_formatDate(date) { return `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`; }
 
   function buildUIFromData(data, masters) {
     mergedData = data;
-    
-    // セレクトボックスの構築
     if(masters) {
       document.getElementById("q-dr").innerHTML = `<option value="">全て</option>` + masters.dr.map(n => `<option value="${n}">${n}</option>`).join("");
       document.getElementById("q-ns").innerHTML = `<option value="">全て</option>` + masters.ns.map(n => `<option value="${n}">${n}</option>`).join("");
       document.getElementById("q-ext").innerHTML = `<option value="">全て</option>` + masters.extStaff.map(n => `<option value="${n}">${n}</option>`).join("");
     }
 
-    // タグの分類と構築
     tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
     mergedData.forEach(m => {
       m.tags.forEach(t => {
-        if(DISEASE_MAIN.some(d => t.includes(d))) tagsMaster.disease.add(t.split(" ")[0].replace('[','').replace(']','')); // [1外傷] などから抽出
+        if(DISEASE_MAIN.some(d => t.includes(d))) tagsMaster.disease.add(t.split(" ")[0].replace('[','').replace(']',''));
         else if(SCENE_LIST.includes(t)) tagsMaster.scene.add(t);
         else if(NTS_LIST.includes(t)) tagsMaster.nts.add(t);
-        else if(PRACTICE_LIST.includes(t)) tagsMaster.practice.add(t);
-        else tagsMaster.practice.add(t); // マスタにない独自の処置や病名もここへ
+        else tagsMaster.practice.add(t);
       });
     });
 
@@ -277,17 +273,15 @@
     const freeW = document.getElementById("q-free").value.trim().toLowerCase();
     const qId = document.getElementById("q-id").value.trim();
     const dMonth = document.getElementById("q-month").value;
-    const dStart = document.getElementById("q-date-start").value; const dEnd = document.getElementById("q-date-end").value;
     const dr = document.getElementById("q-dr").value; const ns = document.getElementById("q-ns").value; const ext = document.getElementById("q-ext").value;
     const activeChips = Array.from(document.querySelectorAll('.chip.active')).map(c => c.innerText);
 
     let results = mergedData.filter(m => {
       let mDate = String(m.date).replace(/\//g, "-"); 
       if (qId && !String(m.id).includes(qId)) return false;
-      if (dMonth) { if (!mDate.startsWith(dMonth)) return false; } else { if (dStart && mDate < dStart) return false; if (dEnd && mDate > dEnd) return false; }
+      if (dMonth) { if (!mDate.startsWith(dMonth)) return false; }
       if (dr && m.dr !== dr) return false; if (ns && m.ns !== ns) return false; if (ext && !m.participants.includes(ext)) return false;
       
-      // 🌟 タグのクロス検索（1つでも該当すればOKとするOR検索に変更すると探しやすい）
       if (activeChips.length > 0) { 
         const matchTag = activeChips.some(chip => m.tags.some(t => t.includes(chip))); 
         if (!matchTag) return false; 
@@ -318,6 +312,16 @@
         <a href="debriefing.html?editId=${r.id}" class="btn-edit-case">✏️ このデブリーフィングを修正・追記する</a>
       </div>
     `).join("");
+  }
+  
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "教育検索" }), redirect: "follow" });
+      const jsonRes = await res.json();
+      if(jsonRes.status === "success") { alert("送信しました。管理者に通知されました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); } else { throw new Error(jsonRes.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { btn.textContent = "送信"; btn.disabled = false; }
   }
 </script>
 </body>
