@@ -92,7 +92,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.5</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.6</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -106,6 +106,7 @@
 </div>
 
 <main>
+  <!-- ================= TAB 1: 環境・疾患 ================= -->
   <div id="tab-sec1" class="tab-content active">
     
     <div class="card no-print">
@@ -141,6 +142,7 @@
         <div id="v-fetched-procs" style="font-size:12px; color:var(--brand); margin-top:8px; font-weight:bold;"></div>
       </div>
 
+      <!-- 疾患分類・予後情報 -->
       <div class="card">
         <div class="section-label">🏥 疾患分類・予後情報</div>
         
@@ -230,20 +232,25 @@
     <button type="button" class="btn-next no-print" onclick="switchTab('sec2')">次へ (症例評価) ➔</button>
   </div>
 
+  <!-- ================= TAB 2: 症例評価 ================= -->
   <div id="tab-sec2" class="tab-content">
     <div id="eval-container"></div>
     <button type="button" class="btn-blue" style="background:#8b5cf6;" onclick="addEvalBlock()">＋ 新しい評価ポイントを追加</button>
     <button type="button" class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('sec3')">次へ (多職種振り返り) ➔</button>
   </div>
 
+  <!-- ================= TAB 3: 多職種 ================= -->
   <div id="tab-sec3" class="tab-content">
     <div id="feedback-container"></div>
     <button type="button" class="btn-blue" style="background:#10b981;" onclick="addFeedbackBlock()">＋ 振り返りの視点を追加</button>
     <button type="button" class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('sec4')">次へ (プレビュー・保存) ➔</button>
   </div>
 
+  <!-- ================= TAB 4: 保存 ================= -->
   <div id="tab-sec4" class="tab-content">
     <div class="card" style="padding: 0;"><div id="print-area"></div></div>
+    <!-- 🌟 エラー監視表示枠 -->
+    <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; padding:16px;"></div>
     <div class="no-print">
       <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
     </div>
@@ -266,14 +273,22 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 活動場面の細分化
+  // 🌟 究極のエラーキャッチャー（F12のスタックトレースをすべて拾って送信する）
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail);
+    return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+  });
+
   const SCENE_LIST = [
     "① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", 
     "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", 
     "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"
   ];
   
-  // NTSの表現を分かりやすく変更
   const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
   const TAG_MASTERS = {
     practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
@@ -304,7 +319,14 @@
     loader.style.display = "flex";
   }
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.5)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} }
+  function sendErrorLog(errMsg) { 
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.6)", errorMsg: errMsg, userAgent: navigator.userAgent }) 
+      }); 
+    } catch(e) {} 
+  }
 
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   function clearSearchMonth() { document.getElementById("s-month").value = ""; }
@@ -331,7 +353,7 @@
     const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}), redirect: "follow" });
+      await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}) });
       alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa');
     } catch (e) { alert("通信エラー"); sendErrorLog(e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
   }
@@ -360,7 +382,6 @@
     }
   }
 
-  // 疾患分類ロジック
   function setDiseaseMain(val) {
     document.querySelectorAll('[id^="d-main-"]').forEach(el => el.classList.remove('on'));
     const idx = val.charAt(0); document.getElementById(`d-main-${idx}`).classList.add('on');
@@ -405,7 +426,7 @@
   async function fetchInitData() {
     showLoader("システム起動中...", "マスタデータと事案DBを同期しています");
     try {
-      const r1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" });
+      const r1 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }) });
       const j1 = await r1.json(); if (j1.status === "success") masters = j1.masters; else throw new Error(j1.message);
       
       if(j1.qa) document.getElementById("qa-list").innerHTML = j1.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
@@ -428,14 +449,14 @@
       ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
       renderChips('recorder-container', masters.ns, 'recorder', true);
 
-      const r2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
+      const r2 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }) });
       const j2 = await r2.json(); if(j2.status === "success") allCasesData = j2.data; else throw new Error(j2.message);
 
-      const r3 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
+      const r3 = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
       const j3 = await r3.json(); if(j3.status === "success") existingDebriefs = j3.data; else throw new Error(j3.message);
 
     } catch(e) { 
-      sendErrorLog(e.toString());
+      sendErrorLog(`InitData Fetch Error: ${e.message}\nStack: ${e.stack}`);
       alert("データベースの同期に失敗しました。電波の良い場所でリロードしてください。");
     } finally { hideLoader(); }
   }
@@ -446,18 +467,17 @@
     btn.innerText = "追加中..."; btn.disabled = true;
 
     try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }), redirect: "follow" });
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }) });
 
       if(!sysData.tags.diagnosis) sysData.tags.diagnosis = [];
       if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
       renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
       
       if(!masters.diagnosis.includes(name)) masters.diagnosis.push(name);
-
       document.getElementById("diag-name").value = "";
     } catch(e) {
       alert("マスタの登録に失敗しました");
-      sendErrorLog(e.toString());
+      sendErrorLog(`Diagnosis Master Add Error: ${e.message}`);
     } finally {
       btn.innerText = "＋追加"; btn.disabled = false;
     }
@@ -467,12 +487,15 @@
     const val = document.getElementById(inputId).value.trim(); if(!val) return;
     document.getElementById(inputId).value = "追加中...";
     try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: cat, val1: val }), redirect: "follow" });
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: cat, val1: val }) });
       if(!masters[cat].includes(val)) masters[cat].push(val); 
       if(!sysData.tags[cat]) sysData.tags[cat] = []; if(!sysData.tags[cat].includes(val)) sysData.tags[cat].push(val);
       renderChips(containerId, masters[cat], cat); 
       document.getElementById(inputId).value = "";
-    } catch(e) { alert("エラー"); document.getElementById(inputId).value = ""; }
+    } catch(e) { 
+      alert("エラー"); document.getElementById(inputId).value = ""; 
+      sendErrorLog(`Master Add Error (${cat}): ${e.message}`);
+    }
   }
 
   let extPtCount = 0;
@@ -529,7 +552,7 @@
     resArea.style.display = "block";
   }
 
-  // 🌟 症例登録からの「処置」連携を追加
+  // 🌟 処置リストの柔軟な読み込みとリンク
   function selectCase(rowWrapper) {
     currentCase = rowWrapper.rawData;
     document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
@@ -543,19 +566,21 @@
     }
     renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
 
-    // 🌟 処置リストの自動抽出とマスタ追加
     let importedProcs = [];
-    if(currentCase["簡易処置リスト"]) {
-      importedProcs.push(...currentCase["簡易処置リスト"].split(",").map(s => s.replace(/x\d+/g,'').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim()).filter(Boolean));
+    // 列名のブレ（簡易処置リスト、処置リスト、実施処置など）を吸収
+    let procStr = currentCase["簡易処置リスト"] || currentCase["処置リスト"] || currentCase["実施処置"] || currentCase["処置"] || "";
+    let traumaStr = currentCase["外傷処置"] || currentCase["外傷・固定"] || currentCase["外傷"] || "";
+
+    if(procStr) {
+      importedProcs.push(...procStr.split(",").map(s => s.replace(/x\d+/g,'').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim()).filter(Boolean));
     }
-    if(currentCase["外傷処置"]) {
-      importedProcs.push(...currentCase["外傷処置"].split(",").map(s => s.trim()).filter(Boolean));
+    if(traumaStr) {
+      importedProcs.push(...traumaStr.split(",").map(s => s.trim()).filter(Boolean));
     }
     
     let procsDisplay = "";
     if(importedProcs.length > 0) {
       procsDisplay = `🚑 実施処置: ${importedProcs.join(", ")}`;
-      // TAG_MASTERSに自動で追加（インラインタグで選べるようにする）
       importedProcs.forEach(p => {
         if(!TAG_MASTERS.treatment.items.includes(p)) TAG_MASTERS.treatment.items.unshift(p);
       });
@@ -601,7 +626,6 @@
     renderEvalBlocks(); renderFeedbackBlocks();
   }
 
-  // アコーディオンが閉じない、タグのトグル処理
   function toggleInlineTag(tag, type, idx, element) {
     let targetArr;
     if(type === 'eval') targetArr = sysData.evals[idx].tags;
@@ -616,7 +640,6 @@
     }
   }
 
-  // 🌟 NTS表記を変更
   function generateInlineTagUI(selectedTags, type, idx) {
     const isEval = (type === 'eval');
     let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px;">🏷️ 関連タグ・NTSを選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}" style="padding:12px; border:1px solid var(--line); border-radius:6px; margin-top:4px;">`;
@@ -631,9 +654,8 @@
     return html;
   }
 
+  // 🌟 対応・判断枠の削除
   function addEvalBlock() { sysData.evals.push({ id: Date.now(), scene: "", sceneOther: "", type: "状況評価(NTS等)", desc: "", vitals:{bp1:"",bp2:"",hr:"",rr:"",spo2:"",o2:"",bt:"",jcs:"",gcs:""}, freeABC:"", good: "", bad: "", tags:[] }); renderEvalBlocks(); }
-  
-  // 🌟 対応・判断の削除
   function renderEvalBlocks() {
     const box = document.getElementById("eval-container"); box.innerHTML = "";
     sysData.evals.forEach((ev, idx) => {
@@ -665,7 +687,6 @@
         <textarea rows="3" placeholder="ABCDEF 所見・アセスメント (フリーテキスト)" onchange="sysData.evals[${idx}].freeABC=this.value">${ev.freeABC}</textarea>`;
       }
       
-      // 対応・判断を削除し、Good/Badにまとめた
       html += `<div style="display:flex; gap:8px; margin-top:8px;">
           <textarea rows="2" placeholder="🟢 Good (良かった判断・対応)" onchange="sysData.evals[${idx}].good=this.value" style="border-color:#a5d6a7;">${ev.good}</textarea>
           <textarea rows="2" placeholder="⚠️ Bad / Gap (課題・反省点)" onchange="sysData.evals[${idx}].bad=this.value" style="border-color:#fff59d;">${ev.bad}</textarea>
@@ -742,6 +763,7 @@
     }).join("");
     
     const summaryVal = document.getElementById("v-summary").value || "";
+    
     // 未追加の現場診断があれば拾う
     let displayDiags = [...(sysData.tags.diagnosis||[])];
     const unaddedDiag = document.getElementById("diag-name").value.trim();
@@ -817,12 +839,12 @@
     showLoader("保存処理中...", "デブリーフィングデータベースへ保存しています");
     
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }) });
       const json = await res.json(); 
       if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else { throw new Error(json.message); }
     } catch(e) { 
+      sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);
       alert("通信エラーが発生しました。入力データは保持されています。電波の良い場所で再度お試しください。"); 
-      sendErrorLog(e.toString());
     } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
   }
 </script>
