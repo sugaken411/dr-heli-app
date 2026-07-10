@@ -29,14 +29,17 @@
     .type-btn.completed { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
     .type-btn.completed::after { content: "✅"; position: absolute; top: -6px; right: -6px; font-size: 12px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
-    .sticky-info { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--line); position: sticky; top: calc(114px + var(--safe-top)); z-index: 90; }
+    /* 🌟 重なりバグ防止のため sticky を解除 */
+    .normal-info { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--line); }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
-    .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; position: sticky; top: calc(104px + var(--safe-top)); z-index: 10; flex-wrap: wrap; }
+    
+    /* 🌟 重なりバグ防止のため sticky を解除 */
+    .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; flex-wrap: wrap; }
     .sub-cat-badge { font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbdefb; margin-left: 8px; white-space: nowrap; }
     
     .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; transition: background-color 0.3s; }
-    .chk-row.error-highlight { background-color: #ffebee; } 
+    .chk-row.error-highlight { background-color: #ffebee; border-left: 4px solid var(--brand); } /* エラー時の視認性アップ */
     .chk-row:last-child { border-bottom: none; }
     
     .chk-title-wrapper { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; }
@@ -82,7 +85,7 @@
 
     @media print {
       body { background: #fff; }
-      header, .tab-container, .type-picker-wrapper, .sticky-info, .no-print { display: none !important; }
+      header, .tab-container, .type-picker-wrapper, .normal-info, .no-print { display: none !important; }
       main { margin-top: 0; padding: 0; max-width: 100%; }
       .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom:20px; }
       #tab-history { display: block !important; }
@@ -104,7 +107,7 @@
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="hdr-title">
       統合チェックリスト
-      <span class="version-tag" onclick="secretCommand()">v2.5</span>
+      <span class="version-tag" onclick="secretCommand()">v2.6</span>
     </div>
     <div style="display:flex; gap:8px;">
       <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -113,14 +116,14 @@
   </header>
 
   <div class="tab-container no-print">
-    <div class="nav-tab active" onclick="switchMainTab('input')">✅ 点検入力</div>
-    <div class="nav-tab" onclick="switchMainTab('history')">🔍 履歴・検索</div>
+    <div class="nav-tab active" id="nav-tab-input" onclick="switchMainTab('input')">✅ 点検入力</div>
+    <div class="nav-tab" id="nav-tab-history" onclick="switchMainTab('history')">🔍 履歴・検索</div>
   </div>
 
   <main>
     <div id="tab-input" class="tab-content active">
       
-      <div class="card no-print" style="margin-bottom: 8px; padding: 12px 16px;">
+      <div class="normal-info no-print" style="margin-bottom: 8px; padding: 12px 16px;">
         <div style="display:flex; gap:12px;">
           <div style="flex:1;">
             <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検日</label>
@@ -228,7 +231,7 @@
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
       <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
       <textarea id="qa-input" rows="3" class="text-input" placeholder="項目の追加依頼や、システムの不具合報告など..."></textarea>
-      <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
+      <button onclick="submitQA()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
       <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
     </div>
   </div>
@@ -240,15 +243,12 @@
     let currentType = "始業点検"; 
     let currentMainTab = "input"; 
     
-    // 🌟 必須チェックすり抜けを防止するためのインデックス管理
     let checklistItems = [];
-    let currentData = {}; // ここには { "0": "◯", "1": "✕", ... } のように「originalIndex」をキーにして値が入る
+    let currentData = {}; 
     let errorDetails = {}; 
     let allHistoryData = []; 
-    
     let mastersCache = {};
 
-    // 💡 隠しコマンド（1.5秒以内に3回タップ）
     let tapCount = 0; let tapTimer;
     function secretCommand() {
       tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 1500); 
@@ -286,7 +286,7 @@
     function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
     function sendErrorLog(errMsg) {
-      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {}
+      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v2.6)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {}
     }
 
     async function fetchQA() {
@@ -299,13 +299,13 @@
       } catch(e) {}
     }
 
-    async function submitQA(event) {
+    async function submitQA() {
       const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
-      const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+      document.getElementById("global-loader").style.display = "flex";
       try {
         await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" }) });
         alert("要望・報告を送信しました。管理者が確認します。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-      } catch(e) { alert("送信に失敗しました。"); } finally { btn.textContent = "送信"; btn.disabled = false; }
+      } catch(e) { alert("送信に失敗しました。"); } finally { hideLoader(); }
     }
 
     async function fetchChecklistStatus() {
@@ -328,12 +328,13 @@
       } catch(e) {}
     }
 
+    // 🌟 エラーの根源だった event.target を排除し、安全に切り替える処理に変更
     function switchMainTab(tab) {
       currentMainTab = tab;
       document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       
-      event.target.classList.add('active');
+      document.getElementById(`nav-tab-${tab}`).classList.add('active');
       document.getElementById(`tab-${tab}`).classList.add('active');
       document.getElementById('btn-print').style.display = tab === 'history' ? 'block' : 'none';
       
@@ -379,7 +380,6 @@
       }
 
       showLoader(`${currentType} マスタ読込中...`, "点検項目を生成しています");
-      // 🌟 データリセットを徹底
       currentData = {}; errorDetails = {};
       try {
         const res = await fetch(GAS_API_URL, {
@@ -388,11 +388,7 @@
         });
         const json = await res.json();
         if (json.status === "success") {
-          // json.items には、GAS側ですでに index 付けされた配列が返ってくる。
-          // アプリ側でも、表示用に index を付け直す（これがすれ違いの原因でした）
-          const itemsWithIndex = json.items.map((it, idx) => {
-             return { ...it, originalIndex: idx };
-          });
+          const itemsWithIndex = json.items.map((it, idx) => { return { ...it, originalIndex: idx }; });
           mastersCache[reqType] = itemsWithIndex; 
           
           const sel = document.getElementById("c-staff");
@@ -415,7 +411,6 @@
       else if (currentType === '終業点検') checklistItems = allItems.filter(it => it.category.includes('終業'));
       else checklistItems = allItems;
       
-      // 種類を切り替えたら、入力データ（currentData）は一旦リセットする
       currentData = {}; errorDetails = {};
       renderChecklist();
     }
@@ -430,7 +425,6 @@
         return;
       }
 
-      // 大分類ごとにグループ化
       const grouped = {};
       checklistItems.forEach((item) => {
         if(!grouped[item.category]) grouped[item.category] = [];
@@ -438,16 +432,18 @@
       });
 
       for (const [cat, items] of Object.entries(grouped)) {
+        // 🌟 重なりバグ（sticky設定）を完全排除したシンプルなカード構造
         let html = `<div class="card"><div class="card-header">🏷️ ${cat}</div>`;
         
         items.forEach(it => {
-          const idx = it.originalIndex; // 🌟 絶対に狂わない一意のID
+          const idx = it.originalIndex;
           const displayConstant = it.constant ? `<span class="constant-val">定数: ${it.constant}</span>` : '';
           const subCatBadge = it.subCategory ? `<span class="sub-cat-badge">${it.subCategory}</span>` : '';
           
           html += `<div class="chk-row" id="row-${idx}">
             <div class="chk-title-wrapper">
-              <div class="chk-title">${it.name} ${subCatBadge} ${displayConstant} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div>
+              ${subCatBadge}
+              <div class="chk-title">${it.name} ${displayConstant} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div>
             </div>`;
             
           const inputTypeStr = String(it.inputType || "").trim();
@@ -473,9 +469,7 @@
     }
 
     function setVal(idx, val) {
-      currentData[idx] = val; // 🌟 確実に originalIndex に対して値を入れる
-      
-      // 対象のアイテムを originalIndex から逆引きで探す
+      currentData[idx] = val;
       const targetItem = checklistItems.find(it => it.originalIndex === idx);
       if(!targetItem) return;
 
@@ -489,7 +483,6 @@
         if (val === '✕') { errBox.style.display = 'block'; } 
         else { errBox.style.display = 'none'; document.getElementById(`err-txt-${idx}`).value = ""; delete errorDetails[idx]; }
         
-        // 入力されたらエラーハイライトを消す
         document.getElementById(`row-${idx}`).classList.remove('error-highlight');
       }
     }
@@ -498,7 +491,7 @@
       checklistItems.forEach(item => { 
         const inputTypeStr = String(item.inputType || "").trim();
         const isTextField = inputTypeStr.includes("自由") || inputTypeStr.includes("数値");
-        if(!isTextField) setVal(item.originalIndex, '◯'); // 🌟 これで確実に裏側の値がセットされ、色も変わる
+        if(!isTextField) setVal(item.originalIndex, '◯'); 
       });
     }
 
@@ -515,7 +508,7 @@
 
       document.querySelectorAll('.chk-row').forEach(el => el.classList.remove('error-highlight'));
 
-      // 🌟 必須チェックのロジックを完全修復
+      // 🌟 必須チェックの完全復旧
       checklistItems.forEach(item => { 
         const val = currentData[item.originalIndex];
         if(item.required && (!val || val === "")) {
@@ -526,13 +519,16 @@
       });
 
       if(missing.length > 0) {
-        alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`);
+        // 🌟 先にスクロールしてからアラートを出す（確実な挙動）
         if(firstMissingId) {
           const element = document.getElementById(firstMissingId);
-          const y = element.getBoundingClientRect().top + window.pageYOffset - 180;
+          const y = element.getBoundingClientRect().top + window.pageYOffset - 120;
           window.scrollTo({top: y, behavior: 'smooth'});
         }
-        return; // ここで処理が止まり、保存させない（すり抜け防止）
+        setTimeout(() => {
+          alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`);
+        }, 100);
+        return; 
       }
 
       let judgment = "異常なし"; let errorList = [];
@@ -588,7 +584,6 @@
       }
     }
 
-    // 🌟 履歴タブからの閲覧対象切り替え機能
     function changeHistoryType() {
       const selectedType = document.getElementById("hist-target-type").value;
       currentType = selectedType;
@@ -598,8 +593,6 @@
       };
       
       document.getElementById("print-title").innerText = `【${typeDisplayNames[selectedType]}】 点検履歴`;
-      
-      // 対象が変わったのでサーバーから取得し直す
       fetchHistory(true);
     }
 
