@@ -12,7 +12,7 @@
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(60px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 10px; padding-right: 10px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 60px; text-align: center; }
     .hdr-title { font-weight: 900; font-size: 16px; text-align: center; flex: 1; display:flex; justify-content:center; align-items:center; }
-    .version-tag { font-size: 11px; background: var(--blue); color: #fff; padding: 2px 8px; border-radius: 6px; margin-left: 8px; cursor: pointer; user-select: none; }
+    .version-tag { font-size: 11px; background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; margin-left: 8px; cursor: pointer; user-select: none; }
     
     .tab-container { position: fixed; top: calc(60px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
     .nav-tab { flex: 1; text-align: center; line-height: 44px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
@@ -20,7 +20,6 @@
 
     main { margin-top: calc(114px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
-    /* 🌟 グループ化されたピルメニュー */
     .timing-label { font-size: 12px; font-weight: 800; color: var(--sub); margin-top: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .timing-label::before { content: ""; display: block; width: 4px; height: 12px; background: var(--blue); border-radius: 2px; }
     
@@ -30,19 +29,19 @@
     .type-btn.completed { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
     .type-btn.completed::after { content: "✅"; position: absolute; top: -6px; right: -6px; font-size: 12px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
+    .sticky-info { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--line); position: sticky; top: calc(114px + var(--safe-top)); z-index: 90; }
+
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
-    
-    /* 🌟 大項目・中項目のヘッダー */
     .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; position: sticky; top: calc(104px + var(--safe-top)); z-index: 10; flex-wrap: wrap; }
-    .sub-cat-badge { font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbdefb; margin-left: 8px; }
+    .sub-cat-badge { font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbdefb; margin-left: 8px; white-space: nowrap; }
     
     .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; transition: background-color 0.3s; }
     .chk-row.error-highlight { background-color: #ffebee; } 
     .chk-row:last-child { border-bottom: none; }
     
-    .chk-title-wrapper { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-    .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; word-break: break-all; }
-    .constant-val { font-size: 12px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; }
+    .chk-title-wrapper { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; }
+    .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; word-break: break-all; flex: 1; }
+    .constant-val { font-size: 12px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
     
     .toggle-group { display: flex; gap: 8px; }
     .tgl-btn { flex: 1; padding: 12px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; user-select: none; }
@@ -83,7 +82,7 @@
 
     @media print {
       body { background: #fff; }
-      header, .tab-container, .no-print { display: none !important; }
+      header, .tab-container, .type-picker-wrapper, .sticky-info, .no-print { display: none !important; }
       main { margin-top: 0; padding: 0; max-width: 100%; }
       .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom:20px; }
       #tab-history { display: block !important; }
@@ -105,7 +104,7 @@
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="hdr-title">
       統合チェックリスト
-      <span class="version-tag" onclick="secretCommand()">v2.3</span>
+      <span class="version-tag" onclick="secretCommand()">v2.5</span>
     </div>
     <div style="display:flex; gap:8px;">
       <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -143,7 +142,6 @@
         <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
         <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
         <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
-        <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
       </div>
 
       <div class="timing-label no-print">🌇 夕・終業時</div>
@@ -153,6 +151,7 @@
 
       <div class="timing-label no-print">📅 月次・その他</div>
       <div class="type-picker no-print" style="margin-bottom: 24px;">
+        <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
         <div class="type-btn" id="btn-type-periodic" onclick="switchType('定期点検')">📅 定期点検</div>
       </div>
 
@@ -187,18 +186,31 @@
           <span>🔍 履歴の検索・絞り込み</span>
         </div>
         <div class="filter-box">
+          <div class="filter-row" style="margin-bottom:4px;">
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">閲覧対象</span>
+            <select id="hist-target-type" onchange="changeHistoryType()" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0; background:#fff9db; border-color:#ffe066;">
+              <option value="始業点検">始業点検</option>
+              <option value="終業点検">終業点検</option>
+              <option value="ME">ME機器</option>
+              <option value="ナースバック">ナースバック</option>
+              <option value="ヘリ内">ヘリ機内</option>
+              <option value="ヘリバック">ヘリバック</option>
+              <option value="待機物品">待機所物品</option>
+              <option value="定期点検">定期点検</option>
+            </select>
+          </div>
+          
           <div class="filter-row">
-            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:50px;">プリセット</span>
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">プリセット</span>
             <select id="hist-preset" onchange="applyPresetFilter()" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;">
-              <option value="all">すべて</option>
               <option value="today">本日</option>
               <option value="week">過去7日間</option>
               <option value="month">過去30日間</option>
-              <option value="custom">指定なし(全件)</option>
+              <option value="all">指定なし(全件)</option>
             </select>
           </div>
           <div class="filter-row">
-            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:50px;">期間指定</span>
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">期間指定</span>
             <input type="date" id="hist-start" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;" onchange="document.getElementById('hist-preset').value='custom'; applyHistoryFilter();">
             <span style="font-size:12px; color:var(--sub);">〜</span>
             <input type="date" id="hist-end" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;" onchange="document.getElementById('hist-preset').value='custom'; applyHistoryFilter();">
@@ -228,13 +240,13 @@
     let currentType = "始業点検"; 
     let currentMainTab = "input"; 
     
+    // 🌟 必須チェックすり抜けを防止するためのインデックス管理
     let checklistItems = [];
-    let currentData = {}; 
+    let currentData = {}; // ここには { "0": "◯", "1": "✕", ... } のように「originalIndex」をキーにして値が入る
     let errorDetails = {}; 
     let allHistoryData = []; 
     
     let mastersCache = {};
-    let nsListCache = [];
 
     // 💡 隠しコマンド（1.5秒以内に3回タップ）
     let tapCount = 0; let tapTimer;
@@ -246,6 +258,12 @@
       }
     }
 
+    function getTodayString() {
+      const d = new Date();
+      const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000);
+      return `${jst.getFullYear()}-${String(jst.getMonth()+1).padStart(2,'0')}-${String(jst.getDate()).padStart(2,'0')}`;
+    }
+
     window.onload = () => { 
       resetTime(); 
       fetchChecklistStatus(); 
@@ -255,7 +273,7 @@
 
     function resetTime() {
       const now = new Date();
-      document.getElementById("c-date").value = now.toISOString().split('T')[0];
+      document.getElementById("c-date").value = getTodayString();
       document.getElementById("c-time").value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     }
 
@@ -319,6 +337,10 @@
       document.getElementById(`tab-${tab}`).classList.add('active');
       document.getElementById('btn-print').style.display = tab === 'history' ? 'block' : 'none';
       
+      if(tab === 'history') {
+         document.getElementById('hist-target-type').value = currentType;
+      }
+      
       loadDataForCurrentView();
     }
 
@@ -338,7 +360,6 @@
       };
       
       document.getElementById("current-check-title").innerText = `${typeDisplayNames[type]} の入力`;
-      document.getElementById("print-title").innerText = `【${typeDisplayNames[type]}】 点検履歴`;
       
       loadDataForCurrentView();
     }
@@ -358,6 +379,7 @@
       }
 
       showLoader(`${currentType} マスタ読込中...`, "点検項目を生成しています");
+      // 🌟 データリセットを徹底
       currentData = {}; errorDetails = {};
       try {
         const res = await fetch(GAS_API_URL, {
@@ -366,14 +388,18 @@
         });
         const json = await res.json();
         if (json.status === "success") {
-          mastersCache[reqType] = json.items; 
-          nsListCache = json.nsList;
+          // json.items には、GAS側ですでに index 付けされた配列が返ってくる。
+          // アプリ側でも、表示用に index を付け直す（これがすれ違いの原因でした）
+          const itemsWithIndex = json.items.map((it, idx) => {
+             return { ...it, originalIndex: idx };
+          });
+          mastersCache[reqType] = itemsWithIndex; 
           
           const sel = document.getElementById("c-staff");
           if(sel.options.length <= 1) {
             json.nsList.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`);
           }
-          filterAndRender(json.items);
+          filterAndRender(itemsWithIndex);
         } else {
           alert(`マスタ読込エラー: ${json.message}`);
           sendErrorLog(json.message);
@@ -388,6 +414,9 @@
       if (currentType === '始業点検') checklistItems = allItems.filter(it => it.category.includes('始業'));
       else if (currentType === '終業点検') checklistItems = allItems.filter(it => it.category.includes('終業'));
       else checklistItems = allItems;
+      
+      // 種類を切り替えたら、入力データ（currentData）は一旦リセットする
+      currentData = {}; errorDetails = {};
       renderChecklist();
     }
 
@@ -401,28 +430,24 @@
         return;
       }
 
-      // 🌟 大分類＋中分類の組み合わせでグループ化
+      // 大分類ごとにグループ化
       const grouped = {};
-      checklistItems.forEach((item, i) => {
-        const groupKey = item.subCategory ? `${item.category}__|__${item.subCategory}` : `${item.category}__|__`;
-        if(!grouped[groupKey]) grouped[groupKey] = [];
-        grouped[groupKey].push({ ...item, originalIndex: i });
+      checklistItems.forEach((item) => {
+        if(!grouped[item.category]) grouped[item.category] = [];
+        grouped[item.category].push(item);
       });
 
-      for (const [key, items] of Object.entries(grouped)) {
-        const [cat, subCat] = key.split('__|__');
-        // 🌟 中分類がある場合は、大項目の横に青いバッジで表示
-        const subCatBadge = subCat ? `<span class="sub-cat-badge">${subCat}</span>` : '';
-        
-        let html = `<div class="card"><div class="card-header">🏷️ ${cat} ${subCatBadge}</div>`;
+      for (const [cat, items] of Object.entries(grouped)) {
+        let html = `<div class="card"><div class="card-header">🏷️ ${cat}</div>`;
         
         items.forEach(it => {
-          const idx = it.originalIndex;
+          const idx = it.originalIndex; // 🌟 絶対に狂わない一意のID
           const displayConstant = it.constant ? `<span class="constant-val">定数: ${it.constant}</span>` : '';
+          const subCatBadge = it.subCategory ? `<span class="sub-cat-badge">${it.subCategory}</span>` : '';
           
           html += `<div class="chk-row" id="row-${idx}">
             <div class="chk-title-wrapper">
-              <div class="chk-title">${it.name} ${displayConstant} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div>
+              <div class="chk-title">${it.name} ${subCatBadge} ${displayConstant} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div>
             </div>`;
             
           const inputTypeStr = String(it.inputType || "").trim();
@@ -448,8 +473,13 @@
     }
 
     function setVal(idx, val) {
-      currentData[idx] = val;
-      const inputTypeStr = String(checklistItems[idx].inputType || "").trim();
+      currentData[idx] = val; // 🌟 確実に originalIndex に対して値を入れる
+      
+      // 対象のアイテムを originalIndex から逆引きで探す
+      const targetItem = checklistItems.find(it => it.originalIndex === idx);
+      if(!targetItem) return;
+
+      const inputTypeStr = String(targetItem.inputType || "").trim();
       const isTextField = inputTypeStr.includes("自由") || inputTypeStr.includes("数値");
 
       if (!isTextField) {
@@ -468,7 +498,7 @@
       checklistItems.forEach(item => { 
         const inputTypeStr = String(item.inputType || "").trim();
         const isTextField = inputTypeStr.includes("自由") || inputTypeStr.includes("数値");
-        if(!isTextField) setVal(item.originalIndex, '◯'); 
+        if(!isTextField) setVal(item.originalIndex, '◯'); // 🌟 これで確実に裏側の値がセットされ、色も変わる
       });
     }
 
@@ -485,8 +515,10 @@
 
       document.querySelectorAll('.chk-row').forEach(el => el.classList.remove('error-highlight'));
 
+      // 🌟 必須チェックのロジックを完全修復
       checklistItems.forEach(item => { 
-        if(item.required && !currentData[item.originalIndex]) {
+        const val = currentData[item.originalIndex];
+        if(item.required && (!val || val === "")) {
           missing.push(`[${item.category}] ${item.name}`);
           document.getElementById(`row-${item.originalIndex}`).classList.add('error-highlight');
           if(!firstMissingId) firstMissingId = `row-${item.originalIndex}`; 
@@ -496,12 +528,11 @@
       if(missing.length > 0) {
         alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`);
         if(firstMissingId) {
-          // 🌟 固定ヘッダーに隠れないようにスクロール位置を調整して飛ぶ
           const element = document.getElementById(firstMissingId);
           const y = element.getBoundingClientRect().top + window.pageYOffset - 180;
           window.scrollTo({top: y, behavior: 'smooth'});
         }
-        return;
+        return; // ここで処理が止まり、保存させない（すり抜け防止）
       }
 
       let judgment = "異常なし"; let errorList = [];
@@ -515,9 +546,9 @@
 
       let rawJson = {};
       checklistItems.forEach(item => {
-        let idx = item.originalIndex;
-        rawJson[`${item.category}_${item.name}`] = currentData[idx] || "";
-        if(errorDetails[idx]) rawJson[`${item.category}_${item.name}_詳細`] = errorDetails[idx];
+        let val = currentData[item.originalIndex] || "";
+        rawJson[`${item.category}_${item.name}`] = val;
+        if(errorDetails[item.originalIndex]) rawJson[`${item.category}_${item.name}_詳細`] = errorDetails[item.originalIndex];
       });
       rawJson["全体特記事項"] = document.getElementById("c-remarks").value;
 
@@ -557,27 +588,41 @@
       }
     }
 
-    // 🌟 カレンダー期間指定による履歴の取得とフィルター
+    // 🌟 履歴タブからの閲覧対象切り替え機能
+    function changeHistoryType() {
+      const selectedType = document.getElementById("hist-target-type").value;
+      currentType = selectedType;
+      
+      const typeDisplayNames = {
+        'ME': 'ME機器', 'ナースバック': 'ナースバック', 'ヘリ内': 'ヘリ機内', 'ヘリバック': 'ヘリバック', '待機物品': '待機所物品', '始業点検': '始業点検', '終業点検': '終業点検', '定期点検': '定期点検'
+      };
+      
+      document.getElementById("print-title").innerText = `【${typeDisplayNames[selectedType]}】 点検履歴`;
+      
+      // 対象が変わったのでサーバーから取得し直す
+      fetchHistory(true);
+    }
+
     function applyPresetFilter() {
       const preset = document.getElementById("hist-preset").value;
       if (preset === "custom") return; 
 
       const startInput = document.getElementById("hist-start");
       const endInput = document.getElementById("hist-end");
-      const now = new Date();
-      let sDate = new Date();
+      
+      const todayStr = getTodayString();
       
       if (preset === "today") {
-        startInput.value = now.toISOString().split('T')[0];
-        endInput.value = now.toISOString().split('T')[0];
+        startInput.value = todayStr;
+        endInput.value = todayStr;
       } else if (preset === "week") {
-        sDate.setDate(now.getDate() - 7);
-        startInput.value = sDate.toISOString().split('T')[0];
-        endInput.value = now.toISOString().split('T')[0];
+        let d = new Date(todayStr); d.setDate(d.getDate() - 7);
+        startInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        endInput.value = todayStr;
       } else if (preset === "month") {
-        sDate.setDate(now.getDate() - 30);
-        startInput.value = sDate.toISOString().split('T')[0];
-        endInput.value = now.toISOString().split('T')[0];
+        let d = new Date(todayStr); d.setDate(d.getDate() - 30);
+        startInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        endInput.value = todayStr;
       } else {
         startInput.value = "";
         endInput.value = "";
@@ -609,10 +654,10 @@
           allHistoryData = filteredHistory;
           
           if(document.getElementById("hist-preset").value === "all") {
+             applyHistoryFilter(); 
+          } else {
              document.getElementById("hist-preset").value = "today";
              applyPresetFilter();
-          } else {
-             applyHistoryFilter(); 
           }
         } else { alert(`履歴の取得に失敗しました: ${json.message}`); }
       } catch(e) { alert("通信エラーが発生しました。"); } finally { hideLoader(); }
@@ -625,10 +670,15 @@
       const sVal = document.getElementById("hist-start").value;
       const eVal = document.getElementById("hist-end").value;
       
+      const sDate = sVal ? new Date(sVal + "T00:00:00") : null;
+      const eDate = eVal ? new Date(eVal + "T23:59:59") : null;
+      
       let filtered = allHistoryData.filter(h => {
-        const hDateStr = h.date.replace(/\//g, '-');
-        if (sVal && hDateStr < sVal) return false;
-        if (eVal && hDateStr > eVal) return false;
+        let hDate = new Date(h.date.replace(/\//g, '-'));
+        if (isNaN(hDate.getTime())) return true; 
+        
+        if (sDate && hDate < sDate) return false;
+        if (eDate && hDate > eDate) return false;
         return true;
       });
 
