@@ -29,17 +29,15 @@
     .type-btn.completed { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
     .type-btn.completed::after { content: "✅"; position: absolute; top: -6px; right: -6px; font-size: 12px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
-    /* 🌟 重なりバグ防止のため sticky を解除 */
     .normal-info { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--line); }
 
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
     
-    /* 🌟 重なりバグ防止のため sticky を解除 */
     .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; flex-wrap: wrap; }
     .sub-cat-badge { font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbdefb; margin-left: 8px; white-space: nowrap; }
     
     .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; transition: background-color 0.3s; }
-    .chk-row.error-highlight { background-color: #ffebee; border-left: 4px solid var(--brand); } /* エラー時の視認性アップ */
+    .chk-row.error-highlight { background-color: #ffebee; border-left: 4px solid var(--brand); } 
     .chk-row:last-child { border-bottom: none; }
     
     .chk-title-wrapper { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; }
@@ -107,7 +105,7 @@
     <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="hdr-title">
       統合チェックリスト
-      <span class="version-tag" onclick="secretCommand()">v2.6</span>
+      <span class="version-tag" onclick="secretCommand()">v2.5</span>
     </div>
     <div style="display:flex; gap:8px;">
       <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -127,7 +125,7 @@
         <div style="display:flex; gap:12px;">
           <div style="flex:1;">
             <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検日</label>
-            <input type="date" id="c-date" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;">
+            <input type="date" id="c-date" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="fetchChecklistStatus()">
           </div>
           <div style="flex:1.5;">
             <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検者 (Ns)</label>
@@ -141,7 +139,7 @@
       <div class="timing-label no-print">🌅 朝・始業時</div>
       <div class="type-picker no-print">
         <div class="type-btn active" id="btn-type-daily-start" onclick="switchType('始業点検')">📋 始業点検</div>
-        <div class="type-btn" id="btn-type-me" onclick="switchType('ME')">🔌 ME機器</div>
+        <div class="type-btn" id="btn-type-me" onclick="switchType('ME機器')">🔌 ME機器</div>
         <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
         <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
         <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
@@ -194,7 +192,7 @@
             <select id="hist-target-type" onchange="changeHistoryType()" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0; background:#fff9db; border-color:#ffe066;">
               <option value="始業点検">始業点検</option>
               <option value="終業点検">終業点検</option>
-              <option value="ME">ME機器</option>
+              <option value="ME機器">ME機器</option>
               <option value="ナースバック">ナースバック</option>
               <option value="ヘリ内">ヘリ機内</option>
               <option value="ヘリバック">ヘリバック</option>
@@ -210,6 +208,7 @@
               <option value="week">過去7日間</option>
               <option value="month">過去30日間</option>
               <option value="all">指定なし(全件)</option>
+              <option value="custom" style="display:none;">期間指定中</option>
             </select>
           </div>
           <div class="filter-row">
@@ -286,7 +285,7 @@
     function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
     function sendErrorLog(errMsg) {
-      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v2.6)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {}
+      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v2.5)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {}
     }
 
     async function fetchQA() {
@@ -310,9 +309,10 @@
 
     async function fetchChecklistStatus() {
       try {
+        const selectedDate = document.getElementById("c-date").value;
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE })
+          body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: selectedDate })
         });
         const json = await res.json();
         if (json.status === "success") {
@@ -321,6 +321,7 @@
             '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic',
             'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki'
           };
+          document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('completed'));
           for (const [type, isCompleted] of Object.entries(json.data)) {
             if (isCompleted && btnMap[type]) document.getElementById(btnMap[type]).classList.add("completed");
           }
@@ -328,7 +329,6 @@
       } catch(e) {}
     }
 
-    // 🌟 エラーの根源だった event.target を排除し、安全に切り替える処理に変更
     function switchMainTab(tab) {
       currentMainTab = tab;
       document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
@@ -350,17 +350,13 @@
       document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
       
       const btnMap = {
-        'ME': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli',
+        'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli',
         '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic',
         'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki'
       };
       if(btnMap[type]) document.getElementById(btnMap[type]).classList.add("active");
       
-      const typeDisplayNames = {
-        'ME': 'ME機器', 'ナースバック': 'ナースバック', 'ヘリ内': 'ヘリ機内', 'ヘリバック': 'ヘリバック', '待機物品': '待機所物品', '始業点検': '始業点検', '終業点検': '終業点検', '定期点検': '定期点検'
-      };
-      
-      document.getElementById("current-check-title").innerText = `${typeDisplayNames[type]} の入力`;
+      document.getElementById("current-check-title").innerText = `${type} の入力`;
       
       loadDataForCurrentView();
     }
@@ -388,6 +384,7 @@
         });
         const json = await res.json();
         if (json.status === "success") {
+          // 🌟 絶対に狂わない一意のID（originalIndex）を付与
           const itemsWithIndex = json.items.map((it, idx) => { return { ...it, originalIndex: idx }; });
           mastersCache[reqType] = itemsWithIndex; 
           
@@ -432,7 +429,6 @@
       });
 
       for (const [cat, items] of Object.entries(grouped)) {
-        // 🌟 重なりバグ（sticky設定）を完全排除したシンプルなカード構造
         let html = `<div class="card"><div class="card-header">🏷️ ${cat}</div>`;
         
         items.forEach(it => {
@@ -469,7 +465,7 @@
     }
 
     function setVal(idx, val) {
-      currentData[idx] = val;
+      currentData[idx] = val; 
       const targetItem = checklistItems.find(it => it.originalIndex === idx);
       if(!targetItem) return;
 
@@ -508,7 +504,7 @@
 
       document.querySelectorAll('.chk-row').forEach(el => el.classList.remove('error-highlight'));
 
-      // 🌟 必須チェックの完全復旧
+      // 🌟 必須チェック：確実にoriginalIndexで判定する
       checklistItems.forEach(item => { 
         const val = currentData[item.originalIndex];
         if(item.required && (!val || val === "")) {
@@ -519,15 +515,13 @@
       });
 
       if(missing.length > 0) {
-        // 🌟 先にスクロールしてからアラートを出す（確実な挙動）
+        // 🌟 先にスクロールしてからアラートを出す
         if(firstMissingId) {
           const element = document.getElementById(firstMissingId);
           const y = element.getBoundingClientRect().top + window.pageYOffset - 120;
           window.scrollTo({top: y, behavior: 'smooth'});
         }
-        setTimeout(() => {
-          alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`);
-        }, 100);
+        setTimeout(() => { alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`); }, 100);
         return; 
       }
 
@@ -587,12 +581,7 @@
     function changeHistoryType() {
       const selectedType = document.getElementById("hist-target-type").value;
       currentType = selectedType;
-      
-      const typeDisplayNames = {
-        'ME': 'ME機器', 'ナースバック': 'ナースバック', 'ヘリ内': 'ヘリ機内', 'ヘリバック': 'ヘリバック', '待機物品': '待機所物品', '始業点検': '始業点検', '終業点検': '終業点検', '定期点検': '定期点検'
-      };
-      
-      document.getElementById("print-title").innerText = `【${typeDisplayNames[selectedType]}】 点検履歴`;
+      document.getElementById("print-title").innerText = `【${selectedType}】 点検履歴`;
       fetchHistory(true);
     }
 
@@ -710,10 +699,38 @@
             <details style="margin-top:8px; cursor:pointer;">
               <summary style="font-size:12px; color:var(--blue); font-weight:bold; outline:none; user-select:none;">▶ 全項目の詳細データを見る</summary>
               ${detailsHtml}
+              <div style="margin-top:12px; text-align:right;">
+                <button class="btn-small" style="background:#ffebee; color:#c62828; border:1px solid #ef5350;" onclick="deleteRecord('${h.id}')">🗑️ この履歴を削除</button>
+              </div>
             </details>
           </div>
         `;
       });
+    }
+
+    // 🌟 履歴の削除アクション
+    async function deleteRecord(recordId) {
+      if(!confirm("本当にこの点検履歴を削除しますか？\n（この操作は取り消せません）")) return;
+      
+      showLoader("削除中...", "データベースから履歴を削除しています");
+      try {
+        const sheetNameMap = { '始業点検': '日常点検', '終業点検': '日常点検', '定期点検': '定期点検' };
+        const reqType = sheetNameMap[currentType] || currentType;
+
+        const res = await fetch(GAS_API_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "delete_checklist_record", password: PIN_CODE, id: recordId, type: reqType })
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          alert("履歴を削除しました。");
+          fetchChecklistStatus(); 
+          fetchHistory(true);     
+        } else { alert("削除に失敗しました: " + json.message); }
+      } catch(e) { 
+        alert("通信エラーが発生しました。"); 
+        sendErrorLog(e.toString());
+      } finally { hideLoader(); }
     }
   </script>
 </body>
