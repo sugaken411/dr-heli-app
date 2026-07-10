@@ -37,8 +37,8 @@
     
     .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .radio-lbl { display: inline-block; padding: 8px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
-    input[type="radio"], input[type="checkbox"] { display: none; }
-    input[type="radio"]:checked + .radio-lbl, input[type="checkbox"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
+    input[type="radio"] { display: none; }
+    input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
     
     .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .pill { border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
@@ -92,7 +92,7 @@
 
 <header>
   <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.3</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.4</span></div>
   <div style="display:flex; gap:12px;">
     <button class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -182,7 +182,7 @@
         <div class="pill-group" id="chip-container-diagnosis" style="margin-bottom:8px;"></div>
         <div style="display:flex; gap:8px;">
           <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin:0; flex:1;">
-          <button class="btn-small" style="background:var(--blue); color:#fff; padding:10px 16px;" onclick="addMasterAndChip('diagnosis', 'diag-name', 'chip-container-diagnosis')">＋追加</button>
+          <button id="btn-diag-add" class="btn-small" style="background:var(--blue); color:#fff; padding:10px 16px;" onclick="generateDiagnosis()">＋追加</button>
         </div>
       </div>
 
@@ -265,14 +265,14 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 活動場面の細分化
+  // 活動場面の細分化
   const SCENE_LIST = [
     "① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", 
     "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", 
     "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"
   ];
   
-  // 🌟 NTSと実務タグの定義
+  // 🌟 NTSの表現を分かりやすく変更
   const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
   const TAG_MASTERS = {
     practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
@@ -280,7 +280,6 @@
     risk: { label: "⚠️ リスク関連", items: ["リスク対策", "忘れ物", "コミュニケーションエラー", "ドレーンチューブ類管理", "処置関連"] }
   };
 
-  // 🌟 疾患分類ツリー
   const DISEASE_TREE = {
     "1外傷": ["1-1: 交通外傷", "1-2: その他"],
     "2心大血管": ["2-1: 急性冠症候群", "2-2: 大動脈瘤・解離", "2-3: その他"],
@@ -304,7 +303,7 @@
     loader.style.display = "flex";
   }
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.3)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.4)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
 
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   function clearSearchMonth() { document.getElementById("s-month").value = ""; }
@@ -341,20 +340,28 @@
   function renderChips(containerId, list, category, isRadio = false) {
     const box = document.getElementById(containerId); if(!box) return;
     box.innerHTML = "";
-    list.forEach(item => { const isOn = sysData.tags[category] && sysData.tags[category].includes(item); box.innerHTML += `<div class="${isOn ? "pill on" : "pill"}" onclick="toggleChip('${category}', '${item}', ${isRadio})">${item}</div>`; });
+    list.forEach(item => { const isOn = sysData.tags[category] && sysData.tags[category].includes(item); box.innerHTML += `<div class="${isOn ? "pill on" : "pill"}" onclick="toggleChip('${category}', '${item}', ${isRadio}, this)">${item}</div>`; });
   }
   
-  function toggleChip(cat, item, isRadio) {
+  function toggleChip(cat, item, isRadio, element) {
     if(!sysData.tags[cat]) sysData.tags[cat] = [];
-    if(isRadio) { sysData.tags[cat] = [item]; } else { if(sysData.tags[cat].includes(item)) sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item); else sysData.tags[cat].push(item); }
-    if(cat === 'diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-    else if(masters[cat]) renderChips(`chip-container-${cat}`, masters[cat], cat);
-    else if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
+    if(isRadio) { 
+      sysData.tags[cat] = [item];
+      // ラジオの場合は全体を再描画
+      if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
+    } else { 
+      if(sysData.tags[cat].includes(item)) {
+        sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item);
+        if(element) element.classList.remove('on');
+      } else {
+        sysData.tags[cat].push(item);
+        if(element) element.classList.add('on');
+      } 
+    }
   }
 
-  // 🌟 疾患分類ロジック
+  // 疾患分類ロジック
   function setDiseaseMain(val) {
-    // リセット
     document.querySelectorAll('[id^="d-main-"]').forEach(el => el.classList.remove('on'));
     const idx = val.charAt(0); document.getElementById(`d-main-${idx}`).classList.add('on');
     sysData.disease.main = val; sysData.disease.cause = ""; sysData.disease.sub = "";
@@ -379,7 +386,6 @@
   function setDiseaseCause(causeVal, btnEl) {
     sysData.disease.cause = causeVal; sysData.disease.sub = "";
     btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on');
-    // その下にさらに詳細を展開
     if(DISEASE_TREE[causeVal]) {
       const exist = document.getElementById("d-sub-pills-2"); if(exist) exist.remove();
       const subHtml = `<div class="pill-group" id="d-sub-pills-2" style="margin-top:12px; padding-top:12px; border-top:1px dashed #ccc;">` + DISEASE_TREE[causeVal].map(s => `<div class="pill" onclick="setDiseaseSubReal('${s}', this)">${s}</div>`).join('') + `</div>`;
@@ -432,6 +438,31 @@
       sendErrorLog(e.toString());
       alert("データベースの同期に失敗しました。電波の良い場所でリロードしてください。");
     } finally { hideLoader(); }
+  }
+
+  // 🌟 疾患マスタ追加の修復
+  async function generateDiagnosis() {
+    const name = document.getElementById("diag-name").value.trim(); if(!name) return;
+    
+    const btn = document.getElementById("btn-diag-add");
+    btn.innerText = "追加中..."; btn.disabled = true;
+
+    try {
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }) });
+
+      if(!sysData.tags.diagnosis) sysData.tags.diagnosis = [];
+      if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
+      renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
+      
+      if(!masters.diagnosis.includes(name)) masters.diagnosis.push(name);
+
+      document.getElementById("diag-name").value = "";
+    } catch(e) {
+      alert("マスタの登録に失敗しました");
+      sendErrorLog(e.toString());
+    } finally {
+      btn.innerText = "＋追加"; btn.disabled = false;
+    }
   }
 
   async function addMasterAndChip(cat, inputId, containerId) {
@@ -504,7 +535,6 @@
     currentCase = rowWrapper.rawData;
     document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
     
-    // 🌟 概要の自動反映
     if(currentCase["備考"]) {
       document.getElementById("v-summary").value = currentCase["備考"].replace(/⚠️【使用物品・補充予定メモ】[\s\S]*?------------------\n/g, "").trim();
     }
@@ -549,28 +579,34 @@
     renderEvalBlocks(); renderFeedbackBlocks();
   }
 
-  // 🌟 インラインタグのトグル処理
-  function toggleInlineTag(tag, type, idx) {
+  // 🌟 アコーディオンが閉じない、タグのトグル処理
+  function toggleInlineTag(tag, type, idx, element) {
     let targetArr;
     if(type === 'eval') targetArr = sysData.evals[idx].tags;
     else targetArr = sysData.feedbacks[idx].tags;
     
-    if(targetArr.includes(tag)) { targetArr.splice(targetArr.indexOf(tag), 1); } else { targetArr.push(tag); }
-    if(type === 'eval') renderEvalBlocks(); else renderFeedbackBlocks();
+    if(targetArr.includes(tag)) { 
+      targetArr.splice(targetArr.indexOf(tag), 1); 
+      element.classList.remove('on'); // クラスだけ外す
+    } else { 
+      targetArr.push(tag); 
+      element.classList.add('on'); // クラスだけ付ける
+    }
   }
 
+  // NTS表記を変更
   function generateInlineTagUI(selectedTags, type, idx) {
     const isEval = (type === 'eval');
     let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px;">🏷️ 関連タグ・NTSを選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}" style="padding:12px; border:1px solid var(--line); border-radius:6px; margin-top:4px;">`;
     
     // NTS
-    html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px;">🧠 NTS (ノンテクニカルスキル)</div><div class="pill-group">`;
-    NTS_LIST.forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx})">${t}</div>`; });
+    html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px;">🧠 チーム連携・状況判断 (NTS等)</div><div class="pill-group">`;
+    NTS_LIST.forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
     html += `</div>`;
 
     // Practice
     html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-top:8px; margin-bottom:4px;">🛠 実務・処置</div><div class="pill-group">`;
-    TAG_MASTERS.practice.items.concat(TAG_MASTERS.treatment.items).forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx})">${t}</div>`; });
+    TAG_MASTERS.practice.items.concat(TAG_MASTERS.treatment.items).forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
     html += `</div></div>`;
     return html;
   }
@@ -596,7 +632,6 @@
 
       if(!isMed) { html += `<textarea rows="3" placeholder="状況の詳細" onchange="sysData.evals[${idx}].desc=this.value">${ev.desc}</textarea>`; } 
       else {
-        // 🌟 バイタルサイン専用枠
         html += `<div class="vitals-grid">
           <div class="vital-item">血圧 <input type="number" inputmode="numeric" value="${ev.vitals.bp1}" onchange="sysData.evals[${idx}].vitals.bp1=this.value"> / <input type="number" inputmode="numeric" value="${ev.vitals.bp2}" onchange="sysData.evals[${idx}].vitals.bp2=this.value"> mmHg</div>
           <div class="vital-item">脈拍 <input type="number" inputmode="numeric" value="${ev.vitals.hr}" onchange="sysData.evals[${idx}].vitals.hr=this.value"> 回/分</div>
@@ -613,7 +648,6 @@
           <textarea rows="2" placeholder="⚠️ Bad" onchange="sysData.evals[${idx}].bad=this.value" style="border-color:#fff59d;">${ev.bad}</textarea>
         </div>`;
       
-      // インラインタグ
       html += generateInlineTagUI(ev.tags, 'eval', idx);
       html += `</div>`; box.insertAdjacentHTML('beforeend', html);
     });
