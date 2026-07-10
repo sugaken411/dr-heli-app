@@ -71,10 +71,10 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.5</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.6</span></div>
   <div class="hdr-group">
-    <button class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
-    <button class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
+    <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
+    <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
   </div>
 </header>
 
@@ -173,7 +173,7 @@
   <div class="modal-box">
     <h3 style="margin-top:0;">📖 取扱説明書 (ポータル・共通)</h3>
     <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
-    <button class="modal-close" onclick="closeModal('modal-manual')">閉じる</button>
+    <button type="button" class="modal-close" onclick="closeModal('modal-manual')">閉じる</button>
   </div>
 </div>
 
@@ -183,14 +183,23 @@
     <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
     <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
     <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
-    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
-    <button class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
+    <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <button type="button" class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
   </div>
 </div>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740"; // 🌟 追加: 通信エラー解消のため
+  const PIN_CODE = "5740";
+
+  // 超高感度エラー監視
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail); return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+  });
 
   let loaderTimer1, loaderTimer2;
   function showLoader() {
@@ -199,7 +208,10 @@
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はアプリを開き直してください</span>"; }, 12000);
   }
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "ポータル(portal.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+  
+  function sendErrorLog(errMsg) { 
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "ポータル(v12.6)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+  }
 
   window.onload = () => {
     const cachedData = localStorage.getItem("aw109_portal_cache");
@@ -210,7 +222,6 @@
   async function fetchInit() {
     showLoader();
     try {
-      // 🌟 修正: 通信時に password (PIN_CODE) を渡すようにして認証エラーを回避
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -249,7 +260,6 @@
     const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      // 🌟 修正: 通信時に password (PIN_CODE) を渡すようにして認証エラーを回避
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
