@@ -56,9 +56,9 @@
     input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
 
     .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .time-cell { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+    .time-cell { display: flex; flex-direction: column; gap: 6px; align-items: center; transition: 0.3s; }
     .time-cell-label { font-size: 12px; font-weight: 700; color: var(--sub); text-align: center; }
-    .time-cell input[type="time"] { width: 100%; text-align: center; }
+    .time-cell input[type="time"] { width: 100%; text-align: center; transition: 0.3s; }
     
     .verdict-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .verdict-pill { border: 1px solid var(--line); border-radius: 8px; padding: 10px 4px; text-align: center; cursor: pointer; background: var(--bg); transition: 0.2s; }
@@ -107,7 +107,7 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 85dvh; overflow-y: auto; }
-    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
@@ -125,11 +125,12 @@
 
 <header>
   <div class="hdr-group"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.3</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.4</span></div>
   <div class="hdr-group"><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
 </header>
 
 <main>
+  <!-- ==================== 入力タブ ==================== -->
   <div id="tab-input" class="tab-content active">
     
     <div class="card">
@@ -171,6 +172,7 @@
       </div>
     </div>
 
+    <!-- 要請形態とキーワード -->
     <div class="card">
       <div class="card-section">
         <div class="section-label">📞 要請形態 (任意)</div>
@@ -193,6 +195,7 @@
       </div>
     </div>
 
+    <!-- スキーム選択とキャンセル展開 -->
     <div class="card">
       <div class="card-section">
         <div class="section-label">🚁 最終スキーム選択 (必須)</div>
@@ -217,6 +220,7 @@
       </div>
     </div>
 
+    <!-- 航空タイムライン -->
     <div class="card">
       <div class="card-section">
         <div class="section-label">🛫 航空タイムライン <button type="button" class="btn-clear" onclick="clearTime('avi')">クリア</button></div>
@@ -228,17 +232,22 @@
       </div>
     </div>
 
+    <!-- 医療タイムライン -->
     <div class="card" id="card-med-time">
       <div class="card-section">
         <div class="section-label">🏥 医療タイムライン <button type="button" class="btn-clear" onclick="clearTime('med')">クリア</button></div>
         <div class="time-grid">
-          <div class="time-cell"><div class="time-cell-label">患者接触</div><input type="time" id="t-contact"></div>
-          <div class="time-cell"><div class="time-cell-label">病着</div><input type="time" id="t-hosp" onchange="calcMonitor()"></div>
+          <div class="time-cell"><div class="time-cell-label">患者接触</div><input type="time" id="t-contact" onchange="calcMonitor()"></div>
+          <div class="time-cell" id="box-hosp-time">
+            <!-- 🌟 Iターン救急隊とキャンセルの時は、この病着がグレーアウトされます -->
+            <div class="time-cell-label">病着</div><input type="time" id="t-hosp" onchange="calcMonitor()">
+          </div>
           <div class="time-cell"><div class="time-cell-label">活動終了</div><input type="time" id="t-end" onchange="calcMonitor()"></div>
         </div>
       </div>
     </div>
       
+    <!-- 自動判定＆算定フラグ -->
     <div class="card" id="card-calc">
       <div class="card-section">
         <div class="section-label">💰 算定フラグ（タップで手動変更も可能）</div>
@@ -258,14 +267,16 @@
       </div>
     </div>
 
+    <!-- 現場診断 -->
     <div class="card">
       <div class="card-section">
         <div class="section-label">🩺 現場診断 <button type="button" class="btn-small" onclick="addMaster('diagnosis', '現場診断')">＋追加</button></div>
-        <input type="text" id="v-diag" list="dl-diag" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:15px; background:#fff;" placeholder="診断名を選択または入力...">
+        <input type="text" id="v-diag" list="dl-diag" class="text-input" placeholder="診断名を選択または入力...">
         <datalist id="dl-diag"></datalist>
       </div>
     </div>
 
+    <!-- 処置アコーディオン -->
     <div class="card" style="padding:0;">
       
       <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span class="arrow">▼</span></div>
@@ -335,7 +346,7 @@
             <label style="font-size:13px; font-weight:bold;"><input type="checkbox" id="chk-shock-pad" onchange="autoStock('除細動パッド')"> 除細動パッドを使用</label>
             <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
               <span style="font-size:12px; font-weight:bold; color:var(--sub);">ショック回数:</span>
-              <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center;"> 回
+              <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #ccc; border-radius:4px;"> 回
             </div>
           </div>
 
@@ -347,16 +358,16 @@
             <label class="proc-lbl"><input type="checkbox" id="chk-thorax" onchange="toggleBox('box-thorax-det', this.checked)">胸腔ドレナージ</label>
             <div id="box-thorax-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <span style="font-size:12px; font-weight:bold;">20Fr:</span><input type="number" inputmode="numeric" id="thorax-20" value="0" min="0" style="width:60px;" onchange="if(this.value>0) autoStock('トロッカー20Fr')"> 本
+                <span style="font-size:12px; font-weight:bold;">20Fr:</span><input type="number" inputmode="numeric" id="thorax-20" value="0" min="0" style="width:60px; padding:6px; border:1px solid #ccc; border-radius:4px;" onchange="if(this.value>0) autoStock('トロッカー20Fr')"> 本
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:12px; font-weight:bold;">28Fr:</span><input type="number" inputmode="numeric" id="thorax-28" value="0" min="0" style="width:60px;" onchange="if(this.value>0) autoStock('トロッカー28Fr')"> 本
+                <span style="font-size:12px; font-weight:bold;">28Fr:</span><input type="number" inputmode="numeric" id="thorax-28" value="0" min="0" style="width:60px; padding:6px; border:1px solid #ccc; border-radius:4px;" onchange="if(this.value>0) autoStock('トロッカー28Fr')"> 本
               </div>
             </div>
           </div>
 
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="輪状甲状靭帯穿刺・切開">輪状甲状靭帯穿刺・切開</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心嚢ドレナージ（穿刺）">心嚢穿刺 (ドレナージ)</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心嚢穿刺(ドレナージ)">心嚢穿刺 (ドレナージ)</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心膜開窓術">心膜開窓術</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="開胸心マッサージ">開胸心マッサージ</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="肺胞開放">肺胞開放</label>
@@ -364,7 +375,7 @@
           <div style="border-top:1px dashed var(--line); padding-top:12px;">
             <label class="proc-lbl"><input type="checkbox" id="chk-stomach" onchange="toggleBox('box-stomach-det', this.checked)">胃管挿入</label>
             <div id="box-stomach-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
-              <input type="number" inputmode="decimal" id="stomach-size" placeholder="サイズ(Fr)" style="width:100%;">
+              <input type="number" inputmode="decimal" id="stomach-size" placeholder="サイズ(Fr)" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
             </div>
           </div>
         </div>
@@ -384,6 +395,7 @@
       </div>
     </div>
 
+    <!-- ダイナミック入力（酸素・CPR・呼吸器） -->
     <div class="card">
       <div class="card-section">
         <div class="section-label"><span>🌬️ 移動用酸素</span><div><button type="button" class="btn-clear" onclick="clearDyn('dyn-o2')">クリア</button> <button type="button" class="btn-add-action" onclick="addDyn('o2')">＋</button></div></div>
@@ -405,6 +417,7 @@
       </div>
     </div>
     
+    <!-- 備考・メモ -->
     <div class="card">
       <div class="card-section">
         <div class="section-label">📝 備考・ストーリー</div>
@@ -420,8 +433,15 @@
         </div>
       </div>
     </div>
+
+    <!-- 🌟 次へボタン（プレビュー用）の追加 -->
+    <div class="card" style="background:transparent; box-shadow:none; border:none;">
+      <button type="button" class="submit-btn" style="background:var(--blue);" onclick="switchTab('send'); buildPreview();">次へ (プレビュー・送信確認) ➔</button>
+    </div>
+
   </div>
   
+  <!-- ==================== 送信タブ ==================== -->
   <div id="tab-send" class="tab-content">
     <div class="card">
       <div class="card-section">
@@ -452,6 +472,7 @@
   <button type="button" class="tab-btn" id="tb-send" onclick="switchTab('send'); buildPreview();"><span class="tab-icon">✉️</span><span>確認・送信</span></button>
 </nav>
 
+<!-- Q&Aモーダル -->
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
@@ -504,7 +525,6 @@
     cntBox.style.display = cb.checked ? "flex" : "none";
   }
 
-  // 自動で在庫メモに書き込む
   function autoStock(item) {
     document.getElementById("chk-stock").checked = true;
     document.getElementById("box-stock-detail").style.display = "block";
@@ -524,7 +544,7 @@
     document.getElementById('box-keyword').style.display = (val === 'キーワード要請') ? 'block' : 'none';
   }
 
-  // 🌟 スキーム選択と算定フラグの自動連動
+  // 🌟 スキーム選択と算定フラグ、病着グレーアウトの連動
   function setScheme(val) {
     state.scheme = val;
     document.querySelectorAll('[id^="sch-"]').forEach(el => el.classList.remove('active'));
@@ -535,6 +555,16 @@
     document.getElementById('box-cancel-detail').style.display = isCan ? "block" : "none";
     document.getElementById('card-med-time').style.display = isCan ? "none" : "block";
     document.getElementById('card-calc').style.display = isCan ? "none" : "block";
+
+    // 🌟 Iターン救急隊の場合は病着を無効化
+    const isIamb = (val === 'Iターン救急隊');
+    const tHosp = document.getElementById("t-hosp");
+    const boxHosp = document.getElementById("box-hosp-time");
+    if(isCan || isIamb) {
+      tHosp.value = ""; tHosp.disabled = true; boxHosp.style.opacity = "0.3";
+    } else {
+      tHosp.disabled = false; boxHosp.style.opacity = "1";
+    }
 
     if(val === 'Uターン' || val === 'Jターン' || val === '施設間') { setCalc('oshin', 1); setCalc('hansou', 1); }
     else if(val === 'Iターン乗込' || val === 'Iターン救急隊') { setCalc('oshin', 1); setCalc('hansou', 0); }
@@ -558,7 +588,7 @@
     if(type === 'med') { document.getElementById("t-contact").value=""; document.getElementById("t-hosp").value=""; document.getElementById("t-end").value=""; document.getElementById("l-monitor").innerText="--:--"; }
   }
 
-  // 🌟 長時間加算の自動判定機能
+  // 🌟 長時間加算とSpO2の自動点灯機能
   function calcMonitor() {
     const c = document.getElementById("t-contact").value;
     let e = document.getElementById("t-hosp").value || document.getElementById("t-end").value;
@@ -570,6 +600,11 @@
         let h = Math.floor(diffMin / 60); let m = diffMin % 60;
         document.getElementById("l-monitor").innerText = (h > 0 ? h + "時間" : "") + m + "分";
         document.getElementById("p-monitor").classList.add("on"); state.calc.monitor = 1;
+        
+        // SpO2を自動点灯
+        document.getElementById("p-spo2").classList.add("on"); 
+        document.getElementById("l-spo2").innerText = "あり";
+        state.calc.spo2 = 1;
 
         let longIdx = 0;
         if (diffMin >= 120) longIdx = 4;
@@ -582,7 +617,7 @@
     }
   }
 
-  // 🌟 ダイナミック入力（レイアウト変更版）
+  // ダイナミック入力（レイアウト変更版）
   function addDyn(type) {
     const box = document.getElementById(`dyn-${type}`);
     const id = Date.now();
@@ -595,7 +630,6 @@
 
     let html = `<div class="dyn-row" id="dyn-${id}">`;
     
-    // 時間（全共通）
     html += `<div style="display:flex; width:100%; gap:4px; align-items:center; margin-bottom:4px;">
                <input type="time" class="v-start" value="${defStart}" onchange="if('${type}'==='cpr')calcCPR()" style="flex:1;"> 
                <span style="color:var(--sub); font-weight:bold;">~</span> 
@@ -653,7 +687,7 @@
         const mbox = document.getElementById("mail-options-box"); mbox.innerHTML = "";
         m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
 
-        if(json.qa) document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+        if(json.qa) document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid #ccc;">`).join("");
       }
     } catch(e) { console.error(e); } finally { hideLoader(); }
   }
@@ -807,11 +841,15 @@
     const d = getCollectData();
     let html = `<b>要請No:</b> ${d["要請番号"]||"未入力"}<br><b>日付:</b> ${d["日付"]}<br><b>出場先:</b> ${d["出場先"]||"未入力"}<br><b>Dr/Ns:</b> ${d["フライトドクター"]||"-"} / ${d["フライトナース"]||"-"}<br><b>スキーム:</b> ${d["スキーム選択"]||"未選択"}<br><br>`;
     html += `<b>✈️ 航空:</b> 要請[${d["要請時刻・施設間搬送依頼時刻"]||"-"}] 離陸[${d["初期離陸時間"]||"-"}] 着陸[${d["最終着陸時間"]||"-"}]<br>`;
-    html += `<b>🏥 医療:</b> 接触[${d["接触"]||"-"}] 病着[${d["病着"]||"-"}] 終了[${d["終了"]||"-"}]<br><br>`;
+    
+    // 🌟 Iターン救急隊とキャンセルの時は病着を対象外表示
+    const isNoHosp = (d["スキーム選択"] === 'Iターン救急隊' || d["スキーム選択"].includes('キャンセル'));
+    html += `<b>🏥 医療:</b> 接触[${d["接触"]||"-"}] 病着[${isNoHosp ? '対象外' : (d["病着"]||"-")}] 終了[${d["終了"]||"-"}]<br><br>`;
+    
     html += `<b>💰 算定:</b> 往診[${d["往診料"]||"-"}] 搬送[${d["搬送料"]||"-"}] 長時間[${d["搬送料（長時間）"]||"-"}]<br>`;
     html += `<b>🩺 診断/処置:</b> ${d["現場診断"]||"-"}<br>${d["簡易処置リスト"]||"-"}<br>`;
     if(d["外傷処置"]) html += `[外傷・固定] ${d["外傷処置"]}<br>`;
-    html += `<br><b>📝 備考:</b><br>${d["備考"].replace(/\n/g, '<br>')}`;
+    html += `<br><b>📝 備考:</b><br>${(d["備考"]||"").replace(/\n/g, '<br>')}`;
     document.getElementById("preview-box").innerHTML = html;
   }
 
