@@ -20,14 +20,14 @@
     main { padding: 16px; max-width: 800px; margin: 0 auto; }
     
     .filter-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; margin-bottom: 16px; color: var(--ink); font-weight: 600; box-sizing: border-box; }
+    .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; margin-bottom: 16px; color: var(--ink); font-weight: 600; box-sizing: border-box; appearance: none; }
     
     .section-lbl { font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; margin-top: 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
     
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
     .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
-    input[type="date"], input[type="month"], select, input[type="tel"] { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--ink); font-weight: 600; outline: none; box-sizing: border-box; }
+    input[type="date"], input[type="month"], select, input[type="tel"] { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); color: var(--ink); font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
     
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--sub); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
@@ -61,7 +61,6 @@
     .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
 
-    /* 🌟 インテリジェントローダー */
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -78,9 +77,9 @@
 </div>
 
 <header>
-  <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.1</span></div>
-  <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.2</span></div>
+  <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
 <main>
@@ -118,7 +117,8 @@
     <div class="section-lbl">📌 カテゴリ・タグ指定 (複数選択可)</div>
     <div class="chip-grid" id="ui-tags"></div>
     
-    <button class="btn-search" onclick="executeSearch()">事例を検索する</button>
+    <!-- 🌟 type="button" に変更してリロードを完全に防止 -->
+    <button type="button" class="btn-search" onclick="executeSearch()">事例を検索する</button>
   </div>
 
   <div id="result-count" style="font-weight:bold; font-size:14px; margin-bottom:12px; color:var(--sub);"></div>
@@ -131,8 +131,8 @@
     <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
     <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
     <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px; background:var(--bg);"></textarea>
-    <button onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
-    <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
+    <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
   </div>
 </div>
 
@@ -143,18 +143,24 @@
   let mergedData = []; 
   let availableTags = new Set();
 
-  // 🌟 ローダー＆エラー送信制御
   let loaderTimer1, loaderTimer2;
   function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
     const loader = document.getElementById("global-loader");
     document.getElementById("loader-main-text").innerText = msg1;
     document.getElementById("loader-sub-text").innerHTML = msg2;
     loader.style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索・教育(debrief_search.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+  
+  function sendErrorLog(errMsg) { 
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v11.2)", errorMsg: errMsg, userAgent: navigator.userAgent }),
+        redirect: "follow"
+      }); 
+    } catch(e) {} 
+  }
 
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
@@ -163,7 +169,7 @@
   window.onload = async () => {
     showLoader("データベース同期中...", "事案データと振り返りデータを結合しています");
     try {
-      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }) });
+      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }), redirect: "follow" });
       const jsonInit = await resInit.json();
       if(jsonInit.status === "success" && jsonInit.masters) {
         jsonInit.masters.dr.forEach(n => document.getElementById("q-dr").innerHTML += `<option value="${n}">${n}</option>`);
@@ -173,15 +179,16 @@
       
       if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
 
-      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }) });
+      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" });
       const jianData = (await resJian.json()).data;
 
-      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
+      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
       const debData = (await resDeb.json()).data;
 
       debData.forEach(d => {
         const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
         if(jian) {
+          // 列のズレを解消した新しい読込ロジック
           let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["処置"], d["特殊ケース"], d["リスク関連"]]
                         .map(t => t ? t.split(",") : []).flat().map(t => t.trim()).filter(Boolean);
           
@@ -262,7 +269,7 @@
     const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング検索"}) });
+      const res = await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング検索"}), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success") { alert("送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); } else { throw new Error(json.message); }
     } catch (e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { btn.textContent = "送信"; btn.disabled = false; }
