@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>AW109 症例登録</title>
   <style>
     :root {
@@ -21,7 +26,7 @@
     .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
-    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--brand); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     .card { background: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 16px; border: 1px solid #d1d1d6; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
     .card-section { padding: 16px; border-bottom: 1px solid #efeff4; }
@@ -32,12 +37,12 @@
     .inline-field:last-child { border-bottom: none; }
     .field-label { font-size: 14px; font-weight: 700; flex: 1; color: var(--ink); display: flex; align-items: center; gap: 8px; }
     
-    /* 🌟 PCでも見やすい明確な入力枠 */
     input[type="text"], input[type="tel"], input[type="time"], input[type="date"], input[type="number"], select { 
       font-size: 15px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); outline: none; padding: 8px 10px; font-weight: 600; 
     }
     .inline-field input, .inline-field select { text-align: right; flex: 1.5; margin-left: 8px; }
     textarea { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 10px; font-size: 15px; background: #fff; outline: none; resize: vertical; color: var(--ink); line-height: 1.5; font-weight: 600; }
+    textarea:focus { border-color: var(--blue); background: #fff; }
     
     .btn-small { background: #e3f2fd; color: #1565c0; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 
@@ -103,12 +108,15 @@
     
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
-    .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; }
-    .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 400px; border-radius: 16px; padding: 20px; max-height: 85dvh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; }
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; }
+    
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
@@ -116,14 +124,18 @@
 
 <div id="global-loader">
   <div class="spinner"></div>
-  <div style="font-size:16px; font-weight:800; color:var(--ink); margin-bottom:8px;" id="loader-main">準備中...</div>
-  <div style="font-size:13px; font-weight:600; color:var(--sub);" id="loader-sub">データベースに接続しています</div>
+  <div class="loader-text" id="loader-main">準備中...</div>
+  <div class="loader-subtext" id="loader-sub">データベースに接続しています</div>
 </div>
 
 <header>
-  <div class="hdr-group"><button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.1</span></div>
-  <div class="hdr-group"><button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button></div>
+  <div class="hdr-group">
+    <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+  </div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.2</span></div>
+  <div class="hdr-group">
+    <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  </div>
 </header>
 
 <main>
@@ -148,39 +160,36 @@
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:12px; font-weight:bold; color:#c62828;">搬入先:</span>
           <input type="text" id="v-er-hosp" list="dl-dest" placeholder="緊急外来の病院名...">
-          <button type="button" class="btn-small" onclick="addMaster('dest', '搬入先病院')">＋追加</button>
+          <button type="button" class="btn-small" onclick="addMaster('dest', '搬入先病院(出場先)')">＋追加</button>
         </div>
       </div>
 
       <div class="inline-field"><span class="field-label">日付</span><input type="date" id="v-date"></div>
       <div class="inline-field">
-        <span class="field-label">出場先</span>
+        <span class="field-label">出場先 <button type="button" class="btn-small" onclick="addMaster('dest', '出場先')">＋追加</button></span>
         <input type="text" id="v-dest" list="dl-dest" placeholder="選択/入力...">
-        <button type="button" class="btn-small" onclick="addMaster('dest', '出場先')" style="margin-left:8px;">＋追加</button>
         <datalist id="dl-dest"></datalist>
       </div>
       <div class="inline-field">
-        <span class="field-label">フライトDr</span>
+        <span class="field-label">フライトDr <button type="button" class="btn-small" onclick="addMaster('dr', 'フライトDr')">＋追加</button></span>
         <select id="v-dr"><option value="">選択...</option></select>
-        <button type="button" class="btn-small" onclick="addMaster('dr', 'フライトDr')" style="margin-left:8px;">＋追加</button>
       </div>
       <div class="inline-field">
-        <span class="field-label">フライトNs</span>
+        <span class="field-label">フライトNs <button type="button" class="btn-small" onclick="addMaster('ns', 'フライトNs')">＋追加</button></span>
         <select id="v-ns"><option value="">選択...</option></select>
-        <button type="button" class="btn-small" onclick="addMaster('ns', 'フライトNs')" style="margin-left:8px;">＋追加</button>
       </div>
     </div>
 
     <div class="card">
       <div class="card-section">
         <div class="section-label">📞 要請形態 (任意)</div>
-        <div class="scheme-picker">
+        <div class="scheme-picker" style="grid-template-columns: repeat(3, 1fr);">
           <button type="button" class="scheme-btn" id="req-genba" onclick="setReqType('現場要請')">現場要請</button>
           <button type="button" class="scheme-btn" id="req-keyword" onclick="setReqType('キーワード要請')">キーワード要請</button>
           <button type="button" class="scheme-btn" id="req-shisetsu" onclick="setReqType('施設間要請')">施設間搬送</button>
         </div>
       </div>
-      <div class="card-section" id="box-keyword" style="display:none; background:#fdfdfd;">
+      <div class="card-section" id="box-keyword" style="display:none; background:#f9f9f9;">
         <div class="section-label">
           🔑 キーワード指定 
           <div>
@@ -188,7 +197,7 @@
             <button type="button" class="btn-small" onclick="addMaster('keyword', 'キーワード')">＋追加</button>
           </div>
         </div>
-        <input type="text" id="v-keyword" list="dl-key" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:15px; background:#fff;" placeholder="キーワードを選択または入力...">
+        <input type="text" id="v-keyword" list="dl-key" class="text-input" placeholder="キーワードを選択または入力...">
         <datalist id="dl-key"></datalist>
       </div>
     </div>
@@ -206,7 +215,7 @@
         </div>
         
         <div id="box-cancel-detail" style="display:none; background:#fff3e0; padding:12px; border-radius:8px; border:1px solid #ffe0b2;">
-          <div style="font-size:12px; font-weight:bold; color:#e65100; margin-bottom:8px;">※キャンセルの理由を選択</div>
+          <div style="font-size:12px; font-weight:bold; color:#e65100; margin-bottom:8px;">※キャンセルの理由を選択してください</div>
           <div class="radio-group">
             <label><input type="radio" name="cancel-reason" value="上空"> <span class="radio-lbl">上空</span></label>
             <label><input type="radio" name="cancel-reason" value="現場"> <span class="radio-lbl">現場</span></label>
@@ -241,17 +250,17 @@
       
     <div class="card" id="card-calc">
       <div class="card-section">
-        <div class="section-label">💰 算定フラグ（タップで切替）</div>
+        <div class="section-label">💰 算定フラグ（タップで手動変更も可能）</div>
         <div class="verdict-row">
-          <div class="verdict-pill off" id="p-oshin" onclick="togglePill('oshin', ['往診料', '往診料(深夜)'])"><div class="v-label">往診料</div><span class="v-icon" id="l-oshin">—</span></div>
-          <div class="verdict-pill off" id="p-hansou" onclick="togglePill('hansou', ['搬送料', '搬送料(新生児)'])"><div class="v-label">搬送料</div><span class="v-icon" id="l-hansou">—</span></div>
-          <div class="verdict-pill off" id="p-long" onclick="togglePill('long', ['30分', '1時間', '1時間30分', '2時間'])"><div class="v-label">長時間加算</div><span class="v-icon" id="l-long">—</span></div>
+          <div class="verdict-pill off" id="p-oshin" onclick="togglePill('oshin')"><div class="v-label">往診料</div><span class="v-icon" id="l-oshin">—</span></div>
+          <div class="verdict-pill off" id="p-hansou" onclick="togglePill('hansou')"><div class="v-label">搬送料</div><span class="v-icon" id="l-hansou">—</span></div>
+          <div class="verdict-pill off" id="p-long" onclick="togglePill('long')"><div class="v-label">長時間加算</div><span class="v-icon" id="l-long">—</span></div>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
-          <div class="monitor-box" id="p-monitor" onclick="togglePill('monitor', ['自動'])">
+          <div class="monitor-box" id="p-monitor" onclick="togglePill('monitor')">
             <span class="monitor-label">モニター<br>算定時間</span><span class="monitor-value" id="l-monitor">--:--</span>
           </div>
-          <div class="monitor-box" id="p-spo2" onclick="togglePill('spo2', ['あり'])" style="flex-direction:column; justify-content:center;">
+          <div class="monitor-box" id="p-spo2" onclick="togglePill('spo2')" style="flex-direction:column; justify-content:center;">
             <span class="monitor-label" style="text-align:center;">SpO2</span><span class="monitor-value" id="l-spo2">—</span>
           </div>
         </div>
@@ -261,13 +270,13 @@
     <div class="card">
       <div class="card-section">
         <div class="section-label">🩺 現場診断 <button type="button" class="btn-small" onclick="addMaster('diagnosis', '現場診断')">＋追加</button></div>
-        <input type="text" id="v-diag" list="dl-diag" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:15px; background:#fff;" placeholder="診断名を選択または入力...">
+        <input type="text" id="v-diag" list="dl-diag" class="text-input" placeholder="診断名を選択または入力...">
         <datalist id="dl-diag"></datalist>
       </div>
     </div>
 
     <div class="card" style="padding:0;">
-      <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span>▼</span></div>
+      <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-line">
         <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">抹消静脈路(20G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
         <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">抹消静脈路(22G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
@@ -278,7 +287,7 @@
         <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">ベニューラ</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
       </div>
       
-      <div class="acc-header" onclick="toggleAcc('acc-intub')">⚕️ 気管挿管 <span>▼</span></div>
+      <div class="acc-header" onclick="toggleAcc('acc-intub')">⚕️ 気管挿管 <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-intub">
         <label class="proc-lbl" style="margin-bottom:12px;"><input type="checkbox" id="chk-intub" onchange="toggleBox('box-intub-det', this.checked)">気管挿管を実施した</label>
         <div id="box-intub-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px;">
@@ -291,19 +300,23 @@
         </div>
       </div>
 
-      <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span>▼</span></div>
+      <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ 超音波検査（エコー） <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-echo">
-        <label class="proc-lbl" style="margin-bottom:8px;"><input type="checkbox" class="chk-echo" value="FAST">FAST</label>
-        <label class="proc-lbl" style="margin-bottom:8px;"><input type="checkbox" class="chk-echo" value="心エコー">心エコー</label>
-        <label class="proc-lbl" style="margin-bottom:8px;"><input type="checkbox" class="chk-echo" value="肺エコー">肺エコー</label>
-        <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="その他エコー">その他エコー</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="FAST">FAST</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="心エコー">心エコー</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="肺エコー">肺エコー</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="その他エコー">その他エコー</label>
+        </div>
       </div>
       
-      <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span>▼</span></div>
+      <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 その他処置 <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-other">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="除細動">除細動</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="除細動パッド">除細動パッド</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="経皮ペーシング">経皮ペーシング</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="胸腔穿刺/ドレナージ">胸腔ドレナージ</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="胃管挿入">胃管挿入</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="尿道カテーテル">尿カテ</label>
@@ -345,9 +358,12 @@
       </div>
       <div class="card-section" style="background: #fff3e0; padding:12px;">
         <label style="font-weight:bold; color: #e65100; font-size: 14px; display:flex; align-items:center; gap:8px;">
-          <input type="checkbox" id="chk-stock" style="width:20px; height:20px;"> ヘリ機内の在庫・資機材を消費した
+          <input type="checkbox" id="chk-stock" style="width:20px; height:20px;" onchange="toggleBox('box-stock-detail', this.checked)"> ヘリ機内の在庫・資機材を消費した
         </label>
-        <div style="font-size:11px; color:#ef6c00; margin-top:4px; margin-left:28px;">※チェックするとメールに補充依頼フラグが記載されます。</div>
+        <div id="box-stock-detail" style="display:none; margin-top:8px;">
+          <div style="font-size:12px; font-weight:bold; color:#e65100; margin-bottom:4px;">補充・持参が必要な物品を入力してください</div>
+          <textarea id="v-stock-detail" rows="2" placeholder="例：挿管セット、吸引カテーテル、生食など" style="border-color:#ffcc80;"></textarea>
+        </div>
       </div>
     </div>
   </div>
@@ -442,6 +458,7 @@
     document.getElementById('box-keyword').style.display = (val === 'キーワード要請') ? 'block' : 'none';
   }
 
+  // 🌟 スキーム選択と算定フラグの自動連動
   function setScheme(val) {
     state.scheme = val;
     document.querySelectorAll('[id^="sch-"]').forEach(el => el.classList.remove('active'));
@@ -453,9 +470,7 @@
     document.getElementById('card-med-time').style.display = isCan ? "none" : "block";
     document.getElementById('card-calc').style.display = isCan ? "none" : "block";
 
-    // 🌟 自動算定ロジックの復元
-    if(val === 'Uターン' || val === 'Jターン') { setCalc('oshin', 1); setCalc('hansou', 1); }
-    else if(val === '施設間') { setCalc('oshin', 0); setCalc('hansou', 1); }
+    if(val === 'Uターン' || val === 'Jターン' || val === '施設間') { setCalc('oshin', 1); setCalc('hansou', 1); }
     else if(val === 'Iターン乗込' || val === 'Iターン救急隊') { setCalc('oshin', 1); setCalc('hansou', 0); }
     else if(isCan) { setCalc('oshin', 0); setCalc('hansou', 0); setCalc('long', 0); }
   }
@@ -466,7 +481,7 @@
     const el = document.getElementById(`p-${key}`); const lbl = document.getElementById(`l-${key}`);
     if(val === "") { el.classList.remove("on"); lbl.innerText = "—"; } else { el.classList.add("on"); lbl.innerText = val; }
   }
-  function togglePill(key, labels) {
+  function togglePill(key) {
     if(key === 'monitor') return;
     let n = state.calc[key] + 1; if(n >= state.calcVals[key].length) n = 0;
     setCalc(key, n);
@@ -477,6 +492,7 @@
     if(type === 'med') { document.getElementById("t-contact").value=""; document.getElementById("t-hosp").value=""; document.getElementById("t-end").value=""; document.getElementById("l-monitor").innerText="--:--"; }
   }
 
+  // 🌟 長時間加算の自動判定機能
   function calcMonitor() {
     const c = document.getElementById("t-contact").value;
     let e = document.getElementById("t-hosp").value || document.getElementById("t-end").value;
@@ -488,6 +504,14 @@
         let h = Math.floor(diffMin / 60); let m = diffMin % 60;
         document.getElementById("l-monitor").innerText = (h > 0 ? h + "時間" : "") + m + "分";
         document.getElementById("p-monitor").classList.add("on"); state.calc.monitor = 1;
+
+        let longIdx = 0;
+        if (diffMin >= 120) longIdx = 4;
+        else if (diffMin >= 90) longIdx = 3;
+        else if (diffMin >= 60) longIdx = 2;
+        else if (diffMin >= 30) longIdx = 1;
+        
+        if(longIdx > 0) setCalc('long', longIdx);
       }
     }
   }
@@ -497,7 +521,6 @@
     const box = document.getElementById(`dyn-${type}`);
     const id = Date.now();
     let defStart = document.getElementById("t-contact").value || "";
-    // 一つ前の終了時間を取得して開始にするロジック
     const prevRows = box.querySelectorAll('.dyn-row');
     if(prevRows.length > 0) {
       const lastEnd = prevRows[prevRows.length-1].querySelector('.v-end').value;
@@ -610,9 +633,13 @@
     
     let biko = document.getElementById("v-biko").value + erText;
     if(dynText) biko = biko + "\n\n" + dynText;
-    if(document.getElementById("chk-stock").checked) biko = "⚠️【ヘリ内在庫使用あり/要補充】\n" + biko;
+    
+    // 🌟 在庫消費の補充依頼を最上部に強調して結合
+    if(document.getElementById("chk-stock").checked) {
+      const stockDet = document.getElementById("v-stock-detail").value;
+      biko = `⚠️【ヘリ内在庫消費 / 補充依頼】\n内容: ${stockDet||'記載なし'}\n------------------\n` + biko;
+    }
 
-    // 追加アドレスの収集
     let addMails = [];
     document.querySelectorAll('.mail-opt-chk:checked').forEach(cb => addMails.push(cb.value));
     const cMail = document.getElementById("custom-email").value; if(cMail) addMails.push(cMail);
@@ -640,7 +667,7 @@
       "備考": biko.trim(),
       "ヘリ在庫フラグ": document.getElementById("chk-stock").checked ? "消費あり" : "",
       "簡易処置リスト": procs.join(", "),
-      "追加送信先": addMails.join(",") // GAS側が古い場合は無視されるがデータとしては持つ
+      "追加送信先": addMails.join(",")
     };
 
     return d;
