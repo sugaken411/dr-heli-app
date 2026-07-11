@@ -81,7 +81,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.8</span></div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.9</span></div>
   <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
@@ -140,12 +140,13 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_debrief_cache_v118";
+  const CACHE_KEY = "aw109_debrief_cache_v119";
 
-  // エラー監視
+  // 🌟 エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); return false;
+    sendErrorLog(errDetail); 
+    return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
     sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
@@ -155,7 +156,7 @@
   let tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
 
   const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
-  const PRACTICE_LIST = ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り", "バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"];
+  const PRACTICE_LIST = ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り", "バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー", "胸腔開放", "血糖測定"];
   const DISEASE_MAIN = ["1外傷", "2心大血管", "3脳血管", "4心肺停止(CPA)", "5その他"];
   const SCENE_LIST = ["① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"];
 
@@ -172,7 +173,13 @@
   function clearMonth() { document.getElementById("q-month").value = ""; }
   
   function sendErrorLog(errMsg) { 
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v11.8)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v11.9)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {} 
   }
 
   window.onload = async () => {
@@ -320,8 +327,18 @@
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "教育検索" }), redirect: "follow" });
       const jsonRes = await res.json();
-      if(jsonRes.status === "success") { alert("送信しました。管理者に通知されました。"); document.getElementById("qa-input").value = ""; closeModal('qa'); } else { throw new Error(jsonRes.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { btn.textContent = "送信"; btn.disabled = false; }
+      if(jsonRes.status === "success") { 
+        alert("送信しました。管理者に通知されました。"); 
+        document.getElementById("qa-input").value = ""; 
+        closeModal('qa'); 
+      } else { throw new Error(jsonRes.message); }
+    } catch(e) { 
+      sendErrorLog(e.toString()); 
+      alert("通信エラーが発生しました。"); 
+    } finally { 
+      btn.textContent = "送信"; 
+      btn.disabled = false; 
+    }
   }
 </script>
 </body>
