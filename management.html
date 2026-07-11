@@ -35,7 +35,7 @@
       .cal-cell { border: 1px solid #ccc; break-inside: avoid; min-height: 80px; }
       .bg-white { border: none !important; box-shadow: none !important; }
       .break-after { page-break-after: always; }
-      #view-list { display: block !important; } /* 印刷時はリストも表示 */
+      #view-list { display: block !important; } 
     }
   </style>
 </head>
@@ -48,9 +48,9 @@
   </div>
 
   <header class="no-print">
-    <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div class="font-black text-base">統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded ml-1">v1.1</span></div>
-    <button class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
+    <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+    <div class="font-black text-base">統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded ml-1">v1.2</span></div>
+    <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
   </header>
 
   <main class="max-w-5xl mx-auto p-4">
@@ -63,14 +63,14 @@
     <!-- コントロールパネル -->
     <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center justify-between no-print">
       <div class="flex items-center gap-4">
-        <button onclick="changeMonth(-1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">◀</button>
+        <button type="button" onclick="changeMonth(-1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">◀</button>
         <input type="month" id="month-picker" class="font-black text-xl text-slate-800 bg-transparent outline-none cursor-pointer" onchange="fetchData()">
-        <button onclick="changeMonth(1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">▶</button>
+        <button type="button" onclick="changeMonth(1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">▶</button>
       </div>
       
       <div class="flex bg-slate-100 p-1 rounded-lg">
-        <button id="btn-view-cal" onclick="switchView('cal')" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition">📅 カレンダー</button>
-        <button id="btn-view-list" onclick="switchView('list')" class="px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition">📋 リスト</button>
+        <button type="button" id="btn-view-cal" onclick="switchView('cal')" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition">📅 カレンダー</button>
+        <button type="button" id="btn-view-list" onclick="switchView('list')" class="px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition">📋 リスト</button>
       </div>
     </div>
 
@@ -115,6 +115,21 @@
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
+
+    // 🌟 超高感度エラー監視機能
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+      sendErrorLog(errDetail); 
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+      if(String(reason).includes("Load failed")) {
+        console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+        return;
+      }
+      sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+    });
     
     let allReports = [];
     let currentYear = new Date().getFullYear();
@@ -139,7 +154,7 @@
       loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
     }
     function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-    function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "業務管理(management.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+    function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "業務管理(management.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} }
 
     window.onload = () => {
       document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
@@ -168,7 +183,6 @@
       }
     }
 
-    // 🌟 時間計算ヘルパー
     function timeToMins(tStr) {
       if(!tStr) return 0;
       let p = String(tStr).split(':');
@@ -184,7 +198,7 @@
       
       showLoader();
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }) });
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), redirect: "follow" });
         const json = await res.json();
         
         if (json.status === "success") {
@@ -204,7 +218,6 @@
       let monthData = {};
       const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
       
-      // 活動時間の集計バケツ
       let timeStats = { mission:0, cancel:0, inspection:0, inspection_end:0, assistant:0, management:0, group:0, other:0 };
 
       for(let d=1; d<=daysInMonth; d++) {
@@ -217,7 +230,6 @@
           if(Array.isArray(r.events)) {
             r.events.forEach(ev => { 
               if(ev.cat === 'mission') mCount++; else if(ev.cat === 'cancel') cCount++; 
-              // 時間集計
               let sMins = timeToMins(ev.start); let eMins = timeToMins(ev.end);
               if(sMins < eMins && timeStats[ev.cat] !== undefined) {
                 timeStats[ev.cat] += (eMins - sMins);
@@ -230,7 +242,6 @@
         }
       });
 
-      // --- 円グラフの描画 ---
       const chartLabels = []; const chartData = []; const chartColors = [];
       const statsHtml = [];
       let totalMins = 0;
@@ -258,7 +269,6 @@
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '60%' }
       });
 
-      // --- カレンダー描画 ---
       const calBody = document.getElementById("cal-body"); calBody.innerHTML = "";
       const firstDayIndex = new Date(currentYear, currentMonth - 1, 1).getDay();
       
@@ -284,7 +294,6 @@
         calBody.innerHTML += `<div class="cal-cell" onclick="location.href='report.html?date=${fullDate}'">${content}</div>`;
       }
 
-      // --- リスト描画 ---
       const listBody = document.getElementById("list-body"); listBody.innerHTML = "";
       Object.keys(monthData).sort().forEach(dateKey => {
         const dat = monthData[dateKey];
