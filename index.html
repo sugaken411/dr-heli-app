@@ -16,9 +16,23 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
     
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(60px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; }
-    main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(60px + var(--safe-bot)); padding: 16px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    header { 
+      position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); 
+      padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; 
+      background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); 
+      display: flex; align-items: center; justify-content: space-between; z-index: 100; 
+    }
+    
+    .tab-bar { 
+      position: fixed; bottom: 0; left: 0; right: 0; height: calc(60px + var(--safe-bot)); 
+      padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); 
+      border-top: 0.5px solid var(--line); display: flex; z-index: 100; 
+    }
+    
+    main { 
+      margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(60px + var(--safe-bot)); 
+      padding: 16px; max-width: 600px; margin-left: auto; margin-right: auto; 
+    }
     
     .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -122,7 +136,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.7</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.8</span></div>
   <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
@@ -344,7 +358,9 @@
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="経皮ペーシング">経皮ペーシング</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="喀痰吸引">喀痰吸引</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label> <!-- 🌟 追加 -->
+          
+          <!-- 🌟 追加：血糖測定 -->
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label>
           
           <div style="border-top:1px dashed var(--line); padding-top:12px;">
             <label class="proc-lbl"><input type="checkbox" id="chk-thorax" onchange="toggleBox('box-thorax-det', this.checked)">胸腔ドレナージ</label>
@@ -362,7 +378,9 @@
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心嚢穿刺(ドレナージ)">心嚢穿刺 (ドレナージ)</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心膜開窓術">心膜開窓術</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="開胸心マッサージ">開胸心マッサージ</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="胸腔開放">胸腔開放</label> <!-- 🌟 修正 -->
+          
+          <!-- 🌟 修正：肺胞開放 -> 胸腔開放 -->
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="胸腔開放">胸腔開放</label>
 
           <div style="border-top:1px dashed var(--line); padding-top:12px;">
             <label class="proc-lbl"><input type="checkbox" id="chk-stomach" onchange="toggleBox('box-stomach-det', this.checked)">胃管挿入</label>
@@ -476,10 +494,11 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 エラー監視
+  // 🌟 超高感度エラー監視機能の導入
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); return false;
+    sendErrorLog(errDetail); 
+    return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
     sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
@@ -502,12 +521,19 @@
     document.getElementById("loader-main").innerText = m1; document.getElementById("loader-sub").innerText = m2;
     document.getElementById("global-loader").style.display = "flex";
   }
+  
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
   function sendErrorLog(errMsg) {
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "症例登録(v10.7)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "症例登録(v10.8)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {}
   }
 
   function switchTab(tab) {
@@ -610,8 +636,11 @@
         let h = Math.floor(diffMin / 60); let m = diffMin % 60;
         document.getElementById("l-monitor").innerText = (h > 0 ? h + "時間" : "") + m + "分";
         document.getElementById("p-monitor").classList.add("on"); state.calc.monitor = 1;
+        
         setCalc('spo2', 1);
-        if (diffMin >= 30) setCalc('long', 1); else setCalc('long', 0);
+
+        if (diffMin >= 30) setCalc('long', 1);
+        else setCalc('long', 0);
       }
     }
   }
@@ -656,6 +685,7 @@
     html += `</div>`;
     box.insertAdjacentHTML('beforeend', html);
   }
+  
   function clearDyn(id) { document.getElementById(id).innerHTML = ""; }
   function calcCPR() {
     let total = 0;
@@ -707,10 +737,12 @@
     } catch(e) { alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
+  // 🌟 安全にデータを収集するロジック
   function getCollectData() {
     let rawId = document.getElementById("v-id").value.trim();
     if (!rawId) {
-      const d = new Date(); const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000);
+      const d = new Date();
+      const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000);
       rawId = "仮" + String(jst.getMonth()+1).padStart(2,'0') + String(jst.getDate()).padStart(2,'0') + String(jst.getHours()).padStart(2,'0') + String(jst.getMinutes()).padStart(2,'0');
     }
     
@@ -840,7 +872,7 @@
       const isNoHosp = (d["スキーム選択"] === 'Iターン救急隊' || (d["スキーム選択"] && d["スキーム選択"].includes('キャンセル')));
       html += `<b>🏥 医療:</b> 接触[${d["接触"]||"-"}] 病着[${isNoHosp ? '対象外' : (d["病着"]||"-")}] 終了[${d["終了"]||"-"}]<br><br>`;
       
-      html += `<b>💰 算定:</b> 往診[${d["往診料"]||"-"}] 搬送[${d["搬送料"]||"-"}] 長時間[${d["長時間加算"]||"-"}] EtCO2[${d["EtCO2算定"]||"-"}] 呼吸器[${d["人工呼吸器管理料"]||"-"}]<br>`;
+      html += `<b>💰 算定:</b> 往診[${d["往診料"]||"-"}] 搬送料[${d["搬送料"]||"-"}] 長時間[${d["長時間加算"]||"-"}] EtCO2[${d["EtCO2算定"]||"-"}] 呼吸器[${d["人工呼吸器管理料"]||"-"}]<br>`;
       html += `<b>🩺 診断/処置:</b> ${d["現場診断"]||"-"}<br>${d["簡易処置リスト"]||"-"}<br>`;
       if(d["外傷処置"]) html += `[外傷・固定] ${d["外傷処置"]}<br>`;
       html += `<br><b>📝 備考:</b><br>${(d["備考"]||"").replace(/\n/g, '<br>')}`;
@@ -878,7 +910,8 @@
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "submit", password: PIN_CODE, data: d }), redirect: "follow"
+        body: JSON.stringify({ action: "submit", password: PIN_CODE, data: d }), 
+        redirect: "follow"
       });
       const json = await res.json();
       if (json.status === "success") {
@@ -886,7 +919,8 @@
           showLoader("ステータス更新中...", "キャンセル事案の完了処理を行っています");
           await fetch(GAS_API_URL, {
             method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: d["要請番号"], who: "自動(キャンセル)" }), redirect: "follow"
+            body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: d["要請番号"], who: "自動(キャンセル)" }), 
+            redirect: "follow"
           });
         }
         alert("事案データの登録とメール送信が完了しました！");
