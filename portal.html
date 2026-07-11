@@ -64,14 +64,16 @@
 </head>
 <body>
 
+<!-- 🌟 ローダーのHTML構造を修正 -->
 <div id="global-loader" style="display:none;">
   <div class="spinner"></div>
-  <div style="font-weight:bold; font-size:12px; color:var(--blue);">最新データを同期中...</div>
+  <div class="loader-text" id="loader-main-text">最新データを同期中...</div>
+  <div class="loader-subtext" id="loader-sub-text">データベースに接続しています</div>
 </div>
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.7</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.8</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
@@ -192,14 +194,21 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 超高感度エラー監視機能の導入
+  // 🌟 エラー監視機能（Load failedのフィルタリング追加）
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
     return false;
   };
+  
   window.addEventListener('unhandledrejection', function(event) {
-    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    // 🌟 Load failed (純粋な通信不良) の場合はエラーメールを飛ばさないように制御
+    if(String(reason).includes("Load failed")) {
+      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+      return;
+    }
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
   let loaderTimer1, loaderTimer2;
@@ -220,7 +229,7 @@
       fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "ポータル(portal.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "ポータル(v12.8)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -251,7 +260,10 @@
       if(!localStorage.getItem("aw109_portal_cache")) { 
         document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。画面を再読み込みしてください。"; 
       }
-      sendErrorLog(e.toString());
+      // 通信エラー時の詳細な監視用
+      if(!String(e).includes("Load failed")) {
+         sendErrorLog(e.toString());
+      }
     } finally { 
       hideLoader(); 
     }
