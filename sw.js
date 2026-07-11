@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aw109-cache-v12.1'; // バージョンを上げて古いキャッシュを破壊
+const CACHE_NAME = 'aw109-cache-v12.2'; // バージョンを上げて古いキャッシュを破壊
 const urlsToCache = [
   './',
   './index.html',
