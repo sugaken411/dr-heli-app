@@ -44,10 +44,9 @@
   </div>
 
   <header class="no-print">
-    <!-- 🌟 URLのパラメータに応じて自動的に戻り先が変わるボタン -->
-    <div class="hdr-group"><button id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.2</span></div>
-    <div class="hdr-group"><button class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
+    <div class="hdr-group"><button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
+    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.3</span></div>
+    <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
   </header>
 
   <main>
@@ -60,9 +59,9 @@
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-4 flex flex-wrap gap-3 justify-between items-center no-print">
       <div class="text-sm font-bold text-slate-600 flex items-center gap-2"><span class="text-xl">📋</span> 日報データの操作</div>
       <div class="flex flex-wrap gap-2">
-        <button onclick="syncFromDb(true)" class="px-4 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-200 transition-colors">🚁 症例情報を再取り込み</button>
-        <button onclick="resetAll()" class="px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors">🗑️ クリア</button>
-        <button onclick="saveReport()" class="px-6 py-2.5 text-white rounded-lg text-sm font-bold hover:opacity-90 shadow-sm" style="background-color: var(--blue);">💾 日報を確定・保存</button>
+        <button type="button" onclick="syncFromDb(true)" class="px-4 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-200 transition-colors">🚁 症例情報を再取り込み</button>
+        <button type="button" onclick="resetAll()" class="px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors">🗑️ クリア</button>
+        <button type="button" onclick="saveReport()" class="px-6 py-2.5 text-white rounded-lg text-sm font-bold hover:opacity-90 shadow-sm" style="background-color: var(--blue);">💾 日報を確定・保存</button>
       </div>
     </div>
 
@@ -103,7 +102,7 @@
     <div id="entry-form-container" class="bg-blue-50 rounded-xl shadow-sm border border-blue-200 mb-6 overflow-hidden no-print">
       <div class="px-5 py-3 border-b border-blue-200 flex justify-between items-center bg-blue-100/50">
         <h2 id="form-title" class="text-sm font-bold text-blue-900 flex items-center gap-2">➕ タイムラインの追加</h2>
-        <button id="btn-cancel-edit" onclick="cancelEdit()" class="hidden text-xs bg-white border border-slate-300 px-3 py-1.5 rounded-md text-slate-600 font-bold hover:bg-slate-50">キャンセル</button>
+        <button type="button" id="btn-cancel-edit" onclick="cancelEdit()" class="hidden text-xs bg-white border border-slate-300 px-3 py-1.5 rounded-md text-slate-600 font-bold hover:bg-slate-50">キャンセル</button>
       </div>
       <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
         <div class="md:col-span-3"><label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label><select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700"><option value="mission">🚁 ヘリ活動(実施)</option><option value="cancel">⚠️ キャンセル</option><option value="inspection">⚙️ 始業点検</option><option value="inspection_end">🛠️ 終業点検</option><option value="assistant">🏃 補助者</option><option value="management">📁 管理</option><option value="group">👥 グループ</option><option value="other">💼 その他</option></select></div>
@@ -111,7 +110,7 @@
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label><input type="time" id="event-start" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">終了時間</label><input type="time" id="event-end" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
         <div class="md:col-span-2 flex items-center h-10 px-2 bg-white rounded-lg border border-slate-300 mb-[1px]"><label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer w-full justify-center"><input type="checkbox" id="event-continuous" class="w-4 h-4 text-blue-600"> 連続出動</label></div>
-        <div class="md:col-span-12 mt-2"><label class="block text-xs font-bold text-slate-500 mb-1">内容</label><div class="flex gap-3"><input type="text" id="event-desc" placeholder="活動内容..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-medium" oninput="toHalfWidth(this)" onkeydown="if(event.key==='Enter') saveEvent()"><button id="btn-save" onclick="saveEvent()" class="text-white font-bold px-8 py-2.5 rounded-lg whitespace-nowrap hover:opacity-90 shadow-sm" style="background-color: var(--blue);">追加する</button></div></div>
+        <div class="md:col-span-12 mt-2"><label class="block text-xs font-bold text-slate-500 mb-1">内容</label><div class="flex gap-3"><input type="text" id="event-desc" placeholder="活動内容..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-medium" oninput="toHalfWidth(this)" onkeydown="if(event.key==='Enter') saveEvent()"><button type="button" id="btn-save" onclick="saveEvent()" class="text-white font-bold px-8 py-2.5 rounded-lg whitespace-nowrap hover:opacity-90 shadow-sm" style="background-color: var(--blue);">追加する</button></div></div>
       </div>
     </div>
 
@@ -136,9 +135,9 @@
       <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">⚠️ 活動時間の重複</h3>
       <p class="text-sm text-slate-600 mb-6 leading-relaxed">取り込もうとしている事案（ヘリ活動）の時間が、すでに入力されている日誌の活動時間と重複しています。<br>重複したスケジュールをどう処理しますか？</p>
       <div class="flex flex-col gap-3">
-        <button onclick="resolveSync('overwrite')" class="bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 shadow-sm transition">🚁 事案の時間を優先する (重複は手動削除)</button>
-        <button onclick="resolveSync('keep')" class="bg-slate-100 text-slate-700 border border-slate-300 font-bold py-3.5 rounded-xl hover:bg-slate-200 transition">📝 日誌の時間を残す (今回は取り込まない)</button>
-        <button onclick="resolveSync('cancel')" class="text-slate-500 font-bold py-2 mt-1">キャンセル</button>
+        <button type="button" onclick="resolveSync('overwrite')" class="bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 shadow-sm transition">🚁 事案の時間を優先する (重複は手動削除)</button>
+        <button type="button" onclick="resolveSync('keep')" class="bg-slate-100 text-slate-700 border border-slate-300 font-bold py-3.5 rounded-xl hover:bg-slate-200 transition">📝 日誌の時間を残す (今回は取り込まない)</button>
+        <button type="button" onclick="resolveSync('cancel')" class="text-slate-500 font-bold py-2 mt-1">キャンセル</button>
       </div>
     </div>
   </div>
@@ -146,6 +145,22 @@
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
+
+    // 🌟 超高感度エラー監視機能
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+      sendErrorLog(errDetail); 
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+      if(String(reason).includes("Load failed")) {
+        console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+        return;
+      }
+      sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+    });
+
     const START_HOUR = 8; const END_HOUR = 19; const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60;
 
     const CATS = {
@@ -178,12 +193,14 @@
         loader.style.display = "none";
       } 
     }
-    function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "浜町日誌(report.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+    
+    function sendErrorLog(errMsg) { 
+      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "浜町日誌(report.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+    }
 
     function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
 
     window.onload = () => { 
-      // 🌟 URLパラメータの解析と戻るボタンの変更
       const urlParams = new URLSearchParams(window.location.search);
       const urlDate = urlParams.get('date');
       document.getElementById('info-date').value = urlDate || new Date().toISOString().split('T')[0];
@@ -200,7 +217,7 @@
     async function fetchInit() {
       showLoader(true, "システム起動中...", "マスタデータを取得しています");
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }) });
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }), redirect: "follow" });
         const json = await res.json();
         if (json.status === "success") { 
           populateSelect('info-nurse', json.masters.ns || []); 
@@ -214,7 +231,7 @@
       showLoader(true, "データを同期中...", "事案データベースからデータを取得しています"); 
       const dateVal = document.getElementById('info-date').value;
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force }) });
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force }), redirect: "follow" });
         const json = await res.json();
         
         if (json.status === "success") {
@@ -272,7 +289,7 @@
       
       showLoader(true, "保存中...", "日誌データを更新しています");
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }) });
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }), redirect: "follow" });
         const json = await res.json(); if (json.status === "success") alert("保存しました！"); else throw new Error(json.message);
       } catch(e) { sendErrorLog(e.toString()); alert("保存エラーが発生しました。"); } finally { showLoader(false); }
     }
@@ -343,8 +360,8 @@
             <td class="px-4 py-2 font-mono text-center">${dur}m</td>
             <td class="px-4 py-2 truncate max-w-[200px]">${ev.desc}</td>
             <td class="px-4 py-2 text-center no-print">
-              <button onclick="editEvent('${ev.id}')" class="text-blue-600 font-bold text-xs bg-blue-50 px-2 py-1 rounded mr-1">修正</button>
-              <button onclick="deleteEvent('${ev.id}')" class="text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded">削除</button>
+              <button type="button" onclick="editEvent('${ev.id}')" class="text-blue-600 font-bold text-xs bg-blue-50 px-2 py-1 rounded mr-1">修正</button>
+              <button type="button" onclick="deleteEvent('${ev.id}')" class="text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded">削除</button>
             </td>
           </tr>
         `;
