@@ -38,7 +38,7 @@
       <h2 style="margin-top:0; color:var(--ink);">システム管理</h2>
       <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">管理者用アクセスコードを入力</p>
       <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; background:#fff;" placeholder="****" oninput="toHalfWidth(this)">
-      <button class="btn-primary" onclick="checkLogin()" style="width:100%; padding:16px; font-size:16px;">ログイン 🔓</button>
+      <button type="button" class="btn-primary" onclick="checkLogin()" style="width:100%; padding:16px; font-size:16px;">ログイン 🔓</button>
       <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none; font-weight:bold;">パスワードが違います</p>
     </div>
   </div>
@@ -52,12 +52,12 @@
 
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
-      <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v11.1</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v11.2</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
-      <button class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
+      <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
     </div>
   </header>
 
@@ -94,7 +94,7 @@
           <input type="email" id="add-val2" placeholder="example@gmail.com" style="width:100%; background:#fff;">
         </div>
         
-        <button class="btn-primary" onclick="addMaster()" style="background:#d48806; padding:14px; margin-top:8px;">＋ マスタデータベースに追加</button>
+        <button type="button" class="btn-primary" onclick="addMaster()" style="background:#d48806; padding:14px; margin-top:8px;">＋ マスタデータベースに追加</button>
       </div>
     </div>
 
@@ -114,10 +114,24 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_ADMIN = "9999"; 
   
+  // 🌟 エラー監視機能の導入
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail); 
+    return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) {
+      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+      return;
+    }
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+  });
+
   let lockTime = 600; 
   let timerInterval;
 
-  // 🌟 ローダー＆エラー送信制御
   let loaderTimer1, loaderTimer2;
   function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
     const loader = document.getElementById("global-loader");
@@ -128,7 +142,16 @@
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(admin.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+  
+  function sendErrorLog(errMsg) { 
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "システム管理(admin.html)", errorMsg: errMsg, userAgent: navigator.userAgent }),
+        redirect: "follow"
+      }); 
+    } catch(e) {} 
+  }
 
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
@@ -171,7 +194,7 @@
               <div style="font-size:11px; color:var(--sub); margin-bottom:6px; font-weight:bold;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
               <div style="color:var(--ink); font-size:14px; font-weight:bold; margin-bottom:12px; line-height:1.4;">Q. ${item.q.replace(/\n/g, '<br>')}</div>
               <textarea id="ans-${i}" rows="3" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px; margin-bottom:8px; font-size:13px; background:#fff;"></textarea>
-              <button class="btn-primary" onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="width:100%;">回答を送信・公開</button>
+              <button type="button" class="btn-primary" onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="width:100%;">回答を送信・公開</button>
             </div>
           `).join("");
         } else {
