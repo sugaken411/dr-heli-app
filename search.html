@@ -102,7 +102,7 @@
       <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v11.2</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v11.3</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -641,7 +641,7 @@
     document.getElementById("edit-biko").value = row["備考"] || ""; 
     document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
     
-    // 🌟 処置リストを展開
+    // 🌟 処置リストの復元 (胸腔開放・血糖測定を追加)
     let supplyHtml = ""; 
     const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
     lineKeys.forEach(k => { 
@@ -661,7 +661,15 @@
         </div>`; 
     });
     
-    const chkOnlyKeys = [{ key: "1%カルボカイン10ml使用", label: "カルボカイン" }, { key: "除細動パッド", label: "除細動パッド" }, { key: "心嚢穿刺・心嚢ドレナージ", label: "心嚢ドレナージ" }];
+    // 🌟 マスタチェック用
+    const chkOnlyKeys = [
+      { key: "1%カルボカイン10ml使用", label: "カルボカイン" }, 
+      { key: "除細動パッド", label: "除細動パッド" }, 
+      { key: "心嚢穿刺・心嚢ドレナージ", label: "心嚢ドレナージ" },
+      { key: "胸腔開放", label: "胸腔開放" }, // 🌟 追加
+      { key: "血糖測定", label: "血糖測定" }  // 🌟 追加
+    ];
+    
     chkOnlyKeys.forEach(obj => { 
       let v = String(row[obj.key] || ""); 
       let isChecked = (v.includes("◯") || v.includes("キット")) ? "checked" : ""; 
@@ -802,6 +810,10 @@
     if (document.getElementById("edit-chk-除細動パッド").checked) payload["除細動パッド"] = "◯"; else payload["除細動パッド"] = "";
     if (document.getElementById("edit-chk-心嚢穿刺・心嚢ドレナージ").checked) payload["心嚢穿刺・心嚢ドレナージ"] = "キット"; else payload["心嚢穿刺・心嚢ドレナージ"] = "";
     
+    // 🌟 追加処置の保存
+    if (document.getElementById("edit-chk-胸腔開放") && document.getElementById("edit-chk-胸腔開放").checked) payload["胸腔開放"] = "◯"; else payload["胸腔開放"] = "";
+    if (document.getElementById("edit-chk-血糖測定") && document.getElementById("edit-chk-血糖測定").checked) payload["血糖測定"] = "◯"; else payload["血糖測定"] = "";
+
     ["酸素", "呼吸器", "圧迫"].forEach(type => { 
       for(let i=1; i<=5; i++) { 
         const s = document.getElementById(`edit-dyn-${type}${i}-start`); 
