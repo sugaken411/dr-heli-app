@@ -91,11 +91,11 @@
 
   <header class="no-print">
     <div class="hdr-group">
-      <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
     <div class="title-box">JSAMS レジストリ・ダッシュボード</div>
     <div class="hdr-group">
-      <button class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
+      <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
     </div>
   </header>
 
@@ -104,10 +104,10 @@
       <div class="filter-group" style="flex: 1 1 100%;">
         <label>📅 集計期間の指定</label>
         <div class="filter-grid">
-          <button class="filter-btn" id="btn-this-month" onclick="setDateFilter('thisMonth')">今月</button>
-          <button class="filter-btn" id="btn-last-month" onclick="setDateFilter('lastMonth')">先月</button>
-          <button class="filter-btn" id="btn-this-year" onclick="setDateFilter('thisYear')">今年</button>
-          <button class="filter-btn" id="btn-all" onclick="setDateFilter('all')">全期間</button>
+          <button type="button" class="filter-btn" id="btn-this-month" onclick="setDateFilter('thisMonth')">今月</button>
+          <button type="button" class="filter-btn" id="btn-last-month" onclick="setDateFilter('lastMonth')">先月</button>
+          <button type="button" class="filter-btn" id="btn-this-year" onclick="setDateFilter('thisYear')">今年</button>
+          <button type="button" class="filter-btn" id="btn-all" onclick="setDateFilter('all')">全期間</button>
           <div style="display:flex; align-items:center; gap:4px; margin-left:8px;">
             <input type="date" id="filter-start" class="date-input" onchange="applyFilters()">
             <span style="color:var(--sub); font-weight:bold;">〜</span>
@@ -129,7 +129,7 @@
           <input type="text" id="filter-keyword" class="search-input" placeholder="キーワードを入力..." oninput="applyFilters()">
         </div>
         
-        <button class="csv-btn" onclick="exportAggregateCSV()">📥 統計結果CSV出力</button>
+        <button type="button" class="csv-btn" onclick="exportAggregateCSV()">📥 統計結果CSV出力</button>
       </div>
     </div>
 
@@ -209,6 +209,22 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   
+  // 🌟 超高感度エラー監視機能の導入
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail); 
+    return false;
+  };
+  
+  window.addEventListener('unhandledrejection', function(event) {
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) {
+      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+      return;
+    }
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+  });
+
   let allData = [];
   let filteredData = [];
   let chartInstances = {}; 
@@ -232,7 +248,8 @@
   }
   
   function hideLoader() {
-    clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
+    clearTimeout(loaderTimer1); 
+    clearTimeout(loaderTimer2);
     document.getElementById("global-loader").style.display = "none";
   }
 
@@ -240,7 +257,8 @@
     try {
       fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "error_log", source: "ダッシュボード", errorMsg: errMsg, userAgent: navigator.userAgent })
+        body: JSON.stringify({ action: "error_log", source: "ダッシュボード", errorMsg: errMsg, userAgent: navigator.userAgent }),
+        redirect: "follow"
       });
     } catch(e) {}
   }
@@ -252,7 +270,8 @@
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow"
+        body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), 
+        redirect: "follow"
       });
       const json = await res.json();
       
@@ -265,7 +284,7 @@
         sendErrorLog("Fetch Status Error: " + json.message);
       }
     } catch (e) {
-      document.getElementById("loader-text").innerText = "通信エラーが発生しました";
+      document.getElementById("loader-sub-text").innerText = "通信エラーが発生しました";
       alert("通信エラーが発生しました。システム管理者に自動報告を行いました。");
       sendErrorLog(e.toString());
     } finally {
@@ -284,10 +303,27 @@
     const startInput = document.getElementById("filter-start"); const endInput = document.getElementById("filter-end");
     const d = new Date(); document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
     
-    if (type === 'thisMonth') { document.getElementById("btn-this-month").classList.add("active"); startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`; } 
-    else if (type === 'lastMonth') { document.getElementById("btn-last-month").classList.add("active"); const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1); startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`; } 
-    else if (type === 'thisYear') { document.getElementById("btn-this-year").classList.add("active"); startInput.value = `${d.getFullYear()}-01-01`; endInput.value = `${d.getFullYear()}-12-31`; } 
-    else if (type === 'all') { document.getElementById("btn-all").classList.add("active"); startInput.value = ""; endInput.value = ""; }
+    if (type === 'thisMonth') { 
+      document.getElementById("btn-this-month").classList.add("active"); 
+      startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; 
+      endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`; 
+    } 
+    else if (type === 'lastMonth') { 
+      document.getElementById("btn-last-month").classList.add("active"); 
+      const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1); 
+      startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`; 
+      endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`; 
+    } 
+    else if (type === 'thisYear') { 
+      document.getElementById("btn-this-year").classList.add("active"); 
+      startInput.value = `${d.getFullYear()}-01-01`; 
+      endInput.value = `${d.getFullYear()}-12-31`; 
+    } 
+    else if (type === 'all') { 
+      document.getElementById("btn-all").classList.add("active"); 
+      startInput.value = ""; 
+      endInput.value = ""; 
+    }
     applyFilters();
   }
 
@@ -441,7 +477,12 @@
 
   function countKey(data, keyName) { 
     let counts = {}; 
-    data.forEach(r => { const val = String(r[keyName] || "不明").trim(); if (val === "" || val === "不明") return; if (!counts[val]) counts[val] = 0; counts[val]++; }); 
+    data.forEach(r => { 
+      const val = String(r[keyName] || "不明").trim(); 
+      if (val === "" || val === "不明") return; 
+      if (!counts[val]) counts[val] = 0; 
+      counts[val]++; 
+    }); 
     return counts; 
   }
   
@@ -459,7 +500,13 @@
     const sortedKeys = Object.keys(dataObj).sort();
     chartInstances['trend'] = new Chart(ctx.getContext('2d'), { 
       type: 'bar', 
-      data: { labels: sortedKeys, datasets: [ { label: '実出動件数', data: sortedKeys.map(k => dataObj[k].actual), backgroundColor: '#007aff', borderRadius: 4 }, { label: '総要請 (キャンセル含)', data: sortedKeys.map(k => dataObj[k].total), backgroundColor: '#e5e5ea', borderRadius: 4 } ] }, 
+      data: { 
+        labels: sortedKeys, 
+        datasets: [ 
+          { label: '実出動件数', data: sortedKeys.map(k => dataObj[k].actual), backgroundColor: '#007aff', borderRadius: 4 }, 
+          { label: '総要請 (キャンセル含)', data: sortedKeys.map(k => dataObj[k].total), backgroundColor: '#e5e5ea', borderRadius: 4 } 
+        ] 
+      }, 
       options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } 
     });
   }
@@ -499,12 +546,15 @@
     if (chartInstances['radar']) chartInstances['radar'].destroy();
     chartInstances['radar'] = new Chart(ctx.getContext('2d'), { 
       type: 'radar', 
-      data: { labels: labels, datasets: [{ label: '実施率 (%)', data: data, backgroundColor: 'rgba(52, 199, 89, 0.2)', borderColor: '#34c759', pointBackgroundColor: '#34c759' }] }, 
+      data: { 
+        labels: labels, 
+        datasets: [{ label: '実施率 (%)', data: data, backgroundColor: 'rgba(52, 199, 89, 0.2)', borderColor: '#34c759', pointBackgroundColor: '#34c759' }] 
+      }, 
       options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, suggestedMin: 0, suggestedMax: 100 } }, plugins: { legend: { display: false } } } 
     });
   }
 
-  // 🌟 真の統計CSVエクスポート機能（生データではなく集計結果を出力）
+  // 🌟 統計CSVエクスポート機能
   function exportAggregateCSV() {
     if (filteredData.length === 0) return alert("データがありません。");
     
