@@ -72,10 +72,10 @@
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    .sync-status { font-size: 10px; color: var(--sub); text-align: right; margin-bottom: 8px; font-weight: bold; }
+    @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
   </style>
 </head>
 <body>
@@ -92,7 +92,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.7</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.9</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -106,7 +106,7 @@
 </div>
 
 <main>
-  <div class="sync-status" id="sync-status">データ状態: 確認中...</div>
+  <div class="sync-status no-print" id="sync-status" style="font-size:10px; color:var(--sub); text-align:right; margin-bottom:8px; font-weight:bold;">データ状態: 確認中...</div>
 
   <!-- ================= TAB 1: 環境・疾患 ================= -->
   <div id="tab-sec1" class="tab-content active">
@@ -142,7 +142,6 @@
         <div class="section-label">📝 紐付けデータ</div>
         <div id="v-fetched-data"></div>
         <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:12px; margin-bottom:8px;">🚑 事前実施処置 (症例登録から連携)</div>
-        <!-- 🌟 症例登録で入力した処置がここに点灯します -->
         <div class="pill-group" id="v-fetched-procs"></div>
       </div>
 
@@ -252,7 +251,7 @@
   <!-- ================= TAB 4: 保存 ================= -->
   <div id="tab-sec4" class="tab-content">
     <div class="card" style="padding: 0;"><div id="print-area"></div></div>
-    <!-- エラー監視表示枠 -->
+    <!-- 🌟 エラー監視表示枠 -->
     <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; padding:16px;"></div>
     <div class="no-print">
       <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
@@ -275,11 +274,13 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_debriefing_cache_v117";
+  const CACHE_KEY = "aw109_debriefing_cache_v118";
 
+  // 🌟 超高感度エラー監視機能の導入
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); return false;
+    sendErrorLog(errDetail); 
+    return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
     sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
@@ -291,7 +292,6 @@
     "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"
   ];
   
-  // 🌟 NTSの表現を統一
   const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
   const TAG_MASTERS = {
     practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
@@ -317,13 +317,20 @@
 
   function showLoader(msg1, msg2) {
     const loader = document.getElementById("global-loader");
-    document.getElementById("loader-main-text").innerText = msg1; document.getElementById("loader-sub-text").innerHTML = msg2;
+    document.getElementById("loader-main-text").innerText = msg1; 
+    document.getElementById("loader-sub-text").innerHTML = msg2;
     loader.style.display = "flex";
   }
+  
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+  
   function sendErrorLog(errMsg) { 
     try { 
-      fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.7)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.9)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
     } catch(e) {} 
   }
 
@@ -332,7 +339,6 @@
   function clearSearchDate() { document.getElementById("s-date").value = ""; }
   function clearSearchFilters() { document.getElementById("s-date").value = ""; document.getElementById("s-month").value = ""; document.getElementById("s-id").value = ""; }
 
-  // 🌟 キャッシュによる超高速起動
   window.onload = async () => {
     document.getElementById("s-date").value = new Date().toISOString().split('T')[0];
     const cachedStr = localStorage.getItem(CACHE_KEY);
@@ -374,6 +380,7 @@
     } catch(e) { 
       if(!isBackground) alert("データベースの同期に失敗しました。電波の良い場所でリロードしてください。");
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
+      sendErrorLog(e.toString());
     } finally { 
       if(!isBackground) hideLoader(); 
     }
@@ -507,6 +514,7 @@
       document.getElementById("diag-name").value = "";
     } catch(e) {
       alert("マスタの登録に失敗しました");
+      sendErrorLog(e.toString());
     } finally {
       btn.innerText = "＋追加"; btn.disabled = false;
     }
@@ -578,10 +586,10 @@
     resArea.style.display = "block";
   }
 
-  // 🌟 処置リストの自動点灯とマスタ反映
   function selectCase(rowWrapper) {
     currentCase = rowWrapper.rawData;
-    document.getElementById("search-results-area").style.display = "none"; document.getElementById("case-data-area").style.display = "block";
+    document.getElementById("search-results-area").style.display = "none"; 
+    document.getElementById("case-data-area").style.display = "block";
     
     if(currentCase["備考"]) {
       document.getElementById("v-summary").value = currentCase["備考"].replace(/⚠️【使用物品・補充予定メモ】[\s\S]*?------------------\n/g, "").trim();
@@ -605,7 +613,6 @@
     
     let procsDisplay = "";
     if(importedProcs.length > 0) {
-      // 重複排除してマスタ(TAG_MASTERS)に追加しつつ、画面にもON状態で表示
       const uniqueProcs = [...new Set(importedProcs)];
       sysData.tags.globalTreatment = uniqueProcs;
       
@@ -676,7 +683,6 @@
     }
   }
 
-  // 🌟 NTSの表現を統一
   function generateInlineTagUI(selectedTags, type, idx) {
     const isEval = (type === 'eval');
     let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px;">🏷️ 関連タグ・NTS等を選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}" style="padding:12px; border:1px solid var(--line); border-radius:6px; margin-top:4px;">`;
@@ -691,8 +697,8 @@
     return html;
   }
 
-  // 🌟 対応・判断枠の削除
   function addEvalBlock() { sysData.evals.push({ id: Date.now(), scene: "", sceneOther: "", type: "状況評価(NTS等)", desc: "", vitals:{bp1:"",bp2:"",hr:"",rr:"",spo2:"",o2:"",bt:"",jcs:"",gcs:""}, freeABC:"", good: "", bad: "", tags:[] }); renderEvalBlocks(); }
+  
   function renderEvalBlocks() {
     const box = document.getElementById("eval-container"); box.innerHTML = "";
     sysData.evals.forEach((ev, idx) => {
@@ -801,12 +807,10 @@
     
     const summaryVal = document.getElementById("v-summary").value || "";
     
-    // 🌟 未追加の現場診断を確実に拾う
     let displayDiags = [...(sysData.tags.diagnosis||[])];
     const unaddedDiag = document.getElementById("diag-name").value.trim();
     if(unaddedDiag && !displayDiags.includes(unaddedDiag)) displayDiags.push(unaddedDiag);
 
-    // 🌟 点灯している実施処置を拾う
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
     
