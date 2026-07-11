@@ -34,7 +34,6 @@
 
     .normal-info { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--line); }
 
-    /* 🌟 重なりを防ぐため sticky を解除したカード構造 */
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
     .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; flex-wrap: wrap; }
     .sub-cat-badge { font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbdefb; margin-left: 8px; white-space: nowrap; }
@@ -105,14 +104,14 @@
   </div>
 
   <header class="no-print">
-    <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+    <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="hdr-title">
       統合チェックリスト
-      <span class="version-tag" onclick="secretCommand()">v2.8</span>
+      <span class="version-tag" onclick="secretCommand()">v2.9</span>
     </div>
     <div style="display:flex; gap:8px;">
-      <button class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
-      <button class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
+      <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+      <button type="button" class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
     </div>
   </header>
 
@@ -177,7 +176,7 @@
           <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">全体特記事項 (引き継ぎ事項・補充報告など)</label>
           <textarea id="c-remarks" rows="3" class="text-input" placeholder="例：吸引器の予備バッテリーを1本補充しました。"></textarea>
           <div style="margin-top:16px; padding-top:16px; border-top:1px dashed #ccc; text-align:center;">
-            <button class="btn-submit" id="btn-save" onclick="submitChecklist()">点検データを保存する</button>
+            <button type="button" class="btn-submit" id="btn-save" onclick="submitChecklist()">点検データを保存する</button>
           </div>
         </div>
       </div>
@@ -220,7 +219,7 @@
             <span style="font-size:12px; color:var(--sub);">〜</span>
             <input type="date" id="hist-end" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;" onchange="document.getElementById('hist-preset').value='custom'; applyHistoryFilter();">
           </div>
-          <button class="hdr-btn no-print" onclick="fetchHistory(true)" style="font-size:13px; margin-top:8px; align-self:flex-end;">🔄 サーバーから最新を取得</button>
+          <button type="button" class="hdr-btn no-print" onclick="fetchHistory(true)" style="font-size:13px; margin-top:8px; align-self:flex-end;">🔄 サーバーから最新を取得</button>
         </div>
         <div id="history-container"></div>
       </div>
@@ -233,8 +232,8 @@
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
       <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
       <textarea id="qa-input" rows="3" class="text-input" placeholder="項目の追加依頼や、システムの不具合報告など..."></textarea>
-      <button onclick="submitQA()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
-      <button class="modal-close" onclick="closeModal('qa')">閉じる</button>
+      <button type="button" onclick="submitQA()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
+      <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
     </div>
   </div>
 
@@ -242,6 +241,21 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
     
+    // 🌟 超高感度エラー監視機能の導入
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+      sendErrorLog(errDetail); 
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+      if(String(reason).includes("Load failed")) {
+        console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+        return;
+      }
+      sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+    });
+
     let currentType = "始業点検"; 
     let currentMainTab = "input"; 
     
@@ -288,12 +302,22 @@
     function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
     function sendErrorLog(errMsg) {
-      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v2.8)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {}
+      try { 
+        fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v2.9)", errorMsg: errMsg, userAgent: navigator.userAgent }),
+          redirect: "follow"
+        }); 
+      } catch(e) {}
     }
 
     async function fetchQA() {
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }) });
+        const res = await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }),
+          redirect: "follow"
+        });
         const json = await res.json();
         if (json.status === "success" && json.qa) {
           document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
@@ -305,9 +329,16 @@
       const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
       document.getElementById("global-loader").style.display = "flex";
       try {
-        await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" }) });
+        await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" }),
+          redirect: "follow"
+        });
         alert("要望・報告を送信しました。管理者が確認します。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-      } catch(e) { alert("送信に失敗しました。"); } finally { hideLoader(); }
+      } catch(e) { 
+        alert("送信に失敗しました。"); 
+        sendErrorLog(e.toString());
+      } finally { hideLoader(); }
     }
 
     async function fetchChecklistStatus() {
@@ -315,7 +346,8 @@
         const selectedDate = document.getElementById("c-date").value;
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: selectedDate })
+          body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: selectedDate }),
+          redirect: "follow"
         });
         const json = await res.json();
         if (json.status === "success") {
@@ -387,7 +419,8 @@
       try {
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: reqType })
+          body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: reqType }),
+          redirect: "follow"
         });
         const json = await res.json();
         if (json.status === "success") {
@@ -428,7 +461,6 @@
         return;
       }
 
-      // 🌟 大分類＋中分類の組み合わせでグループ化し、カードを分割する（縦長防止策）
       const grouped = {};
       checklistItems.forEach((item) => {
         const groupKey = item.subCategory ? `${item.category}__|__${item.subCategory}` : `${item.category}__|__`;
@@ -513,7 +545,6 @@
 
       document.querySelectorAll('.chk-row').forEach(el => el.classList.remove('error-highlight'));
 
-      // 🌟 必須チェックの完全復旧
       checklistItems.forEach(item => { 
         const val = currentData[item.originalIndex];
         if(item.required && (!val || val === "")) {
@@ -524,7 +555,6 @@
       });
 
       if(missing.length > 0) {
-        // 先にスクロールしてからアラート
         if(firstMissingId) {
           const element = document.getElementById(firstMissingId);
           const y = element.getBoundingClientRect().top + window.pageYOffset - 120;
@@ -570,7 +600,8 @@
 
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload })
+          body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload }),
+          redirect: "follow"
         });
         const json = await res.json();
         if (json.status === "success") {
@@ -638,7 +669,8 @@
 
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: reqType })
+          body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: reqType }),
+          redirect: "follow"
         });
         const json = await res.json();
         
@@ -656,7 +688,10 @@
              applyPresetFilter();
           }
         } else { alert(`履歴の取得に失敗しました: ${json.message}`); }
-      } catch(e) { alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+      } catch(e) { 
+        alert("通信エラーが発生しました。"); 
+        sendErrorLog(e.toString());
+      } finally { hideLoader(); }
     }
 
     function applyHistoryFilter() {
@@ -714,7 +749,7 @@
               <summary style="font-size:12px; color:var(--blue); font-weight:bold; outline:none; user-select:none;">▶ 全項目の詳細データを見る</summary>
               ${detailsHtml}
               <div style="margin-top:12px; text-align:right;">
-                <button class="btn-small" style="background:#ffebee; color:#c62828; border:1px solid #ef5350;" onclick="deleteRecord('${h.id}')">🗑️ この履歴を削除</button>
+                <button type="button" class="btn-small" style="background:#ffebee; color:#c62828; border:1px solid #ef5350;" onclick="deleteRecord('${h.id}')">🗑️ この履歴を削除</button>
               </div>
             </details>
           </div>
@@ -732,7 +767,8 @@
 
         const res = await fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "delete_checklist_record", password: PIN_CODE, id: recordId, type: reqType })
+          body: JSON.stringify({ action: "delete_checklist_record", password: PIN_CODE, id: recordId, type: reqType }),
+          redirect: "follow"
         });
         const json = await res.json();
         if (json.status === "success") {
