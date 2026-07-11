@@ -63,8 +63,8 @@
 </div>
 
 <header>
-  <button class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.5</span></div>
+  <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.6</span></div>
   <div style="width:60px;"></div>
 </header>
 
@@ -101,6 +101,21 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
+  // 🌟 超高感度エラー監視機能の導入
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail); 
+    return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) {
+      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+      return;
+    }
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+  });
+
   let allDocs = [];
   let activeLarge = "全件";
   let activeTags = [];
@@ -115,7 +130,7 @@
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:#d32f2f;'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }) }); } catch(e) {} }
+  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} }
 
   window.onload = async () => {
     await fetchLibraryData();
@@ -126,7 +141,8 @@
     try {
       const res = await fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_library", password: PIN_CODE })
+        body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }),
+        redirect: "follow"
       });
       const json = await res.json();
       
@@ -249,7 +265,7 @@
             <a href="${d.url}" target="_blank" class="btn-view">
               <span>↗️ 資料を閲覧する</span>
             </a>
-            <button class="btn-info" onclick="alert('【資料詳細情報】\\n■ 資料名: ${escapeHtml(d.title)}\\n■ 対象領域: ${escapeHtml(d.medium)}\\n■ 更新日: ${d.date}\\n■ 概要:\\n${escapeHtml(d.desc)}')">❓</button>
+            <button type="button" class="btn-info" onclick="alert('【資料詳細情報】\\n■ 資料名: ${escapeHtml(d.title)}\\n■ 対象領域: ${escapeHtml(d.medium)}\\n■ 更新日: ${d.date}\\n■ 概要:\\n${escapeHtml(d.desc)}')">❓</button>
           </div>
         </div>
       `;
