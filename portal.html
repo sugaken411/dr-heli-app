@@ -71,7 +71,7 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.6</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.7</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
@@ -192,10 +192,11 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 超高感度エラー監視
+  // 🌟 超高感度エラー監視機能の導入
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); return false;
+    sendErrorLog(errDetail); 
+    return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
     sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
@@ -207,10 +208,22 @@
     loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。もう少しお待ちください..."; }, 4000);
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はアプリを開き直してください</span>"; }, 12000);
   }
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
+  
+  function hideLoader() { 
+    clearTimeout(loaderTimer1); 
+    clearTimeout(loaderTimer2); 
+    document.getElementById("global-loader").style.display = "none"; 
+  }
   
   function sendErrorLog(errMsg) { 
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "ポータル(v12.6)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "ポータル(portal.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {} 
   }
 
   window.onload = () => {
@@ -229,36 +242,79 @@
         redirect: "follow" 
       });
       const json = await res.json();
-      if (json.status === "success") { localStorage.setItem("aw109_portal_cache", JSON.stringify(json)); renderPortal(json); }
+      if (json.status === "success") { 
+        localStorage.setItem("aw109_portal_cache", JSON.stringify(json)); 
+        renderPortal(json); 
+      }
       else { throw new Error(json.message); }
     } catch (e) {
-      if(!localStorage.getItem("aw109_portal_cache")) { document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。画面を再読み込みしてください。"; }
+      if(!localStorage.getItem("aw109_portal_cache")) { 
+        document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。画面を再読み込みしてください。"; 
+      }
       sendErrorLog(e.toString());
-    } finally { hideLoader(); }
+    } finally { 
+      hideLoader(); 
+    }
   }
 
   function renderPortal(json) {
     const alertBox = document.getElementById("alert-box"); alertBox.innerHTML = ""; 
     if (json.alerts && json.alerts.length > 0) {
       alertBox.style.display = "flex";
-      alertBox.innerHTML = json.alerts.map(a => { if (a.type === "warning") return `<div class="alert-item" onclick="location.href='search.html?auto_filter=uncompleted'">` + a.text + `</div>`; else return `<div class="alert-item error" onclick="location.href='report.html'">` + a.text + `</div>`; }).join("");
-    } else { alertBox.style.display = "none"; }
+      alertBox.innerHTML = json.alerts.map(a => { 
+        if (a.type === "warning") return `<div class="alert-item" onclick="location.href='search.html?auto_filter=uncompleted'">` + a.text + `</div>`; 
+        else return `<div class="alert-item error" onclick="location.href='report.html'">` + a.text + `</div>`; 
+      }).join("");
+    } else { 
+      alertBox.style.display = "none"; 
+    }
 
-    if (json.news && json.news.length > 0) { document.getElementById("news-box").innerHTML = json.news.map(item => `<div class="news-item"><div class="news-hdr"><span class="news-cat">${item.category}</span><span class="news-date">${item.date}</span></div><div class="news-title">${item.title}</div><div class="news-content">${item.content}</div></div>`).join(""); } 
-    else { document.getElementById("news-box").innerHTML = '<p style="font-size:13px; color:var(--sub); padding:4px 0;">お知らせはありません。</p>'; }
+    if (json.news && json.news.length > 0) { 
+      document.getElementById("news-box").innerHTML = json.news.map(item => `
+        <div class="news-item">
+          <div class="news-hdr">
+            <span class="news-cat">${item.category}</span>
+            <span class="news-date">${item.date}</span>
+          </div>
+          <div class="news-title">${item.title}</div>
+          <div class="news-content">${item.content}</div>
+        </div>
+      `).join(""); 
+    } else { 
+      document.getElementById("news-box").innerHTML = '<p style="font-size:13px; color:var(--sub); padding:4px 0;">お知らせはありません。</p>'; 
+    }
 
-    if (json.qa) document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>公開Q&Aはありません。</p>';
+    if (json.qa) {
+      document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `
+        <p style="margin-bottom:8px;">
+          <b>Q. ${item.q}</b><br>
+          <span style="color:var(--ink);">A. ${item.a}</span>
+        </p>
+        <hr style="border:none;border-top:1px solid var(--line);">
+      `).join("") || '<p>公開Q&Aはありません。</p>';
+    }
     
     const manualsData = json.manuals || [];
-    document.getElementById("manual-list").innerHTML = manualsData.map(item => `<p style="margin-bottom:8px;"><b>■ ${item.title}</b><br><span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("") || '<p>マニュアルはありません。</p>';
+    document.getElementById("manual-list").innerHTML = manualsData.map(item => `
+      <p style="margin-bottom:8px;">
+        <b>■ ${item.title}</b><br>
+        <span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span>
+      </p>
+      <hr style="border:none;border-top:1px solid var(--line);">
+    `).join("") || '<p>マニュアルはありません。</p>';
   }
 
   function openModal(id) { document.getElementById(id).classList.add('show'); }
   function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
   async function submitQA(event) {
-    const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
-    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    const q = document.getElementById("qa-input").value.trim(); 
+    if (!q) return alert("入力してください。");
+    
+    const btn = event.target; 
+    btn.textContent = "送信中..."; 
+    btn.disabled = true;
+    
     try {
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
@@ -266,8 +322,21 @@
         body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "ポータル" }), 
         redirect: "follow" 
       });
-      const json = await res.json(); if (json.status === "success") { alert("要望を送信しました。管理者に通知されました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa'); } else { throw new Error(json.message); }
-    } catch (e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
+      const json = await res.json(); 
+      if (json.status === "success") { 
+        alert("要望を送信しました。管理者に通知されました。"); 
+        document.getElementById("qa-input").value = ""; 
+        closeModal('modal-qa'); 
+      } else { 
+        throw new Error(json.message); 
+      }
+    } catch (e) { 
+      alert("通信エラーが発生しました。"); 
+      sendErrorLog(e.toString()); 
+    } finally { 
+      btn.textContent = "送信"; 
+      btn.disabled = false; 
+    }
   }
 </script>
 </body>
