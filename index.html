@@ -122,7 +122,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.10</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.11</span></div>
   <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
@@ -240,17 +240,12 @@
       
     <div class="card" id="card-calc">
       <div class="card-section">
-        <div class="section-label">💰 算定フラグ（タップで手動変更も可能）</div>
+        <div class="section-label">💰 算定フラグ（タップで手動変更可能）</div>
         
         <div class="verdict-row">
           <div class="verdict-pill off" id="p-oshin" onclick="togglePill('oshin')"><div class="v-label">往診料</div><span class="v-icon" id="l-oshin">—</span></div>
           <div class="verdict-pill off" id="p-hansou" onclick="togglePill('hansou')"><div class="v-label">搬送料</div><span class="v-icon" id="l-hansou">—</span></div>
           <div class="verdict-pill off" id="p-long" onclick="togglePill('long')"><div class="v-label">長時間加算</div><span class="v-icon" id="l-long">—</span></div>
-        </div>
-        
-        <div class="verdict-row" style="grid-template-columns: repeat(2, 1fr); margin-top:8px;">
-          <div class="verdict-pill off" id="p-etco2" onclick="togglePill('etco2')"><div class="v-label">EtCO2</div><span class="v-icon" id="l-etco2">—</span></div>
-          <div class="verdict-pill off" id="p-resp" onclick="togglePill('resp')"><div class="v-label">人工呼吸管理</div><span class="v-icon" id="l-resp">—</span></div>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
@@ -285,27 +280,6 @@
         <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">ベニューラ</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
       </div>
       
-      <div class="acc-header" onclick="toggleAcc('acc-intub', 'chk-intub')">⚕️ 気管挿管 <span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-intub">
-        <input type="checkbox" id="chk-intub" style="display:none;">
-        <div style="font-size:11px; color:var(--brand); font-weight:bold; margin-bottom:8px;">※展開時にEtCO2・人工呼吸器管理料が自動点灯します。</div>
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <input type="number" inputmode="decimal" id="intub-size" placeholder="サイズ(ID mm)" style="flex:1;">
-          <input type="number" inputmode="decimal" id="intub-pos" placeholder="固定位置(cm)" style="flex:1;">
-        </div>
-        <label style="font-size:14px; font-weight:bold;"><input type="checkbox" id="intub-cuff" style="width:18px;height:18px;vertical-align:middle;"> カフ上吸引あり</label>
-      </div>
-
-      <div class="acc-header" onclick="toggleAcc('acc-nppv', 'chk-nppv')">🤿 NPPV使用 <span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-nppv">
-        <input type="checkbox" id="chk-nppv" style="display:none;">
-        <div style="font-size:11px; color:var(--brand); font-weight:bold; margin-bottom:8px;">※展開時に人工呼吸器管理料が自動点灯します。</div>
-        <select id="nppv-mask" style="width:100%; border:1px solid #ccc; padding:10px; background:#fff;" onchange="if(this.value) autoStock('NPPVマスク('+this.value+')')">
-          <option value="">マスクサイズを選択...</option>
-          <option value="S">Sサイズ</option><option value="M">Mサイズ</option><option value="L">Lサイズ</option>
-        </select>
-      </div>
-
       <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ エコー・血液ガス <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-echo">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
@@ -332,19 +306,60 @@
       <div class="acc-body" id="acc-other">
         <div style="display:flex; flex-direction:column; gap:12px;">
           
-          <label class="proc-lbl"><input type="checkbox" id="chk-shock" onchange="toggleBox('box-shock-det', this.checked)">除細動（ショック）</label>
-          <div id="box-shock-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
-            <label style="font-size:13px; font-weight:bold;"><input type="checkbox" id="chk-shock-pad" onchange="if(this.checked) autoStock('除細動パッド')"> 除細動パッドを使用</label>
-            <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-              <span style="font-size:12px; font-weight:bold; color:var(--sub);">ショック回数:</span>
-              <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #ccc; border-radius:4px;"> 回
+          <!-- 🌟 気管挿管とNPPVをここに移動 -->
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-intub" onchange="toggleBox('box-intub-det', this.checked); handleLifeSupport()">気管挿管</label>
+            <div id="box-intub-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <input type="number" inputmode="decimal" id="intub-size" placeholder="サイズ(ID mm)" style="flex:1; border:1px solid #bbdefb;">
+                <input type="number" inputmode="decimal" id="intub-pos" placeholder="固定位置(cm)" style="flex:1; border:1px solid #bbdefb;">
+              </div>
+              <label style="font-size:13px; font-weight:bold; color:#0d47a1;"><input type="checkbox" id="intub-cuff" style="width:16px;height:16px;vertical-align:middle;"> カフ上吸引あり</label>
             </div>
           </div>
 
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="経皮ペーシング">経皮ペーシング</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-nppv" onchange="toggleBox('box-nppv-det', this.checked); handleLifeSupport()">NPPV使用</label>
+            <div id="box-nppv-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <select id="nppv-mask" style="width:100%; border:1px solid #bbdefb; padding:10px; background:#fff;" onchange="if(this.value) autoStock('NPPVマスク('+this.value+')')">
+                <option value="">マスクサイズを選択...</option>
+                <option value="S">Sサイズ</option><option value="M">Mサイズ</option><option value="L">Lサイズ</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 🌟 カプノメーター（EtCO2） -->
+          <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2">EtCO2 (カプノメーター)</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="喀痰吸引">喀痰吸引</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label>
+          
+          <div style="border-top:1px dashed var(--line); padding-top:12px;">
+            <label class="proc-lbl"><input type="checkbox" id="chk-shock" onchange="toggleBox('box-shock-det', this.checked); handleLifeSupport()">除細動（ショック）</label>
+            <div id="box-shock-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
+              <label style="font-size:13px; font-weight:bold;"><input type="checkbox" id="chk-shock-pad" onchange="if(this.checked) autoStock('除細動パッド')"> 除細動パッドを使用</label>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                <span style="font-size:12px; font-weight:bold; color:var(--sub);">ショック回数:</span>
+                <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #ccc; border-radius:4px;"> 回
+              </div>
+            </div>
+          </div>
+
+          <!-- 🌟 医療機器安全管理料（生命維持管理装置）枠 -->
+          <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-top:8px;">
+            <div style="font-size:12px; font-weight:900; color:#e65100; margin-bottom:8px; border-bottom:1px solid #ffe082; padding-bottom:4px;">🏥 医療機器安全管理料 (生命維持管理装置)</div>
+            <div style="font-size:10px; color:#f57f17; font-weight:bold; margin-bottom:8px;">※挿管・NPPV・除細動のチェックに連動して自動点灯します。</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label class="proc-lbl"><input type="checkbox" class="chk-life-support" value="人工心肺装置及び補助循環装置">人工心肺装置及び補助循環装置 (PCPS等)</label>
+              <label class="proc-lbl"><input type="checkbox" id="chk-ls-vent" class="chk-life-support" value="人工呼吸器">人工呼吸器</label>
+              <label class="proc-lbl"><input type="checkbox" id="chk-ls-defib" class="chk-life-support" value="除細動装置">除細動装置</label>
+              <label class="proc-lbl"><input type="checkbox" class="chk-life-support" value="閉鎖式保育器">閉鎖式保育器</label>
+            </div>
+          </div>
+
+          <div style="border-top:1px dashed var(--line); padding-top:12px;">
+            <label class="proc-lbl"><input type="checkbox" class="chk-other" value="経皮ペーシング">経皮ペーシング</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label>
+          </div>
           
           <div style="border-top:1px dashed var(--line); padding-top:12px;">
             <label class="proc-lbl"><input type="checkbox" id="chk-thorax" onchange="toggleBox('box-thorax-det', this.checked)">胸腔ドレナージ</label>
@@ -476,7 +491,7 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 最強のフィルターを追加したエラー監視
+  // 🌟 エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -489,8 +504,8 @@
 
   let state = {
     reqType: "", scheme: "",
-    calc: { oshin: 0, hansou: 0, long: 0, monitor: 0, spo2: 0, etco2: 0, resp: 0 },
-    calcVals: { oshin: ["","往診料"], hansou: ["","搬送料","搬送料(新生児)"], long: ["","あり"], monitor:["","自動計算"], spo2:["","あり"], etco2:["","あり"], resp:["","あり"] }
+    calc: { oshin: 0, hansou: 0, long: 0, monitor: 0, spo2: 0 },
+    calcVals: { oshin: ["","往診料"], hansou: ["","搬送料","搬送料(新生児)"], long: ["","あり"], monitor:["","自動計算"], spo2:["","あり"] }
   };
 
   window.onload = () => {
@@ -518,13 +533,12 @@
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
-  // 🌟 ここで Load failed を確実に握り潰す
   function sendErrorLog(errMsg) {
     if(String(errMsg).includes("Load failed")) return;
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "症例登録(v10.10)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "症例登録(v10.11)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {}
@@ -544,12 +558,22 @@
     const el = document.getElementById(id);
     const isOpen = el.classList.toggle('open'); 
     el.previousElementSibling.classList.toggle('open');
+  }
 
-    if(autoCheckId && isOpen) {
-      document.getElementById(autoCheckId).checked = true;
-      if (autoCheckId === 'chk-intub') { setCalc('etco2', 1); setCalc('resp', 1); } 
-      else if (autoCheckId === 'chk-nppv') { setCalc('resp', 1); }
-    }
+  // 🌟 生命維持管理装置の自動点灯ロジック
+  function handleLifeSupport() {
+    const isIntub = document.getElementById("chk-intub").checked;
+    const isNppv = document.getElementById("chk-nppv").checked;
+    const isShock = document.getElementById("chk-shock").checked;
+
+    // 気管挿管 or NPPV で「人工呼吸器」が点灯
+    document.getElementById("chk-ls-vent").checked = (isIntub || isNppv);
+    
+    // 気管挿管で「EtCO2」が点灯
+    document.getElementById("chk-etco2").checked = isIntub;
+    
+    // 除細動で「除細動装置」が点灯
+    document.getElementById("chk-ls-defib").checked = isShock;
   }
 
   function toggleProcCount(cb) {
@@ -598,10 +622,11 @@
 
     if(val === 'Uターン' || val === 'Jターン' || val === '施設間') { setCalc('oshin', 1); setCalc('hansou', 1); }
     else if(val === 'Iターン乗込' || val === 'Iターン救急隊') { setCalc('oshin', 1); setCalc('hansou', 0); }
-    else if(isCan) { setCalc('oshin', 0); setCalc('hansou', 0); setCalc('long', 0); setCalc('etco2', 0); setCalc('resp', 0); }
+    else if(isCan) { setCalc('oshin', 0); setCalc('hansou', 0); setCalc('long', 0); }
   }
 
   function setCalc(key, idx) {
+    if(key === 'etco2' || key === 'resp') return; // 旧ロジック無視
     state.calc[key] = idx;
     const val = state.calcVals[key][idx];
     const el = document.getElementById(`p-${key}`); const lbl = document.getElementById(`l-${key}`);
@@ -630,9 +655,7 @@
         let h = Math.floor(diffMin / 60); let m = diffMin % 60;
         document.getElementById("l-monitor").innerText = (h > 0 ? h + "時間" : "") + m + "分";
         document.getElementById("p-monitor").classList.add("on"); state.calc.monitor = 1;
-        
         setCalc('spo2', 1);
-
         if (diffMin >= 30) setCalc('long', 1);
         else setCalc('long', 0);
       }
@@ -731,6 +754,7 @@
     } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
+  // 🌟 新しく統合した処置を収集する
   function getCollectData() {
     let rawId = document.getElementById("v-id").value.trim();
     if (!rawId) {
@@ -799,6 +823,13 @@
     document.querySelectorAll('.chk-echo:checked').forEach(cb => procs.push(`エコー(${cb.value})`));
     document.querySelectorAll('.chk-other:checked').forEach(cb => procs.push(cb.value));
 
+    // 🌟 生命維持管理装置の抽出
+    let lifeSupports = [];
+    document.querySelectorAll('.chk-life-support:checked').forEach(cb => lifeSupports.push(cb.value));
+    if(lifeSupports.length > 0) {
+      procs.push(`[生命維持管理] ${lifeSupports.join(", ")}`);
+    }
+
     let trauma = [];
     document.querySelectorAll('.chk-trauma:checked').forEach(cb => trauma.push(cb.value));
 
@@ -822,6 +853,10 @@
     document.querySelectorAll('.mail-opt-chk:checked').forEach(cb => addMails.push(cb.value));
     const cMail = document.getElementById("custom-email").value; if(cMail) addMails.push(cMail);
 
+    // 人工呼吸器・EtCO2が新ロジックで点灯しているか判定して、旧フラグ列（Excelの列）にも文字を入れるか決める
+    let lsVentStr = document.getElementById("chk-ls-vent").checked ? "あり" : "";
+    let etco2Str = document.getElementById("chk-etco2").checked ? "あり" : "";
+
     let d = {
       "要請番号": finalId,
       "日付": document.getElementById("v-date").value,
@@ -840,8 +875,8 @@
       "長時間加算": state.calcVals.long[state.calc.long] || "",
       "モニター算定時間": state.calc.monitor > 0 ? document.getElementById("l-monitor").innerText : "", 
       "経皮的酸素飽和度": state.calcVals.spo2[state.calc.spo2] || "",
-      "EtCO2算定": state.calcVals.etco2[state.calc.etco2] || "",
-      "人工呼吸器管理料": state.calcVals.resp[state.calc.resp] || "",
+      "EtCO2算定": etco2Str, // 🌟 新ロジックで代入
+      "人工呼吸器管理料": lsVentStr, // 🌟 新ロジックで代入
       "現場診断": document.getElementById("v-diag").value,
       "キーワード要請": state.reqType === "キーワード要請" ? document.getElementById("v-keyword").value : "",
       "備考": biko.trim(),
