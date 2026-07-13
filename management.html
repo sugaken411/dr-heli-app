@@ -41,7 +41,7 @@
 </head>
 <body class="pb-20">
 
-  <div id="global-loader">
+  <div id="global-loader" style="display:none;">
     <div class="spinner"></div>
     <div class="font-bold text-slate-800 text-lg mb-2" id="loader-main-text">データ同期中...</div>
     <div class="font-semibold text-slate-500 text-sm text-center max-w-[80%]" id="loader-sub-text">日報データベースを読み込んでいます</div>
@@ -49,7 +49,7 @@
 
   <header class="no-print">
     <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div class="font-black text-base">統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded ml-1">v1.2</span></div>
+    <div class="font-black text-base">統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded ml-1">v1.3</span></div>
     <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
   </header>
 
@@ -116,7 +116,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
 
-    // 🌟 超高感度エラー監視機能
+    // 🌟 超高感度エラー監視機能 (Load failed握りつぶし対応済)
     window.onerror = function(message, source, lineno, colno, error) {
       const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
       sendErrorLog(errDetail); 
@@ -153,8 +153,23 @@
       loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "データ量が多いため少し時間がかかっています..."; }, 5000);
       loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
     }
-    function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-    function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "業務管理(management.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} }
+    
+    function hideLoader() { 
+      clearTimeout(loaderTimer1); 
+      clearTimeout(loaderTimer2); 
+      document.getElementById("global-loader").style.display = "none"; 
+    }
+    
+    function sendErrorLog(errMsg) { 
+      if(String(errMsg).includes("Load failed")) return;
+      try { 
+        fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "error_log", source: "業務管理(management.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+          redirect: "follow" 
+        }); 
+      } catch(e) {} 
+    }
 
     window.onload = () => {
       document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
@@ -198,7 +213,11 @@
       
       showLoader();
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), redirect: "follow" });
+        const res = await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), 
+          redirect: "follow" 
+        });
         const json = await res.json();
         
         if (json.status === "success") {
@@ -259,7 +278,7 @@
         }
       });
 
-      document.getElementById("activity-stats").innerHTML = statsHtml.join("") || "<div class="col-span-2 text-center py-4">データなし</div>";
+      document.getElementById("activity-stats").innerHTML = statsHtml.join("") || "<div class=\"col-span-2 text-center py-4\">データなし</div>";
 
       if(chartInstance) chartInstance.destroy();
       const ctx = document.getElementById("activityChart").getContext("2d");
