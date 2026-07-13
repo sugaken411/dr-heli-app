@@ -56,7 +56,7 @@
 </head>
 <body>
 
-<div id="global-loader">
+<div id="global-loader" style="display:none;">
   <div class="spinner"></div>
   <div class="loader-text" id="loader-main-text">通信中...</div>
   <div class="loader-subtext" id="loader-sub-text">資料データベースに接続しています</div>
@@ -130,7 +130,17 @@
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:#d32f2f;'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} }
+  
+  function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {} 
+  }
 
   window.onload = async () => {
     await fetchLibraryData();
