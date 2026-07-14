@@ -122,8 +122,11 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.12</span></div>
-  <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v12.0</span></div>
+  <div class="hdr-group">
+    <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
+    <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  </div>
 </header>
 
 <main>
@@ -488,7 +491,7 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 Load failed を握りつぶす最強フィルター
+  // 🌟 Load failed 無視の最強エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -519,12 +522,66 @@
     }); 
   };
 
+  const CACHE_KEY = "aw109_master_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
+
   window.onload = () => {
     const now = new Date();
     const jst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
     document.getElementById("v-date").value = `${jst.getFullYear()}-${String(jst.getMonth()+1).padStart(2,'0')}-${String(jst.getDate()).padStart(2,'0')}`;
-    fetchInit();
+    
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    if (cachedStr) {
+      try {
+        const cacheObj = JSON.parse(cachedStr);
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          applyMasters(cacheObj.masters);
+          return;
+        }
+      } catch(e) {}
+    }
+    fetchLatestData(false, false);
   };
+
+  function applyMasters(m) {
+    masters = m;
+    pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest); pop("dl-diag", m.diagnosis); pop("dl-key", m.keyword);
+    const mbox = document.getElementById("mail-options-box"); if (mbox) {
+      mbox.innerHTML = "";
+      m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
+    }
+  }
+
+  async function fetchLatestData(isBackground, isManualUpdate) {
+    if(!isBackground) showLoader("マスタデータ同期中...", "システムを初期化しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") {
+        const m = json.masters;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), masters: m }));
+        applyMasters(m);
+        if(json.qa) document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid #ccc;">`).join("");
+        if(isManualUpdate) alert("最新のマスタデータを取得しました。");
+      }
+    } catch(e) { 
+      sendErrorLog(e.toString()); 
+      if(!isBackground) alert("通信エラーが発生しました。");
+    } finally { 
+      if(!isBackground) hideLoader(); 
+    }
+  }
+
+  async function addMaster(type, title) {
+    const val = prompt(`新しい「${title}」を追加します。\n名称を入力してください。`);
+    if (!val) return;
+    showLoader("マスタ追加中...", "データベースを更新しています");
+    try {
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: type, val1: val }), redirect: "follow" });
+      alert(`「${val}」を追加しました！`); 
+      await fetchLatestData(true, false); // キャッシュをバックグラウンドで再更新
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラー"); } finally { hideLoader(); }
+  }
 
   let loaderTimer1, loaderTimer2;
   function showLoader(m1, m2) {
@@ -550,7 +607,7 @@
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "症例登録(v10.12)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "症例登録(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {}
@@ -719,56 +776,6 @@
       }
     });
     document.getElementById('lbl-cpr-total').innerText = total;
-  }
-
-  // 🌟 マスタをローカルキャッシュから即時展開する新ロジック
-  async function fetchInit() {
-    const cachedM = localStorage.getItem("aw109_master_cache");
-    if (cachedM) {
-      try {
-        const m = JSON.parse(cachedM);
-        pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest); pop("dl-diag", m.diagnosis); pop("dl-key", m.keyword);
-        
-        const mbox = document.getElementById("mail-options-box"); if (mbox) {
-          mbox.innerHTML = "";
-          m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
-        }
-      } catch(e) {}
-    } else {
-      showLoader("システム起動中...", "マスタデータを読み込んでいます");
-    }
-    
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") {
-        const m = json.masters;
-        localStorage.setItem("aw109_master_cache", JSON.stringify(m)); // キャッシュを更新
-        
-        pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest); pop("dl-diag", m.diagnosis); pop("dl-key", m.keyword);
-        
-        const mbox = document.getElementById("mail-options-box"); if (mbox) {
-          mbox.innerHTML = "";
-          m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
-        }
-        if(json.qa) document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid #ccc;">`).join("");
-      }
-    } catch(e) { 
-      sendErrorLog(e.toString()); 
-    } finally { 
-      hideLoader(); 
-    }
-  }
-
-  async function addMaster(type, title) {
-    const val = prompt(`新しい「${title}」を追加します。\n名称を入力してください。`);
-    if (!val) return;
-    showLoader("マスタ追加中...", "データベースを更新しています");
-    try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: type, val1: val }), redirect: "follow" });
-      alert(`「${val}」を追加しました！`); 
-      await fetchInit(); // キャッシュを再更新
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラー"); } finally { hideLoader(); }
   }
 
   async function submitQA() {
