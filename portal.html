@@ -9,51 +9,20 @@
   <title>AW109 EMS Portal</title>
   <style>
     :root {
-      --bg: #f2f2f7; 
-      --card: #ffffff; 
-      --ink: #1c1c1e; 
-      --sub: #8e8e93;
-      --brand: #d32f2f; 
-      --brand-light: #ffebeb; 
-      --blue: #007aff; 
-      --med-blue: #e3f2fd;
+      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
+      --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd;
       --line: rgba(60,60,67,0.12);
-      --safe-top: env(safe-area-inset-top); 
-      --safe-bot: env(safe-area-inset-bottom);
+      --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
     }
     
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      font-family: -apple-system, sans-serif; 
-      -webkit-tap-highlight-color: transparent; 
-    }
-    
-    body { 
-      background: var(--bg); 
-      color: var(--ink); 
-      -webkit-font-smoothing: antialiased; 
-      padding-top: calc(56px + var(--safe-top)); 
-      padding-bottom: calc(20px + var(--safe-bot)); 
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(20px + var(--safe-bot)); }
     
     header {
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      right: 0; 
-      height: calc(56px + var(--safe-top));
-      padding-top: var(--safe-top); 
-      padding-left: 16px; 
-      padding-right: 16px;
-      background: rgba(242,242,247,0.92); 
-      backdrop-filter: blur(20px); 
-      border-bottom: 0.5px solid var(--line);
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      z-index: 100;
+      position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top));
+      padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px;
+      background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between; z-index: 100;
     }
     
     .hdr-group { display: flex; gap: 12px; }
@@ -94,6 +63,9 @@
     .modal-overlay.show { display: flex; }
     .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    
+    /* 🌟 同期タイムスタンプ表示 */
+    .sync-status { text-align: right; font-size: 10px; color: var(--sub); padding: 4px 16px 0 0; background: var(--bg); font-weight: bold; margin-top: -12px; margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -106,12 +78,13 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.0</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.1</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
   </div>
 </header>
+<div id="master-sync-info" class="sync-status"></div>
 
 <main>
   <div id="alert-box" class="alert-box"></div>
@@ -215,9 +188,9 @@
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
     <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px; background:var(--bg);"></textarea>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; background:var(--bg);"></textarea>
     <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
     <button type="button" class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
   </div>
@@ -226,8 +199,8 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
+  const CACHE_KEY = "aw109_portal_cache_v13";
 
-  // 🌟 エラー監視とログ通知機能（v12.9の退行を修正し、Load failedフィルターを維持）
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -240,34 +213,59 @@
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
+  let loaderTimer1, loaderTimer2;
+  function showLoader(msg1 = "最新データを同期中...", msg2 = "データベースに接続しています") {
+    document.getElementById("loader-main-text").innerText = msg1;
+    document.getElementById("loader-sub-text").innerHTML = msg2;
+    document.getElementById("global-loader").style.display = "flex";
+    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はアプリを開き直してください</span>"; }, 15000);
+  }
+  
+  function hideLoader() { 
+    clearTimeout(loaderTimer1); 
+    clearTimeout(loaderTimer2); 
+    document.getElementById("global-loader").style.display = "none"; 
+  }
+  
   function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
   }
 
-  let loaderTimer1, loaderTimer2;
-  function showLoader() {
-    document.getElementById("global-loader").style.display = "flex";
-  }
-  
-  function hideLoader() { 
-    document.getElementById("global-loader").style.display = "none"; 
+  function updateSyncTimestamp(ts) {
+    const d = new Date(ts);
+    const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    document.getElementById("master-sync-info").innerText = `最終同期: ${timeStr}`;
   }
 
   window.onload = () => {
-    const cachedData = localStorage.getItem("aw109_portal_cache");
-    if (cachedData) renderPortal(JSON.parse(cachedData));
-    fetchInit();
+    // 🌟 キャッシュが存在する場合は即時展開し、サイレント同期フラグを立てる
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    let hasCache = false;
+    if (cachedStr) {
+      try {
+        const cacheObj = JSON.parse(cachedStr);
+        renderPortal(cacheObj.data);
+        updateSyncTimestamp(cacheObj.timestampMs);
+        hasCache = true;
+      } catch(e) { localStorage.removeItem(CACHE_KEY); }
+    }
+    fetchInit(hasCache);
   };
 
-  async function fetchInit() {
-    showLoader();
+  async function fetchInit(isSilent) {
+    // 🌟 キャッシュがない場合（初回起動等）のみローダーを強制表示してロックする
+    if (!isSilent) {
+      showLoader("初期データ読込中...", "マスターデータベースへ初回接続しています");
+    }
     try {
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
@@ -277,18 +275,16 @@
       });
       const json = await res.json();
       if (json.status === "success") { 
-        localStorage.setItem("aw109_portal_cache", JSON.stringify(json)); 
+        const nowMs = Date.now();
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: nowMs, data: json })); 
         renderPortal(json); 
-      } else {
-        throw new Error(json.message);
-      }
+        updateSyncTimestamp(nowMs);
+      } else { throw new Error(json.message); }
     } catch (e) {
-      if(!localStorage.getItem("aw109_portal_cache")) { 
-        document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。"; 
+      if(!localStorage.getItem(CACHE_KEY)) { 
+        document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。電波の良い場所で再読込してください。"; 
       }
-      if(!String(e).includes("Load failed")) {
-         sendErrorLog(e.toString());
-      }
+      if(!String(e).includes("Load failed")) sendErrorLog(e.toString());
     } finally { 
       hideLoader(); 
     }
@@ -327,7 +323,7 @@
           <b>Q. ${item.q}</b><br>
           <span style="color:var(--ink);">A. ${item.a}</span>
         </p>
-        <hr style="border:none;border-top:1px solid var(--line);">
+        <hr style="border:none;border-top:1px solid var(--line); margin:8px 0;">
       `).join("") || '<p>公開Q&Aはありません。</p>';
     }
     
@@ -337,7 +333,7 @@
         <b>■ ${item.title}</b><br>
         <span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span>
       </p>
-      <hr style="border:none;border-top:1px solid var(--line);">
+      <hr style="border:none;border-top:1px solid var(--line); margin:8px 0;">
     `).join("") || '<p>マニュアルはありません。</p>';
   }
 
@@ -360,14 +356,10 @@
         alert("要望を送信しました。"); 
         document.getElementById("qa-input").value = ""; 
         closeModal('modal-qa'); 
-      } else {
-        throw new Error(json.message);
-      }
+      } else { throw new Error(json.message); }
     } catch (e) { 
       alert("通信エラーが発生しました。"); 
-      if(!String(e).includes("Load failed")) {
-         sendErrorLog(e.toString());
-      }
+      if(!String(e).includes("Load failed")) sendErrorLog(e.toString()); 
     } finally { 
       btn.textContent = "送信"; 
       btn.disabled = false; 
