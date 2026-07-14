@@ -64,7 +64,6 @@
 </head>
 <body>
 
-<!-- 🌟 ローダーのHTML構造を修正 -->
 <div id="global-loader" style="display:none;">
   <div class="spinner"></div>
   <div class="loader-text" id="loader-main-text">最新データを同期中...</div>
@@ -73,8 +72,9 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.8</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.0</span></div>
   <div class="hdr-group">
+    <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
   </div>
@@ -203,7 +203,6 @@
   
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    // 🌟 Load failed (純粋な通信不良) の場合はエラーメールを飛ばさないように制御
     if(String(reason).includes("Load failed")) {
       console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
       return;
@@ -229,20 +228,31 @@
       fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "ポータル(v12.8)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "ポータル(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
   }
 
+  const CACHE_KEY = "aw109_portal_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
+
   window.onload = () => {
-    const cachedData = localStorage.getItem("aw109_portal_cache");
-    if (cachedData) renderPortal(JSON.parse(cachedData));
-    fetchInit();
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    if (cachedStr) {
+      try {
+        const cacheObj = JSON.parse(cachedStr);
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          renderPortal(cacheObj.data);
+          return;
+        }
+      } catch(e) {}
+    }
+    fetchLatestData(false, false);
   };
 
-  async function fetchInit() {
-    showLoader();
+  async function fetchLatestData(isBackground, isManualUpdate) {
+    if(!isBackground) showLoader();
     try {
       const res = await fetch(GAS_API_URL, { 
         method: "POST", 
@@ -252,20 +262,21 @@
       });
       const json = await res.json();
       if (json.status === "success") { 
-        localStorage.setItem("aw109_portal_cache", JSON.stringify(json)); 
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: json })); 
         renderPortal(json); 
+        if(isManualUpdate) alert("最新のお知らせとアラートを取得しました。");
       }
       else { throw new Error(json.message); }
     } catch (e) {
-      if(!localStorage.getItem("aw109_portal_cache")) { 
+      if(!localStorage.getItem(CACHE_KEY)) { 
         document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。画面を再読み込みしてください。"; 
       }
-      // 通信エラー時の詳細な監視用
       if(!String(e).includes("Load failed")) {
          sendErrorLog(e.toString());
       }
+      if(isManualUpdate) alert("通信エラーが発生しました。");
     } finally { 
-      hideLoader(); 
+      if(!isBackground) hideLoader(); 
     }
   }
 
