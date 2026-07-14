@@ -8,7 +8,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>AW109 デブリーフィング</title>
+  <title>AW109 デブリーフィング入力</title>
   <style>
     :root { 
       --bg: #f2f2f7; 
@@ -21,27 +21,161 @@
       --safe-top: env(safe-area-inset-top); 
       --safe-bot: env(safe-area-inset-bottom); 
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
     
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
-    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, sans-serif; 
+      -webkit-tap-highlight-color: transparent; 
+    }
     
-    .tab-container { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
-    .nav-tab { flex: 1; text-align: center; line-height: 44px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
-    .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    body { 
+      background: var(--bg); 
+      color: var(--ink); 
+      padding-bottom: 80px; 
+      -webkit-font-smoothing: antialiased; 
+    }
     
-    main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
-    .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; padding: 16px; }
-    .section-label { font-size: 13px; font-weight: 800; color: var(--blue); margin-bottom: 12px; border-bottom: 1px solid #efeff4; padding-bottom: 6px; text-transform: uppercase; }
+    header { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      height: calc(56px + var(--safe-top)); 
+      padding-top: var(--safe-top); 
+      padding-left: 16px; 
+      padding-right: 16px; 
+      background: rgba(242,242,247,0.92); 
+      backdrop-filter: blur(20px); 
+      border-bottom: 0.5px solid var(--line); 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      z-index: 100; 
+    }
     
-    input[type="text"], input[type="tel"], input[type="time"], input[type="date"], input[type="month"], input[type="number"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 14px; background: #fff; outline: none; padding: 10px; border-radius: 6px; margin-bottom: 8px; color: var(--ink); font-weight: 600; box-sizing: border-box; appearance: none; }
+    .hdr-btn { 
+      color: var(--blue); 
+      background: none; 
+      border: none; 
+      font-size: 14px; 
+      font-weight: bold; 
+      cursor: pointer; 
+    }
+    
+    .version-tag { 
+      font-size: 10px; 
+      color: #fff; 
+      font-weight: bold; 
+      background: var(--blue); 
+      padding: 2px 6px; 
+      border-radius: 4px; 
+      margin-left: 6px; 
+      vertical-align: middle; 
+    }
+    
+    .tab-container { 
+      position: fixed; 
+      top: calc(56px + var(--safe-top)); 
+      left: 0; 
+      right: 0; 
+      height: 44px; 
+      background: #fff; 
+      border-bottom: 1px solid var(--line); 
+      display: flex; 
+      z-index: 99; 
+    }
+    
+    .nav-tab { 
+      flex: 1; 
+      text-align: center; 
+      line-height: 44px; 
+      font-size: 13px; 
+      font-weight: 700; 
+      color: var(--sub); 
+      cursor: pointer; 
+      border-bottom: 3px solid transparent; 
+      transition: 0.2s; 
+    }
+    .nav-tab.active { 
+      color: var(--blue); 
+      border-bottom-color: var(--blue); 
+    }
+    
+    main { 
+      margin-top: calc(100px + var(--safe-top)); 
+      padding: 16px; 
+      max-width: 800px; 
+      margin-left: auto; 
+      margin-right: auto; 
+      padding-bottom: calc(40px + var(--safe-bot)); 
+    }
+    
+    .card { 
+      background: var(--card); 
+      border-radius: 12px; 
+      margin-bottom: 16px; 
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); 
+      border: 1px solid #d1d1d6; 
+      padding: 16px; 
+    }
+    
+    .section-label { 
+      font-size: 13px; 
+      font-weight: 800; 
+      color: var(--blue); 
+      margin-bottom: 12px; 
+      border-bottom: 1px solid #efeff4; 
+      padding-bottom: 6px; 
+      text-transform: uppercase; 
+    }
+    
+    input[type="text"], input[type="tel"], input[type="time"], input[type="date"], input[type="month"], input[type="number"], textarea, select { 
+      width: 100%; 
+      border: 1px solid var(--line); 
+      font-size: 14px; 
+      background: #fff; 
+      outline: none; 
+      padding: 10px; 
+      border-radius: 6px; 
+      margin-bottom: 8px; 
+      color: var(--ink); 
+      font-weight: 600; 
+      box-sizing: border-box; 
+      appearance: none; 
+    }
+    
     textarea { resize: vertical; line-height: 1.5; }
     textarea:focus, input:focus, select:focus { border-color: var(--blue); background: #f0f8ff; }
     
-    .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
-    .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); transition: 0.2s; }
+    .btn-blue { 
+      background: var(--blue); 
+      color: #fff; 
+      border: none; 
+      padding: 12px 16px; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%; 
+      font-size: 15px; 
+      box-shadow: 0 2px 6px rgba(0,122,255,0.2); 
+    }
+    
+    .btn-next { 
+      background: var(--brand); 
+      color: #fff; 
+      border: none; 
+      padding: 14px; 
+      border-radius: 12px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      width: 100%; 
+      font-size: 15px; 
+      margin-top: 8px; 
+      box-shadow: 0 4px 12px rgba(211,47,47,0.2); 
+      transition: 0.2s; 
+    }
     .btn-next:active { transform: scale(0.98); }
     .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
     
@@ -50,7 +184,7 @@
     input[type="radio"] { display: none; }
     input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
     
-    .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .pill-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .pill { border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
     .pill.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     .pill.sub-on { background: #ff9800; border-color: #ff9800; color: #fff; box-shadow: 0 2px 6px rgba(255,152,0,0.2); }
@@ -67,7 +201,7 @@
 
     .search-result-item { padding: 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #fff; transition: border-color 0.2s; }
     .search-result-item:hover { border-color: var(--blue); }
-    .data-preview { font-size: 13px; background: #f0f8ff; padding: 12px; border-radius: 6px; border: 1px solid #bbdefb; margin-bottom: 16px; line-height: 1.6; }
+    .data-preview { font-size: 14px; background: #f0f8ff; padding: 12px; border-radius: 6px; border: 1px solid #bbdefb; margin-bottom: 16px; line-height: 1.6; color: var(--ink); }
     
     .eval-block { border: 1px solid #c7c7cc; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
     .fb-block { background: #f9f9f9; border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
@@ -110,10 +244,10 @@
 </header>
 
 <div class="tab-container no-print">
-  <div class="nav-tab active" onclick="switchTab('sec1')">1.環境・疾患</div>
-  <div class="nav-tab" onclick="switchTab('sec2')">2.症例評価</div>
-  <div class="nav-tab" onclick="switchTab('sec3')">3.多職種</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.保存</div>
+  <div class="nav-tab active" id="btn-sec1" onclick="switchTab('sec1')">1.環境・疾患</div>
+  <div class="nav-tab" id="btn-sec2" onclick="switchTab('sec2')">2.症例評価</div>
+  <div class="nav-tab" id="btn-sec3" onclick="switchTab('sec3')">3.多職種</div>
+  <div class="nav-tab" id="btn-sec4" onclick="switchTab('sec4')">4.保存</div>
 </div>
 
 <main>
@@ -152,7 +286,7 @@
       <div class="card">
         <div class="section-label">📝 紐付けデータ</div>
         <div id="v-fetched-data"></div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:12px; margin-bottom:8px;">🚑 事前実施処置 (症例登録から連携)</div>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:12px; margin-bottom:8px;">🚑 事前実施処置 (症例登録から自動連携)</div>
         <div class="pill-group" id="v-fetched-procs"></div>
       </div>
 
@@ -191,7 +325,7 @@
 
       <div class="card">
         <div class="section-label">📋 概要と現場診断</div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー (※登録時の備考を自動反映)</div>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー (※登録時の備考概要を自動反映)</div>
         <textarea id="v-summary" rows="4" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
         
         <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px; margin-top:12px;">🩺 現場診断 (フリーテキスト/マスタ)</div>
@@ -270,33 +404,11 @@
 
 </main>
 
-<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
-  <div class="modal-box">
-    <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
-    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px;"></textarea>
-    <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
-    <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
-  </div>
-</div>
-
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   const CACHE_KEY = "aw109_debriefing_cache_v12";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
-
-  window.onerror = function(message, source, lineno, colno, error) {
-    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); 
-    return false;
-  };
-  window.addEventListener('unhandledrejection', function(event) {
-    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    if(String(reason).includes("Load failed")) return;
-    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
-  });
 
   const SCENE_LIST = [
     "① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", 
@@ -327,22 +439,6 @@
     evals: [], feedbacks: []
   };
 
-  let loaderTimer1, loaderTimer2;
-  function showLoader(msg1, msg2) {
-    const loader = document.getElementById("global-loader");
-    document.getElementById("loader-main-text").innerText = msg1; 
-    document.getElementById("loader-sub-text").innerHTML = msg2;
-    loader.style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。もう少しお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>リロードしてください。</span>"; }, 15000);
-  }
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
-  
-  function sendErrorLog(errMsg) { 
-    if(String(errMsg).includes("Load failed")) return;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v12.2)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
-  }
-
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   function clearSearchMonth() { document.getElementById("s-month").value = ""; }
   function clearSearchDate() { document.getElementById("s-date").value = ""; }
@@ -351,13 +447,11 @@
   window.onload = async () => {
     document.getElementById("s-date").value = new Date().toISOString().split('T')[0];
     const cachedStr = localStorage.getItem(CACHE_KEY);
-    const now = Date.now();
-    
     if (cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
-        if (now - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
-          document.getElementById("sync-status").innerText = `データ状態: キャッシュから即時展開しました (${cacheObj.timestamp})`;
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          document.getElementById("sync-status").innerText = `データ状態: キャッシュ展開完了 (${cacheObj.timestamp})`;
           buildUIFromData(cacheObj.allCases, cacheObj.existing, cacheObj.masters);
           handleUrlParams();
           return;
@@ -373,8 +467,6 @@
       const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" });
       const jsonInit = await resInit.json();
       
-      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
-      
       const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
       const jianData = (await resJian.json()).data;
 
@@ -385,12 +477,11 @@
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
       
       buildUIFromData(jianData, debData, jsonInit.masters);
-      document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
+      document.getElementById("sync-status").innerText = `データ状態: 最新同期完了 (${cacheObj.timestamp})`;
       if (isManualUpdate) alert("最新のデータを取得しました。");
       else handleUrlParams();
     } catch(e) { 
-      if(!isBackground) alert("データベースの同期に失敗しました。");
-      document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
+      document.getElementById("sync-status").innerText = `データ状態: オフライン稼働中`;
       sendErrorLog(e.toString());
     } finally { if(!isBackground) hideLoader(); }
   }
@@ -400,7 +491,7 @@
     const editId = urlParams.get('editId');
     if (editId && allCasesData.length > 0) {
       const targetCaseWrapper = allCasesData.find(c => String(c.id) === String(editId));
-      if (targetCaseWrapper) { selectCase(targetCaseWrapper); window.history.replaceState({}, document.title, window.location.pathname); }
+      if (targetCaseWrapper) { selectCase(targetCaseWrapper); }
     }
   }
 
@@ -412,16 +503,12 @@
     document.getElementById("ext-staff-list").innerHTML = ""; masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
     document.getElementById("diagnosis-list").innerHTML = ""; masters.diagnosis.forEach(d => document.getElementById("diagnosis-list").innerHTML += `<option value="${d}">`);
     
-    const buildFixedAcc = (cat, label, arr) => `
-      <div class="acc-header" onclick="toggleAcc(this, 'acc-${cat}')">👤 ${label}<span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-${cat}">
+    const buildFixedAcc = (cat, label) => `
+      <div class="acc-header" onclick="toggleAcc(this, 'acc-${cat}')">Aga👤 ${label}<span class="arrow">▼</span></div>
+      <div class="acc-body" id="acc-cat-${cat}">
         <div class="pill-group" id="chip-container-${cat}" style="margin-bottom:8px;"></div>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="new-${cat}" placeholder="${label}を追加" style="margin:0; flex:1; font-size:13px; padding:8px;">
-          <button type="button" class="btn-small" style="background:var(--blue); color:#fff;" onclick="addMasterAndChip('${cat}', 'new-${cat}', 'chip-container-${cat}')">登録</button>
-        </div>
       </div>`;
-    document.getElementById("fixed-pt-accordions").innerHTML = buildFixedAcc('dr','フライトドクター', masters.dr) + buildFixedAcc('ns','フライトナース', masters.ns) + buildFixedAcc('pilot','機長', masters.pilot) + buildFixedAcc('mechanic','整備士', masters.mechanic) + buildFixedAcc('cs','CS', masters.cs);
+    document.getElementById("fixed-pt-accordions").innerHTML = buildFixedAcc('dr','フライトドクター') + buildFixedAcc('ns','フライトナース') + buildFixedAcc('pilot','機長') + buildFixedAcc('mechanic','整備士') + buildFixedAcc('cs','CS');
     ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
     renderChips('recorder-container', masters.ns, 'recorder', true);
     searchCases();
@@ -430,23 +517,14 @@
   function switchTab(id) {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active'); document.getElementById('tab-' + id).classList.add('active'); window.scrollTo(0,0);
+    document.getElementById('btn-' + id).classList.add('active'); 
+    document.getElementById('tab-' + id).classList.add('active'); 
+    window.scrollTo(0,0);
     if (id === 'sec4') generatePreview();
   }
 
-  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
-  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
-
-  async function submitQA(event) {
-    const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
-    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
-    try {
-      await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}), redirect: "follow" });
-      alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-    } catch (e) { alert("通信エラー"); sendErrorLog(e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
-  }
-
-  function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
+  function toggleAcc(headerEl, targetId) { headerEl.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
+  
   function renderChips(containerId, list, category, isRadio = false) {
     const box = document.getElementById(containerId); if(!box) return; box.innerHTML = "";
     list.forEach(item => { const isOn = sysData.tags[category] && sysData.tags[category].includes(item); box.innerHTML += `<div class="${isOn ? "pill on" : "pill"}" onclick="toggleChip('${category}', '${item}', ${isRadio}, this)">${item}</div>`; });
@@ -454,23 +532,22 @@
   
   function toggleChip(cat, item, isRadio, element) {
     if(!sysData.tags[cat]) sysData.tags[cat] = [];
-    if(isRadio) { sysData.tags[cat] = [item]; if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true); } 
+    if(isRadio) { sysData.tags[cat] = [item]; renderChips(element.parentElement.id, masters.ns, 'recorder', true); } 
     else { 
-      if(sysData.tags[cat].includes(item)) { sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item); if(element) element.classList.remove('on'); } 
-      else { sysData.tags[cat].push(item); if(element) element.classList.add('on'); } 
+      if(sysData.tags[cat].includes(item)) { sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item); element.classList.remove('on'); } 
+      else { sysData.tags[cat].push(item); element.classList.add('on'); } 
     }
   }
 
   function setDiseaseMain(val) {
     document.querySelectorAll('[id^="d-main-"]').forEach(el => el.classList.remove('on'));
-    const idx = val.charAt(0); document.getElementById(`d-main-${idx}`).classList.add('on');
+    const idx = val.charAt(0); if(document.getElementById(`d-main-${idx}`)) document.getElementById(`d-main-${idx}`).classList.add('on');
     sysData.disease.main = val; sysData.disease.cause = ""; sysData.disease.sub = "";
     const subArea = document.getElementById("disease-sub-area"); const cpaAlert = document.getElementById("disease-cpa-alert");
     
     if(val === "4心肺停止") {
       cpaAlert.style.display = "block"; subArea.style.display = "block"; document.getElementById("d-sub-title").innerText = "原因疾患を選択 (必須)";
-      const causeHtml = ["1外傷", "2心大血管", "3脳血管", "5その他"].map(c => `<div class="pill" onclick="setDiseaseCause('${c}', this)">${c}</div>`).join('');
-      document.getElementById("d-sub-pills").innerHTML = causeHtml;
+      document.getElementById("d-sub-pills").innerHTML = ["1外傷", "2心大血管", "3脳血管", "5その他"].map(c => `<div class="pill" onclick="setDiseaseCause('${c}', this)">${c}</div>`).join('');
     } else {
       cpaAlert.style.display = "none";
       if(DISEASE_TREE[val]) { subArea.style.display = "block"; document.getElementById("d-sub-title").innerText = "詳細分類"; renderDiseaseSub(val); } 
@@ -493,33 +570,18 @@
 
   async function generateDiagnosis() {
     const name = document.getElementById("diag-name").value.trim(); if(!name) return;
-    const btn = document.getElementById("btn-diag-add"); btn.innerText = "追加中..."; btn.disabled = true;
-    try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }), redirect: "follow" });
-      if(!sysData.tags.diagnosis) sysData.tags.diagnosis = []; if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
-      renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-      if(!masters.diagnosis.includes(name)) masters.diagnosis.push(name); document.getElementById("diag-name").value = "";
-    } catch(e) { sendErrorLog(e.toString()); } finally { btn.innerText = "＋追加"; btn.disabled = false; }
-  }
-
-  async function addMasterAndChip(cat, inputId, containerId) {
-    const val = document.getElementById(inputId).value.trim(); if(!val) return;
-    document.getElementById(inputId).value = "追加中...";
-    try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: cat, val1: val }), redirect: "follow" });
-      if(!masters[cat].includes(val)) masters[cat].push(val); 
-      if(!sysData.tags[cat]) sysData.tags[cat] = []; if(!sysData.tags[cat].includes(val)) sysData.tags[cat].push(val);
-      renderChips(containerId, masters[cat], cat); document.getElementById(inputId).value = "";
-    } catch(e) { document.getElementById(inputId).value = ""; }
+    if(!sysData.tags.diagnosis) sysData.tags.diagnosis = []; if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
+    renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
+    document.getElementById("diag-name").value = "";
   }
 
   let extPtCount = 0;
   function addExtPt(affil="", name="") {
     extPtCount++; const id = `ext-pt-${extPtCount}`;
     const html = `<div id="${id}" class="ext-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <input type="text" class="e-affil" list="ext-affil-list" placeholder="所属" value="${affil}" style="flex:2; margin:0; padding:10px;">
-        <input type="text" class="e-name" list="ext-staff-list" placeholder="名前" value="${name}" style="flex:1.5; margin:0; padding:10px;">
-        <button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:10px;" onclick="document.getElementById('${id}').remove()">✕</button>
+        <input type="text" class="e-affil" list="ext-affil-list" placeholder="所属" value="${affil}" style="flex:2; margin:0;">
+        <input type="text" class="e-name" list="ext-staff-list" placeholder="名前" value="${name}" style="flex:1.5; margin:0;">
+        <button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="document.getElementById('${id}').remove()">✕</button>
       </div>`;
     document.getElementById("ext-pt-container").insertAdjacentHTML('beforeend', html);
   }
@@ -528,9 +590,9 @@
   function addOjtPt(job="", name="") {
     ojtPtCount++; const id = `ojt-pt-${ojtPtCount}`;
     const html = `<div id="${id}" class="ojt-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <select class="o-job" style="flex:1.5; margin:0; padding:10px; font-size:14px;"><option value="Dr" ${job==='Dr'?'selected':''}>Dr</option><option value="Ns" ${job==='Ns'?'selected':''}>Ns</option><option value="救急隊" ${job==='救急隊'?'selected':''}>救急隊</option><option value="その他" ${job==='その他'?'selected':''}>その他</option></select>
-        <input type="text" class="o-name" placeholder="名前" value="${name}" style="flex:2; margin:0; padding:10px;">
-        <button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:10px;" onclick="document.getElementById('${id}').remove()">✕</button>
+        <select class="o-job" style="flex:1.5; margin:0;"><option value="Dr" ${job==='Dr'?'selected':''}>Dr</option><option value="Ns" ${job==='Ns'?'selected':''}>Ns</option><option value="救急隊" ${job==='救急隊'?'selected':''}>救急隊</option><option value="その他" ${job==='handled'?'selected':''}>その他</option></select>
+        <input type="text" class="o-name" placeholder="名前" value="${name}" style="flex:2; margin:0;">
+        <button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="document.getElementById('${id}').remove()">✕</button>
       </div>`;
     document.getElementById("ojt-pt-container").insertAdjacentHTML('beforeend', html);
   }
@@ -549,10 +611,9 @@
     if(results.length === 0) { resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>"; } 
     else {
       resArea.innerHTML = results.map(r => {
-        const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";
         return `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
           <b>No.${r.id}</b> ｜ ${r.date} ｜ ${r.scheme || '未選択'}<br>
-          <span style="font-size:12px;color:var(--sub);">[${time}] 出場先: ${r.dest} ｜ Dr:${r.rawData["フライトドクター"] || '-'} Ns:${r.rawData["フライトナース"] || '-'}</span>
+          <span style="font-size:12px;color:var(--sub);">出場先: ${r.dest} ｜ Dr:${r.rawData["フライトドクター"] || '-'} Ns:${r.rawData["フライトナース"] || '-'}</span>
         </div>`;
       }).join("");
     }
@@ -564,30 +625,34 @@
     document.getElementById("search-results-area").style.display = "none"; 
     document.getElementById("case-data-area").style.display = "block";
     
-    // 🌟 修正: 新しい概要抽出ロジック（備考の構造変更に完全対応）
     if(currentCase["備考"]) {
       let bikoStr = currentCase["備考"];
       bikoStr = bikoStr.replace(/⚠️【使用物品・補充予定メモ】[\s\S]*?------------------\n/g, "");
-      bikoStr = bikoStr.replace(/【事案概要】\n/g, "");
-      document.getElementById("v-summary").value = bikoStr.trim();
+      if (bikoStr.includes("【事案概要】")) {
+        let match = bikoStr.match(/【事案概要】\n([\s\S]*?)(?:\n\n|\n$|$)/);
+        if (match) document.getElementById("v-summary").value = match[1].trim();
+        else document.getElementById("v-summary").value = bikoStr.replace("【事案概要】\n", "").trim();
+      } else {
+        document.getElementById("v-summary").value = bikoStr.trim();
+      }
     }
     
-    if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) { 
+    if(currentCase["現場診断"]) { 
       sysData.tags.diagnosis = currentCase["現場診断"].split(",").map(d => d.trim()).filter(Boolean); 
     }
     renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
 
-    // 🌟 修正: 新しい処置オブジェクト形式(procsState)からの完全復元ロジック
+    // 🌟 procsState オブジェクトの完全復元
     let importedProcs = [];
     if (currentCase["システムデータ"]) {
       try {
         const pSys = JSON.parse(currentCase["システムデータ"]);
         if (pSys.procsState) {
           const ps = pSys.procsState;
-          if (ps.lines) Object.keys(ps.lines).forEach(k => importedProcs.push(`${k} x${ps.lines[k]}`));
-          if (ps.intub) importedProcs.push(`気管挿管(ID${ps.intubSize}mm固定${ps.intubPos}cm)`);
-          if (ps.nppv) importedProcs.push(`NPPV使用(${ps.nppvMask}マスク)`);
-          if (ps.shock) importedProcs.push(`除細動${ps.shockCount}回`);
+          if (ps.lines) Object.keys(ps.lines).forEach(k => importedProcs.push(`${k} x${ps.lines[k]}本`));
+          if (ps.intub) importedProcs.push(`気管挿管(ID ${ps.intubSize}mm, 固定 ${ps.intubPos}cm)`);
+          if (ps.nppv) importedProcs.push(`NPPV使用(${ps.nppvMask}サイズ)`);
+          if (ps.shock) importedProcs.push(`除細動 ${ps.shockCount}回`);
           if (ps.pacing) importedProcs.push("経皮ペーシング");
           if (ps.bg) importedProcs.push(`血液ガス分析(${ps.bgType})`);
           if (ps.thorax) importedProcs.push(`胸腔ドレナージ(20Fr:${ps.thorax20}本/28Fr:${ps.thorax28}本)`);
@@ -600,47 +665,40 @@
       } catch(e) {}
     }
 
-    // 互換性フォールバック（古いデータ用）
     if (importedProcs.length === 0) {
-      let procStr = currentCase["簡易処置リスト"] || currentCase["処置リスト"] || "";
+      let procStr = currentCase["簡易処置リスト"] || "";
       let traumaStr = currentCase["外傷処置"] || "";
       if(procStr) importedProcs.push(...procStr.split(",").map(s => s.trim()).filter(Boolean));
       if(traumaStr) importedProcs.push(...traumaStr.split(",").map(s => s.trim()).filter(Boolean));
     }
     
     if(importedProcs.length > 0) {
-      const uniqueProcs = [...new Set(importedProcs)];
-      sysData.tags.globalTreatment = uniqueProcs;
-      const vProcs = document.getElementById("v-fetched-procs");
-      vProcs.innerHTML = uniqueProcs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
+      sysData.tags.globalTreatment = importedProcs;
+      document.getElementById("v-fetched-procs").innerHTML = importedProcs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
+    } else {
+      document.getElementById("v-fetched-procs").innerHTML = '<span style="font-size:12px;color:var(--sub);">記録なし</span>';
     }
 
-    const targetId = currentCase["要請番号"];
-    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(targetId));
+    // 🌟 マスタから自動マッピング展開
+    const matchAndCheck = (cat, srcVal) => {
+      sysData.tags[cat] = [];
+      if(srcVal) {
+        masters[cat].forEach(mName => { if(srcVal.includes(mName)) sysData.tags[cat].push(mName); });
+      }
+      renderChips(`chip-container-${cat}`, masters[cat], cat);
+    };
+    matchAndCheck('dr', currentCase["フライトドクター"]);
+    matchAndCheck('ns', currentCase["フライトナース"]);
+
+    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b> ｜ 出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"] || '-'} ｜ Ns: ${currentCase["フライトナース"] || '-'}</div>`;
+
+    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
     if(past && past["システムデータ"]) {
-      if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
+      if(confirm("💡 すでにデブリーフィングが登録されています。復元して再編集しますか？")) {
         restoreSystemData(JSON.parse(past["システムデータ"]));
         document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       }
     }
-    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
-  }
-
-  function restoreSystemData(sys) {
-    sysData = sys; document.getElementById("v-summary").value = sys.summary || "";
-    if(sys.disease) {
-       if(sys.disease.main) setDiseaseMain(sys.disease.main);
-       if(sys.disease.cause) { const btn = Array.from(document.getElementById("d-sub-pills").children).find(e=>e.innerText===sys.disease.cause); if(btn) setDiseaseCause(sys.disease.cause, btn); }
-       if(sys.disease.sub) { const btn = Array.from(document.getElementById("d-sub-pills-2")?.children||[]).find(e=>e.innerText===sys.disease.sub); if(btn) setDiseaseSubReal(sys.disease.sub, btn); }
-       document.getElementById("v-maternal").value = sys.disease.maternal || "なし"; document.getElementById("v-worker").value = sys.disease.worker || "なし";
-    }
-    ['dr','ns','pilot','mechanic','cs','diagnosis','recorder'].forEach(cat => { if(sysData.tags[cat]) { if(cat=='diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis'); else if(cat=='recorder') renderChips('recorder-container', masters.ns, 'recorder', true); else renderChips(`chip-container-${cat}`, masters[cat], cat); } });
-    if(sysData.tags.globalTreatment && sysData.tags.globalTreatment.length > 0) {
-      document.getElementById("v-fetched-procs").innerHTML = sysData.tags.globalTreatment.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
-    }
-    document.getElementById("ext-pt-container").innerHTML = ""; if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
-    document.getElementById("ojt-pt-container").innerHTML = ""; if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
-    renderEvalBlocks(); renderFeedbackBlocks();
   }
 
   function toggleInlineTag(tag, type, idx, element) {
@@ -650,11 +708,11 @@
   }
 
   function generateInlineTagUI(selectedTags, type, idx) {
-    let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px;">🏷️ 関連タグ・NTS等を選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}" style="padding:12px; border:1px solid var(--line); border-radius:6px; margin-top:4px;">`;
-    html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px;">🧠 チーム連携・状況判断 (NTS等)</div><div class="pill-group">`;
-    NTS_LIST.forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
-    html += `</div><div style="font-size:11px; font-weight:bold; color:var(--sub); margin-top:8px; margin-bottom:4px;">🛠 実務・処置</div><div class="pill-group">`;
-    TAG_MASTERS.practice.items.concat(TAG_MASTERS.treatment.items).forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
+    let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; padding:6px; font-size:12px;">関連タグ・NTS選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}">`;
+    html += `<div class="chip-grid">`;
+    NTS_LIST.concat(TAG_MASTERS.practice.items).concat(TAG_MASTERS.treatment.items).forEach(t => {
+      html += `<div class="${selectedTags.includes(t)?'chip on':'chip'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`;
+    });
     html += `</div></div>`; return html;
   }
 
@@ -664,32 +722,27 @@
     sysData.evals.forEach((ev, idx) => {
       const isMed = ev.type === "病態評価(ABCDEF)";
       let html = `<div class="eval-block" id="ev-${ev.id}">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold; color:var(--blue); font-size:15px;">📝 評価ポイント #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.evals.splice(${idx},1); renderEvalBlocks()">削除</button></div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">活動場面</div>
-        <select onchange="sysData.evals[${idx}].scene=this.value; document.getElementById('ev-sc-oth-${ev.id}').style.display=(this.value==='⑨ その他'?'block':'none')" style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold; color:var(--blue);">評価ポイント #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.evals.splice(${idx},1); renderEvalBlocks()">削除</button></div>
+        <select onchange="sysData.evals[${idx}].scene=this.value;" style="margin-bottom:8px;">
           <option value="">場面を選択...</option>${SCENE_LIST.map(s => `<option value="${s}" ${ev.scene===s?'selected':''}>${s}</option>`).join('')}
         </select>
-        <input type="text" id="ev-sc-oth-${ev.id}" placeholder="その他の場面" value="${ev.sceneOther}" onchange="sysData.evals[${idx}].sceneOther=this.value" style="display:${ev.scene==='⑨ その他'?'block':'none'}; margin-bottom:12px;">
         <div class="radio-group" style="margin-bottom:12px;">
-          <label><input type="radio" name="ev-type-${ev.id}" value="状況評価(NTS等)" ${!isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">状況評価 (NTS等)</span></label>
-          <label><input type="radio" name="ev-type-${ev.id}" value="病態評価(ABCDEF)" ${isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">病態評価 (ABCDEF)</span></label>
+          <label><input type="radio" name="ev-type-${ev.id}" value="状況評価(NTS等)" ${!isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">状況評価</span></label>
+          <label><input type="radio" name="ev-type-${ev.id}" value="病態評価(ABCDEF)" ${isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">病態評価</span></label>
         </div>`;
-
       if(!isMed) { html += `<textarea rows="3" placeholder="状況の詳細" onchange="sysData.evals[${idx}].desc=this.value">${ev.desc}</textarea>`; } 
       else {
         html += `<div class="vitals-grid">
-          <div class="vital-item">血圧 <input type="number" inputmode="numeric" value="${ev.vitals.bp1}" onchange="sysData.evals[${idx}].vitals.bp1=this.value"> / <input type="number" inputmode="numeric" value="${ev.vitals.bp2}" onchange="sysData.evals[${idx}].vitals.bp2=this.value"> mmHg</div>
-          <div class="vital-item">脈拍 <input type="number" inputmode="numeric" value="${ev.vitals.hr}" onchange="sysData.evals[${idx}].vitals.hr=this.value"> 回/分</div>
-          <div class="vital-item">呼吸 <input type="number" inputmode="numeric" value="${ev.vitals.rr}" onchange="sysData.evals[${idx}].vitals.rr=this.value"> 回/分</div>
-          <div class="vital-item">体温 <input type="number" inputmode="decimal" value="${ev.vitals.bt}" onchange="sysData.evals[${idx}].vitals.bt=this.value"> ℃</div>
-          <div class="vital-item" style="grid-column:1/3;">SpO2 <input type="number" inputmode="numeric" value="${ev.vitals.spo2}" onchange="sysData.evals[${idx}].vitals.spo2=this.value"> % ( O2 <input type="number" inputmode="decimal" value="${ev.vitals.o2}" onchange="sysData.evals[${idx}].vitals.o2=this.value"> L )</div>
-          <div class="vital-item" style="grid-column:1/3;">意識 JCS <input type="text" value="${ev.vitals.jcs}" onchange="sysData.evals[${idx}].vitals.jcs=this.value"> / GCS <input type="text" value="${ev.vitals.gcs}" onchange="sysData.evals[${idx}].vitals.gcs=this.value"></div>
+          <div class="vital-item">血圧 <input type="number" value="${ev.vitals.bp1}" onchange="sysData.evals[${idx}].vitals.bp1=this.value">/ <input type="number" value="${ev.vitals.bp2}" onchange="sysData.evals[${idx}].vitals.bp2=this.value"></div>
+          <div class="vital-item">脈拍 <input type="number" value="${ev.vitals.hr}" onchange="sysData.evals[${idx}].vitals.hr=this.value"></div>
+          <div class="vital-item">呼吸 <input type="number" value="${ev.vitals.rr}" onchange="sysData.evals[${idx}].vitals.rr=this.value"></div>
+          <div class="vital-item">SpO2 <input type="number" value="${ev.vitals.spo2}" onchange="sysData.evals[${idx}].vitals.spo2=this.value"></div>
         </div>
-        <textarea rows="3" placeholder="ABCDEF 所見・アセスメント (フリーテキスト)" onchange="sysData.evals[${idx}].freeABC=this.value">${ev.freeABC}</textarea>`;
+        <textarea rows="3" placeholder="ABCDEF 所見・アセスメント" onchange="sysData.evals[${idx}].freeABC=this.value">${ev.freeABC}</textarea>`;
       }
       html += `<div style="display:flex; gap:8px; margin-top:8px;">
-          <textarea rows="2" placeholder="🟢 Good (良かった点・対応)" onchange="sysData.evals[${idx}].good=this.value" style="border-color:#a5d6a7;">${ev.good}</textarea>
-          <textarea rows="2" placeholder="⚠️ Bad / Gap (課題・反省点)" onchange="sysData.evals[${idx}].bad=this.value" style="border-color:#fff59d;">${ev.bad}</textarea>
+          <textarea rows="2" placeholder="🟢 Good" onchange="sysData.evals[${idx}].good=this.value">${ev.good}</textarea>
+          <textarea rows="2" placeholder="⚠️ Bad" onchange="sysData.evals[${idx}].bad=this.value">${ev.bad}</textarea>
         </div>`;
       html += generateInlineTagUI(ev.tags, 'eval', idx); html += `</div>`; box.insertAdjacentHTML('beforeend', html);
     });
@@ -698,133 +751,74 @@
   function addFeedbackBlock() { sysData.feedbacks.push({ id: Date.now(), prof: "フライトドクター", name: "", good: "", bad: "", next: "", tags:[] }); renderFeedbackBlocks(); }
   function renderFeedbackBlocks() {
     const box = document.getElementById("feedback-container"); box.innerHTML = "";
-    let ptOptions = `<option value="">(名前を指定しない)</option>`;
+    let ptOptions = `<option value="">(職種全体)</option>`;
     ['dr','ns','pilot','mechanic','cs'].forEach(cat => { if(sysData.tags[cat]) sysData.tags[cat].forEach(n => ptOptions+=`<option value="${n}">${n}</option>`); });
-    document.querySelectorAll('.ext-row').forEach(row => { const a = row.querySelector('.e-affil').value; const n = row.querySelector('.e-name').value; if(a||n) ptOptions+=`<option value="${a} ${n}">${a} ${n}</option>`; });
-    document.querySelectorAll('.ojt-row').forEach(row => { const j = row.querySelector('.o-job').value; const n = row.querySelector('.o-name').value; if(j||n) ptOptions+=`<option value="${n}(OJT)">${n}(OJT)</option>`; });
 
     sysData.feedbacks.forEach((fb, idx) => {
       let html = `<div class="fb-block" id="fb-${fb.id}">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold; color:var(--ink); font-size:15px;">🗣️ 振り返り視点 #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.feedbacks.splice(${idx},1); renderFeedbackBlocks()">削除</button></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold;">🗣️ 振り返り視点 #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.feedbacks.splice(${idx},1); renderFeedbackBlocks()">削除</button></div>
         <div style="display:flex; gap:8px; margin-bottom:12px;">
           <select onchange="sysData.feedbacks[${idx}].prof=this.value" style="flex:1;">
             <option value="フライトドクター" ${fb.prof=='フライトドクター'?'selected':''}>Dr</option><option value="フライトナース" ${fb.prof=='フライトナース'?'selected':''}>Ns</option>
-            <option value="機長・整備士" ${fb.prof=='機長・整備士'?'selected':''}>機長・整備士</option><option value="CS" ${fb.prof=='CS'?'selected':''}>CS</option>
-            <option value="消防・救急隊" ${fb.prof=='消防・救急隊'?'selected':''}>消防・救急隊</option><option value="OJT" ${fb.prof=='OJT'?'selected':''}>OJT</option>
+            <option value="機長・整備士" ${fb.prof=='機長・整備士'?'selected':''}>操縦・整備</option><option value="CS" ${fb.prof=='CS'?'selected':''}>CS</option>
           </select>
           <select onchange="sysData.feedbacks[${idx}].name=this.value" style="flex:1.5;">${ptOptions.replace(`value="${fb.name}"`, `value="${fb.name}" selected`)}</select>
         </div>
-        <textarea rows="2" placeholder="🟢 Good" onchange="sysData.feedbacks[${idx}].good=this.value" style="border-color:#a5d6a7;">${fb.good}</textarea>
-        <textarea rows="2" placeholder="⚠️ Bad / Gap" onchange="sysData.feedbacks[${idx}].bad=this.value" style="border-color:#fff59d;">${fb.bad}</textarea>
-        <textarea rows="2" placeholder="🚀 Next" onchange="sysData.feedbacks[${idx}].next=this.value" style="border-color:#bbdefb;">${fb.next}</textarea>`;
+        <textarea rows="2" placeholder="🟢 Good" onchange="sysData.feedbacks[${idx}].good=this.value">${fb.good}</textarea>
+        <textarea rows="2" placeholder="⚠️ Bad" onchange="sysData.feedbacks[${idx}].bad=this.value">${fb.bad}</textarea>
+        <textarea rows="2" placeholder="🚀 Next" onchange="sysData.feedbacks[${idx}].next=this.value">${fb.next}</textarea>`;
       html += generateInlineTagUI(fb.tags, 'fb', idx); html += `</div>`; box.insertAdjacentHTML('beforeend', html);
     });
   }
 
   function generatePreview() {
-    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;font-weight:bold;'>事案を紐付けしてください。</p>"; return; }
-    let envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || ""; let envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
-    let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
-    document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
-    document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
-
-    sysData.disease.maternal = document.getElementById("v-maternal").value; sysData.disease.worker = document.getElementById("v-worker").value;
-    let diseaseStr = `[${sysData.disease.main}]`; if(sysData.disease.cause) diseaseStr += ` 原因:${sysData.disease.cause}`; if(sysData.disease.sub) diseaseStr += ` -> ${sysData.disease.sub}`;
-    diseaseStr += ` (母子:${sysData.disease.maternal} 労災:${sysData.disease.worker})`;
-
-    let evalHtml = sysData.evals.map((e,i) => {
-      let sc = e.scene=='⑨ その他' ? e.sceneOther : e.scene;
-      let html = `<div style="margin-bottom:16px; border-bottom:1px dashed #ccc; padding-bottom:12px;"><b>#${i+1} ${e.type} (${sc||'場面未選択'})</b><br>`;
-      if(e.type === '状況評価(NTS等)') html += `[状況] ${e.desc||'-'}<br>`; 
-      else {
-        html += `[Vital] BP:${e.vitals.bp1}/${e.vitals.bp2} HR:${e.vitals.hr} RR:${e.vitals.rr} SpO2:${e.vitals.spo2}%(O2:${e.vitals.o2}L) BT:${e.vitals.bt} JCS:${e.vitals.jcs}/GCS:${e.vitals.gcs}<br>`;
-        html += `[ABCDEF] ${e.freeABC||'-'}<br>`;
-      }
-      html += `<span style="color:#2e7d32">[Good] ${e.good||'-'}</span><br><span style="color:#d32f2f">[Bad] ${e.bad||'-'}</span>`;
-      if(e.tags.length > 0) html += `<br><span style="font-size:12px;color:var(--blue);">🏷️ ${e.tags.join(', ')}</span>`;
-      return html + `</div>`;
-    }).join("");
-    
-    let fbHtml = sysData.feedbacks.map(f => { 
-      let nm = f.name ? `(${f.name})` : ''; 
-      let html = `<div style="margin-bottom:12px;"><b>【${f.prof}${nm}】</b><br><span style="color:#2e7d32">G: ${f.good||'-'}</span><br><span style="color:#d32f2f">B: ${f.bad||'-'}</span><br><span style="color:#1565c0">N: ${f.next||'-'}</span>`; 
-      if(f.tags.length > 0) html += `<br><span style="font-size:12px;color:var(--blue);">🏷️ ${f.tags.join(', ')}</span>`;
-      return html + `</div>`;
-    }).join("");
-    
+    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:red;padding:20px;'>事案を紐付けしてください。</p>"; return; }
+    let diseaseStr = `[${sysData.disease.main}] ${sysData.disease.sub || sysData.disease.cause || ""}`;
     const summaryVal = document.getElementById("v-summary").value || "";
-    let displayDiags = [...(sysData.tags.diagnosis||[])];
-    const unaddedDiag = document.getElementById("diag-name").value.trim();
-    if(unaddedDiag && !displayDiags.includes(unaddedDiag)) displayDiags.push(unaddedDiag);
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
-    sysData.tags.globalTreatment = activeProcs;
-    
+
     document.getElementById("print-area").innerHTML = `
-      <div style="font-size:14px; line-height:1.6; padding:12px;">
-        <h2 style="margin-top:0; color:var(--ink);">AW109 デブリーフィング</h2>
-        <div style="background:#f9f9f9; padding:8px; border-radius:6px; margin-bottom:12px;">
+      <div style="font-size:14px; line-height:1.6; padding:16px;">
+        <h2>AW109 デブリーフィング報告書</h2>
+        <div style="background:#f9f9f9; padding:12px; border-radius:6px; margin-top:12px;">
           <b>要請番号:</b> No.${currentCase["要請番号"]}<br>
           <b>疾患分類:</b> ${diseaseStr}<br>
-          <b>現場診断:</b> ${displayDiags.join(", ")||'-'}<br>
-          <b>事前実施処置:</b> ${activeProcs.join(", ")||'-'}<br>
-          <b>環境/参加:</b> ${envLoc}・${envMethod} / ${ptList.join(", ")||'未記入'}
+          <b>選択された処置:</b> ${activeProcs.join(", ")}
         </div>
-        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 事案概要</h3><div style="padding:4px; margin-bottom:12px;">${summaryVal.replace(/\n/g,'<br>')}</div>
-        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 症例評価</h3><div style="padding:4px; margin-bottom:12px;">${evalHtml}</div>
-        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 多職種振り返り</h3><div style="padding:4px;">${fbHtml}</div>
+        <h3 style="margin-top:16px; border-bottom:1px solid var(--blue);">■ 事案ストーリー概要</h3>
+        <p>${summaryVal.replace(/\n/g,'<br>')}</p>
       </div>`;
   }
 
   async function submitDebriefing() {
     if (!currentCase) return alert("事案がありません。");
     const rec = (sysData.tags.recorder && sysData.tags.recorder.length>0) ? sysData.tags.recorder[0] : "";
-    if (!rec) return alert("タブ1で記載者(Ns)を選択してください。");
+    if (!rec) return alert("シートの記載者(Ns)を選択してください。");
 
-    const unaddedDiag = document.getElementById("diag-name").value.trim();
-    if(unaddedDiag && !sysData.tags.diagnosis.includes(unaddedDiag)) { sysData.tags.diagnosis.push(unaddedDiag); }
+    sysData.summary = document.getElementById("v-summary").value;
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
-    sysData.summary = document.getElementById("v-summary").value;
-    sysData.disease.maternal = document.getElementById("v-maternal").value;
-    sysData.disease.worker = document.getElementById("v-worker").value;
-
-    sysData.ext = []; document.querySelectorAll('.ext-row').forEach(r => sysData.ext.push({affil:r.querySelector('.e-affil').value, name:r.querySelector('.e-name').value}));
-    sysData.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sysData.ojt.push({job:r.querySelector('.o-job').value, name:r.querySelector('.o-name').value}));
-    let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
-    sysData.ext.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); }); sysData.ojt.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
 
     let allUsedTags = [...activeProcs];
-    let evalTxt = sysData.evals.map((e,i) => {
-      e.tags.forEach(t => allUsedTags.push(t));
-      let sc = e.scene=='⑨ その他'?e.sceneOther:e.scene; let txt = `【#${i+1} ${e.type}(${sc||'未選択'})】\n`;
-      if(e.type=='状況評価(NTS等)') txt+=`状況: ${e.desc||'-'}\n`; 
-      else txt+=`Vital: BP${e.vitals.bp1}/${e.vitals.bp2} HR${e.vitals.hr} RR${e.vitals.rr} SpO2${e.vitals.spo2}%(O2 ${e.vitals.o2}L) BT${e.vitals.bt} JCS${e.vitals.jcs}/GCS${e.vitals.gcs}\nABCDEF: ${e.freeABC||'-'}\n`;
-      txt += `Good: ${e.good||'-'}\nBad: ${e.bad||'-'}\nTag: ${e.tags.join(',')}\n`; return txt;
-    }).join("\n");
-
+    let evalTxt = sysData.evals.map((e,i) => { e.tags.forEach(t => allUsedTags.push(t)); return `【#${i+1}】${e.good||'-'} / ${e.bad||'-'}`; }).join("\n");
     let cg="", cb="";
-    sysData.feedbacks.forEach(f => { f.tags.forEach(t => allUsedTags.push(t)); let nm = f.name ? `(${f.name})` : ''; if(f.good) cg += `【${f.prof}${nm}】\n${f.good}\n`; if(f.bad||f.next) cb += `【${f.prof}${nm}】\n[Bad] ${f.bad}\n[Next] ${f.next}\n`; });
-    const uniqueTags = [...new Set(allUsedTags)];
+    sysData.feedbacks.forEach(f => { f.tags.forEach(t => allUsedTags.push(t)); cg+=f.good+"\n"; cb+=f.bad+"\n"; });
 
-    // 🌟 修正: 固定キーは常に「要請番号」で統一（データの分裂を防ぐ）
     const tagsObj = {
       diseaseMain: sysData.disease.main, diseaseSub: sysData.disease.sub || sysData.disease.cause,
       disease: (sysData.tags['diagnosis']||[]).join(", "),
-      scene: [...new Set(sysData.evals.map(e => e.scene=='⑨ その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
-      inlineTags: uniqueTags.join(", ")
+      scene: [...new Set(sysData.evals.map(e => e.scene).filter(Boolean))].join(", "),
+      inlineTags: [...new Set(allUsedTags)].join(", ")
     };
-    const envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
-    const envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
 
-    const payload = { caseId: currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: envLoc, method: envMethod, participants: ptList.join(", "), systemData: sysData };
+    const payload = { caseId: currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: document.querySelector('input[name="env-loc"]:checked')?.value||"", method: document.querySelector('input[name="env-method"]:checked')?.value||"", participants: "", systemData: sysData };
 
-    const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
-    showLoader("保存処理中...", "デブリーフィングデータベースへ保存しています");
+    showLoader("データ保存中...", "データベースに書き込んでいます");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
       const json = await res.json(); 
-      if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else { throw new Error(json.message); }
-    } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
+      if (json.status === "success") { alert("アーカイブに保存しました！"); location.href = "portal.html"; } 
+    } catch(e) { alert("保存エラー"); } finally { hideLoader(); }
   }
 </script>
 </body>
