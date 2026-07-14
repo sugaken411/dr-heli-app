@@ -3,934 +3,599 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>AW109 デブリーフィング</title>
+  <title>AW109 統合チェックリスト</title>
   <style>
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: #c7c7cc; --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
+    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --brand: #d32f2f; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
     
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
-    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    header { position: fixed; top: 0; left: 0; right: 0; height: calc(60px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 10px; padding-right: 10px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 60px; text-align: center; }
+    .hdr-title { font-weight: 900; font-size: 16px; text-align: center; flex: 1; display:flex; justify-content:center; align-items:center; }
+    .version-tag { font-size: 11px; background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; margin-left: 8px; cursor: pointer; user-select: none; }
     
-    .tab-container { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
+    .tab-container { position: fixed; top: calc(60px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
     .nav-tab { flex: 1; text-align: center; line-height: 44px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
-    
-    main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
-    .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; padding: 16px; }
-    .section-label { font-size: 13px; font-weight: 800; color: var(--blue); margin-bottom: 12px; border-bottom: 1px solid #efeff4; padding-bottom: 6px; text-transform: uppercase; }
-    
-    input[type="text"], input[type="tel"], input[type="time"], input[type="date"], input[type="month"], input[type="number"], textarea, select { width: 100%; border: 1px solid var(--line); font-size: 14px; background: #fff; outline: none; padding: 10px; border-radius: 6px; margin-bottom: 8px; color: var(--ink); font-weight: 600; box-sizing: border-box; appearance: none; }
-    textarea { resize: vertical; line-height: 1.5; }
-    textarea:focus, input:focus, select:focus { border-color: var(--blue); background: #f0f8ff; }
-    
-    .btn-blue { background: var(--blue); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
-    .btn-next { background: var(--brand); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 8px; box-shadow: 0 4px 12px rgba(211,47,47,0.2); transition: 0.2s; }
-    .btn-next:active { transform: scale(0.98); }
-    .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-    
-    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .radio-lbl { display: inline-block; padding: 8px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
-    input[type="radio"] { display: none; }
-    input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
-    
-    .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .pill { border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
-    .pill.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
-    .pill.sub-on { background: #ff9800; border-color: #ff9800; color: #fff; box-shadow: 0 2px 6px rgba(255,152,0,0.2); }
-    
-    .vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #e5e5ea; margin-bottom: 12px; }
-    .vital-item { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--sub); }
-    .vital-item input { width: 50px; text-align: center; padding: 6px; margin: 0; font-size: 14px; }
-    
-    .acc-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 14px; cursor: pointer; color: var(--ink); }
-    .acc-header .arrow { font-size: 12px; color: var(--sub); transition: 0.3s; }
-    .acc-header.open .arrow { transform: rotate(180deg); }
-    .acc-body { display: none; padding: 12px 0; }
-    .acc-body.open { display: block; animation: fadeIn 0.2s ease; }
 
-    .search-result-item { padding: 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #fff; transition: border-color 0.2s; }
-    .search-result-item:hover { border-color: var(--blue); }
-    .data-preview { font-size: 13px; background: #f0f8ff; padding: 12px; border-radius: 6px; border: 1px solid #bbdefb; margin-bottom: 16px; line-height: 1.6; }
+    main { margin-top: calc(114px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
-    .eval-block { border: 1px solid #c7c7cc; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-    .fb-block { background: #f9f9f9; border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .timing-label { font-size: 12px; font-weight: 800; color: var(--sub); margin-top: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .timing-label::before { content: ""; display: block; width: 4px; height: 12px; background: var(--blue); border-radius: 2px; }
+    
+    .type-picker { display: flex; flex-wrap: wrap; background: transparent; gap: 8px; margin-bottom: 8px; }
+    .type-btn { flex: 1 1 calc(33.3% - 8px); min-width: 100px; text-align: center; padding: 12px 6px; font-size: 13px; font-weight: 800; color: var(--sub); background: #e5e5ea; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: normal; line-height: 1.3; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2px solid transparent; position: relative; }
+    .type-btn.active { background: #fff; color: var(--blue); border-color: var(--blue); box-shadow: 0 4px 12px rgba(0,122,255,0.15); }
+    .type-btn.completed { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
+    .type-btn.completed::after { content: "✅"; position: absolute; top: -6px; right: -6px; font-size: 12px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
-    .tab-content { display: none; animation: fadeIn 0.3s ease; } 
+    .normal-info { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--line); }
+
+    .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
+    .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; flex-wrap: wrap; }
+    .sub-cat-badge { font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbdefb; margin-left: 8px; white-space: nowrap; }
+    
+    .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; transition: background-color 0.3s; }
+    .chk-row.error-highlight { background-color: #ffebee; border-left: 4px solid var(--brand); } 
+    .chk-row:last-child { border-bottom: none; }
+    
+    .chk-title-wrapper { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; }
+    .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; word-break: break-all; flex: 1; }
+    .constant-val { font-size: 12px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+    
+    .toggle-group { display: flex; gap: 8px; }
+    .tgl-btn { flex: 1; padding: 12px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; user-select: none; }
+    .tgl-btn.ok.active { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
+    .tgl-btn.ng.active { background: #ffebee; color: #c62828; border-color: #ef5350; }
+    
+    .text-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; box-sizing: border-box; font-weight:600; color:var(--ink); }
+    .text-input:focus { border-color: var(--blue); background: #fff; }
+    .error-reason { display: none; margin-top: 4px; }
+    
+    .btn-submit { width: 100%; padding: 16px; background: var(--blue); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0,122,255,0.3); transition:0.2s; }
+    .btn-submit:active { transform:scale(0.98); }
+
+    .filter-box { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: #f9f9f9; border-bottom: 1px solid var(--line); }
+    .filter-row { display: flex; gap: 8px; align-items: center; }
+    
+    .history-item { padding: 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; background: #fff; }
+    .history-item:last-child { border-bottom: none; }
+    .h-head { display: flex; justify-content: space-between; align-items: center; }
+    .h-badge { font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
+    .h-ok { background: #e8f5e9; color: #2e7d32; } .h-ng { background: #ffebee; color: #c62828; }
+    .h-meta { font-size: 12px; color: var(--sub); font-weight: bold; }
+    .h-err { font-size: 13px; color: var(--ink); background: #fff3e0; padding: 8px; border-radius: 6px; border-left: 3px solid #ff9800; margin-top: 4px; }
+    .h-remarks { font-size: 13px; font-weight: 600; color: #0056b3; background: #e3f2fd; padding: 8px; border-radius: 6px; margin-top: 4px; }
+
+    .tab-content { display: none; animation: fadeIn 0.2s ease; }
     .tab-content.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    
+    @keyframes fadeIn { from{ opacity:0; transform:translateY(5px); } to{ opacity:1; transform:translateY(0); } }
+
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
-    
+
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    
-    @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
+
+    @media print {
+      body { background: #fff; }
+      header, .tab-container, .type-picker-wrapper, .normal-info, .no-print { display: none !important; }
+      main { margin-top: 0; padding: 0; max-width: 100%; }
+      .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom:20px; }
+      #tab-history { display: block !important; }
+      #tab-input { display: none !important; }
+      details[open] summary ~ * { display: block; }
+      details { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
 
-<datalist id="ext-affil-list"></datalist>
-<datalist id="ext-staff-list"></datalist>
-<datalist id="diagnosis-list"></datalist>
-
-<div id="global-loader">
-  <div class="spinner"></div>
-  <div style="font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px;" id="loader-main-text">通信中...</div>
-  <div style="font-size: 13px; font-weight: 600; color: var(--sub); text-align: center;" id="loader-sub-text">データベースに接続しています</div>
-</div>
-
-<header>
-  <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v12.0</span></div>
-  <div style="display:flex; gap:12px;">
-    <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
-    <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div style="font-weight:800; color:var(--ink); font-size:16px; margin-bottom:8px;" id="loader-main">同期中...</div>
+    <div style="font-weight:600; color:var(--sub); font-size:13px;" id="loader-sub">データベースに接続しています</div>
   </div>
-</header>
 
-<div class="tab-container no-print">
-  <div class="nav-tab active" onclick="switchTab('sec1')">1.環境・疾患</div>
-  <div class="nav-tab" onclick="switchTab('sec2')">2.症例評価</div>
-  <div class="nav-tab" onclick="switchTab('sec3')">3.多職種</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.保存</div>
-</div>
-
-<main>
-  <div class="sync-status no-print" id="sync-status" style="font-size:10px; color:var(--sub); text-align:right; margin-bottom:8px; font-weight:bold;">データ状態: 確認中...</div>
-
-  <!-- ================= TAB 1: 環境・疾患 ================= -->
-  <div id="tab-sec1" class="tab-content active">
-    
-    <div class="card no-print">
-      <div class="section-label">🔍 事案の検索と紐付け</div>
-      
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
-        <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">日付指定で探す</label>
-          <input type="date" id="s-date" onchange="clearSearchMonth(); searchCases();" style="margin-bottom:0;">
-        </div>
-        <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">月指定で探す</label>
-          <input type="month" id="s-month" onchange="clearSearchDate(); searchCases();" style="margin-bottom:0;">
-        </div>
-      </div>
-
-      <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-        <div style="flex:1;">
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">要請番号</label>
-          <input type="tel" inputmode="numeric" id="s-id" placeholder="番号入力（空欄でも可）" style="margin-bottom:0;" oninput="toHalfWidth(this); searchCases();">
-        </div>
-        <button type="button" class="btn-blue" onclick="searchCases()" style="padding:11px 16px; margin-top:16px; font-size:13px; width:auto; white-space:nowrap;">検索 🔍</button>
-        <button type="button" class="btn-small" onclick="clearSearchFilters(); searchCases();" style="padding:11px 12px; margin-top:16px; font-size:13px; width:auto; white-space:nowrap;">全表示 🔄</button>
-      </div>
-      
-      <div id="search-results-area" style="max-height:240px; overflow-y:auto; border:1px solid var(--line); padding:8px; border-radius:8px; background:var(--bg); display:none;"></div>
+  <header class="no-print">
+    <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+    <div class="hdr-title">
+      統合チェックリスト
+      <span class="version-tag" onclick="secretCommand()">v12.0</span>
     </div>
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="hdr-btn" onclick="clearAllCache(true)">🔄 更新</button>
+      <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+      <button type="button" class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
+    </div>
+  </header>
 
-    <div id="case-data-area" style="display:none;">
-      <div class="card">
-        <div class="section-label">📝 紐付けデータ</div>
-        <div id="v-fetched-data"></div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:12px; margin-bottom:8px;">🚑 事前実施処置 (症例登録から連携)</div>
-        <div class="pill-group" id="v-fetched-procs"></div>
-      </div>
+  <div class="tab-container no-print">
+    <div class="nav-tab active" id="nav-tab-input" onclick="switchMainTab('input')">✅ 点検入力</div>
+    <div class="nav-tab" id="nav-tab-history" onclick="switchMainTab('history')">🔍 履歴・検索</div>
+  </div>
 
-      <div class="card">
-        <div class="section-label">🏥 疾患分類・予後情報</div>
-        
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">疾患大分類</div>
-        <div class="pill-group">
-          <div class="pill" id="d-main-1" onclick="setDiseaseMain('1外傷')">1 外傷</div>
-          <div class="pill" id="d-main-2" onclick="setDiseaseMain('2心大血管')">2 心大血管</div>
-          <div class="pill" id="d-main-3" onclick="setDiseaseMain('3脳血管')">3 脳血管</div>
-          <div class="pill" id="d-main-4" onclick="setDiseaseMain('4心肺停止')">4 心肺停止(CPA)</div>
-          <div class="pill" id="d-main-5" onclick="setDiseaseMain('5その他')">5 その他</div>
-        </div>
-
-        <div id="disease-cpa-alert" style="display:none; background:#ffebee; color:#c62828; padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; margin-bottom:8px; border:1px solid #ffcdd2;">
-          ※CPAの場合は、その原因を以下から必ず選択してください。
-        </div>
-
-        <div id="disease-sub-area" style="display:none; padding:12px; background:#f9f9f9; border-radius:8px; border:1px solid var(--line); margin-bottom:12px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;" id="d-sub-title">詳細分類</div>
-          <div class="pill-group" id="d-sub-pills"></div>
-        </div>
-
-        <div style="display:flex; gap:16px; margin-top:12px; border-top:1px dashed var(--line); padding-top:12px;">
-          <label style="font-size:13px; font-weight:bold; display:flex; align-items:center; gap:8px;">
-            母子・周産期: 
-            <select id="v-maternal" style="width:auto; margin:0; padding:6px; font-size:13px;"><option value="なし">なし</option><option value="あり">あり</option></select>
-          </label>
-          <label style="font-size:13px; font-weight:bold; display:flex; align-items:center; gap:8px;">
-            労災: 
-            <select id="v-worker" style="width:auto; margin:0; padding:6px; font-size:13px;"><option value="なし">なし</option><option value="あり">あり</option></select>
-          </label>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-label">📋 概要と現場診断</div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー (※登録時の備考を自動反映)</div>
-        <textarea id="v-summary" rows="4" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
-        
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px; margin-top:12px;">🩺 現場診断 (フリーテキスト/マスタ)</div>
-        <div class="pill-group" id="chip-container-diagnosis" style="margin-bottom:8px;"></div>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin:0; flex:1;">
-          <button type="button" id="btn-diag-add" class="btn-small" style="background:var(--blue); color:#fff; padding:10px 16px;" onclick="generateDiagnosis()">＋追加</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-label">🏢 振り返り環境 と 参加者</div>
-        
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">振り返り場所・方法</div>
-          <div class="radio-group" style="margin-bottom:8px;">
-            <label><input type="radio" name="env-loc" value="浜町待機所" checked> <span class="radio-lbl">浜町待機所</span></label>
-            <label><input type="radio" name="env-loc" value="運行調整室"> <span class="radio-lbl">運行調整室</span></label>
-            <label><input type="radio" name="env-loc" value="各自"> <span class="radio-lbl">各自(リモート)</span></label>
+  <main>
+    <div id="tab-input" class="tab-content active">
+      
+      <div class="normal-info no-print" style="margin-bottom: 8px; padding: 12px 16px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:120px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検日</label>
+            <input type="date" id="c-date" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="fetchChecklistStatus()">
           </div>
-          <div class="radio-group">
-            <label><input type="radio" name="env-method" value="対面" checked> <span class="radio-lbl">対面</span></label>
-            <label><input type="radio" name="env-method" value="Zoom"> <span class="radio-lbl">Zoom</span></label>
-            <label><input type="radio" name="env-method" value="対面＋Zoom"> <span class="radio-lbl">対面＋Zoom</span></label>
+          <div style="flex:1.5; min-width:150px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検者 (Ns)</label>
+            <select id="c-staff" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="localStorage.setItem('aw109_last_ns', this.value)">
+              <option value="">選択してください...</option>
+            </select>
           </div>
         </div>
+      </div>
 
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--brand); margin-bottom:8px;">※ このシートの記載者(Ns)</div>
-          <div class="pill-group" id="recorder-container"></div>
-        </div>
+      <div class="timing-label no-print">🌅 朝・始業時</div>
+      <div class="type-picker no-print">
+        <div class="type-btn active" id="btn-type-daily-start" onclick="switchType('始業点検')">📋 始業点検</div>
+        <div class="type-btn" id="btn-type-me" onclick="switchType('ME機器')">🔌 ME機器</div>
+        <div class="type-btn" id="btn-type-ns" onclick="switchType('ナースバック')">🎒 ナースバック</div>
+        <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
+        <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
+      </div>
 
-        <div style="margin-bottom:16px; border-top:1px dashed var(--line); padding-top:12px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">固定参加者</div>
-          <div id="fixed-pt-accordions"></div>
-        </div>
+      <div class="timing-label no-print">🌇 夕・終業時</div>
+      <div class="type-picker no-print">
+        <div class="type-btn" id="btn-type-daily-end" onclick="switchType('終業点検')">📋 終業点検</div>
+      </div>
 
-        <div style="border-top:1px dashed var(--line); padding-top:12px; margin-bottom:12px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">外部参加者 (消防・救急隊など)</div>
-          <div id="ext-pt-container"></div>
-          <button type="button" class="btn-small" style="background:#e3f2fd; color:#0d47a1;" onclick="addExtPt()">＋ 外部を追加</button>
+      <div class="timing-label no-print">📅 月次・その他</div>
+      <div class="type-picker no-print" style="margin-bottom: 24px;">
+        <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
+        <div class="type-btn" id="btn-type-periodic" onclick="switchType('定期点検')">📅 定期点検</div>
+      </div>
+
+      <div class="card" style="background:#f0f8ff; border:1px solid #90caf9; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+          <span style="font-weight:900; color:#0d47a1; font-size:15px;" id="current-check-title">始業点検 の入力</span>
+          <div style="width:110px;">
+            <label style="font-size:10px; font-weight:bold; color:var(--sub); display:block; text-align:right; margin-bottom:4px;">実施時間</label>
+            <input type="time" id="c-time" class="text-input" style="padding:6px; font-size:14px; margin-bottom:0;">
+          </div>
         </div>
-        
-        <div style="border-top:1px dashed var(--line); padding-top:12px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">OJT (同乗研修)</div>
-          <div id="ojt-pt-container"></div>
-          <button type="button" class="btn-small" style="background:#fce4ec; color:#c2185b;" onclick="addOjtPt()">＋ OJTを追加</button>
+      </div>
+
+      <div id="checklist-container"></div>
+
+      <div class="card" style="margin-top: 24px; border:2px solid var(--blue);">
+        <div class="card-header" style="background:#e3f2fd; color:#0d47a1;">📝 最終確認・保存</div>
+        <div style="padding: 16px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">全体特記事項 (引き継ぎ事項・補充報告など)</label>
+          <textarea id="c-remarks" rows="3" class="text-input" placeholder="例：吸引器の予備バッテリーを1本補充しました。"></textarea>
+          <div style="margin-top:16px; padding-top:16px; border-top:1px dashed #ccc; text-align:center;">
+            <button type="button" class="btn-submit" id="btn-save" onclick="submitChecklist()">点検データを保存する</button>
+          </div>
         </div>
       </div>
     </div>
-    <button type="button" class="btn-next no-print" onclick="switchTab('sec2')">次へ (症例評価) ➔</button>
-  </div>
 
-  <!-- ================= TAB 2: 症例評価 ================= -->
-  <div id="tab-sec2" class="tab-content">
-    <div id="eval-container"></div>
-    <button type="button" class="btn-blue" style="background:#8b5cf6;" onclick="addEvalBlock()">＋ 新しい評価ポイントを追加</button>
-    <button type="button" class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('sec3')">次へ (多職種振り返り) ➔</button>
-  </div>
+    <div id="tab-history" class="tab-content">
+      <h2 class="hidden print:block text-center" style="font-size:18px; margin-bottom:16px;" id="print-title">点検履歴</h2>
+      <div class="card">
+        <div class="card-header">
+          <span>🔍 履歴の検索・絞り込み</span>
+        </div>
+        <div class="filter-box">
+          <div class="filter-row" style="margin-bottom:4px;">
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">閲覧対象</span>
+            <select id="hist-target-type" onchange="changeHistoryType()" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0; background:#fff9db; border-color:#ffe066;">
+              <option value="始業点検">始業点検</option>
+              <option value="終業点検">終業点検</option>
+              <option value="ME機器">ME機器</option>
+              <option value="ナースバック">ナースバック</option>
+              <option value="ヘリ内">ヘリ機内</option>
+              <option value="ヘリバック">ヘリバック</option>
+              <option value="待機物品">待機所物品</option>
+              <option value="定期点検">定期点検</option>
+            </select>
+          </div>
+          
+          <div class="filter-row">
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">プリセット</span>
+            <select id="hist-preset" onchange="applyPresetFilter()" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;">
+              <option value="today">本日</option>
+              <option value="week">過去7日間</option>
+              <option value="month">過去30日間</option>
+              <option value="all">指定なし(全件)</option>
+              <option value="custom" style="display:none;">期間指定中</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">期間指定</span>
+            <input type="date" id="hist-start" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;" onchange="document.getElementById('hist-preset').value='custom'; applyHistoryFilter();">
+            <span style="font-size:12px; color:var(--sub);">〜</span>
+            <input type="date" id="hist-end" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;" onchange="document.getElementById('hist-preset').value='custom'; applyHistoryFilter();">
+          </div>
+          <button type="button" class="hdr-btn no-print" onclick="fetchHistory(true)" style="font-size:13px; margin-top:8px; align-self:flex-end;">🔄 サーバーから最新を取得</button>
+        </div>
+        <div id="history-container"></div>
+      </div>
+    </div>
+  </main>
 
-  <!-- ================= TAB 3: 多職種 ================= -->
-  <div id="tab-sec3" class="tab-content">
-    <div id="feedback-container"></div>
-    <button type="button" class="btn-blue" style="background:#10b981;" onclick="addFeedbackBlock()">＋ 振り返りの視点を追加</button>
-    <button type="button" class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('sec4')">次へ (プレビュー・保存) ➔</button>
-  </div>
-
-  <!-- ================= TAB 4: 保存 ================= -->
-  <div id="tab-sec4" class="tab-content">
-    <div class="card" style="padding: 0;"><div id="print-area"></div></div>
-    <!-- 🌟 エラー監視表示枠 -->
-    <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; padding:16px;"></div>
-    <div class="no-print">
-      <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
+  <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+    <div class="modal-box">
+      <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+      <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+      <textarea id="qa-input" rows="3" class="text-input" placeholder="項目の追加依頼や、システムの不具合報告など..."></textarea>
+      <button type="button" onclick="submitQA()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
+      <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
     </div>
   </div>
 
-</main>
-
-<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
-  <div class="modal-box">
-    <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
-    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px;"></textarea>
-    <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
-    <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
-  </div>
-</div>
-
-<script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_debriefing_cache_v12";
-  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000; // 6時間
-
-  // 🌟 Load failed 無視の最強エラー監視
-  window.onerror = function(message, source, lineno, colno, error) {
-    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); 
-    return false;
-  };
-  window.addEventListener('unhandledrejection', function(event) {
-    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    if(String(reason).includes("Load failed")) return;
-    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
-  });
-
-  const SCENE_LIST = [
-    "① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", 
-    "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", 
-    "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"
-  ];
-  
-  const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
-  const TAG_MASTERS = {
-    practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
-    treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] }
-  };
-
-  const DISEASE_TREE = {
-    "1外傷": ["1-1: 交通外傷", "1-2: その他"],
-    "2心大血管": ["2-1: 急性冠症候群", "2-2: 大動脈瘤・解離", "2-3: その他"],
-    "3脳血管": ["3-1: 脳梗塞", "3-2: くも膜下出血", "3-3: 脳出血", "3-4: その他"],
-    "5その他": ["5-1: 外因性", "5-2: 内因性"]
-  };
-
-  let allCasesData = []; let existingDebriefs = []; let currentCase = null; 
-  let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[], keyword:[] };
-  
-  let sysData = {
-    disease: { main: "", cause: "", sub: "", maternal: "なし", worker: "なし" },
-    summary: "",
-    tags: { diagnosis:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[], globalTreatment:[] },
-    evals: [], feedbacks: []
-  };
-
-  let loaderTimer1, loaderTimer2;
-  function showLoader(msg1, msg2) {
-    const loader = document.getElementById("global-loader");
-    document.getElementById("loader-main-text").innerText = msg1; 
-    document.getElementById("loader-sub-text").innerHTML = msg2;
-    loader.style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
-  }
-  
-  function hideLoader() { 
-    clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
-    document.getElementById("global-loader").style.display = "none"; 
-  }
-  
-  function sendErrorLog(errMsg) { 
-    if(String(errMsg).includes("Load failed")) return;
-    try { 
-      fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
-        redirect: "follow" 
-      }); 
-    } catch(e) {} 
-  }
-
-  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
-  function clearSearchMonth() { document.getElementById("s-month").value = ""; }
-  function clearSearchDate() { document.getElementById("s-date").value = ""; }
-  function clearSearchFilters() { document.getElementById("s-date").value = ""; document.getElementById("s-month").value = ""; document.getElementById("s-id").value = ""; }
-
-  // 🌟 6時間保持のキャッシュ起動ロジック
-  window.onload = async () => {
-    document.getElementById("s-date").value = new Date().toISOString().split('T')[0];
-    const cachedStr = localStorage.getItem(CACHE_KEY);
-    const now = Date.now();
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+    const PIN_CODE = "5740";
+    const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
     
-    if (cachedStr) {
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+      sendErrorLog(errDetail); 
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+      if(String(reason).includes("Load failed")) return;
+      sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+    });
+
+    let currentType = "始業点検"; 
+    let currentMainTab = "input"; 
+    
+    let checklistItems = [];
+    let currentData = {}; 
+    let errorDetails = {}; 
+    let allHistoryData = []; 
+    let mastersCache = {};
+
+    let tapCount = 0; let tapTimer;
+    function secretCommand() {
+      tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 1500); 
+      if (tapCount >= 3) {
+        tapCount = 0; setAllOk();
+        alert("🤫 シークレット機能：\n表示中の全項目を「異常なし」に設定しました。");
+      }
+    }
+
+    function getTodayString() {
+      const d = new Date();
+      const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000);
+      return `${jst.getFullYear()}-${String(jst.getMonth()+1).padStart(2,'0')}-${String(jst.getDate()).padStart(2,'0')}`;
+    }
+
+    window.onload = () => { 
+      resetTime();
+      loadCache();
+      fetchChecklistStatus(); 
+      loadDataForCurrentView(); 
+      fetchQA(); 
+    };
+
+    function loadCache() {
+      const msListStr = localStorage.getItem("aw109_cl_nslist");
+      if(msListStr) {
+        const arr = JSON.parse(msListStr);
+        const sel = document.getElementById("c-staff");
+        if(sel.options.length <= 1) { arr.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`); }
+        const lastNs = localStorage.getItem("aw109_last_ns");
+        if(lastNs) sel.value = lastNs;
+      }
+      const cStr = localStorage.getItem("aw109_cl_masters");
+      if(cStr) {
+        const obj = JSON.parse(cStr);
+        if(Date.now() - obj.timestampMs < CACHE_EXPIRE_MS) {
+          mastersCache = obj.data;
+        }
+      }
+    }
+
+    function saveCache() {
+      localStorage.setItem("aw109_cl_masters", JSON.stringify({ timestampMs: Date.now(), data: mastersCache }));
+    }
+
+    function clearAllCache(isManual) {
+      localStorage.removeItem("aw109_cl_masters");
+      mastersCache = {};
+      loadDataForCurrentView();
+      if(isManual) alert("キャッシュをクリアし、最新の点検マスタを取得しました。");
+    }
+
+    function resetTime() {
+      const now = new Date();
+      document.getElementById("c-date").value = getTodayString();
+      document.getElementById("c-time").value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function showLoader(m1, m2) {
+      document.getElementById("loader-main").innerText = m1; document.getElementById("loader-sub").innerText = m2;
+      document.getElementById("global-loader").style.display = "flex";
+    }
+    function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+    function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+    function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
+
+    function sendErrorLog(errMsg) {
+      if(String(errMsg).includes("Load failed")) return;
+      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
+    }
+
+    async function fetchQA() {
       try {
-        const cacheObj = JSON.parse(cachedStr);
-        if (now - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
-          document.getElementById("sync-status").innerText = `データ状態: キャッシュから即時展開しました (${cacheObj.timestamp})`;
-          buildUIFromData(cacheObj.allCases, cacheObj.existing, cacheObj.masters);
-          handleUrlParams(); // URLからのジャンプ処理
-          return;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success" && json.qa) { document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join(""); }
+      } catch(e) {}
+    }
+
+    async function submitQA() {
+      const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
+      document.getElementById("global-loader").style.display = "flex";
+      try {
+        await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" }), redirect: "follow" });
+        alert("要望・報告を送信しました。管理者が確認します。"); document.getElementById("qa-input").value = ""; closeModal('qa');
+      } catch(e) { alert("送信に失敗しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
+
+    async function fetchChecklistStatus() {
+      try {
+        const selectedDate = document.getElementById("c-date").value;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: selectedDate }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success") {
+          const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki' };
+          document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('completed'));
+          for (const [type, isCompleted] of Object.entries(json.data)) {
+            if (isCompleted && btnMap[type]) document.getElementById(btnMap[type]).classList.add("completed");
+          }
         }
       } catch(e) {}
     }
-    // キャッシュがないか、6時間以上経過している場合は自動フェッチ
-    fetchLatestData(false, false);
-  };
 
-  async function fetchLatestData(isBackground, isManualUpdate) {
-    if (!isBackground) showLoader("データベース同期中...", "マスタデータと事案DBを同期しています");
-    try {
-      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" });
-      const jsonInit = await resInit.json();
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       
-      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+      document.getElementById(`nav-tab-${tab}`).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.getElementById('btn-print').style.display = tab === 'history' ? 'block' : 'none';
       
-      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
-      const jianData = (await resJian.json()).data;
-
-      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
-      const debData = (await resDeb.json()).data;
-
-      const cacheObj = {
-        timestamp: Utilities_formatDate(new Date()), timestampMs: Date.now(),
-        allCases: jianData, existing: debData, masters: jsonInit.masters
-      };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
-      
-      buildUIFromData(jianData, debData, jsonInit.masters);
-      document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
-      
-      if (isManualUpdate) alert("最新のデータを取得しました。");
-      else handleUrlParams();
-
-    } catch(e) { 
-      if(!isBackground) alert("データベースの同期に失敗しました。電波の良い場所でリロードしてください。");
-      document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
-      sendErrorLog(e.toString());
-    } finally { 
-      if(!isBackground) hideLoader(); 
+      if(tab === 'history') { document.getElementById('hist-target-type').value = currentType; }
+      loadDataForCurrentView();
     }
-  }
 
-  // 🌟 URLパラメータからのジャンプ機能を追加
-  function handleUrlParams() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const editId = urlParams.get('editId');
-    if (editId && allCasesData.length > 0) {
-      const targetCaseWrapper = allCasesData.find(c => String(c.id) === String(editId));
-      if (targetCaseWrapper) {
-        selectCase(targetCaseWrapper);
-        // パラメータを消してリロード時におかしくならないようにする
-        window.history.replaceState({}, document.title, window.location.pathname);
+    function switchType(type) {
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki' };
+      if(btnMap[type]) document.getElementById(btnMap[type]).classList.add("active");
+      
+      document.getElementById("current-check-title").innerText = `${type} の入力`;
+      loadDataForCurrentView();
+    }
+
+    function loadDataForCurrentView() {
+      if (currentMainTab === "input") fetchMaster();
+      else fetchHistory();
+    }
+
+    async function fetchMaster() {
+      const sheetNameMap = { '始業点検': '日常点検', '終業点検': '日常点検', '定期点検': '定期点検' };
+      const reqType = sheetNameMap[currentType] || currentType;
+
+      if (mastersCache[reqType]) { filterAndRender(mastersCache[reqType]); return; }
+
+      showLoader(`${currentType} マスタ読込中...`, "点検項目を生成しています");
+      currentData = {}; errorDetails = {};
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: reqType }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success") {
+          const itemsWithIndex = json.items.map((it, idx) => { return { ...it, originalIndex: idx }; });
+          mastersCache[reqType] = itemsWithIndex; saveCache();
+          
+          const sel = document.getElementById("c-staff");
+          if(json.nsList && json.nsList.length > 0) {
+            localStorage.setItem("aw109_cl_nslist", JSON.stringify(json.nsList));
+            if(sel.options.length <= 1) { json.nsList.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`); const lastNs = localStorage.getItem("aw109_last_ns"); if(lastNs) sel.value = lastNs; }
+          }
+          filterAndRender(itemsWithIndex);
+        } else { alert(`マスタ読込エラー: ${json.message}`); sendErrorLog(json.message); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
+
+    function filterAndRender(allItems) {
+      if (currentType === '始業点検') checklistItems = allItems.filter(it => it.category.includes('始業'));
+      else if (currentType === '終業点検') checklistItems = allItems.filter(it => it.category.includes('終業'));
+      else checklistItems = allItems;
+      
+      currentData = {}; errorDetails = {};
+      renderChecklist();
+    }
+
+    function renderChecklist() {
+      const container = document.getElementById("checklist-container"); container.innerHTML = ""; document.getElementById("c-remarks").value = "";
+      if(checklistItems.length === 0) { container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--sub);">表示する点検項目がありません。</div>`; return; }
+
+      const grouped = {};
+      checklistItems.forEach((item) => { const groupKey = item.subCategory ? `${item.category}__|__${item.subCategory}` : `${item.category}__|__`; if(!grouped[groupKey]) grouped[groupKey] = []; grouped[groupKey].push(item); });
+
+      for (const [key, items] of Object.entries(grouped)) {
+        const [cat, subCat] = key.split('__|__'); const subCatBadge = subCat ? `<span class="sub-cat-badge">${subCat}</span>` : '';
+        let html = `<div class="card"><div class="card-header">🏷️ ${cat} ${subCatBadge}</div>`;
+        
+        items.forEach(it => {
+          const idx = it.originalIndex; const displayConstant = it.constant ? `<span class="constant-val">定数: ${it.constant}</span>` : '';
+          html += `<div class="chk-row" id="row-${idx}">
+            <div class="chk-title-wrapper"><div class="chk-title">${it.name} ${displayConstant} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div></div>`;
+            
+          const isTextField = String(it.inputType || "").trim().includes("自由") || String(it.inputType || "").trim().includes("数値");
+          if (isTextField) { html += `<input type="text" class="text-input" placeholder="テキストや数値を入力..." onchange="setVal(${idx}, this.value)" style="margin-top:8px;">`; } 
+          else {
+            html += `
+              <div class="toggle-group" style="margin-top:8px;">
+                <div class="tgl-btn ok" id="btn-ok-${idx}" onclick="setVal(${idx}, '◯')">◯ 異常なし</div><div class="tgl-btn ng" id="btn-ng-${idx}" onclick="setVal(${idx}, '✕')">✕ 異常あり</div>
+              </div>
+              <div class="error-reason" id="err-box-${idx}"><input type="text" class="text-input" placeholder="異常の詳細、または対象外の理由を入力..." id="err-txt-${idx}" onchange="errorDetails[${idx}]=this.value" style="border-color:var(--brand); background:var(--brand-light);"></div>`;
+          }
+          html += `</div>`;
+        });
+        html += `</div>`; container.innerHTML += html;
       }
     }
-  }
 
-  function Utilities_formatDate(date) { return `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`; }
+    function setVal(idx, val) {
+      currentData[idx] = val; const targetItem = checklistItems.find(it => it.originalIndex === idx); if(!targetItem) return;
+      const isTextField = String(targetItem.inputType || "").trim().includes("自由") || String(targetItem.inputType || "").trim().includes("数値");
 
-  function buildUIFromData(jianData, debData, ms) {
-    allCasesData = jianData;
-    existingDebriefs = debData;
-    masters = ms;
-
-    document.getElementById("ext-affil-list").innerHTML = ""; masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
-    document.getElementById("ext-staff-list").innerHTML = ""; masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
-    document.getElementById("diagnosis-list").innerHTML = ""; masters.diagnosis.forEach(d => document.getElementById("diagnosis-list").innerHTML += `<option value="${d}">`);
-    
-    const buildFixedAcc = (cat, label, arr) => `
-      <div class="acc-header" onclick="toggleAcc(this, 'acc-${cat}')">👤 ${label}<span class="arrow">▼</span></div>
-      <div class="acc-body" id="acc-${cat}">
-        <div class="pill-group" id="chip-container-${cat}" style="margin-bottom:8px;"></div>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="new-${cat}" placeholder="${label}を追加" style="margin:0; flex:1; font-size:13px; padding:8px;">
-          <button type="button" class="btn-small" style="background:var(--blue); color:#fff;" onclick="addMasterAndChip('${cat}', 'new-${cat}', 'chip-container-${cat}')">登録</button>
-        </div>
-      </div>`;
-    document.getElementById("fixed-pt-accordions").innerHTML = buildFixedAcc('dr','フライトドクター', masters.dr) + buildFixedAcc('ns','フライトナース', masters.ns) + buildFixedAcc('pilot','機長', masters.pilot) + buildFixedAcc('mechanic','整備士', masters.mechanic) + buildFixedAcc('cs','CS', masters.cs);
-    
-    ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
-    renderChips('recorder-container', masters.ns, 'recorder', true);
-
-    searchCases();
-  }
-
-  function switchTab(id) {
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active')); 
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active'); document.getElementById('tab-' + id).classList.add('active'); window.scrollTo(0,0);
-    if (id === 'sec4') generatePreview();
-  }
-
-  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
-  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
-
-  async function submitQA(event) {
-    const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
-    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
-    try {
-      await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}), redirect: "follow" });
-      alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-    } catch (e) { alert("通信エラー"); sendErrorLog(e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
-  }
-
-  function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
-  
-  function renderChips(containerId, list, category, isRadio = false) {
-    const box = document.getElementById(containerId); if(!box) return;
-    box.innerHTML = "";
-    list.forEach(item => { const isOn = sysData.tags[category] && sysData.tags[category].includes(item); box.innerHTML += `<div class="${isOn ? "pill on" : "pill"}" onclick="toggleChip('${category}', '${item}', ${isRadio}, this)">${item}</div>`; });
-  }
-  
-  function toggleChip(cat, item, isRadio, element) {
-    if(!sysData.tags[cat]) sysData.tags[cat] = [];
-    if(isRadio) { 
-      sysData.tags[cat] = [item];
-      if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
-    } else { 
-      if(sysData.tags[cat].includes(item)) {
-        sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item);
-        if(element) element.classList.remove('on');
-      } else {
-        sysData.tags[cat].push(item);
-        if(element) element.classList.add('on');
-      } 
+      if (!isTextField) {
+        document.getElementById(`btn-ok-${idx}`).classList.toggle('active', val === '◯');
+        document.getElementById(`btn-ng-${idx}`).classList.toggle('active', val === '✕');
+        const errBox = document.getElementById(`err-box-${idx}`);
+        if (val === '✕') { errBox.style.display = 'block'; } 
+        else { errBox.style.display = 'none'; document.getElementById(`err-txt-${idx}`).value = ""; delete errorDetails[idx]; }
+        document.getElementById(`row-${idx}`).classList.remove('error-highlight');
+      }
     }
-  }
 
-  function setDiseaseMain(val) {
-    document.querySelectorAll('[id^="d-main-"]').forEach(el => el.classList.remove('on'));
-    const idx = val.charAt(0); document.getElementById(`d-main-${idx}`).classList.add('on');
-    sysData.disease.main = val; sysData.disease.cause = ""; sysData.disease.sub = "";
-    
-    const subArea = document.getElementById("disease-sub-area");
-    const cpaAlert = document.getElementById("disease-cpa-alert");
-    
-    if(val === "4心肺停止") {
-      cpaAlert.style.display = "block"; subArea.style.display = "block";
-      document.getElementById("d-sub-title").innerText = "原因疾患を選択 (必須)";
-      const causeHtml = ["1外傷", "2心大血管", "3脳血管", "5その他"].map(c => `<div class="pill" onclick="setDiseaseCause('${c}', this)">${c}</div>`).join('');
-      document.getElementById("d-sub-pills").innerHTML = causeHtml;
-    } else {
-      cpaAlert.style.display = "none";
-      if(DISEASE_TREE[val]) {
-        subArea.style.display = "block"; document.getElementById("d-sub-title").innerText = "詳細分類";
-        renderDiseaseSub(val);
-      } else { subArea.style.display = "none"; }
-    }
-  }
+    function setAllOk() { checklistItems.forEach(item => { const isTextField = String(item.inputType || "").trim().includes("自由") || String(item.inputType || "").trim().includes("数値"); if(!isTextField) setVal(item.originalIndex, '◯'); }); }
 
-  function setDiseaseCause(causeVal, btnEl) {
-    sysData.disease.cause = causeVal; sysData.disease.sub = "";
-    btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on');
-    if(DISEASE_TREE[causeVal]) {
-      const exist = document.getElementById("d-sub-pills-2"); if(exist) exist.remove();
-      const subHtml = `<div class="pill-group" id="d-sub-pills-2" style="margin-top:12px; padding-top:12px; border-top:1px dashed #ccc;">` + DISEASE_TREE[causeVal].map(s => `<div class="pill" onclick="setDiseaseSubReal('${s}', this)">${s}</div>`).join('') + `</div>`;
-      document.getElementById("d-sub-pills").insertAdjacentHTML('beforeend', subHtml);
-    }
-  }
+    async function submitChecklist() {
+      const staff = document.getElementById("c-staff").value;
+      if(!staff) { alert("画面上部の「共通 点検者 (Ns)」を選択してください。"); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
 
-  function renderDiseaseSub(mainVal) {
-    document.getElementById("d-sub-pills").innerHTML = DISEASE_TREE[mainVal].map(s => `<div class="pill" onclick="setDiseaseSubReal('${s}', this)">${s}</div>`).join('');
-  }
+      let missing = []; let firstMissingId = null;
+      document.querySelectorAll('.chk-row').forEach(el => el.classList.remove('error-highlight'));
 
-  function setDiseaseSubReal(subVal, btnEl) {
-    sysData.disease.sub = subVal;
-    btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on');
-  }
-
-  async function generateDiagnosis() {
-    const name = document.getElementById("diag-name").value.trim(); if(!name) return;
-    const btn = document.getElementById("btn-diag-add");
-    btn.innerText = "追加中..."; btn.disabled = true;
-
-    try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }), redirect: "follow" });
-
-      if(!sysData.tags.diagnosis) sysData.tags.diagnosis = [];
-      if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
-      renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-      
-      if(!masters.diagnosis.includes(name)) masters.diagnosis.push(name);
-      document.getElementById("diag-name").value = "";
-    } catch(e) {
-      alert("マスタの登録に失敗しました");
-      sendErrorLog(e.toString());
-    } finally {
-      btn.innerText = "＋追加"; btn.disabled = false;
-    }
-  }
-
-  async function addMasterAndChip(cat, inputId, containerId) {
-    const val = document.getElementById(inputId).value.trim(); if(!val) return;
-    document.getElementById(inputId).value = "追加中...";
-    try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: cat, val1: val }), redirect: "follow" });
-      if(!masters[cat].includes(val)) masters[cat].push(val); 
-      if(!sysData.tags[cat]) sysData.tags[cat] = []; if(!sysData.tags[cat].includes(val)) sysData.tags[cat].push(val);
-      renderChips(containerId, masters[cat], cat); 
-      document.getElementById(inputId).value = "";
-    } catch(e) { alert("エラー"); document.getElementById(inputId).value = ""; }
-  }
-
-  let extPtCount = 0;
-  function addExtPt(affil="", name="") {
-    extPtCount++; const id = `ext-pt-${extPtCount}`;
-    const html = `<div id="${id}" class="ext-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <input type="text" class="e-affil" list="ext-affil-list" placeholder="所属" value="${affil}" style="flex:2; margin:0; padding:10px;">
-        <input type="text" class="e-name" list="ext-staff-list" placeholder="名前" value="${name}" style="flex:1.5; margin:0; padding:10px;">
-        <button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:10px;" onclick="document.getElementById('${id}').remove()">✕</button>
-      </div>`;
-    document.getElementById("ext-pt-container").insertAdjacentHTML('beforeend', html);
-  }
-
-  let ojtPtCount = 0;
-  function addOjtPt(job="", name="") {
-    ojtPtCount++; const id = `ojt-pt-${ojtPtCount}`;
-    const html = `<div id="${id}" class="ojt-row" style="display:flex; gap:4px; margin-bottom:6px; align-items:center;">
-        <select class="o-job" style="flex:1.5; margin:0; padding:10px; font-size:14px;"><option value="Dr" ${job==='Dr'?'selected':''}>Dr</option><option value="Ns" ${job==='Ns'?'selected':''}>Ns</option><option value="救急隊" ${job==='救急隊'?'selected':''}>救急隊</option><option value="その他" ${job==='その他'?'selected':''}>その他</option></select>
-        <input type="text" class="o-name" placeholder="名前" value="${name}" style="flex:2; margin:0; padding:10px;">
-        <button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c; padding:10px;" onclick="document.getElementById('${id}').remove()">✕</button>
-      </div>`;
-    document.getElementById("ojt-pt-container").insertAdjacentHTML('beforeend', html);
-  }
-
-  function searchCases() {
-    const sDate = document.getElementById("s-date").value;
-    const sMonth = document.getElementById("s-month").value;
-    const qId = document.getElementById("s-id").value.trim();
-    
-    let results = allCasesData.filter(r => {
-      if(!r.id) return false;
-      let match = true;
-      if(qId && !String(r.id).includes(qId)) match = false;
-      let rDate = r.date ? String(r.date).replace(/\//g, "-") : ""; 
-      if(sDate && rDate !== sDate) match = false;
-      if(sMonth && !rDate.startsWith(sMonth)) match = false;
-      return match;
-    });
-
-    results.sort((a,b) => b.id.localeCompare(a.id));
-
-    const resArea = document.getElementById("search-results-area");
-    if(results.length === 0) {
-      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>";
-    } else {
-      resArea.innerHTML = results.map(r => {
-        const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";
-        return `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
-          <b>No.${r.id}</b> ｜ ${r.date} ｜ ${r.scheme || '未選択'}<br>
-          <span style="font-size:12px;color:var(--sub);">[${time}] 出場先: ${r.dest} ｜ Dr:${r.rawData["フライトドクター"] || '-'} Ns:${r.rawData["フライトナース"] || '-'}</span>
-        </div>`;
-      }).join("");
-    }
-    resArea.style.display = "block";
-  }
-
-  function selectCase(rowWrapper) {
-    currentCase = rowWrapper.rawData;
-    document.getElementById("search-results-area").style.display = "none"; 
-    document.getElementById("case-data-area").style.display = "block";
-    
-    if(currentCase["備考"]) {
-      document.getElementById("v-summary").value = currentCase["備考"].replace(/⚠️【使用物品・補充予定メモ】[\s\S]*?------------------\n/g, "").trim();
-    }
-    
-    if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) { 
-      sysData.tags.diagnosis = currentCase["現場診断"].split(",").map(d => d.trim()).filter(Boolean); 
-    }
-    renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-
-    let importedProcs = [];
-    let procStr = currentCase["簡易処置リスト"] || currentCase["処置リスト"] || currentCase["実施処置"] || currentCase["処置"] || "";
-    let traumaStr = currentCase["外傷処置"] || currentCase["外傷・固定"] || currentCase["外傷"] || "";
-
-    if(procStr) {
-      importedProcs.push(...procStr.split(",").map(s => s.replace(/x\d+/g,'').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim()).filter(Boolean));
-    }
-    if(traumaStr) {
-      importedProcs.push(...traumaStr.split(",").map(s => s.trim()).filter(Boolean));
-    }
-    
-    let procsDisplay = "";
-    if(importedProcs.length > 0) {
-      const uniqueProcs = [...new Set(importedProcs)];
-      sysData.tags.globalTreatment = uniqueProcs;
-      
-      uniqueProcs.forEach(p => {
-        if(!TAG_MASTERS.treatment.items.includes(p)) TAG_MASTERS.treatment.items.unshift(p);
+      checklistItems.forEach(item => { 
+        const val = currentData[item.originalIndex];
+        if(item.required && (!val || val === "")) {
+          missing.push(`[${item.category}] ${item.name}`); document.getElementById(`row-${item.originalIndex}`).classList.add('error-highlight'); if(!firstMissingId) firstMissingId = `row-${item.originalIndex}`; 
+        }
       });
-      
-      const vProcs = document.getElementById("v-fetched-procs");
-      vProcs.innerHTML = uniqueProcs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
-    }
 
-    // 🌟 バグ修正: 要親番号ではなく要請番号で確実に探す
-    const targetId = currentCase["要請番号"];
-    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(targetId));
-    if(past && past["システムデータ"]) {
-      if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
-        restoreSystemData(JSON.parse(past["システムデータ"]));
-        document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; 
-        document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
+      if(missing.length > 0) {
+        if(firstMissingId) { const element = document.getElementById(firstMissingId); const y = element.getBoundingClientRect().top + window.pageYOffset - 120; window.scrollTo({top: y, behavior: 'smooth'}); }
+        setTimeout(() => { alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`); }, 100); return; 
       }
-    }
-    
-    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
-  }
 
-  function restoreSystemData(sys) {
-    sysData = sys; document.getElementById("v-summary").value = sys.summary || "";
-    if(sys.disease) {
-       if(sys.disease.main) setDiseaseMain(sys.disease.main);
-       if(sys.disease.cause) {
-         const btn = Array.from(document.getElementById("d-sub-pills").children).find(e=>e.innerText===sys.disease.cause);
-         if(btn) setDiseaseCause(sys.disease.cause, btn);
-       }
-       if(sys.disease.sub) {
-         const btn = Array.from(document.getElementById("d-sub-pills-2")?.children||[]).find(e=>e.innerText===sys.disease.sub);
-         if(btn) setDiseaseSubReal(sys.disease.sub, btn);
-       }
-       document.getElementById("v-maternal").value = sys.disease.maternal || "なし";
-       document.getElementById("v-worker").value = sys.disease.worker || "なし";
-    }
+      let judgment = "異常なし"; let errorList = [];
+      checklistItems.forEach(item => { let val = currentData[item.originalIndex]; if (val === "✕") { judgment = "異常あり"; errorList.push(`${item.category} - ${item.name} (${errorDetails[item.originalIndex] || '詳細未記入'})`); } });
 
-    ['dr','ns','pilot','mechanic','cs','diagnosis','recorder'].forEach(cat => {
-      if(sysData.tags[cat]) {
-        if(cat=='diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-        else if(cat=='recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
-        else renderChips(`chip-container-${cat}`, masters[cat], cat);
-      }
-    });
-    
-    if(sysData.tags.globalTreatment && sysData.tags.globalTreatment.length > 0) {
-      const vProcs = document.getElementById("v-fetched-procs");
-      vProcs.innerHTML = sysData.tags.globalTreatment.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
+      let rawJson = {};
+      checklistItems.forEach(item => { let val = currentData[item.originalIndex] || ""; rawJson[`${item.category}_${item.name}`] = val; if(errorDetails[item.originalIndex]) rawJson[`${item.category}_${item.name}_詳細`] = errorDetails[item.originalIndex]; });
+      rawJson["全体特記事項"] = document.getElementById("c-remarks").value;
+
+      const payload = { date: document.getElementById("c-date").value, time: document.getElementById("c-time").value, staff: staff, judgment: judgment, errorItems: errorList.length > 0 ? errorList.join(" / ") : "なし", rawJson: rawJson };
+
+      if(!confirm(`総合判定: ${judgment}\n【${currentType}】のデータを保存しますか？`)) return;
+
+      const btn = document.getElementById("btn-save"); btn.innerText = "保存中..."; btn.disabled = true;
+      showLoader("データ保存中...", "データベースに書き込んでいます");
+
+      try {
+        const sheetNameMap = { '始業点検': '日常点検', '終業点検': '日常点検', '定期点検': '定期点検' };
+        const reqType = sheetNameMap[currentType] || currentType;
+
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success") { alert("点検を完了しました！"); fetchChecklistStatus(); fetchHistory(true); switchMainTab('history'); } else { throw new Error(json.message); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader(); }
     }
 
-    document.getElementById("ext-pt-container").innerHTML = ""; if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
-    document.getElementById("ojt-pt-container").innerHTML = ""; if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
-    renderEvalBlocks(); renderFeedbackBlocks();
-  }
+    function changeHistoryType() { const selectedType = document.getElementById("hist-target-type").value; currentType = selectedType; document.getElementById("print-title").innerText = `【${selectedType}】 点検履歴`; fetchHistory(true); }
 
-  function toggleInlineTag(tag, type, idx, element) {
-    let targetArr;
-    if(type === 'eval') targetArr = sysData.evals[idx].tags;
-    else targetArr = sysData.feedbacks[idx].tags;
-    
-    if(targetArr.includes(tag)) { 
-      targetArr.splice(targetArr.indexOf(tag), 1); 
-      element.classList.remove('on');
-    } else { 
-      targetArr.push(tag); 
-      element.classList.add('on');
+    function applyPresetFilter() {
+      const preset = document.getElementById("hist-preset").value; if (preset === "custom") return; 
+      const startInput = document.getElementById("hist-start"); const endInput = document.getElementById("hist-end"); const todayStr = getTodayString();
+      if (preset === "today") { startInput.value = todayStr; endInput.value = todayStr; } 
+      else if (preset === "week") { let d = new Date(todayStr); d.setDate(d.getDate() - 7); startInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; endInput.value = todayStr; } 
+      else if (preset === "month") { let d = new Date(todayStr); d.setDate(d.getDate() - 30); startInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; endInput.value = todayStr; } 
+      else { startInput.value = ""; endInput.value = ""; }
+      applyHistoryFilter();
     }
-  }
 
-  function generateInlineTagUI(selectedTags, type, idx) {
-    const isEval = (type === 'eval');
-    let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px;">🏷️ 関連タグ・NTS等を選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}" style="padding:12px; border:1px solid var(--line); border-radius:6px; margin-top:4px;">`;
-    
-    html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px;">🧠 チーム連携・状況判断 (NTS等)</div><div class="pill-group">`;
-    NTS_LIST.forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
-    html += `</div>`;
-
-    html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-top:8px; margin-bottom:4px;">🛠 実務・処置</div><div class="pill-group">`;
-    TAG_MASTERS.practice.items.concat(TAG_MASTERS.treatment.items).forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
-    html += `</div></div>`;
-    return html;
-  }
-
-  function addEvalBlock() { sysData.evals.push({ id: Date.now(), scene: "", sceneOther: "", type: "状況評価(NTS等)", desc: "", vitals:{bp1:"",bp2:"",hr:"",rr:"",spo2:"",o2:"",bt:"",jcs:"",gcs:""}, freeABC:"", good: "", bad: "", tags:[] }); renderEvalBlocks(); }
-  
-  function renderEvalBlocks() {
-    const box = document.getElementById("eval-container"); box.innerHTML = "";
-    sysData.evals.forEach((ev, idx) => {
-      const isMed = ev.type === "病態評価(ABCDEF)";
-      let html = `<div class="eval-block" id="ev-${ev.id}">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold; color:var(--blue); font-size:15px;">📝 評価ポイント #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.evals.splice(${idx},1); renderEvalBlocks()">削除</button></div>
+    async function fetchHistory(force = false) {
+      showLoader(`${currentType} 履歴読込中...`, "データベースから最新の記録を取得しています");
+      const container = document.getElementById("history-container"); container.innerHTML = ""; allHistoryData = []; 
+      try {
+        const sheetNameMap = { '始業点検': '日常点検', '終業点検': '日常点検', '定期点検': '定期点検' }; const reqType = sheetNameMap[currentType] || currentType;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: reqType }), redirect: "follow" });
+        const json = await res.json();
         
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">活動場面</div>
-        <select onchange="sysData.evals[${idx}].scene=this.value; document.getElementById('ev-sc-oth-${ev.id}').style.display=(this.value==='⑨ その他'?'block':'none')" style="margin-bottom:8px;">
-          <option value="">場面を選択...</option>${SCENE_LIST.map(s => `<option value="${s}" ${ev.scene===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-        <input type="text" id="ev-sc-oth-${ev.id}" placeholder="その他の場面" value="${ev.sceneOther}" onchange="sysData.evals[${idx}].sceneOther=this.value" style="display:${ev.scene==='⑨ その他'?'block':'none'}; margin-bottom:12px;">
-        
-        <div class="radio-group" style="margin-bottom:12px;">
-          <label><input type="radio" name="ev-type-${ev.id}" value="状況評価(NTS等)" ${!isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">状況評価 (NTS等)</span></label>
-          <label><input type="radio" name="ev-type-${ev.id}" value="病態評価(ABCDEF)" ${isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">病態評価 (ABCDEF)</span></label>
-        </div>`;
+        if (json.status === "success") {
+          let filteredHistory = json.history;
+          if (currentType === '始業点検') filteredHistory = json.history.filter(h => JSON.stringify(h.rawJson).includes('始業'));
+          else if (currentType === '終業点検') filteredHistory = json.history.filter(h => JSON.stringify(h.rawJson).includes('終業'));
+          allHistoryData = filteredHistory;
+          if(document.getElementById("hist-preset").value === "all") { applyHistoryFilter(); } else { document.getElementById("hist-preset").value = "today"; applyPresetFilter(); }
+        } else { alert(`履歴の取得に失敗しました: ${json.message}`); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
 
-      if(!isMed) { html += `<textarea rows="3" placeholder="状況の詳細" onchange="sysData.evals[${idx}].desc=this.value">${ev.desc}</textarea>`; } 
-      else {
-        html += `<div class="vitals-grid">
-          <div class="vital-item">血圧 <input type="number" inputmode="numeric" value="${ev.vitals.bp1}" onchange="sysData.evals[${idx}].vitals.bp1=this.value"> / <input type="number" inputmode="numeric" value="${ev.vitals.bp2}" onchange="sysData.evals[${idx}].vitals.bp2=this.value"> mmHg</div>
-          <div class="vital-item">脈拍 <input type="number" inputmode="numeric" value="${ev.vitals.hr}" onchange="sysData.evals[${idx}].vitals.hr=this.value"> 回/分</div>
-          <div class="vital-item">呼吸 <input type="number" inputmode="numeric" value="${ev.vitals.rr}" onchange="sysData.evals[${idx}].vitals.rr=this.value"> 回/分</div>
-          <div class="vital-item">体温 <input type="number" inputmode="decimal" value="${ev.vitals.bt}" onchange="sysData.evals[${idx}].vitals.bt=this.value"> ℃</div>
-          <div class="vital-item" style="grid-column:1/3;">SpO2 <input type="number" inputmode="numeric" value="${ev.vitals.spo2}" onchange="sysData.evals[${idx}].vitals.spo2=this.value"> % ( O2 <input type="number" inputmode="decimal" value="${ev.vitals.o2}" onchange="sysData.evals[${idx}].vitals.o2=this.value"> L )</div>
-          <div class="vital-item" style="grid-column:1/3;">意識 JCS <input type="text" value="${ev.vitals.jcs}" onchange="sysData.evals[${idx}].vitals.jcs=this.value"> / GCS <input type="text" value="${ev.vitals.gcs}" onchange="sysData.evals[${idx}].vitals.gcs=this.value"></div>
-        </div>
-        <textarea rows="3" placeholder="ABCDEF 所見・アセスメント (フリーテキスト)" onchange="sysData.evals[${idx}].freeABC=this.value">${ev.freeABC}</textarea>`;
-      }
+    function applyHistoryFilter() {
+      const container = document.getElementById("history-container"); container.innerHTML = "";
+      const sVal = document.getElementById("hist-start").value; const eVal = document.getElementById("hist-end").value;
+      const sDate = sVal ? new Date(sVal + "T00:00:00") : null; const eDate = eVal ? new Date(eVal + "T23:59:59") : null;
       
-      html += `<div style="display:flex; gap:8px; margin-top:8px;">
-          <textarea rows="2" placeholder="🟢 Good (良かった点・対応)" onchange="sysData.evals[${idx}].good=this.value" style="border-color:#a5d6a7;">${ev.good}</textarea>
-          <textarea rows="2" placeholder="⚠️ Bad / Gap (課題・反省点)" onchange="sysData.evals[${idx}].bad=this.value" style="border-color:#fff59d;">${ev.bad}</textarea>
-        </div>`;
+      let filtered = allHistoryData.filter(h => {
+        let hDate = new Date(h.date.replace(/\//g, '-')); if (isNaN(hDate.getTime())) return true; 
+        if (sDate && hDate < sDate) return false; if (eDate && hDate > eDate) return false; return true;
+      });
+
+      if(filtered.length === 0) { container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--sub); font-weight:bold;">指定した期間の履歴はありません。</div>`; return; }
       
-      html += generateInlineTagUI(ev.tags, 'eval', idx);
-      html += `</div>`; box.insertAdjacentHTML('beforeend', html);
-    });
-  }
+      filtered.forEach(h => {
+        const isOk = h.judgment === "異常なし"; const badgeClass = isOk ? "h-ok" : "h-ng"; const badgeText = isOk ? "✅ 異常なし" : "⚠️ 異常あり";
+        const remarks = h.rawJson["全体特記事項"] ? `<div class="h-remarks">💬 連絡事項：<br>${h.rawJson["全体特記事項"]}</div>` : "";
+        let detailsHtml = '<div style="margin-top:8px; font-size:12px; color:var(--ink); background:#f9f9f9; padding:8px; border-radius:6px; border:1px solid #e5e5ea; display:grid; gap:4px;">';
+        for(let key in h.rawJson) {
+          if(key !== "全体特記事項" && !key.endsWith("_詳細")) {
+            if (currentType === '始業点検' && !key.includes('始業')) continue; if (currentType === '終業点検' && !key.includes('終業')) continue;
+            let val = h.rawJson[key]; let detailText = h.rawJson[key + "_詳細"] ? ` <span style="color:#c62828; font-weight:bold;">(${h.rawJson[key + "_詳細"]})</span>` : "";
+            detailsHtml += `<div><span style="color:var(--sub);">・${key.replace('_', '：')}</span> <b>${val}</b>${detailText}</div>`;
+          }
+        }
+        detailsHtml += '</div>';
+        container.innerHTML += `
+          <div class="history-item">
+            <div class="h-head"><span class="h-meta">${h.date} ${h.time} ｜ Ns: ${h.staff}</span><span class="h-badge ${badgeClass}">${badgeText}</span></div>
+            ${!isOk ? `<div class="h-err"><b>異常報告：</b><br>${h.errorItems}</div>` : ''} ${remarks}
+            <details style="margin-top:8px; cursor:pointer;">
+              <summary style="font-size:12px; color:var(--blue); font-weight:bold; outline:none; user-select:none;">▶ 全項目の詳細データを見る</summary>${detailsHtml}
+              <div style="margin-top:12px; text-align:right;"><button type="button" class="btn-small" style="background:#ffebee; color:#c62828; border:1px solid #ef5350;" onclick="deleteRecord('${h.id}')">🗑️ この履歴を削除</button></div>
+            </details>
+          </div>
+        `;
+      });
+    }
 
-  function addFeedbackBlock() { sysData.feedbacks.push({ id: Date.now(), prof: "フライトドクター", name: "", good: "", bad: "", next: "", tags:[] }); renderFeedbackBlocks(); }
-  function renderFeedbackBlocks() {
-    const box = document.getElementById("feedback-container"); box.innerHTML = "";
-    let ptOptions = `<option value="">(名前を指定しない)</option>`;
-    ['dr','ns','pilot','mechanic','cs'].forEach(cat => { if(sysData.tags[cat]) sysData.tags[cat].forEach(n => ptOptions+=`<option value="${n}">${n}</option>`); });
-    document.querySelectorAll('.ext-row').forEach(row => { const a = row.querySelector('.e-affil').value; const n = row.querySelector('.e-name').value; if(a||n) ptOptions+=`<option value="${a} ${n}">${a} ${n}</option>`; });
-    document.querySelectorAll('.ojt-row').forEach(row => { const j = row.querySelector('.o-job').value; const n = row.querySelector('.o-name').value; if(j||n) ptOptions+=`<option value="${n}(OJT)">${n}(OJT)</option>`; });
-
-    sysData.feedbacks.forEach((fb, idx) => {
-      let html = `<div class="fb-block" id="fb-${fb.id}">
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold; color:var(--ink); font-size:15px;">🗣️ 振り返り視点 #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.feedbacks.splice(${idx},1); renderFeedbackBlocks()">削除</button></div>
-        <div style="display:flex; gap:8px; margin-bottom:12px;">
-          <select onchange="sysData.feedbacks[${idx}].prof=this.value" style="flex:1;">
-            <option value="フライトドクター" ${fb.prof=='フライトドクター'?'selected':''}>Dr</option><option value="フライトナース" ${fb.prof=='フライトナース'?'selected':''}>Ns</option>
-            <option value="機長・整備士" ${fb.prof=='機長・整備士'?'selected':''}>機長・整備士</option><option value="CS" ${fb.prof=='CS'?'selected':''}>CS</option>
-            <option value="消防・救急隊" ${fb.prof=='消防・救急隊'?'selected':''}>消防・救急隊</option><option value="OJT" ${fb.prof=='OJT'?'selected':''}>OJT</option>
-          </select>
-          <select onchange="sysData.feedbacks[${idx}].name=this.value" style="flex:1.5;">${ptOptions.replace(`value="${fb.name}"`, `value="${fb.name}" selected`)}</select>
-        </div>
-        <textarea rows="2" placeholder="🟢 Good" onchange="sysData.feedbacks[${idx}].good=this.value" style="border-color:#a5d6a7;">${fb.good}</textarea>
-        <textarea rows="2" placeholder="⚠️ Bad / Gap" onchange="sysData.feedbacks[${idx}].bad=this.value" style="border-color:#fff59d;">${fb.bad}</textarea>
-        <textarea rows="2" placeholder="🚀 Next" onchange="sysData.feedbacks[${idx}].next=this.value" style="border-color:#bbdefb;">${fb.next}</textarea>`;
-      html += generateInlineTagUI(fb.tags, 'fb', idx);
-      html += `</div>`; box.insertAdjacentHTML('beforeend', html);
-    });
-  }
-
-  function generatePreview() {
-    if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;font-weight:bold;'>事案を紐付けしてください。</p>"; return; }
-    
-    let envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
-    let envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
-    
-    let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
-    document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
-    document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
-
-    sysData.disease.maternal = document.getElementById("v-maternal").value;
-    sysData.disease.worker = document.getElementById("v-worker").value;
-    
-    let diseaseStr = `[${sysData.disease.main}]`; 
-    if(sysData.disease.cause) diseaseStr += ` 原因:${sysData.disease.cause}`;
-    if(sysData.disease.sub) diseaseStr += ` -> ${sysData.disease.sub}`;
-    diseaseStr += ` (母子:${sysData.disease.maternal} 労災:${sysData.disease.worker})`;
-
-    let evalHtml = sysData.evals.map((e,i) => {
-      let sc = e.scene=='⑨ その他' ? e.sceneOther : e.scene;
-      let html = `<div style="margin-bottom:16px; border-bottom:1px dashed #ccc; padding-bottom:12px;"><b>#${i+1} ${e.type} (${sc||'場面未選択'})</b><br>`;
-      if(e.type === '状況評価(NTS等)') html += `[状況] ${e.desc||'-'}<br>`; 
-      else {
-        html += `[Vital] BP:${e.vitals.bp1}/${e.vitals.bp2} HR:${e.vitals.hr} RR:${e.vitals.rr} SpO2:${e.vitals.spo2}%(O2:${e.vitals.o2}L) BT:${e.vitals.bt} JCS:${e.vitals.jcs}/GCS:${e.vitals.gcs}<br>`;
-        html += `[ABCDEF] ${e.freeABC||'-'}<br>`;
-      }
-      html += `<span style="color:#2e7d32">[Good] ${e.good||'-'}</span><br><span style="color:#d32f2f">[Bad] ${e.bad||'-'}</span>`;
-      if(e.tags.length > 0) html += `<br><span style="font-size:12px;color:var(--blue);">🏷️ ${e.tags.join(', ')}</span>`;
-      return html + `</div>`;
-    }).join("");
-    
-    let fbHtml = sysData.feedbacks.map(f => { 
-      let nm = f.name ? `(${f.name})` : ''; 
-      let html = `<div style="margin-bottom:12px;"><b>【${f.prof}${nm}】</b><br><span style="color:#2e7d32">G: ${f.good||'-'}</span><br><span style="color:#d32f2f">B: ${f.bad||'-'}</span><br><span style="color:#1565c0">N: ${f.next||'-'}</span>`; 
-      if(f.tags.length > 0) html += `<br><span style="font-size:12px;color:var(--blue);">🏷️ ${f.tags.join(', ')}</span>`;
-      return html + `</div>`;
-    }).join("");
-    
-    const summaryVal = document.getElementById("v-summary").value || "";
-    
-    let displayDiags = [...(sysData.tags.diagnosis||[])];
-    const unaddedDiag = document.getElementById("diag-name").value.trim();
-    if(unaddedDiag && !displayDiags.includes(unaddedDiag)) displayDiags.push(unaddedDiag);
-
-    const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
-    sysData.tags.globalTreatment = activeProcs;
-    
-    document.getElementById("print-area").innerHTML = `
-      <div style="font-size:14px; line-height:1.6; padding:12px;">
-        <h2 style="margin-top:0; color:var(--ink);">AW109 デブリーフィング</h2>
-        <div style="background:#f9f9f9; padding:8px; border-radius:6px; margin-bottom:12px;">
-          <b>疾患分類:</b> ${diseaseStr}<br>
-          <b>現場診断:</b> ${displayDiags.join(", ")||'-'}<br>
-          <b>事前実施処置:</b> ${activeProcs.join(", ")||'-'}<br>
-          <b>環境/参加:</b> ${envLoc}・${envMethod} / ${ptList.join(", ")||'未記入'}
-        </div>
-        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 事案概要</h3><div style="padding:4px; margin-bottom:12px;">${summaryVal.replace(/\n/g,'<br>')}</div>
-        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 症例評価</h3><div style="padding:4px; margin-bottom:12px;">${evalHtml}</div>
-        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 多職種振り返り</h3><div style="padding:4px;">${fbHtml}</div>
-      </div>`;
-  }
-
-  async function submitDebriefing() {
-    if (!currentCase) return alert("事案がありません。");
-    const rec = (sysData.tags.recorder && sysData.tags.recorder.length>0) ? sysData.tags.recorder[0] : "";
-    if (!rec) return alert("タブ1で記載者(Ns)を選択してください。");
-
-    const unaddedDiag = document.getElementById("diag-name").value.trim();
-    if(unaddedDiag && !sysData.tags.diagnosis.includes(unaddedDiag)) { sysData.tags.diagnosis.push(unaddedDiag); }
-
-    const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
-    sysData.tags.globalTreatment = activeProcs;
-
-    sysData.summary = document.getElementById("v-summary").value;
-    sysData.disease.maternal = document.getElementById("v-maternal").value;
-    sysData.disease.worker = document.getElementById("v-worker").value;
-
-    sysData.ext = []; document.querySelectorAll('.ext-row').forEach(r => sysData.ext.push({affil:r.querySelector('.e-affil').value, name:r.querySelector('.e-name').value}));
-    sysData.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sysData.ojt.push({job:r.querySelector('.o-job').value, name:r.querySelector('.o-name').value}));
-
-    let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
-    sysData.ext.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); }); sysData.ojt.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
-
-    let allUsedTags = [...activeProcs];
-    let evalTxt = sysData.evals.map((e,i) => {
-      e.tags.forEach(t => allUsedTags.push(t));
-      let sc = e.scene=='⑨ その他'?e.sceneOther:e.scene; let txt = `【#${i+1} ${e.type}(${sc||'未選択'})】\n`;
-      if(e.type=='状況評価(NTS等)') txt+=`状況: ${e.desc||'-'}\n`; 
-      else txt+=`Vital: BP${e.vitals.bp1}/${e.vitals.bp2} HR${e.vitals.hr} RR${e.vitals.rr} SpO2${e.vitals.spo2}%(O2 ${e.vitals.o2}L) BT${e.vitals.bt} JCS${e.vitals.jcs}/GCS${e.vitals.gcs}\nABCDEF: ${e.freeABC||'-'}\n`;
-      txt += `Good: ${e.good||'-'}\nBad: ${e.bad||'-'}\nTag: ${e.tags.join(',')}\n`; return txt;
-    }).join("\n");
-
-    let cg="", cb="";
-    sysData.feedbacks.forEach(f => { 
-      f.tags.forEach(t => allUsedTags.push(t));
-      let nm = f.name ? `(${f.name})` : ''; 
-      if(f.good) cg += `【${f.prof}${nm}】\n${f.good}\n`; 
-      if(f.bad||f.next) cb += `【${f.prof}${nm}】\n[Bad] ${f.bad}\n[Next] ${f.next}\n`; 
-    });
-
-    const uniqueTags = [...new Set(allUsedTags)];
-
-    // 🌟 バグ修正: currentCase["要請番号"]を使用
-    const tagsObj = {
-      diseaseMain: sysData.disease.main, diseaseSub: sysData.disease.sub || sysData.disease.cause,
-      disease: (sysData.tags['diagnosis']||[]).join(", "),
-      scene: [...new Set(sysData.evals.map(e => e.scene=='⑨ その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
-      inlineTags: uniqueTags.join(", ")
-    };
-
-    const envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
-    const envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
-
-    const payload = { caseId: currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: envLoc, method: envMethod, participants: ptList.join(", "), systemData: sysData };
-
-    const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
-    showLoader("保存処理中...", "デブリーフィングデータベースへ保存しています");
-    
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
-      const json = await res.json(); 
-      if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else { throw new Error(json.message); }
-    } catch(e) { 
-      sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);
-      alert("通信エラーが発生しました。入力データは保持されています。電波の良い場所で再度お試しください。"); 
-    } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
-  }
-</script>
+    async function deleteRecord(recordId) {
+      if(!confirm("本当にこの点検履歴を削除しますか？\n（この操作は取り消せません）")) return;
+      showLoader("削除中...", "データベースから履歴を削除しています");
+      try {
+        const sheetNameMap = { '始業点検': '日常点検', '終業点検': '日常点検', '定期点検': '定期点検' }; const reqType = sheetNameMap[currentType] || currentType;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_checklist_record", password: PIN_CODE, id: recordId, type: reqType }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success") { alert("履歴を削除しました。"); fetchChecklistStatus(); fetchHistory(true); } else { alert("削除に失敗しました: " + json.message); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
+  </script>
 </body>
 </html>
