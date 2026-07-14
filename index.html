@@ -122,7 +122,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v10.11</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v10.12</span></div>
   <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
@@ -306,7 +306,6 @@
       <div class="acc-body" id="acc-other">
         <div style="display:flex; flex-direction:column; gap:12px;">
           
-          <!-- 🌟 気管挿管とNPPVをここに移動 -->
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-intub" onchange="toggleBox('box-intub-det', this.checked); handleLifeSupport()">気管挿管</label>
             <div id="box-intub-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
@@ -328,7 +327,6 @@
             </div>
           </div>
 
-          <!-- 🌟 カプノメーター（EtCO2） -->
           <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2">EtCO2 (カプノメーター)</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="喀痰吸引">喀痰吸引</label>
           
@@ -343,7 +341,6 @@
             </div>
           </div>
 
-          <!-- 🌟 医療機器安全管理料（生命維持管理装置）枠 -->
           <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-top:8px;">
             <div style="font-size:12px; font-weight:900; color:#e65100; margin-bottom:8px; border-bottom:1px solid #ffe082; padding-bottom:4px;">🏥 医療機器安全管理料 (生命維持管理装置)</div>
             <div style="font-size:10px; color:#f57f17; font-weight:bold; margin-bottom:8px;">※挿管・NPPV・除細動のチェックに連動して自動点灯します。</div>
@@ -491,7 +488,7 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 エラー監視
+  // 🌟 Load failed を握りつぶす最強フィルター
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -499,6 +496,7 @@
   };
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) return;
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
@@ -506,6 +504,19 @@
     reqType: "", scheme: "",
     calc: { oshin: 0, hansou: 0, long: 0, monitor: 0, spo2: 0 },
     calcVals: { oshin: ["","往診料"], hansou: ["","搬送料","搬送料(新生児)"], long: ["","あり"], monitor:["","自動計算"], spo2:["","あり"] }
+  };
+
+  // 🌟 安全なDOM操作でdatalistを生成 (Safariバグ対策)
+  const pop = (id, arr) => { 
+    const el = document.getElementById(id); 
+    if (!el) return;
+    el.innerHTML = ""; 
+    arr.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a;
+      opt.innerText = a; 
+      el.appendChild(opt);
+    }); 
   };
 
   window.onload = () => {
@@ -517,9 +528,10 @@
 
   let loaderTimer1, loaderTimer2;
   function showLoader(m1, m2) {
+    const loader = document.getElementById("global-loader");
     document.getElementById("loader-main").innerText = m1; 
     document.getElementById("loader-sub").innerText = m2;
-    document.getElementById("global-loader").style.display = "flex";
+    loader.style.display = "flex";
     loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
@@ -538,7 +550,7 @@
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "症例登録(v10.11)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "症例登録(v10.12)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {}
@@ -560,19 +572,12 @@
     el.previousElementSibling.classList.toggle('open');
   }
 
-  // 🌟 生命維持管理装置の自動点灯ロジック
   function handleLifeSupport() {
     const isIntub = document.getElementById("chk-intub").checked;
     const isNppv = document.getElementById("chk-nppv").checked;
     const isShock = document.getElementById("chk-shock").checked;
-
-    // 気管挿管 or NPPV で「人工呼吸器」が点灯
     document.getElementById("chk-ls-vent").checked = (isIntub || isNppv);
-    
-    // 気管挿管で「EtCO2」が点灯
     document.getElementById("chk-etco2").checked = isIntub;
-    
-    // 除細動で「除細動装置」が点灯
     document.getElementById("chk-ls-defib").checked = isShock;
   }
 
@@ -626,7 +631,6 @@
   }
 
   function setCalc(key, idx) {
-    if(key === 'etco2' || key === 'resp') return; // 旧ロジック無視
     state.calc[key] = idx;
     const val = state.calcVals[key][idx];
     const el = document.getElementById(`p-${key}`); const lbl = document.getElementById(`l-${key}`);
@@ -717,22 +721,43 @@
     document.getElementById('lbl-cpr-total').innerText = total;
   }
 
+  // 🌟 マスタをローカルキャッシュから即時展開する新ロジック
   async function fetchInit() {
-    showLoader("システム起動中...", "マスタデータを読み込んでいます");
+    const cachedM = localStorage.getItem("aw109_master_cache");
+    if (cachedM) {
+      try {
+        const m = JSON.parse(cachedM);
+        pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest); pop("dl-diag", m.diagnosis); pop("dl-key", m.keyword);
+        
+        const mbox = document.getElementById("mail-options-box"); if (mbox) {
+          mbox.innerHTML = "";
+          m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
+        }
+      } catch(e) {}
+    } else {
+      showLoader("システム起動中...", "マスタデータを読み込んでいます");
+    }
+    
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success") {
         const m = json.masters;
-        const pop = (id, arr) => { const el=document.getElementById(id); el.innerHTML=""; arr.forEach(a => el.innerHTML+=`<option value="${a}">${a}</option>`); };
+        localStorage.setItem("aw109_master_cache", JSON.stringify(m)); // キャッシュを更新
+        
         pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest); pop("dl-diag", m.diagnosis); pop("dl-key", m.keyword);
         
-        const mbox = document.getElementById("mail-options-box"); mbox.innerHTML = "";
-        m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
-
+        const mbox = document.getElementById("mail-options-box"); if (mbox) {
+          mbox.innerHTML = "";
+          m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
+        }
         if(json.qa) document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid #ccc;">`).join("");
       }
-    } catch(e) { sendErrorLog(e.toString()); } finally { hideLoader(); }
+    } catch(e) { 
+      sendErrorLog(e.toString()); 
+    } finally { 
+      hideLoader(); 
+    }
   }
 
   async function addMaster(type, title) {
@@ -741,7 +766,8 @@
     showLoader("マスタ追加中...", "データベースを更新しています");
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: type, val1: val }), redirect: "follow" });
-      alert(`「${val}」を追加しました！`); fetchInit(); 
+      alert(`「${val}」を追加しました！`); 
+      await fetchInit(); // キャッシュを再更新
     } catch(e) { sendErrorLog(e.toString()); alert("通信エラー"); } finally { hideLoader(); }
   }
 
@@ -754,7 +780,6 @@
     } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
-  // 🌟 新しく統合した処置を収集する
   function getCollectData() {
     let rawId = document.getElementById("v-id").value.trim();
     if (!rawId) {
@@ -823,7 +848,6 @@
     document.querySelectorAll('.chk-echo:checked').forEach(cb => procs.push(`エコー(${cb.value})`));
     document.querySelectorAll('.chk-other:checked').forEach(cb => procs.push(cb.value));
 
-    // 🌟 生命維持管理装置の抽出
     let lifeSupports = [];
     document.querySelectorAll('.chk-life-support:checked').forEach(cb => lifeSupports.push(cb.value));
     if(lifeSupports.length > 0) {
@@ -853,7 +877,6 @@
     document.querySelectorAll('.mail-opt-chk:checked').forEach(cb => addMails.push(cb.value));
     const cMail = document.getElementById("custom-email").value; if(cMail) addMails.push(cMail);
 
-    // 人工呼吸器・EtCO2が新ロジックで点灯しているか判定して、旧フラグ列（Excelの列）にも文字を入れるか決める
     let lsVentStr = document.getElementById("chk-ls-vent").checked ? "あり" : "";
     let etco2Str = document.getElementById("chk-etco2").checked ? "あり" : "";
 
@@ -875,8 +898,8 @@
       "長時間加算": state.calcVals.long[state.calc.long] || "",
       "モニター算定時間": state.calc.monitor > 0 ? document.getElementById("l-monitor").innerText : "", 
       "経皮的酸素飽和度": state.calcVals.spo2[state.calc.spo2] || "",
-      "EtCO2算定": etco2Str, // 🌟 新ロジックで代入
-      "人工呼吸器管理料": lsVentStr, // 🌟 新ロジックで代入
+      "EtCO2算定": etco2Str, 
+      "人工呼吸器管理料": lsVentStr, 
       "現場診断": document.getElementById("v-diag").value,
       "キーワード要請": state.reqType === "キーワード要請" ? document.getElementById("v-keyword").value : "",
       "備考": biko.trim(),
