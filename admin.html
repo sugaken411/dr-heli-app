@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>AW109 システム管理</title>
   <style>
     :root { --bg: #f2f2f7; --card: #ffffff; --brand: #d32f2f; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --line: rgba(60,60,67,0.12); }
@@ -53,7 +56,7 @@
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v12.0</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v13.0</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -112,7 +115,7 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_ADMIN = "9999"; 
-  const CACHE_KEY = "aw109_admin_cache_v12";
+  const CACHE_KEY = "aw109_admin_cache_v13";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
   window.onerror = function(message, source, lineno, colno, error) {
@@ -120,6 +123,7 @@
     sendErrorLog(errDetail); 
     return false;
   };
+  
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
     if(String(reason).includes("Load failed")) return;
@@ -137,12 +141,17 @@
     loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>リロードしてください。</span>"; }, 15000);
   }
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
+  
+  function hideLoader() { 
+    clearTimeout(loaderTimer1); 
+    clearTimeout(loaderTimer2); 
+    document.getElementById("global-loader").style.display = "none"; 
+  }
   
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
     try { 
-      fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); 
+      fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v13.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); 
     } catch(e) {} 
   }
 
@@ -259,6 +268,7 @@
       if (json.status === "success") { 
         alert("マスタデータベースに正常に追加しました。"); 
         document.getElementById("add-val1").value = ""; 
+        document.getElementById("add-val2").value = ""; // 論理的欠陥の修正箇所
       } else { throw new Error(json.message); }
     } catch(e) { 
       sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); 
