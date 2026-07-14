@@ -104,7 +104,7 @@
     .scheme-btn { padding: 10px 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; transition: 0.2s; }
     .scheme-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); box-shadow: 0 4px 12px rgba(211,47,47,0.2); }
     
-    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
     .radio-lbl { display: inline-block; padding: 8px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
     input[type="radio"] { display: none; }
     input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
@@ -248,7 +248,6 @@
         <input type="text" id="v-keyword" list="dl-key" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:15px; background:#fff;" placeholder="キーワードを選択または入力...">
         <datalist id="dl-key"></datalist>
       </div>
-      <!-- 🌟 追加: 事案概要フリー入力欄 -->
       <div class="card-section" style="border-top: 1px dashed var(--line);">
         <div class="section-label">📋 事案概要 (覚知内容など・任意)</div>
         <textarea id="v-summary-req" rows="2" placeholder="通報内容や事案の簡単な概要を記入してください..."></textarea>
@@ -359,8 +358,6 @@
       <div class="acc-body" id="acc-other">
         <div style="display:flex; flex-direction:column; gap:8px;">
           
-          <!-- 🌟 青枠・アコーディオンUIの完全統一 -->
-          
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-bg" onchange="toggleBox('box-bg-det', this.checked)">血液ガス分析</label>
             <div id="box-bg-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
@@ -452,7 +449,6 @@
             </div>
           </div>
 
-          <!-- その他単一チェック項目 -->
           <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2(カプノメーター)">EtCO2 (カプノメーター)</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="喀痰吸引">喀痰吸引</label>
@@ -511,7 +507,7 @@
         </label>
         <div id="box-stock-detail" style="display:none;">
           <div style="font-size:11px; color:#f57f17; margin-bottom:4px; font-weight:bold;">※ここに書いた内容はメールの最上部に強調して記載されます。</div>
-          <textarea id="v-stock-detail" rows="2" placeholder="例：挿管セット、吸引カテ、NPPVマスク(M) など" style="border-color:#fff59d; background:#fff;"></textarea>
+          <textarea id="v-stock-detail" rows="2" placeholder="例：挿管セット、吸引カテ、NPPVマスク(M) など" style="border-color:#fff59d; background:#fff Hausa;"></textarea>
         </div>
       </div>
     </div>
@@ -521,7 +517,6 @@
     </div>
   </div>
   
-  <!-- ==================== 送信タブ ==================== -->
   <div id="tab-send" class="tab-content">
     <div class="card">
       <div class="card-section">
@@ -539,10 +534,6 @@
 
       <div class="card-section">
         <button type="button" class="submit-btn" id="btn-submit" onclick="submitData()">🚀 この内容で送信する</button>
-        <div style="text-align:center; font-size:12px; color:var(--sub); margin-top:12px; line-height: 1.5;">
-          ※送信後、自動で速報メールが配信されます。<br>
-          ※キャンセルを選択して送信した場合は、自動的に完了処理が行われます。
-        </div>
       </div>
     </div>
   </div>
@@ -568,7 +559,6 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 Load failed を握りつぶす最強フィルター
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -586,7 +576,6 @@
     calcVals: { oshin: ["","往診料"], hansou: ["","搬送料","搬送料(新生児)"], long: ["","あり"], monitor:["","自動計算"], spo2:["","あり"] }
   };
 
-  // 🌟 安全なDOM操作でdatalistを生成 (Safariバグ対策)
   const pop = (id, arr) => { 
     const el = document.getElementById(id); 
     if (!el) return;
@@ -628,7 +617,6 @@
     pop("dl-diag", m.diagnosis); 
     pop("dl-key", m.keyword);
     
-    // 🌟 Dr/Nsの朝イチ記憶機能
     const lastDr = localStorage.getItem("aw109_last_dr");
     const lastNs = localStorage.getItem("aw109_last_ns");
     if(lastDr) document.getElementById("v-dr").value = lastDr;
@@ -682,7 +670,7 @@
         redirect: "follow" 
       });
       alert(`「${val}」を追加しました！`); 
-      await fetchLatestData(true, false); // キャッシュを裏で再更新
+      await fetchLatestData(true, false); 
     } catch(e) { 
       sendErrorLog(e.toString()); 
       alert("通信エラー"); 
@@ -730,6 +718,7 @@
     window.scrollTo(0, 0);
   }
 
+  // 表示・非表示切り替え
   function toggleBox(id, isShow) { 
     document.getElementById(id).style.display = isShow ? "block" : "none"; 
   }
@@ -1044,7 +1033,7 @@
     let etco2Str = document.getElementById("chk-etco2").checked ? "あり" : "";
 
     let d = {
-      "要親番号": finalId, // 互換性のため残す
+      "要親番号": finalId,
       "要請番号": finalId,
       "日付": document.getElementById("v-date").value,
       "出場先": document.getElementById("v-dest").value,
