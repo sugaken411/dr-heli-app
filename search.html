@@ -6,21 +6,87 @@
   <title>AW109 事案検索コンソール</title>
   <style>
     :root {
-      --bg: #f2f2f7; --brand: #d32f2f; --ink: #1c1c1e; --sub: #8e8e93;
-      --blue: #007aff; --line: rgba(60,60,67,0.12); --card: #ffffff;
+      --bg: #f2f2f7; 
+      --brand: #d32f2f; 
+      --ink: #1c1c1e; 
+      --sub: #8e8e93;
+      --blue: #007aff; 
+      --line: rgba(60,60,67,0.12); 
+      --card: #ffffff;
     }
-    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
     
-    header { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; }
-    .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; }
-    .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
+    body { 
+      font-family: -apple-system, sans-serif; 
+      background: var(--bg); 
+      color: var(--ink); 
+      margin: 0; 
+      padding: 0; 
+      height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+    }
     
-    main { padding: 20px; flex: 1; overflow-y: auto; }
-    .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    header { 
+      background: #fff; 
+      padding: 12px 20px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 1px solid #ccc; 
+      flex-shrink: 0; 
+    }
     
-    input, select, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
-    button { background: var(--blue); color: #fff; border: none; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+    .hdr-btn { 
+      background: none; 
+      border: none; 
+      color: var(--blue); 
+      font-weight: bold; 
+      cursor: pointer; 
+      font-size: 14px; 
+    }
+    
+    .timer-badge { 
+      background: #e5e5ea; 
+      padding: 4px 10px; 
+      border-radius: 12px; 
+      font-family: monospace; 
+      font-weight: bold; 
+      font-size: 14px; 
+      color: var(--ink); 
+    }
+    
+    main { 
+      padding: 20px; 
+      flex: 1; 
+      overflow-y: auto; 
+    }
+    
+    .card { 
+      background: #fff; 
+      border-radius: 12px; 
+      padding: 20px; 
+      margin-bottom: 20px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+    }
+    
+    input, select, button, textarea { 
+      padding: 10px; 
+      border-radius: 6px; 
+      border: 1px solid #ccc; 
+      font-size: 14px; 
+      box-sizing: border-box; 
+    }
+    
+    button { 
+      background: var(--blue); 
+      color: #fff; 
+      border: none; 
+      cursor: pointer; 
+      font-weight: bold; 
+      transition: opacity 0.2s; 
+    }
     button:hover { opacity: 0.8; }
+    
     .filter-btn { background: #e5e5ea; color: var(--ink); margin-right: 8px; margin-bottom: 8px; }
     
     .res-item { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.2s; }
@@ -50,11 +116,11 @@
     .dyn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; }
     .dyn-grid input { font-size: 12px; padding: 6px; }
 
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; }
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
 
-    /* 🌟 処置UI（青枠）のスタイル */
+    /* 🌟 処置UI（青枠）のスタイル統一 */
     .proc-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
     .proc-line:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
     .proc-lbl { font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; cursor: pointer; }
@@ -68,6 +134,7 @@
     
     #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     
+    /* インテリジェントローダー */
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -109,7 +176,7 @@
       <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v12.1</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v12.2</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -219,6 +286,7 @@
         <input type="hidden" id="edit-scheme">
       </div>
       
+      <!-- 🌟 アコーディオン式に改修 -->
       <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px;">
         <label style="margin-bottom:8px;">キーワード選択</label>
         <div class="chip-grid" id="edit-chip-keyword-selected" style="margin-bottom:8px;"></div>
@@ -362,7 +430,7 @@
           </div>
         </div>
 
-        <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-bottom:8px;">
+        <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-top:8px; margin-bottom:8px;">
           <div style="font-size:12px; font-weight:900; color:#e65100; margin-bottom:8px; border-bottom:1px solid #ffe082; padding-bottom:4px;">🏥 医療機器安全管理料</div>
           <div style="display:flex; flex-direction:column; gap:8px;">
             <label class="proc-lbl"><input type="checkbox" class="chk-life-support" value="人工心肺装置及び補助循環装置">人工心肺装置及び補助循環装置 (PCPS等)</label>
@@ -394,11 +462,12 @@
         </div>
       </div>
 
+      <!-- 古いデータを開いたときの互換用（テキストエリア） -->
       <div id="legacy-procs-container" style="display:none;">
-        <label>過去データ 簡易処置リスト (※手動編集)</label>
-        <textarea id="edit-procs-legacy" rows="3"></textarea>
-        <label style="margin-top:8px; display:block;">過去データ 外傷処置</label>
-        <input type="text" id="edit-trauma-legacy" style="width:100%;">
+        <label style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px; display:block;">過去データ 簡易処置リスト (※手動編集)</label>
+        <textarea id="edit-procs-legacy" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px;"></textarea>
+        <label style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:8px; margin-bottom:4px; display:block;">過去データ 外傷処置</label>
+        <input type="text" id="edit-trauma-legacy" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px;">
       </div>
 
       <div class="edit-section-title">🌬️ 酸素・人工呼吸器・CPR詳細設定</div>
@@ -453,7 +522,7 @@
   <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
     <div class="modal-box">
       <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
-      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div>
+      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div>
       <div style="background:var(--bg); padding:12px; border-radius:8px;">
         <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 システム改善の要望を送る</div>
         <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
@@ -486,17 +555,16 @@
   let lockTime = 600; 
   let timerInterval;
   
-  let loaderTimer1, loaderTimer2;
   function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
     const loader = document.getElementById("global-loader");
     document.getElementById("loader-main-text").innerText = msg1;
     document.getElementById("loader-sub-text").innerHTML = msg2;
     loader.style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
   
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
+  function hideLoader() { 
+    document.getElementById("global-loader").style.display = "none"; 
+  }
   
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
@@ -508,7 +576,7 @@
   function startTimer() { updateTimerDisplay(); timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); }
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   
-  const CACHE_KEY = "aw109_search_master_v12_1";
+  const CACHE_KEY = "aw109_search_master_v12_2";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
   function checkLogin() {
@@ -538,6 +606,14 @@
       document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
       const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...masters.dr, ...masters.ns])].map(v => `<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
       document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
+      
+      const mbox = document.getElementById("mail-options-box"); 
+      if (mbox) {
+        mbox.innerHTML = "";
+        masters.mailOptions.forEach(opt => { 
+          mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; 
+        });
+      }
     }
     if (jsonRes.qa) { 
       document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>'; 
