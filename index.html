@@ -122,7 +122,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div class="title-box">AW109 症例登録<span class="version-tag">v12.0</span></div>
+  <div class="title-box">AW109 症例登録<span class="version-tag">v12.1</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
     <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -163,11 +163,11 @@
       </div>
       <div class="inline-field">
         <span class="field-label">フライトDr <button type="button" class="btn-small" onclick="addMaster('dr', 'フライトDr')">＋追加</button></span>
-        <select id="v-dr" style="background:#f2f2f7;"><option value="">選択...</option></select>
+        <select id="v-dr" style="background:#f2f2f7;" onchange="localStorage.setItem('aw109_last_dr', this.value)"><option value="">選択...</option></select>
       </div>
       <div class="inline-field">
         <span class="field-label">フライトNs <button type="button" class="btn-small" onclick="addMaster('ns', 'フライトNs')">＋追加</button></span>
-        <select id="v-ns" style="background:#f2f2f7;"><option value="">選択...</option></select>
+        <select id="v-ns" style="background:#f2f2f7;" onchange="localStorage.setItem('aw109_last_ns', this.value)"><option value="">選択...</option></select>
       </div>
     </div>
 
@@ -274,41 +274,44 @@
       
       <div class="acc-header" onclick="toggleAcc('acc-line')">💉 確保ライン <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-line">
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">抹消静脈路(20G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">抹消静脈路(22G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">抹消静脈路(24G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">抹消静脈路(18G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
+        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">末梢静脈路(20G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
+        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">末梢静脈路(22G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
+        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">末梢静脈路(24G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
+        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">末梢静脈路(18G)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
         <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">骨髄路(EZ-IO等)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
         <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">骨髄路(BIG等)</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
         <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)">ベニューラ</label><div class="proc-count"><input type="number" inputmode="numeric" value="1" min="1">本</div></div>
       </div>
       
-      <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ エコー・血液ガス <span class="arrow">▼</span></div>
+      <div class="acc-header" onclick="toggleAcc('acc-echo')">🖥️ エコー検査 <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-echo">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
           <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="FAST">FAST</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="心エコー">心エコー</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="パルスドプラ(頸動脈等)">パルスドプラ(頸動脈等)</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="下肢静脈エコー">下肢静脈エコー</label>
         </div>
-        <div style="border-top:1px dashed var(--line); padding-top:12px;">
-          <label class="proc-lbl" style="margin-bottom:8px;"><input type="checkbox" id="chk-bg" onchange="toggleBox('box-bg-det', this.checked)">血液ガス分析</label>
-          <div id="box-bg-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px;">
-            <div class="radio-group" style="margin-bottom:8px;">
-              <label><input type="radio" name="bg-type" value="静脈血" checked onchange="toggleBox('box-bg-art', false)"> <span class="radio-lbl">静脈血</span></label>
-              <label><input type="radio" name="bg-type" value="動脈血" onchange="toggleBox('box-bg-art', true)"> <span class="radio-lbl">動脈血</span></label>
-            </div>
-            <div id="box-bg-art" style="display:none;">
-              <select id="bg-art-loc" style="width:100%; border:1px solid #ccc; padding:10px; background:#fff;"><option value="橈骨動脈">橈骨動脈</option><option value="大腿動脈">大腿動脈</option><option value="上腕動脈">上腕動脈</option></select>
-            </div>
-          </div>
-        </div>
       </div>
       
       <div class="acc-header" onclick="toggleAcc('acc-other')">🩺 処置・高度医療 <span class="arrow">▼</span></div>
       <div class="acc-body" id="acc-other">
-        <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
           
+          <!-- 🌟 青枠・アコーディオンUIの完全統一 -->
+          
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-bg" onchange="toggleBox('box-bg-det', this.checked)">血液ガス分析</label>
+            <div id="box-bg-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <div class="radio-group">
+                <label><input type="radio" name="bg-type" value="静脈血" checked onchange="toggleBox('box-bg-art', false)"> <span class="radio-lbl">静脈血</span></label>
+                <label><input type="radio" name="bg-type" value="動脈血" onchange="toggleBox('box-bg-art', true)"> <span class="radio-lbl">動脈血</span></label>
+              </div>
+              <div id="box-bg-art" style="display:none; margin-top:8px;">
+                <select id="bg-art-loc" style="width:100%; border:1px solid #bbdefb; padding:10px; background:#fff;"><option value="橈骨動脈">橈骨動脈</option><option value="大腿動脈">大腿動脈</option><option value="上腕動脈">上腕動脈</option></select>
+              </div>
+            </div>
+          </div>
+
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-intub" onchange="toggleBox('box-intub-det', this.checked); handleLifeSupport()">気管挿管</label>
             <div id="box-intub-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
@@ -330,21 +333,54 @@
             </div>
           </div>
 
-          <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2">EtCO2 (カプノメーター)</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="喀痰吸引">喀痰吸引</label>
-          
-          <div style="border-top:1px dashed var(--line); padding-top:12px;">
-            <label class="proc-lbl"><input type="checkbox" id="chk-shock" onchange="toggleBox('box-shock-det', this.checked); handleLifeSupport()">除細動（ショック）</label>
-            <div id="box-shock-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
-              <label style="font-size:13px; font-weight:bold;"><input type="checkbox" id="chk-shock-pad" onchange="if(this.checked) autoStock('除細動パッド')"> 除細動パッドを使用</label>
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-shock" onchange="toggleBox('box-shock-det', this.checked); handleLifeSupport()">除細動（ショック）</label>
+            <div id="box-shock-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <label style="font-size:13px; font-weight:bold; color:#0d47a1;"><input type="checkbox" id="chk-shock-pad" onchange="if(this.checked) autoStock('除細動パッド')"> 除細動パッドを使用</label>
               <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-                <span style="font-size:12px; font-weight:bold; color:var(--sub);">ショック回数:</span>
-                <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #ccc; border-radius:4px;"> 回
+                <span style="font-size:12px; font-weight:bold; color:#0d47a1;">ショック回数:</span>
+                <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #bbdefb; border-radius:4px;"> <span style="color:#0d47a1; font-weight:bold;">回</span>
               </div>
             </div>
           </div>
 
-          <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-top:8px;">
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-pacing" onchange="toggleBox('box-pacing-det', this.checked)">経皮ペーシング</label>
+            <div id="box-pacing-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <label style="font-size:13px; font-weight:bold; color:#0d47a1;"><input type="checkbox" id="chk-pacing-pad" onchange="if(this.checked) autoStock('ペーシングパッド')"> ペーシングパッドを使用</label>
+            </div>
+          </div>
+
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-thorax" onchange="toggleBox('box-thorax-det', this.checked)">胸腔ドレナージ</label>
+            <div id="box-thorax-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="font-size:12px; font-weight:bold; color:#0d47a1;">20Fr:</span><input type="number" inputmode="numeric" id="thorax-20" value="0" min="0" style="width:60px; padding:6px; border:1px solid #bbdefb; border-radius:4px;" onchange="if(this.value>0) autoStock('トロッカー20Fr')"> <span style="color:#0d47a1; font-weight:bold;">本</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; font-weight:bold; color:#0d47a1;">28Fr:</span><input type="number" inputmode="numeric" id="thorax-28" value="0" min="0" style="width:60px; padding:6px; border:1px solid #bbdefb; border-radius:4px;" onchange="if(this.value>0) autoStock('トロッカー28Fr')"> <span style="color:#0d47a1; font-weight:bold;">本</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-pericardial" onchange="toggleBox('box-pericardial-det', this.checked)">心嚢穿刺 (ドレナージ)</label>
+            <div id="box-pericardial-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <div class="radio-group">
+                <label><input type="radio" name="pericardial-type" value="キット使用" checked> <span class="radio-lbl">キット使用</span></label>
+                <label><input type="radio" name="pericardial-type" value="ベニューラ使用"> <span class="radio-lbl">ベニューラ使用</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
+            <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-stomach" onchange="toggleBox('box-stomach-det', this.checked)">胃管挿入</label>
+            <div id="box-stomach-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <input type="number" inputmode="decimal" id="stomach-size" placeholder="サイズ(Fr)" style="width:100%; padding:8px; border:1px solid #bbdefb; border-radius:4px;">
+            </div>
+          </div>
+
+          <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-top:8px; margin-bottom:8px;">
             <div style="font-size:12px; font-weight:900; color:#e65100; margin-bottom:8px; border-bottom:1px solid #ffe082; padding-bottom:4px;">🏥 医療機器安全管理料 (生命維持管理装置)</div>
             <div style="font-size:10px; color:#f57f17; font-weight:bold; margin-bottom:8px;">※挿管・NPPV・除細動のチェックに連動して自動点灯します。</div>
             <div style="display:flex; flex-direction:column; gap:8px;">
@@ -355,36 +391,16 @@
             </div>
           </div>
 
-          <div style="border-top:1px dashed var(--line); padding-top:12px;">
-            <label class="proc-lbl"><input type="checkbox" class="chk-other" value="経皮ペーシング">経皮ペーシング</label>
-            <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
-            <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label>
-          </div>
-          
-          <div style="border-top:1px dashed var(--line); padding-top:12px;">
-            <label class="proc-lbl"><input type="checkbox" id="chk-thorax" onchange="toggleBox('box-thorax-det', this.checked)">胸腔ドレナージ</label>
-            <div id="box-thorax-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <span style="font-size:12px; font-weight:bold;">20Fr:</span><input type="number" inputmode="numeric" id="thorax-20" value="0" min="0" style="width:60px; padding:6px; border:1px solid #ccc; border-radius:4px;" onchange="if(this.value>0) autoStock('トロッカー20Fr')"> 本
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:12px; font-weight:bold;">28Fr:</span><input type="number" inputmode="numeric" id="thorax-28" value="0" min="0" style="width:60px; padding:6px; border:1px solid #ccc; border-radius:4px;" onchange="if(this.value>0) autoStock('トロッカー28Fr')"> 本
-              </div>
-            </div>
-          </div>
-
+          <!-- その他単一チェック項目 -->
+          <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2(カプノメーター)">EtCO2 (カプノメーター)</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="喀痰吸引">喀痰吸引</label>
+          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="輪状甲状靭帯穿刺・切開">輪状甲状靭帯穿刺・切開</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心嚢穿刺(ドレナージ)">心嚢穿刺 (ドレナージ)</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心膜開窓術">心膜開窓術</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="開胸心マッサージ">開胸心マッサージ</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="胸腔開放">胸腔開放</label>
 
-          <div style="border-top:1px dashed var(--line); padding-top:12px;">
-            <label class="proc-lbl"><input type="checkbox" id="chk-stomach" onchange="toggleBox('box-stomach-det', this.checked)">胃管挿入</label>
-            <div id="box-stomach-det" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px; margin-left:24px;">
-              <input type="number" inputmode="decimal" id="stomach-size" placeholder="サイズ(Fr)" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-            </div>
-          </div>
         </div>
       </div>
       
@@ -491,7 +507,6 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🌟 Load failed 無視の最強エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -509,7 +524,6 @@
     calcVals: { oshin: ["","往診料"], hansou: ["","搬送料","搬送料(新生児)"], long: ["","あり"], monitor:["","自動計算"], spo2:["","あり"] }
   };
 
-  // 🌟 安全なDOM操作でdatalistを生成 (Safariバグ対策)
   const pop = (id, arr) => { 
     const el = document.getElementById(id); 
     if (!el) return;
@@ -522,7 +536,7 @@
     }); 
   };
 
-  const CACHE_KEY = "aw109_master_cache_v12";
+  const CACHE_KEY = "aw109_master_cache_v12_1";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
   window.onload = () => {
@@ -546,6 +560,13 @@
   function applyMasters(m) {
     masters = m;
     pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest); pop("dl-diag", m.diagnosis); pop("dl-key", m.keyword);
+    
+    // 🌟 Dr/Nsの朝イチ記憶機能
+    const lastDr = localStorage.getItem("aw109_last_dr");
+    const lastNs = localStorage.getItem("aw109_last_ns");
+    if(lastDr) document.getElementById("v-dr").value = lastDr;
+    if(lastNs) document.getElementById("v-ns").value = lastNs;
+
     const mbox = document.getElementById("mail-options-box"); if (mbox) {
       mbox.innerHTML = "";
       m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; });
@@ -579,7 +600,7 @@
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: type, val1: val }), redirect: "follow" });
       alert(`「${val}」を追加しました！`); 
-      await fetchLatestData(true, false); // キャッシュをバックグラウンドで再更新
+      await fetchLatestData(true, false); 
     } catch(e) { sendErrorLog(e.toString()); alert("通信エラー"); } finally { hideLoader(); }
   }
 
@@ -592,13 +613,7 @@
     loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
     loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
-  
-  function hideLoader() { 
-    clearTimeout(loaderTimer1); 
-    clearTimeout(loaderTimer2); 
-    document.getElementById("global-loader").style.display = "none"; 
-  }
-  
+  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
 
@@ -607,7 +622,7 @@
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "症例登録(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "症例登録(v12.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {}
@@ -787,6 +802,48 @@
     } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
+  // 🌟 処置・高度医療の全ステータスをJSONにパックする関数
+  function getProcsState() {
+    let state = {
+      bg: document.getElementById("chk-bg")?.checked,
+      bgType: document.querySelector('input[name="bg-type"]:checked')?.value,
+      bgLoc: document.getElementById("bg-art-loc")?.value,
+      intub: document.getElementById("chk-intub")?.checked,
+      intubSize: document.getElementById("intub-size")?.value,
+      intubPos: document.getElementById("intub-pos")?.value,
+      intubCuff: document.getElementById("intub-cuff")?.checked,
+      nppv: document.getElementById("chk-nppv")?.checked,
+      nppvMask: document.getElementById("nppv-mask")?.value,
+      shock: document.getElementById("chk-shock")?.checked,
+      shockPad: document.getElementById("chk-shock-pad")?.checked,
+      shockCount: document.getElementById("shock-count")?.value,
+      pacing: document.getElementById("chk-pacing")?.checked,
+      pacingPad: document.getElementById("chk-pacing-pad")?.checked,
+      thorax: document.getElementById("chk-thorax")?.checked,
+      thorax20: document.getElementById("thorax-20")?.value,
+      thorax28: document.getElementById("thorax-28")?.value,
+      pericardial: document.getElementById("chk-pericardial")?.checked,
+      pericardialType: document.querySelector('input[name="pericardial-type"]:checked')?.value,
+      stomach: document.getElementById("chk-stomach")?.checked,
+      stomachSize: document.getElementById("stomach-size")?.value,
+      lines: {},
+      echos: Array.from(document.querySelectorAll('.chk-echo:checked')).map(cb=>cb.value),
+      others: Array.from(document.querySelectorAll('.chk-other:checked')).map(cb=>cb.value),
+      lifeSupports: Array.from(document.querySelectorAll('.chk-life-support:checked')).map(cb=>cb.value),
+      traumas: Array.from(document.querySelectorAll('.chk-trauma:checked')).map(cb=>cb.value)
+    };
+    
+    document.querySelectorAll('.proc-line').forEach(line => {
+      const cb = line.querySelector('input[type="checkbox"]');
+      if(cb && cb.checked) {
+        let name = line.innerText.replace('本','').trim();
+        const cnt = line.querySelector('input[type="number"]')?.value || "1";
+        state.lines[name] = cnt;
+      }
+    });
+    return state;
+  }
+
   function getCollectData() {
     let rawId = document.getElementById("v-id").value.trim();
     if (!rawId) {
@@ -812,57 +869,38 @@
       finalScheme = `キャンセル(${reason})`;
     }
 
+    const procsState = getProcsState();
     let procs = [];
-    document.querySelectorAll('.proc-line').forEach(line => {
-      const cb = line.querySelector('input[type="checkbox"]');
-      if(cb && cb.checked) {
-        let name = line.innerText.replace('本','').trim();
-        const cnt = line.querySelector('input[type="number"]')?.value || "1";
-        procs.push(`${name}x${cnt}`);
-      }
-    });
+    
+    for (const [name, cnt] of Object.entries(procsState.lines)) { procs.push(`${name}x${cnt}`); }
+    
+    if(procsState.intub) {
+      const cuff = procsState.intubCuff ? "カフ上吸引あり" : "";
+      procs.push(`気管挿管(ID${procsState.intubSize}mm, ${procsState.intubPos}cm, ${cuff})`);
+    }
+    if(procsState.nppv) { procs.push(`NPPV使用(${procsState.nppvMask}サイズ)`); }
+    if(procsState.shock) {
+      const pad = procsState.shockPad ? "(パッド使用)" : "";
+      procs.push(`除細動${procsState.shockCount}回${pad}`);
+    }
+    if(procsState.pacing) {
+      const pad = procsState.pacingPad ? "(パッド使用)" : "";
+      procs.push(`経皮ペーシング${pad}`);
+    }
+    if(procsState.bg) {
+      const loc = procsState.bgType === "動脈血" ? `(${procsState.bgLoc})` : "";
+      procs.push(`血液ガス分析[${procsState.bgType}]${loc}`);
+    }
+    if(procsState.thorax) {
+      if(procsState.thorax20>0) procs.push(`胸腔ドレナージ(20Fr x${procsState.thorax20}本)`);
+      if(procsState.thorax28>0) procs.push(`胸腔ドレナージ(28Fr x${procsState.thorax28}本)`);
+    }
+    if(procsState.pericardial) { procs.push(`心嚢穿刺(${procsState.pericardialType})`); }
+    if(procsState.stomach) { procs.push(`胃管挿入(${procsState.stomachSize}Fr)`); }
 
-    if(document.getElementById("chk-intub").checked) {
-      const sz = document.getElementById("intub-size").value; const pos = document.getElementById("intub-pos").value;
-      const cuff = document.getElementById("intub-cuff").checked ? "カフ上吸引あり" : "";
-      procs.push(`気管挿管(ID${sz}mm, ${pos}cm, ${cuff})`);
-    }
-    if(document.getElementById("chk-nppv")?.checked) {
-      const mask = document.getElementById("nppv-mask").value;
-      procs.push(`NPPV使用(${mask}サイズ)`);
-    }
-
-    if(document.getElementById("chk-shock")?.checked) {
-      const pad = document.getElementById("chk-shock-pad").checked ? "(パッド使用)" : "";
-      const cnt = document.getElementById("shock-count").value;
-      procs.push(`除細動${cnt}回${pad}`);
-    }
-    if(document.getElementById("chk-bg")?.checked) {
-      const bgType = document.querySelector('input[name="bg-type"]:checked')?.value || "静脈血";
-      const loc = bgType === "動脈血" ? `(${document.getElementById("bg-art-loc").value})` : "";
-      procs.push(`血液ガス分析[${bgType}]${loc}`);
-    }
-    if(document.getElementById("chk-thorax")?.checked) {
-      const t20 = document.getElementById("thorax-20").value; const t28 = document.getElementById("thorax-28").value;
-      if(t20>0) procs.push(`胸腔ドレナージ(20Fr x${t20}本)`);
-      if(t28>0) procs.push(`胸腔ドレナージ(28Fr x${t28}本)`);
-    }
-    if(document.getElementById("chk-stomach")?.checked) {
-      const sz = document.getElementById("stomach-size").value;
-      procs.push(`胃管挿入(${sz}Fr)`);
-    }
-
-    document.querySelectorAll('.chk-echo:checked').forEach(cb => procs.push(`エコー(${cb.value})`));
-    document.querySelectorAll('.chk-other:checked').forEach(cb => procs.push(cb.value));
-
-    let lifeSupports = [];
-    document.querySelectorAll('.chk-life-support:checked').forEach(cb => lifeSupports.push(cb.value));
-    if(lifeSupports.length > 0) {
-      procs.push(`[生命維持管理] ${lifeSupports.join(", ")}`);
-    }
-
-    let trauma = [];
-    document.querySelectorAll('.chk-trauma:checked').forEach(cb => trauma.push(cb.value));
+    procsState.echos.forEach(v => procs.push(`エコー(${v})`));
+    procsState.others.forEach(v => procs.push(v));
+    if(procsState.lifeSupports.length > 0) procs.push(`[生命維持管理] ${procsState.lifeSupports.join(", ")}`);
 
     let dynText = "";
     document.querySelectorAll('#dyn-o2 .dyn-row').forEach(row => { dynText += `[酸素] ${row.querySelector('.v-type').value} ${row.querySelector('.v-val').value}L/min ${row.querySelector('.v-val2').value}% (${row.querySelector('.v-start').value}~${row.querySelector('.v-end').value})\n`; });
@@ -912,8 +950,10 @@
       "備考": biko.trim(),
       "ヘリ在庫フラグ": stockFlag,
       "簡易処置リスト": procs.join(", "),
-      "外傷処置": trauma.join(", "),
-      "追加送信先": addMails.join(",")
+      "外傷処置": procsState.traumas.join(", "),
+      "追加送信先": addMails.join(","),
+      // 🌟 search.html でUIを復元するためにシステムデータへ保存
+      "システムデータ": JSON.stringify({ procsState: procsState })
     };
 
     return d;
