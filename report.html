@@ -45,7 +45,7 @@
 
   <header class="no-print">
     <div class="hdr-group"><button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.3</span></div>
+    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.4</span></div>
     <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
   </header>
 
@@ -146,7 +146,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
 
-    // 🌟 超高感度エラー監視機能
+    // 🌟 Load failedの握りつぶしフィルターを追加
     window.onerror = function(message, source, lineno, colno, error) {
       const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
       sendErrorLog(errDetail); 
@@ -195,7 +195,14 @@
     }
     
     function sendErrorLog(errMsg) { 
-      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "浜町日誌(report.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+      if(String(errMsg).includes("Load failed")) return;
+      try { 
+        fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "error_log", source: "浜町日誌(report.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+          redirect: "follow" 
+        }); 
+      } catch(e) {} 
     }
 
     function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
@@ -217,21 +224,32 @@
     async function fetchInit() {
       showLoader(true, "システム起動中...", "マスタデータを取得しています");
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }), redirect: "follow" });
+        const res = await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }), 
+          redirect: "follow" 
+        });
         const json = await res.json();
         if (json.status === "success") { 
           populateSelect('info-nurse', json.masters.ns || []); 
           populateSelect('info-doctor', json.masters.dr || []); 
           await syncFromDb(false); 
         } else { throw new Error(json.message); }
-      } catch(e) { sendErrorLog(e.toString()); alert("初期通信エラーが発生しました。"); } finally { showLoader(false); }
+      } catch(e) { 
+        sendErrorLog(e.toString()); 
+        alert("初期通信エラーが発生しました。"); 
+      } finally { showLoader(false); }
     }
 
     async function syncFromDb(force) {
       showLoader(true, "データを同期中...", "事案データベースからデータを取得しています"); 
       const dateVal = document.getElementById('info-date').value;
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force }), redirect: "follow" });
+        const res = await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force }), 
+          redirect: "follow" 
+        });
         const json = await res.json();
         
         if (json.status === "success") {
@@ -271,7 +289,10 @@
           }
           updatePrintHeader(); render();
         } else { throw new Error(json.message); }
-      } catch(e) { sendErrorLog(e.toString()); alert("同期エラーが発生しました。"); } finally { showLoader(false); }
+      } catch(e) { 
+        sendErrorLog(e.toString()); 
+        alert("同期エラーが発生しました。"); 
+      } finally { showLoader(false); }
     }
 
     function resolveSync(choice) {
@@ -289,9 +310,18 @@
       
       showLoader(true, "保存中...", "日誌データを更新しています");
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }), redirect: "follow" });
-        const json = await res.json(); if (json.status === "success") alert("保存しました！"); else throw new Error(json.message);
-      } catch(e) { sendErrorLog(e.toString()); alert("保存エラーが発生しました。"); } finally { showLoader(false); }
+        const res = await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }), 
+          redirect: "follow" 
+        });
+        const json = await res.json(); 
+        if (json.status === "success") alert("保存しました！"); 
+        else throw new Error(json.message);
+      } catch(e) { 
+        sendErrorLog(e.toString()); 
+        alert("保存エラーが発生しました。"); 
+      } finally { showLoader(false); }
     }
 
     function updatePrintHeader() {
