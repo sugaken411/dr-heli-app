@@ -81,11 +81,9 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.0</span></div>
-  <div style="display:flex; gap:12px;">
-    <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
-    <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
-  </div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.2</span></div>
+  <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
+  <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
 </header>
 
 <main>
@@ -144,9 +142,8 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   const CACHE_KEY = "aw109_debrief_cache_v12";
-  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000; // 6時間
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
-  // 🌟 Load failed 無視の最強エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -180,31 +177,22 @@
   
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
-    try { 
-      fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
-        redirect: "follow" 
-      }); 
-    } catch(e) {} 
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.2)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
   }
 
-  // 🌟 6時間保持のキャッシュ起動ロジック
   window.onload = async () => {
     const cachedStr = localStorage.getItem(CACHE_KEY);
     const now = Date.now();
-    
     if (cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
         if (now - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
-          document.getElementById("sync-status").innerText = `データ状態: キャッシュから即時展開しました (${cacheObj.timestamp})`;
+          document.getElementById("sync-status").innerText = `データ状態: キャッシュ展開完了 (${cacheObj.timestamp})`;
           buildUIFromData(cacheObj.data, cacheObj.masters);
           return;
         }
       } catch(e) {}
     }
-    // キャッシュがないか、6時間以上経過している場合は自動フェッチ
     fetchLatestData(false, false);
   };
 
@@ -222,7 +210,9 @@
 
       let newData = [];
       debData.forEach(d => {
-        const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
+        // 🌟 修正: 完全に「要請番号」キーだけで強固に紐付け結合
+        const targetId = d["要請番号"];
+        const jian = jianData.find(j => String(j["要請番号"]) === String(targetId));
         if(jian) {
           let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"]]
                         .map(t => t ? String(t).split(",") : []).flat().map(t => t.trim()).filter(Boolean);
@@ -232,7 +222,7 @@
           const uniqueTags = [...new Set(tags)];
           
           newData.push({
-            id: d["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
+            id: targetId, date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
             reqTime: jian["要請時刻・施設間搬送依頼時刻"] || jian["初期離陸時間"] || "--:--",
             contactTime: jian["接触"] || "--:--", dr: jian["フライトドクター"], ns: jian["フライトナース"], 
             participants: d["参加者一覧"] || "", summary: d["概要"], evalText: d["症例評価"], 
@@ -242,26 +232,18 @@
         }
       });
       
-      const cacheObj = { 
-        timestamp: Utilities_formatDate(new Date()), timestampMs: Date.now(), 
-        data: newData, masters: jsonInit.masters 
-      };
+      const cacheObj = { timestamp: Utilities_formatDate(new Date()), timestampMs: Date.now(), data: newData, masters: jsonInit.masters };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
-      
       if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
       
       buildUIFromData(newData, jsonInit.masters);
       document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
-      
       if(isManualUpdate) alert("最新のデータを取得しました。");
-
     } catch (e) { 
       sendErrorLog(e.toString());
       if(!isBackground) alert("データベース同期エラーが発生しました。"); 
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
-    } finally { 
-      if(!isBackground) hideLoader();
-    }
+    } finally { if(!isBackground) hideLoader(); }
   }
 
   function Utilities_formatDate(date) { return `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`; }
@@ -289,14 +271,11 @@
     document.getElementById("ui-tags-scene").innerHTML = renderChipHtml(tagsMaster.scene) || '<span style="font-size:11px;color:#ccc;">なし</span>';
     document.getElementById("ui-tags-nts").innerHTML = renderChipHtml(tagsMaster.nts) || '<span style="font-size:11px;color:#ccc;">なし</span>';
     document.getElementById("ui-tags-practice").innerHTML = renderChipHtml(tagsMaster.practice) || '<span style="font-size:11px;color:#ccc;">なし</span>';
-
     executeSearch();
   }
 
   function executeSearch() {
-    const freeW = document.getElementById("q-free").value.trim().toLowerCase();
-    const qId = document.getElementById("q-id").value.trim();
-    const dMonth = document.getElementById("q-month").value;
+    const freeW = document.getElementById("q-free").value.trim().toLowerCase(); const qId = document.getElementById("q-id").value.trim(); const dMonth = document.getElementById("q-month").value;
     const dr = document.getElementById("q-dr").value; const ns = document.getElementById("q-ns").value; const ext = document.getElementById("q-ext").value;
     const activeChips = Array.from(document.querySelectorAll('.chip.active')).map(c => c.innerText);
 
@@ -305,19 +284,13 @@
       if (qId && !String(m.id).includes(qId)) return false;
       if (dMonth) { if (!mDate.startsWith(dMonth)) return false; }
       if (dr && m.dr !== dr) return false; if (ns && m.ns !== ns) return false; if (ext && !m.participants.includes(ext)) return false;
-      
-      if (activeChips.length > 0) { 
-        const matchTag = activeChips.some(chip => m.tags.some(t => t.includes(chip))); 
-        if (!matchTag) return false; 
-      }
-      
+      if (activeChips.length > 0) { const matchTag = activeChips.some(chip => m.tags.some(t => t.includes(chip))); if (!matchTag) return false; }
       if (freeW) { const fullText = (m.summary + " " + m.evalText + " " + m.good + " " + m.bad + " " + m.participants).toLowerCase(); if (!fullText.includes(freeW)) return false; }
       return true;
     });
     
     results.sort((a,b) => new Date(b.date) - new Date(a.date));
     document.getElementById("result-count").innerText = `検索結果: ${results.length}件`;
-    
     const resArea = document.getElementById("results-area");
     if(results.length === 0) { resArea.innerHTML = "<div style='text-align:center; padding:40px; color:var(--sub);'>条件に一致する事例がありません</div>"; return; }
 
@@ -336,26 +309,6 @@
         <a href="debriefing.html?editId=${r.id}" class="btn-edit-case">✏️ このデブリーフィングを修正・追記する</a>
       </div>
     `).join("");
-  }
-  
-  async function submitQA(event) {
-    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("入力してください。");
-    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "教育検索" }), redirect: "follow" });
-      const jsonRes = await res.json();
-      if(jsonRes.status === "success") { 
-        alert("送信しました。管理者に通知されました。"); 
-        document.getElementById("qa-input").value = ""; 
-        closeModal('qa'); 
-      } else { throw new Error(jsonRes.message); }
-    } catch(e) { 
-      sendErrorLog(e.toString()); 
-      alert("通信エラーが発生しました。"); 
-    } finally { 
-      btn.textContent = "送信する ✉️"; 
-      btn.disabled = false; 
-    }
   }
 </script>
 </body>
