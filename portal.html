@@ -3,40 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>AW109 EMS Portal</title>
   <style>
     :root {
-      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
-      --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd;
+      --bg: #f2f2f7; 
+      --card: #ffffff; 
+      --ink: #1c1c1e; 
+      --sub: #8e8e93;
+      --brand: #d32f2f; 
+      --brand-light: #ffebeb; 
+      --blue: #007aff; 
+      --med-blue: #e3f2fd;
       --line: rgba(60,60,67,0.12);
-      --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
+      --safe-top: env(safe-area-inset-top); 
+      --safe-bot: env(safe-area-inset-bottom);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(20px + var(--safe-bot)); }
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, sans-serif; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    
+    body { 
+      background: var(--bg); 
+      color: var(--ink); 
+      -webkit-font-smoothing: antialiased; 
+      padding-top: calc(56px + var(--safe-top)); 
+      padding-bottom: calc(20px + var(--safe-bot)); 
+    }
+    
+    header {
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      height: calc(56px + var(--safe-top));
+      padding-top: var(--safe-top); 
+      padding-left: 16px; 
+      padding-right: 16px;
+      background: rgba(242,242,247,0.92); 
+      backdrop-filter: blur(20px); 
+      border-bottom: 0.5px solid var(--line);
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      z-index: 100;
+    }
+    
+    .hdr-group { display: flex; gap: 12px; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .title-box { text-align: center; font-weight: 800; font-size: 16px; }
-    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    
     main { padding: 16px; max-width: 900px; margin: 0 auto; }
-    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
+    
     .alert-box { background: #fff9db; border: 1px solid #ffd43b; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: none; flex-direction: column; gap: 8px; }
-    .alert-item { font-size: 14px; font-weight: bold; color: #b08800; cursor: pointer; }
+    .alert-item { font-size: 14px; font-weight: bold; color: #b08800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .alert-item.error { color: var(--brand); }
+    
     .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .portal-card { background: var(--card); border-radius: 16px; padding: 20px; text-decoration: none; color: var(--ink); display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 6px solid var(--sub); }
+    .portal-card { background: #fff; border-radius: 16px; padding: 20px; text-decoration: none; color: var(--ink); display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: 0.2s ease; border-left: 6px solid var(--sub); border: 1px solid var(--line); }
+    .portal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .icon { font-size: 32px; width: 48px; text-align: center; }
     .card-body { flex: 1; }
     .title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
     .desc { font-size: 12px; color: var(--sub); line-height: 1.4; }
-    .card-section { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--line); }
-    .section-label { font-size: 14px; font-weight: 800; color: var(--sub); margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+    
+    .card-section { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--line); }
+    .section-label { font-size: 14px; font-weight: 800; color: var(--sub); text-transform: uppercase; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
     .news-item { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 0.5px solid var(--line); }
     .news-hdr { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
-    .news-date { font-size: 11px; color: var(--sub); }
+    .news-date { font-size: 11px; color: var(--sub); font-family: monospace; }
     .news-cat { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: var(--med-blue); color: var(--blue); }
-    .news-title { font-size: 14px; font-weight: 700; }
-    .news-content { font-size: 13px; color: var(--sub); white-space: pre-wrap; }
+    .news-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .news-content { font-size: 13px; color: var(--sub); line-height: 1.5; white-space: pre-wrap; }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -44,48 +101,253 @@
 <div id="global-loader" style="display:none;">
   <div class="spinner"></div>
   <div class="loader-text" id="loader-main-text">最新データを同期中...</div>
-  <div id="loader-sub-text" style="font-size:12px; color:var(--sub); margin-top:4px;">接続中</div>
+  <div class="loader-subtext" id="loader-sub-text">データベースに接続しています</div>
 </div>
 
 <header>
+  <div class="hdr-group"></div>
   <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.9</span></div>
+  <div class="hdr-group">
+    <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
+    <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
+  </div>
 </header>
 
 <main>
   <div id="alert-box" class="alert-box"></div>
+
+  <!-- 🌟 本物の全10項目グリッドを完全修復復元 -->
   <div class="grid-container">
-    <a href="index.html" class="portal-card" style="border-left-color: var(--brand);"><div class="icon">🚁</div><div class="card-body"><div class="title" style="color:var(--brand);">症例登録</div><div class="desc">処置・資機材の登録</div></div></a>
-    <a href="search.html" class="portal-card" style="border-left-color: var(--blue);"><div class="icon">🔍</div><div class="card-body"><div class="title" style="color:var(--blue);">事案検索コンソール</div><div class="desc">過去データの検索・修正</div></div></a>
-    <a href="checklist.html" class="portal-card" style="border-left-color: #ff9500;"><div class="icon">☑️</div><div class="card-body"><div class="title" style="color:#ff9500;">日常点検</div><div class="desc">ME機器、バック等の点検</div></div></a>
+    <a href="index.html" class="portal-card" style="border-left-color: var(--brand);">
+      <div class="icon">🚁</div>
+      <div class="card-body">
+        <div class="title" style="color:var(--brand);">症例登録</div>
+        <div class="desc">現場・搬送中の処置・タイムライン・資機材のクイック登録</div>
+      </div>
+    </a>
+
+    <a href="search.html" class="portal-card" style="border-left-color: var(--blue);">
+      <div class="icon">🔍</div>
+      <div class="card-body">
+        <div class="title" style="color:var(--blue);">事案検索コンソール</div>
+        <div class="desc">過去データの検索・修正、電子カルテ転記完了マークの処理</div>
+      </div>
+    </a>
+    
+    <a href="management.html" class="portal-card" style="border-left-color: #f59e0b;">
+      <div class="icon">📅</div>
+      <div class="card-body">
+        <div class="title" style="color:#f59e0b;">統括・業務管理</div>
+        <div class="desc">管理用カレンダー、日々の出動状況と待機理由の月間一覧</div>
+      </div>
+    </a>
+
+    <a href="checklist.html" class="portal-card" style="border-left-color: #ff9500;">
+      <div class="icon">☑️</div>
+      <div class="card-body">
+        <div class="title" style="color:#ff9500;">日常点検 ＆ 履歴確認</div>
+        <div class="desc">ME機器、ナースバック等のペーパーレス点検。異常時の自動アラートと履歴出力対応。</div>
+      </div>
+    </a>
+
+    <a href="report.html" class="portal-card" style="border-left-color: #10b981;">
+      <div class="icon">📝</div>
+      <div class="card-body">
+        <div class="title" style="color:#10b981;">業務日報 (浜町日誌)</div>
+        <div class="desc">当直帯のタイムライン自動生成・手動修正・印刷管理</div>
+      </div>
+    </a>
+
+    <a href="summary.html" class="portal-card" style="border-left-color: #0ea5e9;">
+      <div class="icon">📊</div>
+      <div class="card-body">
+        <div class="title" style="color:#0ea5e9;">JSAMS 統計ダッシュボード</div>
+        <div class="desc">月次集計、個人実績、時間帯ヒートマップ、処置ランキング</div>
+      </div>
+    </a>
+    
+    <a href="library.html" class="portal-card" style="border-left-color: #8b5cf6;">
+      <div class="icon">📚</div>
+      <div class="card-body">
+        <div class="title" style="color:#8b5cf6;">資料集・アーカイブ</div>
+        <div class="desc">公式ガイドラインや院内自作プロトコルの階層型ドリルダウン検索</div>
+      </div>
+    </a>
+
+    <a href="debriefing.html" class="portal-card" style="border-left-color: #34c759;">
+      <div class="icon">🗣️</div>
+      <div class="card-body">
+        <div class="title" style="color:#34c759;">デブリーフィング入力</div>
+        <div class="desc">事案に紐づく多職種振り返り・評価ポイント・Nextアクション of 記録</div>
+      </div>
+    </a>
+
+    <a href="debrief_search.html" class="portal-card" style="border-left-color: #ec4899;">
+      <div class="icon">🧠</div>
+      <div class="card-body">
+        <div class="title" style="color:#ec4899;">教育・事案振り返り検索</div>
+        <div class="desc">デブリーフィングを元に、過去の成功事例やヒヤリハットを学習検索</div>
+      </div>
+    </a>
+    
+    <a href="admin.html" class="portal-card" style="border-left-color:#d48806;">
+      <div class="icon">⚙️</div>
+      <div class="card-body">
+        <div class="title" style="color:#d48806;">システム管理コンソール</div>
+        <div class="desc">ドクター、ナース、出場先マスタの追加やQ&A未回答処理</div>
+      </div>
+    </a>
   </div>
+
   <div class="card-section">
     <div class="section-label">📢 最新のお知らせ</div>
-    <div id="news-box" style="font-size:13px;">お知らせはありません。</div>
+    <div id="news-box" style="font-size:13px; color:var(--sub);">お知らせはありません。</div>
   </div>
 </main>
 
+<div class="modal-overlay" id="modal-manual" onclick="if(event.target===this)closeModal('modal-manual')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">📖 取扱説明書 (ポータル・共通)</h3>
+    <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
+    <button type="button" class="modal-close" onclick="closeModal('modal-manual')">閉じる</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px; background:var(--bg);"></textarea>
+    <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <button type="button" class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
+  </div>
+</div>
+
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  window.onload = () => { fetchInit(); };
+  const PIN_CODE = "5740";
+
+  window.onerror = function(message, source, lineno, colno, error) {
+    return false;
+  };
+  
+  window.addEventListener('unhandledrejection', function(event) {
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) return;
+  });
+
+  let loaderTimer1, loaderTimer2;
+  function showLoader() {
+    document.getElementById("global-loader").style.display = "flex";
+  }
+  
+  function hideLoader() { 
+    document.getElementById("global-loader").style.display = "none"; 
+  }
+
+  window.onload = () => {
+    const cachedData = localStorage.getItem("aw109_portal_cache");
+    if (cachedData) renderPortal(JSON.parse(cachedData));
+    fetchInit();
+  };
 
   async function fetchInit() {
-    document.getElementById("global-loader").style.display = "flex";
+    showLoader();
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: "5740", app_name: "ポータル" }) });
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "ポータル" }), 
+        redirect: "follow" 
+      });
       const json = await res.json();
-      if (json.status === "success") {
-        if (json.news && json.news.length > 0) {
-          document.getElementById("news-box").innerHTML = json.news.map(item => `
-            <div class="news-item">
-              <div class="news-hdr"><span class="news-cat">${item.category}</span> <span class="news-date">${item.date}</span></div>
-              <div class="news-title"><b>${item.title}</b></div>
-              <div class="news-content">${item.content}</div>
-            </div>`).join("");
-        }
+      if (json.status === "success") { 
+        localStorage.setItem("aw109_portal_cache", JSON.stringify(json)); 
+        renderPortal(json); 
       }
     } catch (e) {
-      document.getElementById("news-box").innerHTML = `<span style="color:red; font-weight:bold;">⚠️ GAS連携エラー: スプレッドシート側の「DB_お知らせ」シートに有効なデータが存在するか、列構成を確認してください。</span>`;
-    } finally { document.getElementById("global-loader").style.display = "none"; }
+      if(!localStorage.getItem("aw109_portal_cache")) { 
+        document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。"; 
+      }
+    } finally { 
+      hideLoader(); 
+    }
+  }
+
+  function renderPortal(json) {
+    const alertBox = document.getElementById("alert-box"); alertBox.innerHTML = ""; 
+    if (json.alerts && json.alerts.length > 0) {
+      alertBox.style.display = "flex";
+      alertBox.innerHTML = json.alerts.map(a => { 
+        if (a.type === "warning") return `<div class="alert-item" onclick="location.href='search.html?auto_filter=uncompleted'">` + a.text + `</div>`; 
+        else return `<div class="alert-item error" onclick="location.href='report.html'">` + a.text + `</div>`; 
+      }).join("");
+    } else { 
+      alertBox.style.display = "none"; 
+    }
+
+    if (json.news && json.news.length > 0) { 
+      document.getElementById("news-box").innerHTML = json.news.map(item => `
+        <div class="news-item">
+          <div class="news-hdr">
+            <span class="news-cat">${item.category}</span>
+            <span class="news-date">${item.date}</span>
+          </div>
+          <div class="news-title">${item.title}</div>
+          <div class="news-content">${item.content}</div>
+        </div>
+      `).join(""); 
+    } else { 
+      document.getElementById("news-box").innerHTML = '<p style="font-size:13px; color:var(--sub); padding:4px 0;">お知らせはありません。</p>'; 
+    }
+
+    if (json.qa) {
+      document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `
+        <p style="margin-bottom:8px;">
+          <b>Q. ${item.q}</b><br>
+          <span style="color:var(--ink);">A. ${item.a}</span>
+        </p>
+        <hr style="border:none;border-top:1px solid var(--line);">
+      `).join("") || '<p>公開Q&Aはありません。</p>';
+    }
+    
+    const manualsData = json.manuals || [];
+    document.getElementById("manual-list").innerHTML = manualsData.map(item => `
+      <p style="margin-bottom:8px;">
+        <b>■ ${item.title}</b><br>
+        <span style="font-size:13px;">${item.text.replace(/\\n/g,'<br>')}</span>
+      </p>
+      <hr style="border:none;border-top:1px solid var(--line);">
+    `).join("") || '<p>マニュアルはありません。</p>';
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); 
+    if (!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "ポータル" }), 
+        redirect: "follow" 
+      });
+      const json = await res.json(); 
+      if (json.status === "success") { 
+        alert("要望を送信しました。"); 
+        document.getElementById("qa-input").value = ""; 
+        closeModal('modal-qa'); 
+      }
+    } catch (e) { 
+      alert("通信エラーが発生しました。"); 
+    } finally { 
+      btn.textContent = "送信"; 
+      btn.disabled = false; 
+    }
   }
 </script>
 </body>
