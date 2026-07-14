@@ -106,7 +106,7 @@
 
 <header>
   <div class="hdr-group"></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v12.9</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.0</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
@@ -116,7 +116,6 @@
 <main>
   <div id="alert-box" class="alert-box"></div>
 
-  <!-- 🌟 本物の全10項目グリッドを完全修復復元 -->
   <div class="grid-container">
     <a href="index.html" class="portal-card" style="border-left-color: var(--brand);">
       <div class="icon">🚁</div>
@@ -178,7 +177,7 @@
       <div class="icon">🗣️</div>
       <div class="card-body">
         <div class="title" style="color:#34c759;">デブリーフィング入力</div>
-        <div class="desc">事案に紐づく多職種振り返り・評価ポイント・Nextアクション of 記録</div>
+        <div class="desc">事案に紐づく多職種振り返り・評価ポイント・Nextアクションの記録</div>
       </div>
     </a>
 
@@ -228,14 +227,29 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
+  // 🌟 エラー監視とログ通知機能（v12.9の退行を修正し、Load failedフィルターを維持）
   window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail); 
     return false;
   };
   
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
     if(String(reason).includes("Load failed")) return;
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
+
+  function sendErrorLog(errMsg) { 
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {} 
+  }
 
   let loaderTimer1, loaderTimer2;
   function showLoader() {
@@ -265,10 +279,15 @@
       if (json.status === "success") { 
         localStorage.setItem("aw109_portal_cache", JSON.stringify(json)); 
         renderPortal(json); 
+      } else {
+        throw new Error(json.message);
       }
     } catch (e) {
       if(!localStorage.getItem("aw109_portal_cache")) { 
         document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。"; 
+      }
+      if(!String(e).includes("Load failed")) {
+         sendErrorLog(e.toString());
       }
     } finally { 
       hideLoader(); 
@@ -341,9 +360,14 @@
         alert("要望を送信しました。"); 
         document.getElementById("qa-input").value = ""; 
         closeModal('modal-qa'); 
+      } else {
+        throw new Error(json.message);
       }
     } catch (e) { 
       alert("通信エラーが発生しました。"); 
+      if(!String(e).includes("Load failed")) {
+         sendErrorLog(e.toString());
+      }
     } finally { 
       btn.textContent = "送信"; 
       btn.disabled = false; 
