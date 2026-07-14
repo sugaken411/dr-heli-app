@@ -81,8 +81,11 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v11.9</span></div>
-  <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.0</span></div>
+  <div style="display:flex; gap:12px;">
+    <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
+    <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  </div>
 </header>
 
 <main>
@@ -140,16 +143,19 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_debrief_cache_v119";
+  const CACHE_KEY = "aw109_debrief_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000; // 6時間
 
-  // 🌟 エラー監視
+  // 🌟 Load failed 無視の最強エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
     return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
-    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) return;
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
   let mergedData = []; 
@@ -173,30 +179,36 @@
   function clearMonth() { document.getElementById("q-month").value = ""; }
   
   function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v11.9)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
   }
 
+  // 🌟 6時間保持のキャッシュ起動ロジック
   window.onload = async () => {
     const cachedStr = localStorage.getItem(CACHE_KEY);
-    if(cachedStr) {
+    const now = Date.now();
+    
+    if (cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
-        document.getElementById("sync-status").innerText = `データ状態: ${cacheObj.timestamp} 時点のキャッシュを表示中 (裏側で最新データを同期しています...)`;
-        buildUIFromData(cacheObj.data, cacheObj.masters);
-        fetchLatestData(true);
-      } catch(e) { fetchLatestData(false); }
-    } else {
-      fetchLatestData(false);
+        if (now - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          document.getElementById("sync-status").innerText = `データ状態: キャッシュから即時展開しました (${cacheObj.timestamp})`;
+          buildUIFromData(cacheObj.data, cacheObj.masters);
+          return;
+        }
+      } catch(e) {}
     }
+    // キャッシュがないか、6時間以上経過している場合は自動フェッチ
+    fetchLatestData(false, false);
   };
 
-  async function fetchLatestData(isBackground) {
+  async function fetchLatestData(isBackground, isManualUpdate) {
     if(!isBackground) showLoader("データベース同期中...", "事案データと振り返りデータを結合しています");
     try {
       const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }), redirect: "follow" });
@@ -230,13 +242,18 @@
         }
       });
       
-      const cacheObj = { timestamp: Utilities_formatDate(new Date()), data: newData, masters: jsonInit.masters };
+      const cacheObj = { 
+        timestamp: Utilities_formatDate(new Date()), timestampMs: Date.now(), 
+        data: newData, masters: jsonInit.masters 
+      };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
       
       if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
       
       buildUIFromData(newData, jsonInit.masters);
       document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
+      
+      if(isManualUpdate) alert("最新のデータを取得しました。");
 
     } catch (e) { 
       sendErrorLog(e.toString());
@@ -336,7 +353,7 @@
       sendErrorLog(e.toString()); 
       alert("通信エラーが発生しました。"); 
     } finally { 
-      btn.textContent = "送信"; 
+      btn.textContent = "送信する ✉️"; 
       btn.disabled = false; 
     }
   }
