@@ -46,7 +46,6 @@
     .doc-card.needs-review { border-color: #f87171; background-color: var(--brand-danger-light); }
     
     .card-top { margin-bottom: 12px; flex: 1; display: flex; flex-direction: column; }
-    /* 🌟 修正：表示被りを100%防ぐための横並びメタデータ行 */
     .meta-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
     .cat-badge { font-size: 10px; font-weight: 800; background: #e3f2fd; color: var(--brand); padding: 4px 8px; border-radius: 6px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cat-badge.badge-review { background: #fee2e2; color: #b91c1c; }
@@ -69,7 +68,7 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; color: var(--ink); }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 700; font-size: 16px; cursor: pointer; color: var(--ink); }
     .form-group { margin-bottom: 14px; }
     .form-group label { font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 4px; display: block; }
     .form-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; background: #fff; color: var(--ink); font-weight: 600; outline: none; }
@@ -94,14 +93,13 @@
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div class="title-box">資料・プロトコル集 <span class="version-tag">v13.1</span></div>
+    <div class="title-box">資料・プロトコル集 <span class="version-tag">v13.2</span></div>
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="fetchLibraryData(true)" style="margin-right:8px;">🔄 更新</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-global-qa')" style="margin-right:8px;">❓ Q&A</button>
       <button type="button" id="btn-admin-toggle" class="hdr-btn" onclick="toggleAdmin()">管理</button>
     </div>
   </header>
-  <!-- 🌟 追加：マスタ最終同期日時の表示領域 -->
   <div id="master-sync-info" style="text-align:right; font-size:10px; color:var(--sub); padding:4px 16px 0 0; background:var(--bg); font-weight:bold;"></div>
 
   <main>
@@ -119,6 +117,7 @@
       
       <div class="filter-section" style="border-top: 1px solid var(--line); padding-top: 12px;">
         <div class="filter-title">🧭 2. 中項目（対象領域）</div>
+        <!-- 🌟 修正：初期値のvalue属性を「欲しい領域」から「全て」へ正規化 -->
         <select id="filter-medium" onchange="filterDocs()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); font-size:13px; font-weight:700; outline:none; background:#ffffff; color:var(--ink); cursor:pointer;">
           <option value="全て">🔄 全ての中項目</option>
         </select>
@@ -133,7 +132,6 @@
     <div class="grid-container" id="cards-container"></div>
   </main>
 
-  <!-- 🌟 追加：全画面共通仕様の公開Q&A閲覧＆総合要望送信モーダル -->
   <div class="modal-overlay" id="modal-global-qa" onclick="if(event.target===this)closeModal('modal-global-qa')">
     <div class="modal-box">
       <h3 style="margin-top:0; margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3>
@@ -149,7 +147,6 @@
     </div>
   </div>
 
-  <!-- ❓ 資料個別の質問モーダル -->
   <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
     <div class="modal-box">
       <h3 style="margin-top:0; color: #d84315; margin-bottom:12px;">❓ 資料に関する質問・要望</h3>
@@ -165,7 +162,6 @@
     </div>
   </div>
 
-  <!-- ✏️ 管理者用事後編集モーダル -->
   <div class="modal-overlay" id="modal-edit" onclick="if(event.target===this)closeModal('modal-edit')">
     <div class="modal-box">
       <h3 style="margin-top:0; margin-bottom:12px; color:var(--ink);">✏️ 資料データの事後編集</h3>
@@ -275,7 +271,6 @@
     try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
   }
 
-  // 🌟 標準仕様：最終マスタ同期日時の表示ロジック
   function updateSyncTimestamp(ts) {
     const d = new Date(ts);
     const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -297,7 +292,7 @@
           allDocs = cacheObj.data;
           updateSyncTimestamp(cacheObj.timestampMs);
           buildFilters(); filterDocs();
-          fetchInitData(); // Q&Aのみ裏側で取得
+          fetchInitData(); 
           return;
         }
       } catch(e) {}
@@ -305,13 +300,12 @@
     await fetchLibraryData(false);
   };
 
-  // 🌟 追加：全画面共通標準の公開Q&Aリスト取得ロジック
   async function fetchInitData() {
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "資料" }), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success" && json.qa) {
-        document.getElementById("global-qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line); margin:8px 0;">`).join("") || '<p>公開Q&Aはありません。</p>';
+        document.getElementById("global-qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><span style="border:none;border-top:1px solid var(--line); margin:8px 0; display:block;"></span>`).join("") || '<p>公開Q&Aはありません。</p>';
       }
     } catch(e) {}
   }
@@ -351,7 +345,7 @@
   async function fetchLibraryData(isManualUpdate) {
     showLoader("資料庫同期中...", "アーカイブから最新の資料を取得しています");
     try {
-      await fetchInitData(); // Q&Aと並行
+      await fetchInitData(); 
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success" && json.data) {
@@ -432,7 +426,6 @@
       return `
         <div class="${cardClass}">
           <div class="card-top">
-            <!-- 🌟 修正：表示被りを物理的に排除した配置構造 -->
             <div class="meta-top-row">
               <span style="font-size:11px; color:var(--sub); font-weight:bold;">🔄 更新: ${d.date}</span>
               <span class="${badgeClass}" title="${d.large}">${badgeText}</span>
@@ -478,7 +471,6 @@
     } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
-  // 🌟 追加：全画面共通要望BOXの送信ロジック
   async function submitGlobalQA() {
     const qText = document.getElementById("global-qa-input").value.trim();
     if(!qText) return alert("要望内容を入力してください。");
