@@ -9,17 +9,17 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); padding-bottom: 40px; -webkit-font-smoothing: antialiased; }
     
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--brand); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--brand); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
-    main { margin-top: 72px; padding: 16px; max-width: 1000px; margin-left: auto; margin-right: auto; }
+    main { margin-top: calc(72px + env(safe-area-inset-top)); padding: 16px; max-width: 1000px; margin-left: auto; margin-right: auto; }
     
     .search-box { position: relative; margin-bottom: 16px; }
     .search-box input { width: 100%; padding: 14px 16px 14px 40px; font-size: 15px; font-weight: 600; border: 1px solid var(--line); border-radius: 12px; background: #fff; outline: none; }
     .search-box::before { content: "🔍"; position: absolute; left: 14px; top: 14px; font-size: 16px; color: var(--sub); }
     
-    .filter-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    .filter-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid var(--line); }
     .filter-section { margin-bottom: 14px; }
     .filter-section:last-child { margin-bottom: 0; }
     .filter-title { font-size: 12px; font-weight: 800; color: var(--sub); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
@@ -46,7 +46,6 @@
     .btn-view { flex: 1; background: var(--brand); color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; }
     .btn-info { background: #ffebee; color: #c62828; border: none; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
     
-    /* 🌟 インテリジェントローダー */
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -64,8 +63,8 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v11.6</span></div>
-  <div style="width:60px;"></div>
+  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v12.0</span></div>
+  <button type="button" class="hdr-btn no-print" onclick="fetchLibraryData(true)">🔄 更新</button>
 </header>
 
 <main>
@@ -100,8 +99,9 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
+  const CACHE_KEY = "aw109_library_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
-  // 🌟 超高感度エラー監視機能の導入
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -109,183 +109,112 @@
   };
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    if(String(reason).includes("Load failed")) {
-      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
-      return;
-    }
+    if(String(reason).includes("Load failed")) return;
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
-  let allDocs = [];
-  let activeLarge = "全件";
-  let activeTags = [];
+  let allDocs = []; let activeLarge = "全件"; let activeTags = [];
 
   let loaderTimer1, loaderTimer2;
   function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
-    const loader = document.getElementById("global-loader");
-    document.getElementById("loader-main-text").innerText = msg1;
-    document.getElementById("loader-sub-text").innerHTML = msg2;
-    loader.style.display = "flex";
+    document.getElementById("loader-main-text").innerText = msg1; document.getElementById("loader-sub-text").innerHTML = msg2;
+    document.getElementById("global-loader").style.display = "flex";
     loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:#d32f2f;'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:#d32f2f;'>通信タイムアウト<br>リロードしてください。</span>"; }, 15000);
   }
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
   
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
-    try { 
-      fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
-        redirect: "follow" 
-      }); 
-    } catch(e) {} 
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
   }
 
   window.onload = async () => {
-    await fetchLibraryData();
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    if(cachedStr) {
+      try {
+        const cacheObj = JSON.parse(cachedStr);
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          allDocs = cacheObj.data;
+          buildFilters(); filterDocs();
+          return;
+        }
+      } catch(e) {}
+    }
+    fetchLibraryData(false);
   };
 
-  async function fetchLibraryData() {
+  async function fetchLibraryData(isManualUpdate) {
     showLoader("資料庫同期中...", "アーカイブから最新の資料を取得しています");
     try {
-      const res = await fetch(GAS_API_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }),
-        redirect: "follow"
-      });
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }), redirect: "follow" });
       const json = await res.json();
-      
       if (json.status === "success" && json.data) {
         allDocs = json.data.map((item, index) => {
-          return {
-            id: index,
-            title: item.title || "無題の資料",        
-            url: item.url || "",                     
-            large: item.category || "未分類",         
-            medium: item.domain || "全般",           
-            keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [], 
-            desc: item.desc || "説明・概要はありません",  
-            date: item.date || "日付不明"             
-          };
+          return { id: index, title: item.title || "無題の資料", url: item.url || "", large: item.category || "未分類", medium: item.domain || "全般", keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [], desc: item.desc || "説明・概要はありません", date: item.date || "日付不明" };
         });
-        
-        buildFilters();
-        filterDocs();
-      } else {
-        throw new Error(json.message || "データ同期に失敗しました");
-      }
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: allDocs }));
+        buildFilters(); filterDocs();
+        if(isManualUpdate) alert("最新の資料情報を取得しました。");
+      } else { throw new Error(json.message || "データ同期に失敗しました"); }
     } catch (e) {
-      document.getElementById("cards-container").innerHTML = `<p style='color:red; font-weight:bold; text-align:center; padding:20px;'>通信エラーが発生しました。<br>${e.message}</p>`;
+      document.getElementById("cards-container").innerHTML = `<p style='color:red; font-weight:bold; text-align:center; padding:20px;'>通信エラーが発生しました。</p>`;
       sendErrorLog(e.toString());
-    } finally {
-      hideLoader();
-    }
+    } finally { hideLoader(); }
   }
 
   function buildFilters() {
-    const largeSet = new Set();
-    const mediumSet = new Set();
-    const tagSet = new Set();
-
-    allDocs.forEach(d => {
-      if(d.large) largeSet.add(d.large);
-      if(d.medium) mediumSet.add(d.medium);
-      d.keywords.forEach(k => tagSet.add(k));
-    });
+    const largeSet = new Set(); const mediumSet = new Set(); const tagSet = new Set();
+    allDocs.forEach(d => { if(d.large) largeSet.add(d.large); if(d.medium) mediumSet.add(d.medium); d.keywords.forEach(k => tagSet.add(k)); });
 
     const largeBox = document.getElementById("filter-large");
     largeBox.innerHTML = `<div class="chip active" onclick="setLargeFilter('全件', this)">全件</div>`;
-    Array.from(largeSet).sort().forEach(l => {
-      largeBox.innerHTML += `<div class="chip" onclick="setLargeFilter('${l}', this)">${l}</div>`;
-    });
+    Array.from(largeSet).sort().forEach(l => { largeBox.innerHTML += `<div class="chip" onclick="setLargeFilter('${l}', this)">${l}</div>`; });
 
     const mediumSelect = document.getElementById("filter-medium");
     mediumSelect.innerHTML = `<option value="全て">🔄 全ての中項目</option>`;
-    Array.from(mediumSet).sort().forEach(m => {
-      mediumSelect.innerHTML += `<option value="${m}">${m}</option>`;
-    });
+    Array.from(mediumSet).sort().forEach(m => { mediumSelect.innerHTML += `<option value="${m}">${m}</option>`; });
 
-    const tagBox = document.getElementById("filter-tags");
-    tagBox.innerHTML = "";
-    Array.from(tagSet).sort().forEach(t => {
-      tagBox.innerHTML += `<div class="chip-tag" onclick="toggleTagFilter('${t}', this)" style="cursor:pointer;">#${t}</div>`;
-    });
+    const tagBox = document.getElementById("filter-tags"); tagBox.innerHTML = "";
+    Array.from(tagSet).sort().forEach(t => { tagBox.innerHTML += `<div class="chip-tag" onclick="toggleTagFilter('${t}', this)" style="cursor:pointer;">#${t}</div>`; });
   }
 
-  function setLargeFilter(val, element) {
-    activeLarge = val;
-    document.querySelectorAll("#filter-large .chip").forEach(c => c.classList.remove("active"));
-    element.classList.add("active");
-    filterDocs();
-  }
-
-  function toggleTagFilter(val, element) {
-    if (activeTags.includes(val)) {
-      activeTags = activeTags.filter(t => t !== val);
-      element.classList.remove("active");
-    } else {
-      activeTags.push(val);
-      element.classList.add("active");
-    }
-    filterDocs();
-  }
+  function setLargeFilter(val, element) { activeLarge = val; document.querySelectorAll("#filter-large .chip").forEach(c => c.classList.remove("active")); element.classList.add("active"); filterDocs(); }
+  function toggleTagFilter(val, element) { if (activeTags.includes(val)) { activeTags = activeTags.filter(t => t !== val); element.classList.remove("active"); } else { activeTags.push(val); element.classList.add("active"); } filterDocs(); }
 
   function filterDocs() {
-    const searchQ = document.getElementById("search-input").value.toLowerCase().trim();
-    const activeMedium = document.getElementById("filter-medium").value;
-
+    const searchQ = document.getElementById("search-input").value.toLowerCase().trim(); const activeMedium = document.getElementById("filter-medium").value;
     const filtered = allDocs.filter(d => {
       if (activeLarge !== "全件" && d.large !== activeLarge) return false;
       if (activeMedium !== "全て" && d.medium !== activeMedium) return false;
       if (activeTags.length > 0 && !activeTags.every(t => d.keywords.includes(t))) return false;
-      if (searchQ) {
-        const targetStr = `${d.title} ${d.large} ${d.medium} ${d.desc} ${d.keywords.join(" ")}`.toLowerCase();
-        if (!targetStr.includes(searchQ)) return false;
-      }
+      if (searchQ) { const targetStr = `${d.title} ${d.large} ${d.medium} ${d.desc} ${d.keywords.join(" ")}`.toLowerCase(); if (!targetStr.includes(searchQ)) return false; }
       return true;
     });
-
     renderCards(filtered);
   }
 
   function renderCards(docs) {
     const container = document.getElementById("cards-container");
-    if (docs.length === 0) {
-      container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--sub); font-weight:bold;">該当する資料が見つかりません。</div>`;
-      return;
-    }
-
+    if (docs.length === 0) { container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--sub); font-weight:bold;">該当する資料が見つかりません。</div>`; return; }
     container.innerHTML = docs.map(d => {
       return `
         <div class="doc-card">
           <div class="card-top">
             <span class="cat-badge" title="${d.large}">${d.large}</span>
             <div class="doc-title">${escapeHtml(d.title)}</div>
-            <div class="doc-meta">
-              <span>🧭 領域: <b>${escapeHtml(d.medium)}</b></span>
-              <span style="margin-left:12px;">🔄 更新: <b>${d.date}</b></span>
-            </div>
+            <div class="doc-meta"><span>🧭 領域: <b>${escapeHtml(d.medium)}</b></span><span style="margin-left:12px;">🔄 更新: <b>${d.date}</b></span></div>
             <div class="doc-desc">${escapeHtml(d.desc)}</div>
-            <div class="tag-box">
-              ${d.keywords.map(k => `<span class="doc-tag">#${escapeHtml(k)}</span>`).join("")}
-            </div>
+            <div class="tag-box">${d.keywords.map(k => `<span class="doc-tag">#${escapeHtml(k)}</span>`).join("")}</div>
           </div>
           <div class="btn-row">
-            <a href="${d.url}" target="_blank" class="btn-view">
-              <span>↗️ 資料を閲覧する</span>
-            </a>
+            <a href="${d.url}" target="_blank" class="btn-view"><span>↗️ 資料を閲覧する</span></a>
             <button type="button" class="btn-info" onclick="alert('【資料詳細情報】\\n■ 資料名: ${escapeHtml(d.title)}\\n■ 対象領域: ${escapeHtml(d.medium)}\\n■ 更新日: ${d.date}\\n■ 概要:\\n${escapeHtml(d.desc)}')">❓</button>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join("");
   }
-
-  function escapeHtml(str) {
-    if (!str) return "";
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-  }
+  function escapeHtml(str) { if (!str) return ""; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 </script>
 </body>
 </html>
