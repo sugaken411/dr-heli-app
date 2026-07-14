@@ -19,8 +19,9 @@
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-group { display: flex; gap: 12px; align-items: center; }
-    .hdr-btn { color: var(--brand); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .hdr-btn { color: var(--brand); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .hdr-btn.admin-active { color: var(--brand-danger); }
+    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--brand); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     main { margin-top: calc(72px + var(--safe-top)); padding: 16px; max-width: 1000px; margin-left: auto; margin-right: auto; }
@@ -45,9 +46,12 @@
     .doc-card.needs-review { border-color: #f87171; background-color: var(--brand-danger-light); }
     
     .card-top { margin-bottom: 12px; flex: 1; display: flex; flex-direction: column; }
-    .cat-badge { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 800; background: #e3f2fd; color: var(--brand); padding: 4px 8px; border-radius: 6px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* 🌟 修正：表示被りを100%防ぐための横並びメタデータ行 */
+    .meta-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+    .cat-badge { font-size: 10px; font-weight: 800; background: #e3f2fd; color: var(--brand); padding: 4px 8px; border-radius: 6px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cat-badge.badge-review { background: #fee2e2; color: #b91c1c; }
-    .doc-title { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 6px; padding-right: 110px; word-break: break-all; }
+    
+    .doc-title { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 8px; word-break: break-all; }
     .doc-meta { font-size: 11px; color: var(--sub); font-weight: bold; margin-bottom: 8px; }
     .doc-desc { font-size: 13px; color: #48484a; line-height: 1.5; margin-bottom: 12px; white-space: pre-wrap; word-break: break-all; flex: 1; }
     
@@ -58,7 +62,6 @@
     .btn-view { flex: 1; background: var(--brand); color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     .btn-view:active { transform: scale(0.98); }
     .btn-view.btn-review-style { background: #dc2626; }
-    .btn-view.btn-review-style:shadow { box-shadow: 0 2px 6px rgba(220,38,38,0.2); }
     .btn-qa { background: #fff3e0; color: #d84315; border: 1px solid #ffe0b2; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
     .btn-edit { background: #e5e5ea; color: #1c1c1e; border: 1px solid #d1d1d6; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
 
@@ -68,7 +71,7 @@
     .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; color: var(--ink); }
     .form-group { margin-bottom: 14px; }
-    .form-group label { block; font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 4px; display: block; }
+    .form-group label { font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 4px; display: block; }
     .form-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; background: #fff; color: var(--ink); font-weight: 600; outline: none; }
     .form-input:focus { border-color: var(--brand); background: #f0f8ff; }
 
@@ -91,12 +94,15 @@
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div class="title-box">資料・プロトコル集 <span class="version-tag">v13.0</span></div>
+    <div class="title-box">資料・プロトコル集 <span class="version-tag">v13.1</span></div>
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="fetchLibraryData(true)" style="margin-right:8px;">🔄 更新</button>
+      <button type="button" class="hdr-btn" onclick="openModal('modal-global-qa')" style="margin-right:8px;">❓ Q&A</button>
       <button type="button" id="btn-admin-toggle" class="hdr-btn" onclick="toggleAdmin()">管理</button>
     </div>
   </header>
+  <!-- 🌟 追加：マスタ最終同期日時の表示領域 -->
+  <div id="master-sync-info" style="text-align:right; font-size:10px; color:var(--sub); padding:4px 16px 0 0; background:var(--bg); font-weight:bold;"></div>
 
   <main>
     <div class="search-box">
@@ -127,7 +133,23 @@
     <div class="grid-container" id="cards-container"></div>
   </main>
 
-  <!-- ❓ 質問モーダル -->
+  <!-- 🌟 追加：全画面共通仕様の公開Q&A閲覧＆総合要望送信モーダル -->
+  <div class="modal-overlay" id="modal-global-qa" onclick="if(event.target===this)closeModal('modal-global-qa')">
+    <div class="modal-box">
+      <h3 style="margin-top:0; margin-bottom:12px; color:var(--ink);">❓ Q&A ＆ 要望BOX</h3>
+      <div id="global-qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+      <div class="form-group">
+        <label>💡 開発チームへシステム要望を送る</label>
+        <textarea id="global-qa-input" rows="3" class="form-input" placeholder="項目の追加依頼や、システムの不具合報告など..."></textarea>
+      </div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button type="button" class="modal-close" style="margin-top:0; flex:1;" onclick="closeModal('modal-global-qa')">閉じる</button>
+        <button type="button" class="btn-view" onclick="submitGlobalQA()">要望を送信する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ❓ 資料個別の質問モーダル -->
   <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
     <div class="modal-box">
       <h3 style="margin-top:0; color: #d84315; margin-bottom:12px;">❓ 資料に関する質問・要望</h3>
@@ -214,7 +236,6 @@
   const CACHE_KEY = "aw109_library_cache_v13";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
-  // 🌟 標準仕様: 例外フィルター
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -228,7 +249,6 @@
 
   let allDocs = []; let activeLarge = "全件"; let activeTags = []; let isAdmin = false;
 
-  // 🌟 標準仕様: インテリジェントローダー
   let loaderTimer1, loaderTimer2;
   function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
     const loader = document.getElementById("global-loader");
@@ -255,6 +275,13 @@
     try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
   }
 
+  // 🌟 標準仕様：最終マスタ同期日時の表示ロジック
+  function updateSyncTimestamp(ts) {
+    const d = new Date(ts);
+    const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    document.getElementById("master-sync-info").innerText = `マスタ最終同期: ${timeStr}`;
+  }
+
   window.onload = async () => {
     if (sessionStorage.getItem('aw109_admin') === 'true') {
       isAdmin = true;
@@ -262,20 +289,32 @@
       if(adminBtn) { adminBtn.innerText = "管理解除"; adminBtn.classList.add("admin-active"); }
     }
     
-    // 🌟 復活：React化の過程で消失していた「6時間ローカルキャッシュ復元制御」
     const cachedStr = localStorage.getItem(CACHE_KEY);
     if(cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
         if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
           allDocs = cacheObj.data;
+          updateSyncTimestamp(cacheObj.timestampMs);
           buildFilters(); filterDocs();
+          fetchInitData(); // Q&Aのみ裏側で取得
           return;
         }
       } catch(e) {}
     }
-    fetchLibraryData(false);
+    await fetchLibraryData(false);
   };
+
+  // 🌟 追加：全画面共通標準の公開Q&Aリスト取得ロジック
+  async function fetchInitData() {
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "資料" }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success" && json.qa) {
+        document.getElementById("global-qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line); margin:8px 0;">`).join("") || '<p>公開Q&Aはありません。</p>';
+      }
+    } catch(e) {}
+  }
 
   function toggleAdmin() {
     const adminBtn = document.getElementById("btn-admin-toggle");
@@ -299,7 +338,6 @@
     }
   }
 
-  // 🌟 日付フォーマットのパディング正規化
   function normalizeDate(rawDate) {
     if (!rawDate) return "日付不明";
     let rawDateStr = String(rawDate).split(" ")[0]; 
@@ -313,6 +351,7 @@
   async function fetchLibraryData(isManualUpdate) {
     showLoader("資料庫同期中...", "アーカイブから最新の資料を取得しています");
     try {
+      await fetchInitData(); // Q&Aと並行
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success" && json.data) {
@@ -329,7 +368,9 @@
             status: item.status || "共有中"
           };
         });
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: allDocs }));
+        const nowMs = Date.now();
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: nowMs, data: allDocs }));
+        updateSyncTimestamp(nowMs);
         buildFilters(); filterDocs();
         if(isManualUpdate) alert("最新の資料情報を取得しました。");
       } else { throw new Error(json.message || "データ同期に失敗しました"); }
@@ -391,15 +432,19 @@
       return `
         <div class="${cardClass}">
           <div class="card-top">
-            <span class="${badgeClass}" title="${d.large}">${badgeText}</span>
+            <!-- 🌟 修正：表示被りを物理的に排除した配置構造 -->
+            <div class="meta-top-row">
+              <span style="font-size:11px; color:var(--sub); font-weight:bold;">🔄 更新: ${d.date}</span>
+              <span class="${badgeClass}" title="${d.large}">${badgeText}</span>
+            </div>
             <div class="doc-title">${escapeHtml(d.title)}</div>
-            <div class="doc-meta"><span>🧭 領域: <b>${escapeHtml(d.medium)}</b></span><span style="margin-left:12px;">🔄 更新: <b>${d.date}</b></span></div>
+            <div class="doc-meta"><span>🧭 対象領域: <b>${escapeHtml(d.medium)}</b></span></div>
             <div class="doc-desc">${escapeHtml(d.desc)}</div>
             <div class="tag-box">${d.keywords.map(k => `<span class="doc-tag">#${escapeHtml(k)}</span>`).join("")}</div>
           </div>
           <div class="btn-row">
             <button type="button" onclick="handleLinkClick('${d.url}')" class="btn-view ${isReview ? 'btn-review-style' : ''}"><span>↗️ 資料を閲覧する</span></button>
-            <button type="button" class="btn-qa" onclick="openQaModal('${d.title.replace(/'/g, "\\'")}')">❓</button>
+            <button type="button" class="btn-qa" onclick="openQaModal('${d.title.replace(/'/g, "\\'")}')" title="この資料について質問">❓</button>
             ${adminBtnHtml}
           </div>
         </div>`;
@@ -427,9 +472,21 @@
     
     showLoader("質問送信中...", "");
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集" }), redirect: "follow" });
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(個別)" }), redirect: "follow" });
       const json = await res.json();
       if(json.status === "success") { alert("質問を送信しました。管理者に通知されました。"); closeModal("modal-qa"); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
+  }
+
+  // 🌟 追加：全画面共通要望BOXの送信ロジック
+  async function submitGlobalQA() {
+    const qText = document.getElementById("global-qa-input").value.trim();
+    if(!qText) return alert("要望内容を入力してください。");
+    showLoader("要望送信中...", "");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(共通)" }), redirect: "follow" });
+      const json = await res.json();
+      if(json.status === "success") { alert("ご要望を送信しました。管理者に通知されました。"); document.getElementById("global-qa-input").value = ""; closeModal("modal-global-qa"); } else { throw new Error(json.message); }
     } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
@@ -454,7 +511,7 @@
       tags: document.getElementById("edit-tags").value.trim(),
       desc: document.getElementById("edit-desc").value.trim(),
       status: document.getElementById("edit-status").value,
-      url: allDocs.find(x => x.rowIdx == rowIdx).url // 元のURLを保持
+      url: allDocs.find(x => x.rowIdx == rowIdx).url 
     };
 
     if(!editData.title) return alert("タイトルを入力してください。");
