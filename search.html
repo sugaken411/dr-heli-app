@@ -175,7 +175,7 @@
       <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v12.4</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v12.5</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -271,6 +271,12 @@
         <div class="form-group" style="flex:1;"><label>出場先</label><select id="edit-dest"></select></div>
       </div>
 
+      <!-- 🌟 追加: 症例登録と100%完全一貫した事案概要欄 -->
+      <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
+        <label style="font-weight:bold; color:var(--blue); font-size:12px; margin-bottom:6px; display:block;">📋 事案概要 (覚知内容など・任意)</label>
+        <textarea id="edit-summary-req" rows="2" placeholder="通報内容や事案の簡単な概要..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px; font-weight:600; background:#fff; color:var(--ink); font-size:14px; outline:none;"></textarea>
+      </div>
+
       <div class="edit-section-title" id="edit-scheme-section">📞 要請形態・スキーム・診断</div>
       <div class="form-group">
         <label>スキーム選択 <span style="color:var(--brand); font-size:10px;">(必須)</span></label>
@@ -324,7 +330,7 @@
       <div class="edit-section-title">📦 消費資機材・各種処置</div>
       
       <div id="unified-procs-container" style="display:none; background:#f9f9f9; padding:12px; border-radius:8px;">
-        <div style="font-size:12px; font-weight:bold; color(--sub); margin-bottom:8px;">💉 確保ライン</div>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">💉 確保ライン</div>
         <div style="background:#fff; border:1px solid #ccc; border-radius:8px; padding:12px; margin-bottom:16px;">
           <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleBox('cnt-20G', this.checked)" id="chk-20G">末梢静脈路(20G)</label><div class="proc-count" id="cnt-20G"><input type="number" inputmode="numeric" value="1" min="1" id="val-20G">本</div></div>
           <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleBox('cnt-22G', this.checked)" id="chk-22G">末梢静脈路(22G)</label><div class="proc-count" id="cnt-22G"><input type="number" inputmode="numeric" value="1" min="1" id="val-22G">本</div></div>
@@ -438,7 +444,7 @@
 
         <div style="background:#fff; border:1px solid #ccc; padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:8px;">
           <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2(カプノメーター)">EtCO2 (カプノメーター)</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
+          <label class="proc-lbl"><input type="checkbox" id="chk-12leads" class="chk-other" value="12誘導心電図">12誘導心電図</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="喀痰吸引">喀痰吸引</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label>
           <label class="proc-lbl"><input type="checkbox" class="chk-other" value="輪状甲状靭帯穿刺・切開">輪状甲状靭帯穿刺・切開</label>
@@ -487,7 +493,7 @@
             <label style="font-size:13px; font-weight:bold;"><input type="radio" name="comp-who" value="代行" onchange="toggleComp()"> 代行入力</label>
           </div>
           <input type="text" id="comp-name" placeholder="代行入力者名 (※代行時必須)" style="display:none; width:100%;" oninput="formatKatakana(this)">
-          <button type="button" style="width:100%; background:#34c759; margin-top:8px;" id="btn-complete" onclick="markComplete()">カルテ完了状態にする</button>
+          <p style="margin-top:4px;"><button type="button" style="width:100%; background:#34c759;" id="btn-complete" onclick="markComplete()">カルテ完了状態にする</button></p>
         </div>
 
         <p style="font-size:12px; font-weight:bold; color:var(--brand); margin:0 0 8px 0;">※修正する場合は担当を選択し「上書き保存」を押してください。</p>
@@ -497,7 +503,7 @@
         </div>
         <input type="text" id="edit-person" placeholder="修正担当者名 (※その他の場合必須)" style="display:none; width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
 
-        <div style="display:flex; gap:8px; margin-top:12px;">
+        <div style="display:flex; gap:12px; margin-top:12px;">
           <button type="button" style="background:var(--brand); color:#fff; font-size:12px; padding:10px;" onclick="deleteRecord()">🗑️ 削除</button>
           <button type="button" style="flex:1; padding:10px;" onclick="saveRecord()">💾 上書き保存</button>
           <button type="button" style="background:#ff9800; color:#fff; padding:10px;" id="btn-email" onclick="sendEmail()">📧 メール再送</button>
@@ -520,7 +526,7 @@
       <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
       <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid #ccc; padding-bottom:12px;">読込中...</div>
       <div style="background:var(--bg); padding:12px; border-radius:8px;">
-        <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 システム改善の要望を送る</div>
+        <div style="font-size:13px; font-weight:bold; margin-bottom:8px;">💡 System改善の要望を送る</div>
         <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
         <button type="button" onclick="submitQA(event)" style="width:100%; padding:10px;">送信する ✉️</button>
       </div>
@@ -634,7 +640,6 @@
     } catch(e) { sendErrorLog(e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
   }
 
-  // 🌟 クイックフィルター関数を完全に配置
   function quickFilter(type) {
     ["q-id", "q-date-start", "q-date-end", "q-month", "q-status", "q-dest", "q-dr", "q-ns"].forEach(id => document.getElementById(id).value = "");
     if (type === '未完了') { 
@@ -710,6 +715,7 @@
     } catch(e) { sendErrorLog(e.toString()); document.getElementById("results").innerHTML = `<p style="text-align:center; color:red;">通信エラーが発生しました。</p>`; } finally { hideLoader(); }
   }
 
+  function toggleBox(id, isShow) { document.getElementById(id).style.display = isShow ? "block" : "none"; }
   function setEditScheme(btn, s) { document.getElementById("edit-scheme").value = s; document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); }
   function toggleEditChip(cat, item) { if(!currentEditSysData.tags[cat]) currentEditSysData.tags[cat] = []; if(currentEditSysData.tags[cat].includes(item)) { currentEditSysData.tags[cat] = currentEditSysData.tags[cat].filter(x => x !== item); } else { currentEditSysData.tags[cat].push(item); } renderEditChips(cat); }
   function renderEditChips(cat) { 
@@ -759,7 +765,7 @@
       setCb("chk-bg", ps.bg); setVal("bg-art-loc", ps.bgLoc);
       if(ps.bgType) { const r = document.querySelector(`input[name="bg-type"][value="${ps.bgType}"]`); if(r){ r.checked=true; if(r.onchange)r.onchange(); } }
       
-      setCb("chk-intub", ps.intub); setVal("intub-size", ps.intubSize); setVal("intub-pos", ps.intubPos); setCb("intub-cuff", ps.intubCuff);
+      setCb("chk-intub", ps.intub); setVal("intub-size", ps.intubSize); setVal("intub-pos", ps.intubPos); setCb("chk-intub", ps.intubCuff);
       setCb("chk-nppv", ps.nppv); setVal("nppv-mask", ps.nppvMask);
       setCb("chk-shock", ps.shock); setCb("chk-shock-pad", ps.shockPad); setVal("shock-count", ps.shockCount);
       setCb("chk-pacing", ps.pacing); setCb("chk-pacing-pad", ps.pacingPad);
@@ -792,7 +798,18 @@
       document.getElementById("edit-trauma-legacy").value = row["外傷処置"] || "";
     }
 
-    document.getElementById("edit-biko").value = row["備考"] || ""; 
+    // 🌟 概要自動切り分け・復元ロジック
+    let bikoStr = row["備考"] || "";
+    let summaryReq = "";
+    if (bikoStr.includes("【事案概要】")) {
+      let match = bikoStr.match(/【事案概要】\n([\s\S]*?)\n\n/);
+      if (match) {
+        summaryReq = match[1];
+        bikoStr = bikoStr.replace(/【事案概要】\n[\s\S]*?\n\n/, "");
+      }
+    }
+    document.getElementById("edit-summary-req").value = summaryReq;
+    document.getElementById("edit-biko").value = bikoStr;
     document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
 
     let dynHtml = "";
@@ -826,7 +843,7 @@
   function getProcsStateFromSearch() {
     let state = {
       bg: document.getElementById("chk-bg")?.checked, bgType: document.querySelector('input[name="bg-type"]:checked')?.value, bgLoc: document.getElementById("bg-art-loc")?.value,
-      intub: document.getElementById("chk-intub")?.checked, intubSize: document.getElementById("intub-size")?.value, intubPos: document.getElementById("intub-pos")?.value, intubCuff: document.getElementById("intub-cuff")?.checked,
+      intub: document.getElementById("chk-intub")?.checked, intubSize: document.getElementById("intub-size")?.value, intubPos: document.getElementById("intub-pos")?.value, intubCuff: document.getElementById("chk-intub")?.checked,
       nppv: document.getElementById("chk-nppv")?.checked, nppvMask: document.getElementById("nppv-mask")?.value,
       shock: document.getElementById("chk-shock")?.checked, shockPad: document.getElementById("chk-shock-pad")?.checked, shockCount: document.getElementById("shock-count")?.value,
       pacing: document.getElementById("chk-pacing")?.checked, pacingPad: document.getElementById("chk-pacing-pad")?.checked,
@@ -870,7 +887,6 @@
     return procs.join(", ");
   }
 
-  // 🌟 脱落していた各種表示トグル・カタカナ補正ユーティリティ関数を完全修復配置
   function toggleComp() { 
     const isDaiko = document.querySelector('input[name="comp-who"]:checked').value === "代行"; 
     document.getElementById("comp-name").style.display = isDaiko ? "block" : "none"; 
@@ -952,12 +968,19 @@
       procsStr = document.getElementById("edit-procs-legacy").value; traumaStr = document.getElementById("edit-trauma-legacy").value;
     }
 
+    // 🌟 概要再マージロジック
+    let bikoVal = document.getElementById("edit-biko").value;
+    let summaryReqVal = document.getElementById("edit-summary-req").value.trim();
+    if (summaryReqVal) {
+      bikoVal = `【事案概要】\n${summaryReqVal}\n\n` + bikoVal;
+    }
+
     let payload = { 
       "要請番号": newId, "日付": document.getElementById("edit-date").value, "出場先": document.getElementById("edit-dest").value, 
       "スキーム選択": document.getElementById("edit-scheme").value, "フライトドクター": document.getElementById("edit-dr").value, "フライトナース": document.getElementById("edit-ns").value, 
       "要請時刻・施設間搬送依頼時刻": document.getElementById("edit-request").value, "初期離陸時間": document.getElementById("edit-takeoff").value, "最終着陸時間": document.getElementById("edit-landing").value, 
       "接触": document.getElementById("edit-contact").value, "病着": document.getElementById("edit-arrival").value, "終了": document.getElementById("edit-end").value, 
-      "簡易処置リスト": procsStr, "外傷処置": traumaStr, "備考": document.getElementById("edit-biko").value, "現場診断": (currentEditSysData.tags.diagnosis||[]).join(", "),
+      "簡易処置リスト": procsStr, "外傷処置": traumaStr, "備考": bikoVal, "現場診断": (currentEditSysData.tags.diagnosis||[]).join(", "),
       "システムデータ": JSON.stringify(sysDataToSave)
     };
 
@@ -979,7 +1002,7 @@
 
   async function sendEmail() {
     const id = document.getElementById("edit-id").value;
-    if(!confirm(`事案 [ ${id} ] の内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
+    if(!confirm(`事案 [ ${id} ] の内容をメール再送信しますか？\n※未保存の変更がある場合は、先に Cas 「上書き保存」を実行してください。`)) return;
     showLoader("メール送信中...", "関係各所に送信しています");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "send_email", password: activePin, id: id }), redirect: "follow" });
