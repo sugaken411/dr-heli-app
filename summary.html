@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
+<!DOCTYPE html><html lang="ja"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 統計・BIダッシュボード</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* 🌟 システム完全統一カラー・変数 */
     :root {
       --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
       --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd;
@@ -35,14 +34,14 @@
     .card-title { font-size: 14px; font-weight: 800; color: var(--sub); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; text-transform: uppercase; }
     
     .filter-section { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; background: #fffdf0; border: 2px solid #ffcc00; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
+    .filter-section label { display: block; font-size: 11px; font-weight: bold; color: #d48806; }
     .filter-group { display: flex; flex-direction: column; gap: 4px; }
-    .filter-group label { font-size: 11px; font-weight: bold; color: #d48806; }
     .filter-grid { display: flex; flex-wrap: wrap; gap: 6px; }
     .filter-btn { padding: 8px 14px; background: #fff; color: var(--ink); border: 1px solid #ccc; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .filter-btn.active { background: #d48806; color: #fff; border-color: #d48806; }
-    .date-input, .staff-select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; }
+    .date-input, .staff-select, .bi-select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; width: 100%; }
     
-    .search-input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; min-width: 200px; }
+    .search-input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; min-width: 200px; width: 100%; }
     .csv-btn { padding: 10px 16px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; margin-left: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
     .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
@@ -56,6 +55,9 @@
 
     .chart-container { position: relative; height: 260px; width: 100%; }
     .chart-container-large { position: relative; height: 320px; width: 100%; }
+
+    .radar-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding: 10px; background: var(--bg); border-radius: 8px; width: 100%; }
+    .radar-checkbox-label { font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; cursor: pointer; }
 
     .ranking-list { list-style: none; margin: 0; padding: 0; }
     .ranking-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid var(--line); }
@@ -77,9 +79,7 @@
       header, .no-print { display: none !important; }
       .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
     }
-  </style>
-</head>
-<body>
+  </style></head><body>
 
   <div id="global-loader">
     <div class="spinner"></div>
@@ -90,9 +90,8 @@
   <header class="no-print">
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-      <button type="button" class="hdr-btn no-print" onclick="fetchData(true)">🔄 更新</button>
     </div>
-    <div class="title-box">JSAMS レジストリ・ダッシュボード <span class="version-tag">v12.0</span></div>
+    <div class="title-box">JSAMS レジストリ・ダッシュボード <span class="version-tag">v12.1</span></div>
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
     </div>
@@ -117,14 +116,14 @@
       
       <div style="display:flex; flex-wrap:wrap; gap:12px; width:100%; align-items:flex-end;">
         <div class="filter-group">
-          <label>👨‍⚕️ 個人・チーム実績</label>
+          <label>👨‍⚕️ 個人・チーム実績 (ドクター/ナース名)</label>
           <select id="filter-staff" class="staff-select" onchange="applyFilters()">
             <option value="">全員 (チーム全体)</option>
           </select>
         </div>
         
         <div class="filter-group" style="flex:1;">
-          <label>🔍 フリーワード絞り込み (病名・出場先など)</label>
+          <label>🔍 フリーワード絞り込み (病名・出場先・振り返り詳細など)</label>
           <input type="text" id="filter-keyword" class="search-input" placeholder="キーワードを入力..." oninput="applyFilters()">
         </div>
         
@@ -142,16 +141,41 @@
         <div><span class="kpi-value green" id="kpi-actual">0</span><span class="kpi-unit">件</span></div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">キャンセル率</div>
-        <div><span class="kpi-value red" id="kpi-cancel-rate">0</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-label">デブリーフィング実施</div>
+        <div><span class="kpi-value purple" id="kpi-debrief-count">0</span><span class="kpi-unit">回</span></div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">平均 接触〜病着時間</div>
-        <div><span class="kpi-value purple" id="kpi-time-med">0</span><span class="kpi-unit">分</span></div>
+        <div class="kpi-label">デブリーフィング実施率</div>
+        <div><span class="kpi-value orange" id="kpi-debrief-rate">0</span><span class="kpi-unit">%</span></div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">気管挿管 実施率</div>
-        <div><span class="kpi-value orange" id="kpi-intubation">0</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-label">浜町待機所 振り返り</div>
+        <div><span class="kpi-value red" id="kpi-hamacho-count">0</span><span class="kpi-unit">回</span></div>
+      </div>
+    </div>
+
+    <div class="card no-print" style="background:#f4f9ff; border: 1px solid var(--blue);">
+      <div class="card-title" style="color:var(--blue); font-weight:800;">🧭 動的分析コントローラー (ヒートマップクロス軸設定)</div>
+      <div style="display:flex; flex-wrap:wrap; gap:16px; padding:8px 0;">
+        <div class="filter-group">
+          <label style="color:var(--blue);">📈 縦軸項目を選択</label>
+          <select id="heatmap-yaxis" class="bi-select" onchange="replotHeatmap()">
+            <option value="フライトドクター">フライトドクター</option>
+            <option value="フライトナース" selected>フライトナース</option>
+            <option value="出場先">出場先</option>
+            <option value="スキーム選択">スキーム選択</option>
+            <option value="振り返り場所">振り返り場所（浜町等）</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label style="color:var(--blue);">📊 横軸項目を選択</label>
+          <select id="heatmap-xaxis" class="bi-select" onchange="replotHeatmap()">
+            <option value="曜日" selected>曜日</option>
+            <option value="時間帯">時間帯 (要請時刻)</option>
+            <option value="スキーム選択">スキーム選択</option>
+            <option value="ステータス">ステータス</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -164,9 +188,9 @@
       </div>
       
       <div class="card">
-        <div class="card-title">⏱️ 時間散布図 (要請〜接触 vs 現場滞在)</div>
+        <div class="card-title">🌡️ 多次元動的クロスヒートマップ</div>
         <div class="chart-container-large">
-          <canvas id="scatterChart"></canvas>
+          <canvas id="pivotHeatmapChart"></canvas>
         </div>
       </div>
     </div>
@@ -184,9 +208,32 @@
       
       <div class="card">
         <div class="card-title">🕸️ 主要処置 レーダープロファイル</div>
-        <div class="chart-container" style="height: 280px;">
+        <div class="chart-container" style="height: 220px;">
           <canvas id="radarChart"></canvas>
         </div>
+        <div class="radar-options">
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="気管挿管" checked onchange="replotRadar()">気管挿管</label>
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="心エコー" checked onchange="replotRadar()">心エコー</label>
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="FAST" checked onchange="replotRadar()">FAST</label>
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="胸腔ドレナージ" checked onchange="replotRadar()">胸腔ドレナージ</label>
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="EtCO2" checked onchange="replotRadar()">EtCO2</label>
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="12誘導心電図" checked onchange="replotRadar()">12誘導</label>
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="血糖測定" onchange="replotRadar()">血糖測定</label>
+          <label class="radar-checkbox-label"><input type="checkbox" class="radar-toggle" value="静脈血採血" onchange="replotRadar()">静脈血採血</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2col">
+      <div class="card">
+        <div class="card-title">🤝 デブリーフィング振り返り場所 (浜町待機所等の活動比率)</div>
+        <div class="chart-container">
+          <canvas id="debriefPlaceChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🧠 デブリーフィング主要疾患/特殊ケースTOP10</div>
+        <ul class="ranking-list" id="debrief-list"></ul>
       </div>
     </div>
     
@@ -202,206 +249,562 @@
       </div>
     </div>
 
-  </main>
-
-<script>
+  </main><script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_summary_cache_v12";
-  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
-  // 🌟 エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
     return false;
   };
+  
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    if(String(reason).includes("Load failed")) return;
+    if(String(reason).includes("Load failed")) {
+      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+      return;
+    }
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
-  let allData = []; let filteredData = []; let chartInstances = {}; let statsForCSV = {};
+  let allData = [];
+  let allDebriefData = []; 
+  let filteredData = [];
+  let filteredDebriefData = [];
+  let chartInstances = {}; 
+  let statsForCSV = {};
 
   let loaderTimer1, loaderTimer2;
   function showLoader() {
     document.getElementById("global-loader").style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "データ量が多いため少し時間がかかっています..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+    document.getElementById("loader-main-text").innerText = "多次元データベース集計中...";
+    document.getElementById("loader-sub-text").innerText = "データベースに直接接続しています";
+    
+    loaderTimer1 = setTimeout(() => {
+      document.getElementById("loader-sub-text").innerText = "データ量が多いか、電波が弱い可能性があります。そのままお待ちください...";
+    }, 5000);
+    
+    loaderTimer2 = setTimeout(() => {
+      document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>";
+    }, 15000);
   }
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
+  
+  function hideLoader() {
+    clearTimeout(loaderTimer1); 
+    clearTimeout(loaderTimer2);
+    document.getElementById("global-loader").style.display = "none";
+  }
 
   function sendErrorLog(errMsg) {
     if(String(errMsg).includes("Load failed")) return;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "ダッシュボード", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
+    try {
+      fetch(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "error_log", source: "ダッシュボード v12.1", errorMsg: errMsg, userAgent: navigator.userAgent }),
+        redirect: "follow"
+      });
+    } catch(e) {}
   }
 
-  window.onload = () => { 
-    const cachedStr = localStorage.getItem(CACHE_KEY);
-    if(cachedStr) {
-      try {
-        const cacheObj = JSON.parse(cachedStr);
-        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
-          allData = cacheObj.data;
-          populateStaffFilter(); setDateFilter('thisMonth');
-          return;
-        }
-      } catch(e) {}
-    }
-    fetchData(false); 
-  };
+  window.onload = () => { fetchData(); };
 
-  async function fetchData(isManualUpdate) {
+  async function fetchData() {
     showLoader();
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") {
-        allData = json.data || [];
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: allData }));
-        populateStaffFilter(); setDateFilter('thisMonth');
-        if(isManualUpdate) alert("最新データを取得しました。");
-      } else { alert("データの取得に失敗しました。"); sendErrorLog(json.message); }
-    } catch (e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+      const res1 = await fetch(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), 
+        redirect: "follow"
+      });
+      const json1 = await res1.json();
+      
+      // 🌟 修正: 未定義の fetch_all_debrief アクションを廃止し、既存の資産である fetch_debriefings アクションに紐付けを最適化
+      const res2 = await fetch(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), 
+        redirect: "follow"
+      });
+      const json2 = await res2.json();
+      
+      if (json1.status === "success") {
+        allData = json1.data || [];
+        allDebriefData = json2.status === "success" ? (json2.data || []) : [];
+        populateStaffFilter();
+        setDateFilter('thisMonth');
+      } else {
+        alert("データの取得に失敗しました。");
+        sendErrorLog("Fetch Status Error: " + json1.message);
+      }
+    } catch (e) {
+      document.getElementById("loader-sub-text").innerText = "通信エラーが発生しました";
+      alert("通信エラーが発生しました。電波状況の良い場所で再接続してください。");
+      sendErrorLog(e.toString());
+    } finally {
+      hideLoader();
+    }
   }
 
   function populateStaffFilter() {
     let staffSet = new Set();
-    allData.forEach(r => { if(r["フライトドクター"]) staffSet.add(r["フライトドクター"]); if(r["フライトナース"]) staffSet.add(r["フライトナース"]); });
-    const sel = document.getElementById("filter-staff"); sel.innerHTML = `<option value="">全員 (チーム全体)</option>`;
-    Array.from(staffSet).sort().forEach(s => { if(s && s!=="その他") sel.innerHTML += `<option value="${s}">${s}</option>`; });
+    allData.forEach(r => { 
+      if(r["フライトドクター"]) staffSet.add(r["フライトドクター"]); 
+      if(r["フライトナース"]) staffSet.add(r["フライトナース"]); 
+    });
+    const sel = document.getElementById("filter-staff");
+    Array.from(staffSet).sort().forEach(s => { 
+      if(s && s !== "その他") sel.innerHTML += `<option value="${s}">${s}</option>`; 
+    });
+  }
+
+  function parseAndNormalizeDate(rawDate) {
+    if (!rawDate) return "";
+    let rawDateStr = String(rawDate).split(" ")[0]; 
+    let dateParts = rawDateStr.split(/[\/\-]/);
+    if (dateParts.length === 3) {
+      return `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
+    }
+    return rawDateStr.replace(/\//g, "-");
   }
 
   function setDateFilter(type) {
-    const startInput = document.getElementById("filter-start"); const endInput = document.getElementById("filter-end");
-    const d = new Date(); document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    if (type === 'thisMonth') { document.getElementById("btn-this-month").classList.add("active"); startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`; } 
-    else if (type === 'lastMonth') { document.getElementById("btn-last-month").classList.add("active"); const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1); startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`; } 
-    else if (type === 'thisYear') { document.getElementById("btn-this-year").classList.add("active"); startInput.value = `${d.getFullYear()}-01-01`; endInput.value = `${d.getFullYear()}-12-31`; } 
-    else if (type === 'all') { document.getElementById("btn-all").classList.add("active"); startInput.value = ""; endInput.value = ""; }
+    const startInput = document.getElementById("filter-start"); 
+    const endInput = document.getElementById("filter-end");
+    const d = new Date(); 
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    
+    if (type === 'thisMonth') { 
+      document.getElementById("btn-this-month").classList.add("active"); 
+      startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; 
+      endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`; 
+    } 
+    else if (type === 'lastMonth') { 
+      document.getElementById("btn-last-month").classList.add("active"); 
+      const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1); 
+      startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`; 
+      endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`; 
+    } 
+    else if (type === 'thisYear') { 
+      document.getElementById("btn-this-year").classList.add("active"); 
+      startInput.value = `${d.getFullYear()}-01-01`; 
+      endInput.value = `${d.getFullYear()}-12-31`; 
+    } 
+    else if (type === 'all') { 
+      document.getElementById("btn-all").classList.add("active"); 
+      startInput.value = ""; 
+      endInput.value = ""; 
+    }
     applyFilters();
   }
 
   function applyFilters() {
-    const startStr = document.getElementById("filter-start").value; const endStr = document.getElementById("filter-end").value; 
-    const staffFilter = document.getElementById("filter-staff").value; const keywordFilter = document.getElementById("filter-keyword").value.toLowerCase().trim();
+    const startStr = document.getElementById("filter-start").value; 
+    const endStr = document.getElementById("filter-end").value; 
+    const staffFilter = document.getElementById("filter-staff").value;
+    const keywordFilter = document.getElementById("filter-keyword").value.toLowerCase().trim();
     
     filteredData = allData.filter(row => {
-      let dateVal = row["日付"] ? String(row["日付"]).replace(/\//g, "-") : "";
-      if (startStr && dateVal < startStr) return false; if (endStr && dateVal > endStr) return false;
+      let dateVal = parseAndNormalizeDate(row["日付"]);
+      if (startStr && dateVal < startStr) return false; 
+      if (endStr && dateVal > endStr) return false;
       if (staffFilter && row["フライトドクター"] !== staffFilter && row["フライトナース"] !== staffFilter) return false;
-      if (keywordFilter) { const rowText = Object.values(row).join(" ").toLowerCase(); if (!rowText.includes(keywordFilter)) return false; }
+      if (keywordFilter) {
+        const rowText = Object.values(row).join(" ").toLowerCase();
+        if (!rowText.includes(keywordFilter)) return false;
+      }
       return true;
     });
-    try { renderDashboard(); } catch(e) { sendErrorLog(e.toString()); }
+
+    filteredDebriefData = allDebriefData.filter(row => {
+      let dateVal = parseAndNormalizeDate(row["登録日時"] || row["登録日"]);
+      if (startStr && dateVal < startStr) return false;
+      if (endStr && dateVal > endStr) return false;
+      
+      if (staffFilter) {
+        const rowText = Object.values(row).join(" ");
+        if (!rowText.includes(staffFilter)) return false;
+      }
+      
+      if (keywordFilter) {
+        const rowText = Object.values(row).join(" ").toLowerCase();
+        if (!rowText.includes(keywordFilter)) return false;
+      }
+      return true;
+    });
+    
+    try {
+      renderDashboard();
+    } catch(e) {
+      console.error(e);
+      sendErrorLog("Dashboard Render Error: " + e.toString());
+      alert("ダッシュボードの描画中にエラーが発生しました。");
+    }
   }
 
   function animateValue(id, start, end, duration) {
     if(start === end || isNaN(end)) { document.getElementById(id).innerText = end || 0; return; }
     let range = end - start; let current = start; let increment = end > start ? 1 : -1;
     let stepTime = Math.abs(Math.floor(duration / range)); if(stepTime < 5) stepTime = 5;
-    let obj = document.getElementById(id); if(!obj) return;
-    let timer = setInterval(function() { current += increment; obj.innerText = current; if (current == end) clearInterval(timer); }, stepTime);
-  }
-
-  function timeToMins(tStr) {
-    if(!tStr) return 0; let parts = String(tStr).split(":"); if(parts.length < 2) return 0;
-    let h = parseInt(parts[0]), m = parseInt(parts[1]); if(isNaN(h) || isNaN(m)) return 0; return h * 60 + m;
+    let obj = document.getElementById(id); 
+    if(!obj) return;
+    let timer = setInterval(function() { 
+      current += increment; 
+      obj.innerText = current; 
+      if (current == end) clearInterval(timer); 
+    }, stepTime);
   }
 
   function renderDashboard() {
-    statsForCSV = { kpi: {}, scheme: {}, proc: {}, dr: {}, ns: {}, diag: {}, kw: {} };
+    statsForCSV = {
+      kpi: {}, scheme: {}, proc: {}, dr: {}, ns: {}, diag: {}, kw: {}, debrief: {}
+    };
 
-    let total = filteredData.length; let cancel = 0; let intubation = 0; let totalMedTime = 0; let medTimeCount = 0; let scatterData = [];
+    let total = filteredData.length; 
+    let cancel = 0; 
     
     filteredData.forEach(r => {
-      const st = String(r["ステータス"] || ""); const scheme = String(r["スキーム選択"] || "");
+      const st = String(r["ステータス"] || ""); 
+      const scheme = String(r["スキーム選択"] || "");
       if (st.includes("キャンセル")) cancel++;
-      if (String(r["気管挿管"] || "").includes("◯") || String(r["簡易処置リスト"] || "").includes("気管挿管")) intubation++;
-      if(scheme) { statsForCSV.scheme[scheme] = (statsForCSV.scheme[scheme]||0) + 1; }
-      
-      let tReq = timeToMins(r["要請時刻・施設間搬送依頼時刻"]); let tCont = timeToMins(r["接触"]); let tHosp = timeToMins(r["病着"]);
-      if(tCont && tHosp && !st.includes("キャンセル") && scheme !== "Iターン救急隊のみ") {
-        let diffMed = tHosp - tCont; if(diffMed < 0) diffMed += 1440; 
-        if(diffMed > 0 && diffMed < 300) { totalMedTime += diffMed; medTimeCount++; } 
-      }
-      if(tReq && tCont && tHosp && !st.includes("キャンセル")) {
-        let reqToCont = tCont - tReq; if(reqToCont < 0) reqToCont += 1440;
-        let contToHosp = tHosp - tCont; if(contToHosp < 0) contToHosp += 1440;
-        if(reqToCont < 120 && contToHosp < 180) { 
-          let color = '#007aff'; if(scheme.includes("Uターン")) color = '#ff2d55'; else if(scheme.includes("Iターン")) color = '#34c759';
-          scatterData.push({ x: reqToCont, y: contToHosp, scheme: scheme, backgroundColor: color });
-        }
-      }
+      if (scheme) { statsForCSV.scheme[scheme] = (statsForCSV.scheme[scheme]||0) + 1; }
     });
     
-    let actual = total - cancel; let cancelRate = total > 0 ? Math.round((cancel / total) * 100) : 0;
-    let avgMedTime = medTimeCount > 0 ? Math.round(totalMedTime / medTimeCount) : 0; let intubationRate = actual > 0 ? Math.round((intubation / actual) * 100) : 0;
+    let actual = total - cancel; 
+    let debriefCount = filteredDebriefData.length;
+    let debriefRate = actual > 0 ? Math.round((debriefCount / actual) * 100) : 0;
+    
+    let hamachoCount = 0;
+    filteredDebriefData.forEach(r => {
+      const place = String(r["振り返り場所"] || "");
+      if(place.includes("浜町") || place.includes("浜町待機所")) {
+        hamachoCount++;
+      }
+    });
 
-    statsForCSV.kpi = { "総要請件数": total, "実出動件数": actual, "キャンセル率(%)": cancelRate, "平均 接触~病着時間(分)": avgMedTime, "気管挿管 実施率(%)": intubationRate };
+    statsForCSV.kpi = { 
+      "総要請件数": total, "実出動件数": actual, 
+      "デブリーフィング実施件数": debriefCount, "デブリーフィング実施率(%)": debriefRate,
+      "浜町待機所活動数": hamachoCount
+    };
 
-    animateValue("kpi-total", 0, total, 500); animateValue("kpi-actual", 0, actual, 500); animateValue("kpi-cancel-rate", 0, cancelRate, 500); animateValue("kpi-time-med", 0, avgMedTime, 500); animateValue("kpi-intubation", 0, intubationRate, 500);
+    animateValue("kpi-total", 0, total, 500); 
+    animateValue("kpi-actual", 0, actual, 500);
+    animateValue("kpi-debrief-count", 0, debriefCount, 500);
+    animateValue("kpi-debrief-rate", 0, debriefRate, 500);
+    animateValue("kpi-hamacho-count", 0, hamachoCount, 500);
     
     let trendCounts = {};
     filteredData.forEach(r => {
-      let dStr = String(r["日付"] || "不明"); let key = dStr.includes("/") ? dStr.substring(0, 7) : (dStr.includes("-") ? dStr.substring(0, 7) : dStr);
+      let dStr = parseAndNormalizeDate(r["日付"]) || "不明";
+      let key = dStr.substring(0, 7); 
       if (!trendCounts[key]) trendCounts[key] = { total: 0, actual: 0 };
-      trendCounts[key].total++; if (!String(r["ステータス"]).includes("キャンセル")) trendCounts[key].actual++;
+      trendCounts[key].total++; 
+      if (!String(r["ステータス"]).includes("キャンセル")) trendCounts[key].actual++;
     });
-    drawTrendChart(trendCounts); drawScatterChart(scatterData);
+    drawTrendChart(trendCounts);
+
+    replotHeatmap();
+    replotRadar();
+    drawDebriefPlaceChart();
     
     let diagCounts = {}; let kwCounts = {};
     filteredData.forEach(r => {
-      if(r["システムデータ"]) { try { const sys = JSON.parse(r["システムデータ"]); if(sys.tags && sys.tags.diagnosis) sys.tags.diagnosis.forEach(d => { diagCounts[d] = (diagCounts[d]||0)+1; }); if(sys.tags && sys.tags.keyword) sys.tags.keyword.forEach(k => { kwCounts[k] = (kwCounts[k]||0)+1; }); } catch(e){} }
+      if(r["システムデータ"]) { 
+        try { 
+          const sys = JSON.parse(r["システムデータ"]); 
+          if(sys.tags && sys.tags.diagnosis) sys.tags.diagnosis.forEach(d => { diagCounts[d] = (diagCounts[d]||0)+1; }); 
+          if(sys.tags && sys.tags.keyword) sys.tags.keyword.forEach(k => { kwCounts[k] = (kwCounts[k]||0)+1; }); 
+        } catch(e){} 
+      }
       if(r["現場診断"]) r["現場診断"].split(",").map(x=>x.trim()).forEach(d => { if(d) diagCounts[d] = (diagCounts[d]||0)+1; });
     });
-    statsForCSV.diag = diagCounts; statsForCSV.kw = kwCounts;
-    renderList("diag-list", diagCounts, 10, "color:#5b21b6; background:#ede9fe;"); renderList("kw-list", kwCounts, 10, "color:#9d174d; background:#fce7f3;");
+    statsForCSV.diag = diagCounts;
+    statsForCSV.kw = kwCounts;
+    renderList("diag-list", diagCounts, 10, "color:#5b21b6; background:#ede9fe;");
+    renderList("kw-list", kwCounts, 10, "color:#9d174d; background:#fce7f3;");
 
-    const radarProcs = ["気管挿管", "心エコー", "FAST", "胸腔ドレナージ", "EtCO2", "12誘導心電図"];
-    let radarCounts = radarProcs.map(p => { 
-      let c=0; filteredData.forEach(r=>{ if(String(r[p]||"").includes("◯") || String(r["簡易処置リスト"]||"").includes(p)) c++; }); statsForCSV.proc[p] = c; 
-      return actual>0 ? Math.round((c/actual)*100) : 0; 
+    let debriefTopics = {};
+    filteredDebriefData.forEach(r => {
+      ["疾患", "処置", "特殊ケース", "リスク関連"].forEach(key => {
+        const val = String(r[key] || "");
+        if(val && val !== "NaN") {
+          val.split(",").map(x=>x.trim()).forEach(t => {
+            if(t) debriefTopics[t] = (debriefTopics[t] || 0) + 1;
+          });
+        }
+      });
     });
-    drawRadarChart(radarProcs, radarCounts);
+    statsForCSV.debrief = debriefTopics;
+    renderList("debrief-list", debriefTopics, 10, "color:#3b82f6; background:#eff6ff;");
 
-    statsForCSV.dr = countKey(filteredData, "フライトドクター"); statsForCSV.ns = countKey(filteredData, "フライトナース");
-    renderList("dr-list", statsForCSV.dr, 10); renderList("ns-list", statsForCSV.ns, 10);
+    statsForCSV.dr = countKey(filteredData, "フライトドクター");
+    statsForCSV.ns = countKey(filteredData, "フライトナース");
+    renderList("dr-list", statsForCSV.dr, 10);
+    renderList("ns-list", statsForCSV.ns, 10);
   }
 
-  function countKey(data, keyName) { let counts = {}; data.forEach(r => { const val = String(r[keyName] || "不明").trim(); if (val === "" || val === "不明") return; if (!counts[val]) counts[val] = 0; counts[val]++; }); return counts; }
+  function countKey(data, keyName) { 
+    let counts = {}; 
+    data.forEach(r => { 
+      const val = String(r[keyName] || "不明").trim(); 
+      if (val === "" || val === "不明") return; 
+      if (!counts[val]) counts[val] = 0; 
+      counts[val]++; 
+    }); 
+    return counts; 
+  }
   
   function renderList(elementId, countsObj, limit, badgeStyle="color:var(--blue); background:var(--med-blue);") {
-    const sorted = Object.entries(countsObj).sort((a, b) => b[1] - a[1]).slice(0, limit); const ul = document.getElementById(elementId);
+    const sorted = Object.entries(countsObj).sort((a, b) => b[1] - a[1]).slice(0, limit);
+    const ul = document.getElementById(elementId);
     if (sorted.length === 0) { ul.innerHTML = "<li class='ranking-item'><span class='ranking-name' style='color:var(--sub);'>データなし</span></li>"; return; }
     ul.innerHTML = sorted.map((item, i) => `<li class="ranking-item"><span class="ranking-rank">${i+1}</span><span class="ranking-name">${item[0]}</span><span class="ranking-count" style="${badgeStyle}">${item[1]}件</span></li>`).join("");
   }
 
   function drawTrendChart(dataObj) {
-    const ctx = document.getElementById('trendChart'); if(!ctx) return; if (chartInstances['trend']) chartInstances['trend'].destroy();
+    const ctx = document.getElementById('trendChart'); if(!ctx) return;
+    if (chartInstances['trend']) chartInstances['trend'].destroy();
     const sortedKeys = Object.keys(dataObj).sort();
-    chartInstances['trend'] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: sortedKeys, datasets: [ { label: '実出動件数', data: sortedKeys.map(k => dataObj[k].actual), backgroundColor: '#007aff', borderRadius: 4 }, { label: '総要請 (キャンセル含)', data: sortedKeys.map(k => dataObj[k].total), backgroundColor: '#e5e5ea', borderRadius: 4 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } });
+    chartInstances['trend'] = new Chart(ctx.getContext('2d'), { 
+      type: 'bar', 
+      data: { 
+        labels: sortedKeys, 
+        datasets: [ 
+          { label: '実出動件数', data: sortedKeys.map(k => dataObj[k].actual), backgroundColor: '#007aff', borderRadius: 4 }, 
+          { label: '総要請 (キャンセル含)', data: sortedKeys.map(k => dataObj[k].total), backgroundColor: '#e5e5ea', borderRadius: 4 } 
+        ] 
+      }, 
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } 
+    });
   }
 
-  function drawScatterChart(dataArr) {
-    const ctx = document.getElementById('scatterChart'); if(!ctx) return; if (chartInstances['scatter']) chartInstances['scatter'].destroy();
-    let datasets = []; const schemes = [...new Set(dataArr.map(d => d.scheme))];
-    schemes.forEach(sc => { datasets.push({ label: sc || "未選択", data: dataArr.filter(d => d.scheme === sc).map(d => ({x: d.x, y: d.y})), backgroundColor: dataArr.find(d => d.scheme === sc).backgroundColor || '#8e8e93', pointRadius: 5, pointHoverRadius: 7 }); });
-    chartInstances['scatter'] = new Chart(ctx.getContext('2d'), { type: 'scatter', data: { datasets: datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: '要請〜接触 時間 (分)' }, min: 0 }, y: { title: { display: true, text: '現場滞在[接触〜病着] (分)' }, min: 0 } }, plugins: { tooltip: { callbacks: { label: function(ctx){ return `${ctx.dataset.label}: 要請〜接触 ${ctx.parsed.x}分, 現場滞在 ${ctx.parsed.y}分`; } } } } } });
+  function replotHeatmap() {
+    const ctx = document.getElementById('pivotHeatmapChart'); if(!ctx) return;
+    if (chartInstances['heatmap']) chartInstances['heatmap'].destroy();
+
+    const yKey = document.getElementById("heatmap-yaxis").value;
+    const xKey = document.getElementById("heatmap-xaxis").value;
+
+    let yLabelsSet = new Set();
+    let xLabelsSet = new Set();
+
+    if (xKey === "曜日") {
+      ["日", "月", "火", "水", "木", "金", "土"].forEach(d => xLabelsSet.add(d));
+    } else if (xKey === "時間帯") {
+      for (let h = 8; h <= 18; h++) xLabelsSet.add(`${h}時`);
+    }
+
+    filteredData.forEach(row => {
+      let yVal = "不明";
+      if (yKey === "振り返り場所") {
+        let matchingDebrief = filteredDebriefData.find(d => d["要請番号"] == row["要請番号"]);
+        yVal = matchingDebrief ? (matchingDebrief["振り返り場所"] || "未実施") : "未実施";
+      } else {
+        yVal = row[yKey] || "不明";
+      }
+      yLabelsSet.add(yVal);
+
+      if (xKey === "スキーム選択" || xKey === "ステータス") {
+        xLabelsSet.add(row[xKey] || "不明");
+      }
+    });
+
+    const yLabels = Array.from(yLabelsSet).slice(0, 10); 
+    const xLabels = Array.from(xLabelsSet);
+
+    let matrix = {};
+    yLabels.forEach(y => {
+      matrix[y] = {};
+      xLabels.forEach(x => { matrix[y][x] = 0; });
+    });
+
+    filteredData.forEach(row => {
+      let yVal = row[yKey] || "不明";
+      if (yKey === "振り返り場所") {
+        let matchingDebrief = filteredDebriefData.find(d => d["要請番号"] == row["要請番号"]);
+        yVal = matchingDebrief ? (matchingDebrief["振り返り場所"] || "未実施") : "未実施";
+      }
+      
+      let xVal = "不明";
+      if (xKey === "曜日") {
+        let rawDate = parseAndNormalizeDate(row["日付"]);
+        if (rawDate) {
+          const days = ["日", "月", "火", "水", "木", "金", "土"];
+          xVal = days[new Date(rawDate).getDay()];
+        }
+      } else if (xKey === "時間帯") {
+        let time = row["要請時刻・施設間搬送依頼時刻"] || row["初期離陸時間"];
+        if (time) {
+          let h = parseInt(time.split(":")[0]);
+          xVal = `${h}時`;
+        }
+      } else {
+        xVal = row[xKey] || "不明";
+      }
+
+      if (matrix[yVal] && matrix[yVal][xVal] !== undefined) {
+        matrix[yVal][xVal]++;
+      }
+    });
+
+    let scatterPoints = [];
+    let maxVal = 1;
+    yLabels.forEach((y, yIdx) => {
+      xLabels.forEach((x, xIdx) => {
+        let count = matrix[y][x];
+        if (count > maxVal) maxVal = count;
+        scatterPoints.push({ x: xIdx, y: yIdx, count: count });
+      });
+    });
+
+    chartInstances['heatmap'] = new Chart(ctx.getContext('2d'), {
+      type: 'bubble',
+      data: {
+        datasets: [{
+          label: '要請件数',
+          data: scatterPoints.map(p => ({ x: p.x, y: p.y, r: p.count > 0 ? (p.count / maxVal) * 15 + 4 : 0 })),
+          backgroundColor: function(context) {
+            if (!context.raw) return 'rgba(0,0,0,0)';
+            const intensity = context.raw.r / 19;
+            return `rgba(211, 47, 47, ${Math.min(intensity + 0.2, 1.0)})`;
+          }
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: { callback: function(val) { return xLabels[val]; } },
+            min: -0.5, max: xLabels.length - 0.5, grid: { display: false }
+          },
+          y: {
+            ticks: { callback: function(val) { return yLabels[val]; } },
+            min: -0.5, max: yLabels.length - 0.5, grid: { display: true }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const pt = scatterPoints[context.dataIndex];
+                return `${yLabels[pt.y]} × ${xLabels[pt.x]}: ${pt.count}件`;
+              }
+            }
+          },
+          legend: { display: false }
+        }
+      }
+    });
   }
 
-  function drawRadarChart(labels, data) {
-    const ctx = document.getElementById('radarChart'); if(!ctx) return; if (chartInstances['radar']) chartInstances['radar'].destroy();
-    chartInstances['radar'] = new Chart(ctx.getContext('2d'), { type: 'radar', data: { labels: labels, datasets: [{ label: '実施率 (%)', data: data, backgroundColor: 'rgba(52, 199, 89, 0.2)', borderColor: '#34c759', pointBackgroundColor: '#34c759' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, suggestedMin: 0, suggestedMax: 100 } }, plugins: { legend: { display: false } } } });
+  function replotRadar() {
+    const ctx = document.getElementById('radarChart'); if(!ctx) return;
+    if (chartInstances['radar']) chartInstances['radar'].destroy();
+
+    const selectedProcs = [];
+    document.querySelectorAll(".radar-toggle:checked").forEach(cb => {
+      selectedProcs.push(cb.value);
+    });
+
+    if (selectedProcs.length === 0) {
+      return;
+    }
+
+    let actual = filteredData.filter(r => !String(r["ステータス"] || "").includes("キャンセル")).length;
+
+    let radarCounts = selectedProcs.map(p => { 
+      let c = 0; 
+      filteredData.forEach(r => { 
+        if (String(r[p] || "").includes("◯")) c++; 
+        else if (p === "血糖測定" && String(r["血糖測定"] || "").trim() !== "") c++;
+        else if (p === "静脈血採血" && String(r["静脈血採血"] || "").trim() !== "") c++;
+      }); 
+      statsForCSV.proc[p] = c;
+      return actual > 0 ? Math.round((c / actual) * 100) : 0; 
+    });
+
+    chartInstances['radar'] = new Chart(ctx.getContext('2d'), { 
+      type: 'radar', 
+      data: { 
+        labels: selectedProcs, 
+        datasets: [{ 
+          label: '実施率 (%)', 
+          data: radarCounts, 
+          backgroundColor: 'rgba(52, 199, 89, 0.2)', 
+          borderColor: '#34c759', 
+          pointBackgroundColor: '#34c759' 
+        }] 
+      }, 
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, suggestedMin: 0, suggestedMax: 100 } }, 
+        plugins: { legend: { display: false } } 
+      } 
+    });
+  }
+
+  function drawDebriefPlaceChart() {
+    const ctx = document.getElementById('debriefPlaceChart'); if(!ctx) return;
+    if (chartInstances['debriefPlace']) chartInstances['debriefPlace'].destroy();
+
+    let placeCounts = {};
+    filteredDebriefData.forEach(r => {
+      const place = String(r["振り返り場所"] || "未分類").trim();
+      if (!placeCounts[place]) placeCounts[place] = 0;
+      placeCounts[place]++;
+    });
+
+    const labels = Object.keys(placeCounts);
+    const data = Object.values(placeCounts);
+
+    chartInstances['debriefPlace'] = new Chart(ctx.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: ['#007aff', '#ff9500', '#34c759', '#5856d6', '#ff2d55', '#8e8e93'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right' } },
+        cutout: '60%'
+      }
+    });
   }
 
   function exportAggregateCSV() {
-    if (filteredData.length === 0) return alert("データがありません。");
-    let csvContent = "\uFEFF"; const addSection = (title, obj) => { csvContent += `【${title}】\n項目,件数・値\n`; Object.keys(obj).sort((a,b)=>obj[b]-obj[a]).forEach(k => { csvContent += `"${k}","${obj[k]}"\n`; }); csvContent += "\n"; };
-    csvContent += "=== AW109 JSAMS 統計・BIダッシュボード 出力レポート ===\n"; csvContent += `出力対象期間: ${document.getElementById("filter-start").value || "全期間"} 〜 ${document.getElementById("filter-end").value || "全期間"}\n`; csvContent += `対象スタッフ: ${document.getElementById("filter-staff").value || "全員"}\n\n`;
-    addSection("1. KPIサマリー", statsForCSV.kpi); addSection("2. スキーム別件数", statsForCSV.scheme); addSection("3. 主要処置 実施件数", statsForCSV.proc); addSection("4. 現場診断 (上位)", statsForCSV.diag); addSection("5. キーワード要請 (上位)", statsForCSV.kw); addSection("6. フライトドクター実績", statsForCSV.dr); addSection("7. フライトナース実績", statsForCSV.ns);
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `AW109_統計レポート_${document.getElementById("filter-start").value || "All"}.csv`; link.click();
+    if (filteredData.length === 0) return alert("出力対象データがありません。");
+    
+    let csvContent = "\uFEFF"; 
+    const addSection = (title, obj) => {
+      csvContent += `【${title}】\n項目,件数・値\n`;
+      Object.keys(obj).sort((a,b)=>obj[b]-obj[a]).forEach(k => { csvContent += `"${k}","${obj[k]}"\n`; });
+      csvContent += "\n";
+    };
+
+    csvContent += "=== AW109 JSAMS 統計・BIダッシュボード 出力レポート ===\n";
+    csvContent += `出力対象期間: ${document.getElementById("filter-start").value || "全期間"} 〜 ${document.getElementById("filter-end").value || "全期間"}\n`;
+    csvContent += `対象スタッフ: ${document.getElementById("filter-staff").value || "全員"}\n\n`;
+
+    addSection("1. KPIサマリー", statsForCSV.kpi);
+    addSection("2. スキーム別件数", statsForCSV.scheme);
+    addSection("3. 主要処置 登録件数", statsForCSV.proc);
+    addSection("4. 現場診断 (上位)", statsForCSV.diag);
+    addSection("5. キーワード要請 (上位)", statsForCSV.kw);
+    addSection("6. デブリーフィング関連トピック (上位)", statsForCSV.debrief);
+    addSection("7. フライトドクター搭乗実績", statsForCSV.dr);
+    addSection("8. フライトナース搭乗実績", statsForCSV.ns);
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" }); 
+    const link = document.createElement("a"); 
+    link.href = URL.createObjectURL(blob); 
+    link.download = `AW109_統計BIレポート_${document.getElementById("filter-start").value || "All"}.csv`; 
+    link.click();
   }
 </script>
 </body>
