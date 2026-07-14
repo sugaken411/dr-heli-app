@@ -11,7 +11,7 @@
     body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--ink); margin: 0; padding: 0; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-group { display: flex; gap: 12px; } 
+    .hdr-group { display: flex; gap: 12px; align-items: center; } 
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; } 
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
@@ -44,9 +44,12 @@
   </div>
 
   <header class="no-print">
-    <div class="hdr-group"><button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button></div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v12.0</span></div>
-    <div class="hdr-group"><button type="button" class="hdr-btn no-print" onclick="fetchInit(true)">🔄 更新</button><button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
+    <div class="hdr-group">
+      <button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hidden"></span>
+    </div>
+    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.5</span></div>
+    <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
   </header>
 
   <main>
@@ -133,7 +136,7 @@
   <div id="sync-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
       <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">⚠️ 活動時間の重複</h3>
-      <p class="text-sm text-slate-600 mb-6 leading-relaxed">取り込もうとしている事案（ヘリ活動）の時間が、すでに入力されている日誌の活動時間と重複しています。<br>重複したスケジュールをどう処理しますか？</p>
+      <p class="text-sm text-slate-600 mb-6 leading-relaxed">取り込もうとしている事案（ヘリ活動）の時間が、すでに入力されている日誌の活動時間と重複しています。<br>重複したスケジュールをどう処理しますか?</p>
       <div class="flex flex-col gap-3">
         <button type="button" onclick="resolveSync('overwrite')" class="bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 shadow-sm transition">🚁 事案の時間を優先する (重複は手動削除)</button>
         <button type="button" onclick="resolveSync('keep')" class="bg-slate-100 text-slate-700 border border-slate-300 font-bold py-3.5 rounded-xl hover:bg-slate-200 transition">📝 日誌の時間を残す (今回は取り込まない)</button>
@@ -146,7 +149,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
 
-    // 🌟 Load failedの握りつぶしフィルターを追加
+    // 🌟 Load failedの握りつぶし付きグローバルエラー制御
     window.onerror = function(message, source, lineno, colno, error) {
       const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
       sendErrorLog(errDetail); 
@@ -154,8 +157,8 @@
     };
     window.addEventListener('unhandledrejection', function(event) {
       const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-      if(String(reason).includes("Load failed")) {
-        console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+      if(String(reason).includes("Load failed") || String(reason).includes("Failed to fetch")) {
+        console.warn("オフライン・ネットワーク切断によるFetchエラーを検知。エラー通知を抑止します。");
         return;
       }
       sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
@@ -195,7 +198,7 @@
     }
     
     function sendErrorLog(errMsg) { 
-      if(String(errMsg).includes("Load failed")) return;
+      if(String(errMsg).includes("Load failed") || String(errMsg).includes("Failed to fetch")) return;
       try { 
         fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -207,64 +210,64 @@
 
     function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
 
-    
-  const CACHE_KEY = "aw109_report_master_v12";
-  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
-
-  window.onload = () => { 
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlDate = urlParams.get('date');
-    document.getElementById('info-date').value = urlDate || new Date().toISOString().split('T')[0];
-    
-    if(urlDate) {
-      const backBtn = document.getElementById("btn-back");
-      backBtn.innerHTML = "◀ 業務管理";
-      backBtn.onclick = () => location.href = "management.html";
+    // 🌟 日付の正規化 (ゼロパディング処理)
+    function normalizeDate(rawDate) {
+      if (!rawDate) return "";
+      let rawDateStr = String(rawDate).split(" ")[0]; 
+      let dateParts = rawDateStr.split(/[\/\-]/);
+      if (dateParts.length === 3) {
+        return `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
+      }
+      return rawDateStr.replace(/\//g, "-");
     }
-    
-    drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); 
 
-    const cachedStr = localStorage.getItem(CACHE_KEY);
-    if(cachedStr) {
+    // 🌟 同期完了時間のタイムスタンプ表示更新
+    function updateSyncTimestamp() {
+      const tsSpan = document.getElementById("sync-timestamp");
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      tsSpan.innerText = `最終同期: ${timeStr}`;
+      tsSpan.classList.remove("hidden");
+    }
+
+    window.onload = () => { 
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlDate = urlParams.get('date');
+      document.getElementById('info-date').value = normalizeDate(urlDate) || new Date().toISOString().split('T')[0];
+      
+      if(urlDate) {
+        const backBtn = document.getElementById("btn-back");
+        backBtn.innerHTML = "◀ 業務管理";
+        backBtn.onclick = () => location.href = "management.html";
+      }
+      
+      drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); fetchInit(); 
+    };
+
+    async function fetchInit() {
+      showLoader(true, "システム起動中...", "マスタデータを取得しています");
       try {
-        const cacheObj = JSON.parse(cachedStr);
-        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
-          populateSelect('info-nurse', cacheObj.masters.ns || []); 
-          populateSelect('info-doctor', cacheObj.masters.dr || []); 
-          syncFromDb(false); // 日報データ自体は最新を見に行く
-          return;
-        }
-      } catch(e) {}
+        const res = await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }), 
+          redirect: "follow" 
+        });
+        const json = await res.json();
+        if (json.status === "success") { 
+          populateSelect('info-nurse', json.masters.ns || []); 
+          populateSelect('info-doctor', json.masters.dr || []); 
+          updateSyncTimestamp();
+          await syncFromDb(false); 
+        } else { throw new Error(json.message); }
+      } catch(e) { 
+        sendErrorLog(e.toString()); 
+        alert("初期通信エラーが発生しました。接続を確認してください。"); 
+      } finally { showLoader(false); }
     }
-    fetchInit(false); 
-  };
 
-  async function fetchInit(isManual) {
-    if(!isManual) showLoader(true, "システム起動中...", "マスタデータを取得しています");
-    else showLoader(true, "マスタ更新中...", "マスタデータを再取得しています");
-    try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }), 
-        redirect: "follow" 
-      });
-      const json = await res.json();
-      if (json.status === "success") { 
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), masters: json.masters }));
-        populateSelect('info-nurse', json.masters.ns || []); 
-        populateSelect('info-doctor', json.masters.dr || []); 
-        if(isManual) { alert("マスタデータを更新しました。"); await syncFromDb(false); }
-        else { await syncFromDb(false); }
-      } else { throw new Error(json.message); }
-    } catch(e) { 
-      sendErrorLog(e.toString()); 
-      alert("初期通信エラーが発生しました。"); 
-    } finally { showLoader(false); }
-  }
-
-  async function syncFromDb(force) {
+    async function syncFromDb(force) {
       showLoader(true, "データを同期中...", "事案データベースからデータを取得しています"); 
-      const dateVal = document.getElementById('info-date').value;
+      const dateVal = normalizeDate(document.getElementById('info-date').value);
       try {
         const res = await fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -308,11 +311,13 @@
             }
             events = data.events || [];
           }
-          updatePrintHeader(); render();
+          updatePrintHeader(); 
+          updateSyncTimestamp();
+          render();
         } else { throw new Error(json.message); }
       } catch(e) { 
         sendErrorLog(e.toString()); 
-        alert("同期エラーが発生しました。"); 
+        alert("事案の同期に失敗しました。オフライン保存データを確認してください。"); 
       } finally { showLoader(false); }
     }
 
@@ -322,7 +327,7 @@
     }
 
     async function saveReport() {
-      const dateVal = document.getElementById('info-date').value;
+      const dateVal = normalizeDate(document.getElementById('info-date').value);
       const nsVal = document.getElementById('info-nurse').value === 'その他' ? document.getElementById('info-nurse-other').value : document.getElementById('info-nurse').value;
       const drVal = document.getElementById('info-doctor').value === 'その他' ? document.getElementById('info-doctor-other').value : document.getElementById('info-doctor').value;
       if (!nsVal || !drVal) return alert("記載者と担当医師を選択・入力してください。");
@@ -337,8 +342,10 @@
           redirect: "follow" 
         });
         const json = await res.json(); 
-        if (json.status === "success") alert("保存しました！"); 
-        else throw new Error(json.message);
+        if (json.status === "success") {
+          alert("保存しました！"); 
+          updateSyncTimestamp();
+        } else { throw new Error(json.message); }
       } catch(e) { 
         sendErrorLog(e.toString()); 
         alert("保存エラーが発生しました。"); 
@@ -346,7 +353,7 @@
     }
 
     function updatePrintHeader() {
-      document.getElementById('print-date').innerText = document.getElementById('info-date').value;
+      document.getElementById('print-date').innerText = normalizeDate(document.getElementById('info-date').value);
       const ns = document.getElementById('info-nurse').value; document.getElementById('print-ns').innerText = ns === 'その他' ? document.getElementById('info-nurse-other').value : ns || "未入力";
       const dr = document.getElementById('info-doctor').value; document.getElementById('print-dr').innerText = dr === 'その他' ? document.getElementById('info-doctor-other').value : dr || "未入力";
       const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
@@ -358,9 +365,9 @@
     function toggleCustomInput(sId, iId) { const sel = document.getElementById(sId); const inp = document.getElementById(iId); if (sel.value === 'その他') { inp.classList.remove('hidden'); inp.focus(); } else { inp.classList.add('hidden'); inp.value = ''; } updatePrintHeader(); }
     
     function calculateSun() {
-      const dateStr = document.getElementById('info-date').value; updatePrintHeader();
+      const dateStr = normalizeDate(document.getElementById('info-date').value); updatePrintHeader();
       if (!dateStr || typeof SunCalc === 'undefined') return;
-      const date = new Date(dateStr); const times = SunCalc.getTimes(date, 31.5602, 130.558);
+      const date = new Date(dateStr.replace(/-/g, '/')); const times = SunCalc.getTimes(date, 31.5602, 130.558);
       const fmt = d => d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
       const limit = new Date(date); limit.setHours(17, 30, 0); const standby = (times.sunset.getTime() - 60*60*1000 < limit.getTime()) ? new Date(times.sunset.getTime() - 60*60*1000) : limit;
       document.getElementById('sun-display').innerHTML = `<span>🌅 日出:${fmt(times.sunrise)}</span><span>🌇 日没:${fmt(times.sunset)}</span><span class="font-bold border-l border-amber-200 pl-3 ml-1 text-amber-900">⏱️ 待機終了:${fmt(standby)}</span>`;
