@@ -99,10 +99,11 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v11.4</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v12.0</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -399,57 +400,76 @@
     ele.value = val; 
   }
 
+  const CACHE_KEY = "aw109_search_master_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
+
   function checkLogin() {
     const input = document.getElementById("login-pin").value;
     if(input === "5740") {
       activePin = input; 
       document.getElementById("login-overlay").style.display = "none"; 
       startTimer(); 
-      fetchInit(); 
+      initSearchApp(); 
     } else { 
       document.getElementById("login-err").style.display = "block"; 
       document.getElementById("login-pin").value = ""; 
     }
   }
 
-  function openModal(id) { document.getElementById(id).classList.add('show'); resetTimer(); }
-  function closeModal(id) { document.getElementById(id || 'detail-modal').classList.remove('show'); resetTimer(); }
-
-  function toggleComp() { 
-    const isDaiko = document.querySelector('input[name="comp-who"]:checked').value === "代行"; 
-    document.getElementById("comp-name").style.display = isDaiko ? "block" : "none"; 
-  }
-  
-  function toggleEditWho() { 
-    const isDaiko = document.querySelector('input[name="edit-who"]:checked').value === "代行"; 
-    document.getElementById("edit-person").style.display = isDaiko ? "block" : "none"; 
-  }
-  
-  function formatKatakana(input) { 
-    let val = input.value; 
-    val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); 
-    input.value = val; 
-  }
-
-  function quickFilter(type) {
-    ["q-id", "q-date-start", "q-date-end", "q-month", "q-status", "q-dest", "q-dr", "q-ns"].forEach(id => document.getElementById(id).value = "");
-    if (type === '未完了') { 
-      document.getElementById("q-status").value = "未完了"; 
-    } 
-    else if (type === '本日') { 
-      const d = new Date(); 
-      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; 
-      document.getElementById("q-date-start").value = today; 
-      document.getElementById("q-date-end").value = today; 
+  async function initSearchApp() {
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    if(cachedStr) {
+      try {
+        const cacheObj = JSON.parse(cachedStr);
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          applySearchMasters(cacheObj.data);
+          return;
+        }
+      } catch(e) {}
     }
-    fetchData();
+    await fetchLatestData(false, false);
   }
 
-  function clearDateRange() { document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = ""; }
-  function clearMonth() { document.getElementById("q-month").value = ""; }
+  function applySearchMasters(jsonRes) {
+    if (jsonRes.masters) {
+      masters = jsonRes.masters;
+      const destOpts = '<option value="">全出場先</option>' + masters.dest.map(v => `<option value="${v}">${v}</option>`).join("");
+      document.getElementById("q-dest").innerHTML = destOpts; 
+      document.getElementById("edit-dest").innerHTML = destOpts.replace("全出場先", "選択...");
+      
+      document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + masters.dr.map(v => `<option value="${v}">${v}</option>`).join("");
+      document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
+      
+      const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...masters.dr, ...masters.ns])].map(v => `<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
+      document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
+    }
+    if (jsonRes.qa) { 
+      document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `
+        <p style="margin-bottom:8px;">
+          <b>Q. ${item.q}</b><br>
+          <span style="color:var(--ink);">A. ${item.a}</span>
+        </p>
+        <hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">
+      `).join("") || '<p>公開Q&Aはありません。</p>'; 
+    }
+    const manualsData = jsonRes.manuals || []; 
+    document.getElementById("manual-list").innerHTML = manualsData.map(item => `
+      <p style="margin-bottom:8px;">
+        <b>■ ${item.title}</b><br>
+        <span style="font-size:13px;">${item.text.replace(/<br>/g, '<br>')}</span>
+      </p>
+      <hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">
+    `).join("") || '<p>マニュアルはありません。</p>';
+    
+    const urlParams = new URLSearchParams(window.location.search); 
+    if (urlParams.get('auto_filter') === 'uncompleted') { 
+      document.getElementById('q-status').value = '未完了'; 
+      fetchData(); 
+    }
+  }
 
-  async function fetchInit() {
-    showLoader("マスタデータ同期中...", "システムを初期化しています");
+  async function fetchLatestData(isBackground, isManualUpdate) {
+    if(!isBackground) showLoader("マスタデータ同期中...", "システムを初期化しています");
     try {
       const res = await fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -458,46 +478,16 @@
       });
       const jsonRes = await res.json();
       if (jsonRes.status === "success") {
-        if (jsonRes.masters) {
-          masters = jsonRes.masters;
-          const destOpts = '<option value="">全出場先</option>' + masters.dest.map(v => `<option value="${v}">${v}</option>`).join("");
-          document.getElementById("q-dest").innerHTML = destOpts; 
-          document.getElementById("edit-dest").innerHTML = destOpts.replace("全出場先", "選択...");
-          
-          document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + masters.dr.map(v => `<option value="${v}">${v}</option>`).join("");
-          document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
-          
-          const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...masters.dr, ...masters.ns])].map(v => `<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
-          document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
-        }
-        if (jsonRes.qa) { 
-          document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `
-            <p style="margin-bottom:8px;">
-              <b>Q. ${item.q}</b><br>
-              <span style="color:var(--ink);">A. ${item.a}</span>
-            </p>
-            <hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">
-          `).join("") || '<p>公開Q&Aはありません。</p>'; 
-        }
-        const manualsData = jsonRes.manuals || []; 
-        document.getElementById("manual-list").innerHTML = manualsData.map(item => `
-          <p style="margin-bottom:8px;">
-            <b>■ ${item.title}</b><br>
-            <span style="font-size:13px;">${item.text.replace(/\\n/g, '<br>')}</span>
-          </p>
-          <hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">
-        `).join("") || '<p>マニュアルはありません。</p>';
-        
-        const urlParams = new URLSearchParams(window.location.search); 
-        if (urlParams.get('auto_filter') === 'uncompleted') { 
-          document.getElementById('q-status').value = '未完了'; 
-          fetchData(); 
-        }
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: jsonRes }));
+        applySearchMasters(jsonRes);
+        if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       } else { throw new Error(jsonRes.message); }
     } catch(e) { 
       sendErrorLog(e.toString()); 
-      alert("通信エラーが発生しました。"); 
-    } finally { hideLoader(); }
+      if(!isBackground) alert("通信エラーが発生しました。"); 
+    } finally { 
+      if(!isBackground) hideLoader(); 
+    }
   }
 
   async function fetchData() {
