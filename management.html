@@ -49,7 +49,8 @@
 
   <header class="no-print">
     <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div class="font-black text-base">統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded ml-1">v1.3</span></div>
+    <div class="font-black text-base">統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded ml-1">v12.0</span></div>
+    <button type="button" class="hdr-btn no-print" onclick="fetchData(true)">🔄 更新</button>
     <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
   </header>
 
@@ -171,68 +172,86 @@
       } catch(e) {} 
     }
 
-    window.onload = () => {
-      document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      fetchData();
-    };
+    
+  const CACHE_KEY = "aw109_management_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
-    function changeMonth(delta) {
-      currentMonth += delta;
-      if (currentMonth > 12) { currentMonth = 1; currentYear++; } 
-      else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
-      document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      fetchData();
-    }
-
-    function switchView(view) {
-      document.getElementById('view-cal').classList.toggle('hidden', view !== 'cal');
-      document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
-      
-      const btnCal = document.getElementById('btn-view-cal'); const btnList = document.getElementById('btn-view-list');
-      if(view === 'cal') {
-        btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
-        btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
-      } else {
-        btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
-        btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
-      }
-    }
-
-    function timeToMins(tStr) {
-      if(!tStr) return 0;
-      let p = String(tStr).split(':');
-      if(p.length < 2) return 0;
-      return parseInt(p[0]) * 60 + parseInt(p[1]);
-    }
-
-    async function fetchData() {
-      const pickerVal = document.getElementById("month-picker").value;
-      if(!pickerVal) return;
-      [currentYear, currentMonth] = pickerVal.split('-').map(Number);
-      document.getElementById("print-month-title").innerText = `${currentYear}年 ${currentMonth}月`;
-      
-      showLoader();
+  window.onload = () => {
+    document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    if(cachedStr) {
       try {
-        const res = await fetch(GAS_API_URL, { 
-          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), 
-          redirect: "follow" 
-        });
-        const json = await res.json();
-        
-        if (json.status === "success") {
-          allReports = json.data;
+        const cacheObj = JSON.parse(cachedStr);
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          allReports = cacheObj.data;
           renderViews();
-        } else { throw new Error(json.message); }
-      } catch (e) {
-        alert("データ同期に失敗しました。");
-        sendErrorLog(e.toString());
-      } finally {
-        hideLoader();
-      }
+          // We fetch in background to keep data fresh but UI responsive
+          fetchData(false, true); 
+          return;
+        }
+      } catch(e) {}
     }
+    fetchData(false);
+  };
 
-    function renderViews() {
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 12) { currentMonth = 1; currentYear++; } 
+    else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+    document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    renderViews(); // Data should already be in allReports
+  }
+
+  function switchView(view) {
+    document.getElementById('view-cal').classList.toggle('hidden', view !== 'cal');
+    document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
+    
+    const btnCal = document.getElementById('btn-view-cal'); const btnList = document.getElementById('btn-view-list');
+    if(view === 'cal') {
+      btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
+      btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
+    } else {
+      btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
+      btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
+    }
+  }
+
+  function timeToMins(tStr) {
+    if(!tStr) return 0;
+    let p = String(tStr).split(':');
+    if(p.length < 2) return 0;
+    return parseInt(p[0]) * 60 + parseInt(p[1]);
+  }
+
+  async function fetchData(isManual = false, isBackground = false) {
+    const pickerVal = document.getElementById("month-picker").value;
+    if(!pickerVal) return;
+    
+    if(!isBackground) showLoader();
+    try {
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), 
+        redirect: "follow" 
+      });
+      const json = await res.json();
+      
+      if (json.status === "success") {
+        allReports = json.data;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: allReports }));
+        renderViews();
+        if(isManual) alert("最新データを取得しました。");
+      } else { throw new Error(json.message); }
+    } catch (e) {
+      if(isManual) alert("データ同期に失敗しました。");
+      sendErrorLog(e.toString());
+    } finally {
+      if(!isBackground) hideLoader();
+    }
+  }
+
+  function renderViews() {
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       let monthData = {};
       const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
