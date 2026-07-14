@@ -11,35 +11,88 @@
     :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --brand: #d32f2f; --line: rgba(60,60,67,0.12); --safe-top: env(safe-area-inset-top); }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
+    
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(60px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 10px; padding-right: 10px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 60px; text-align: center; }
     .hdr-title { font-weight: 900; font-size: 16px; text-align: center; flex: 1; display:flex; justify-content:center; align-items:center; }
     .version-tag { font-size: 11px; background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; margin-left: 8px; cursor: pointer; user-select: none; }
+    
     .tab-container { position: fixed; top: calc(60px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
     .nav-tab { flex: 1; text-align: center; line-height: 44px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
     main { margin-top: calc(114px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    
     .timing-label { font-size: 12px; font-weight: 800; color: var(--sub); margin-top: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     .timing-label::before { content: ""; display: block; width: 4px; height: 12px; background: var(--blue); border-radius: 2px; }
+    
     .type-picker { display: flex; flex-wrap: wrap; background: transparent; gap: 8px; margin-bottom: 8px; }
     .type-btn { flex: 1 1 calc(33.3% - 8px); min-width: 100px; text-align: center; padding: 12px 6px; font-size: 13px; font-weight: 800; color: var(--sub); background: #e5e5ea; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: normal; line-height: 1.3; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2px solid transparent; position: relative; }
     .type-btn.active { background: #fff; color: var(--blue); border-color: var(--blue); box-shadow: 0 4px 12px rgba(0,122,255,0.15); }
     .type-btn.completed { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
+    .type-btn.completed::after { content: "✅"; position: absolute; top: -6px; right: -6px; font-size: 12px; background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
     .normal-info { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--line); }
+
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); }
     .card-header { background: #f9f9f9; padding: 12px 16px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; flex-wrap: wrap; }
     .sub-cat-badge { font-size: 11px; font-weight: bold; background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 6px; border: 1px solid #bbdefb; margin-left: 8px; white-space: nowrap; }
-    .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+    
+    .chk-row { padding: 16px; border-bottom: 0.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; transition: background-color 0.3s; }
     .chk-row.error-highlight { background-color: #ffebee; border-left: 4px solid var(--brand); } 
-    .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; }
+    .chk-row:last-child { border-bottom: none; }
+    
+    .chk-title-wrapper { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; }
+    .chk-title { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.4; word-break: break-all; flex: 1; }
+    .constant-val { font-size: 12px; color: var(--brand); font-weight: bold; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+    
     .toggle-group { display: flex; gap: 8px; }
-    .tgl-btn { flex: 1; padding: 12px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; }
+    .tgl-btn { flex: 1; padding: 12px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; user-select: none; }
     .tgl-btn.ok.active { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
     .tgl-btn.ng.active { background: #ffebee; color: #c62828; border-color: #ef5350; }
+    
     .text-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; box-sizing: border-box; font-weight:600; color:var(--ink); }
-    .btn-submit { width: 100%; padding: 16px; background: var(--blue); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; }
+    .text-input:focus { border-color: var(--blue); background: #fff; }
+    .error-reason { display: none; margin-top: 4px; }
+    
+    .btn-submit { width: 100%; padding: 16px; background: var(--blue); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0,122,255,0.3); transition:0.2s; }
+    .btn-submit:active { transform:scale(0.98); }
+
+    .filter-box { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: #f9f9f9; border-bottom: 1px solid var(--line); }
+    .filter-row { display: flex; gap: 8px; align-items: center; }
+    
+    .history-item { padding: 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; background: #fff; }
+    .history-item:last-child { border-bottom: none; }
+    .h-head { display: flex; justify-content: space-between; align-items: center; }
+    .h-badge { font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
+    .h-ok { background: #e8f5e9; color: #2e7d32; } .h-ng { background: #ffebee; color: #c62828; }
+    .h-meta { font-size: 12px; color: var(--sub); font-weight: bold; }
+    .h-err { font-size: 13px; color: var(--ink); background: #fff3e0; padding: 8px; border-radius: 6px; border-left: 3px solid #ff9800; margin-top: 4px; }
+    .h-remarks { font-size: 13px; font-weight: 600; color: #0056b3; background: #e3f2fd; padding: 8px; border-radius: 6px; margin-top: 4px; }
+
+    .tab-content { display: none; animation: fadeIn 0.2s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from{ opacity:0; transform:translateY(5px); } to{ opacity:1; transform:translateY(0); } }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @media print {
+      body { background: #fff; }
+      header, .tab-container, .type-picker-wrapper, .normal-info, .no-print { display: none !important; }
+      main { margin-top: 0; padding: 0; max-width: 100%; }
+      .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom:20px; }
+      #tab-history { display: block !important; }
+      #tab-input { display: none !important; }
+      details[open] summary ~ * { display: block; }
+      details { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
@@ -52,8 +105,15 @@
 
   <header class="no-print">
     <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div class="hdr-title">統合チェックリスト<span class="version-tag">v12.1</span></div>
-    <button type="button" class="hdr-btn" onclick="clearAllCache(true)">🔄 更新</button>
+    <div class="hdr-title">
+      統合チェックリスト
+      <span class="version-tag" onclick="secretCommand()">v13.0</span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="hdr-btn" onclick="clearAllCache(true)">🔄 更新</button>
+      <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+      <button type="button" class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
+    </div>
   </header>
 
   <div class="tab-container no-print">
@@ -63,10 +123,19 @@
 
   <main>
     <div id="tab-input" class="tab-content active">
-      <div class="normal-info no-print">
-        <div style="display:flex; gap:12px;">
-          <div style="flex:1;"><label>共通 点検日</label><input type="date" id="c-date" class="text-input" onchange="fetchChecklistStatus()"></div>
-          <div style="flex:1.5;"><label>共通 点検者 (Ns)</label><select id="c-staff" class="text-input"></select></div>
+      
+      <div class="normal-info no-print" style="margin-bottom: 8px; padding: 12px 16px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:120px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検日</label>
+            <input type="date" id="c-date" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="fetchChecklistStatus()">
+          </div>
+          <div style="flex:1.5; min-width:150px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検者 (Ns)</label>
+            <select id="c-staff" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="localStorage.setItem('aw109_last_ns', this.value)">
+              <option value="">選択してください...</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -78,100 +147,451 @@
         <div class="type-btn" id="btn-type-heli" onclick="switchType('ヘリ内')">🚁 ヘリ機内</div>
         <div class="type-btn" id="btn-type-hbag" onclick="switchType('ヘリバック')">🎒 ヘリバック</div>
       </div>
+
       <div class="timing-label no-print">🌇 夕・終業時</div>
-      <div class="type-picker no-print"><div class="type-btn" id="btn-type-daily-end" onclick="switchType('終業点検')">📋 終業点検</div></div>
-      <div class="timing-label no-print">📅 月次・その他</div>
       <div class="type-picker no-print">
+        <div class="type-btn" id="btn-type-daily-end" onclick="switchType('終業点検')">📋 終業点検</div>
+      </div>
+
+      <div class="timing-label no-print">📅 月次・その他</div>
+      <div class="type-picker no-print" style="margin-bottom: 24px;">
         <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
         <div class="type-btn" id="btn-type-periodic" onclick="switchType('定期点検')">📅 定期点検</div>
       </div>
 
-      <div class="card" style="background:#f0f8ff; border:1px solid #90caf9;"><div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;"><span id="current-check-title">始業点検 の入力</span><input type="time" id="c-time" style="width:100px;"></div></div>
+      <div class="card" style="background:#f0f8ff; border:1px solid #90caf9; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+          <span style="font-weight:900; color:#0d47a1; font-size:15px;" id="current-check-title">始業点検 の入力</span>
+          <div style="width:110px;">
+            <label style="font-size:10px; font-weight:bold; color:var(--sub); display:block; text-align:right; margin-bottom:4px;">実施時間</label>
+            <input type="time" id="c-time" class="text-input" style="padding:6px; font-size:14px; margin-bottom:0;">
+          </div>
+        </div>
+      </div>
+
       <div id="checklist-container"></div>
-      <button type="button" class="btn-submit" id="btn-save" onclick="submitChecklist()" style="margin-top:20px;">点検データを保存する</button>
+
+      <div class="card" style="margin-top: 24px; border:2px solid var(--blue);">
+        <div class="card-header" style="background:#e3f2fd; color:#0d47a1;">📝 最終確認・保存</div>
+        <div style="padding: 16px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:8px;">全体特記事項 (引き継ぎ事項・補充報告など)</label>
+          <textarea id="c-remarks" rows="3" class="text-input" placeholder="例：吸引器の予備バッテリーを1本補充しました。"></textarea>
+          <div style="margin-top:16px; padding-top:16px; border-top:1px dashed #ccc; text-align:center;">
+            <button type="button" class="btn-submit" id="btn-save" onclick="submitChecklist()">点検データを保存する</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div id="tab-history" class="tab-content"><div id="history-container"></div></div>
+
+    <div id="tab-history" class="tab-content">
+      <h2 class="hidden print:block text-center" style="font-size:18px; margin-bottom:16px;" id="print-title">点検履歴</h2>
+      <div class="card">
+        <div class="card-header">
+          <span>🔍 履歴の検索・絞り込み</span>
+        </div>
+        <div class="filter-box">
+          <div class="filter-row" style="margin-bottom:4px;">
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">閲覧対象</span>
+            <select id="hist-target-type" onchange="changeHistoryType()" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0; background:#fff9db; border-color:#ffe066;">
+              <option value="始業点検">始業点検</option>
+              <option value="終業点検">終業点検</option>
+              <option value="ME機器">ME機器</option>
+              <option value="ナースバック">ナースバック</option>
+              <option value="ヘリ内">ヘリ機内</option>
+              <option value="ヘリバック">ヘリバック</option>
+              <option value="待機物品">待機所物品</option>
+              <option value="定期点検">定期点検</option>
+            </select>
+          </div>
+          
+          <div class="filter-row">
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">プリセット</span>
+            <select id="hist-preset" onchange="applyPresetFilter()" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;">
+              <option value="today">本日</option>
+              <option value="week">過去7日間</option>
+              <option value="month">過去30日間</option>
+              <option value="all">指定なし(全件)</option>
+              <option value="custom" style="display:none;">期間指定中</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <span style="font-size:12px; font-weight:bold; color:var(--sub); width:60px;">期間指定</span>
+            <input type="date" id="hist-start" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;" onchange="document.getElementById('hist-preset').value='custom'; applyHistoryFilter();">
+            <span style="font-size:12px; color:var(--sub);">〜</span>
+            <input type="date" id="hist-end" class="text-input" style="padding:8px; font-size:13px; flex:1; margin-bottom:0;" onchange="document.getElementById('hist-preset').value='custom'; applyHistoryFilter();">
+          </div>
+          <button type="button" class="hdr-btn no-print" onclick="fetchHistory(true)" style="font-size:13px; margin-top:8px; align-self:flex-end;">🔄 サーバーから最新を取得</button>
+        </div>
+        <div id="history-container"></div>
+      </div>
+    </div>
   </main>
+
+  <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+    <div class="modal-box">
+      <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+      <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+      <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+      <textarea id="qa-input" rows="3" class="text-input" placeholder="項目の追加依頼や、システムの不具合報告など..."></textarea>
+      <button type="button" onclick="submitQA()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
+      <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
+    </div>
+  </div>
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
+    const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
+    
+    window.onerror = function(message, source, lineno, colno, error) {
+      const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+      sendErrorLog(errDetail); 
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+      if(String(reason).includes("Load failed")) return;
+      sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+    });
 
-    let currentType = "始業点検"; let currentMainTab = "input";
-    let checklistItems = []; let currentData = {}; let errorDetails = {}; let allHistoryData = []; let mastersCache = {};
+    let currentType = "始業点検"; 
+    let currentMainTab = "input"; 
+    
+    let checklistItems = [];
+    let currentData = {}; 
+    let errorDetails = {}; 
+    let allHistoryData = []; 
+    let mastersCache = {};
 
-    window.onload = () => { resetTime(); loadCache(); fetchChecklistStatus(); loadDataForCurrentView(); };
+    let tapCount = 0; let tapTimer;
+    function secretCommand() {
+      tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 1500); 
+      if (tapCount >= 3) {
+        tapCount = 0; setAllOk();
+        alert("🤫 シークレット機能：\n表示中の全項目を「異常なし」に設定しました。");
+      }
+    }
 
-    function resetTime() { const d = new Date(); const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000); document.getElementById("c-date").value = `${jst.getFullYear()}-${String(jst.getMonth()+1).padStart(2,'0')}-${String(jst.getDate()).padStart(2,'0')}`; document.getElementById("c-time").value = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-    function loadCache() { const list = localStorage.getItem("aw109_cl_nslist"); if(list) { const arr = JSON.parse(list); const sel = document.getElementById("c-staff"); sel.innerHTML = arr.map(n => `<option value="${n}">${n}</option>`).join(""); } }
-    function clearAllCache() { localStorage.removeItem("aw109_cl_masters"); mastersCache = {}; loadDataForCurrentView(); }
-    function showLoader(m1, m2) { document.getElementById("loader-main").innerText = m1; document.getElementById("loader-sub").innerText = m2; document.getElementById("global-loader").style.display = "flex"; }
+    function getTodayString() {
+      const d = new Date();
+      const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000);
+      return `${jst.getFullYear()}-${String(jst.getMonth()+1).padStart(2,'0')}-${String(jst.getDate()).padStart(2,'0')}`;
+    }
+
+    window.onload = () => { 
+      resetTime();
+      loadCache();
+      fetchChecklistStatus(); 
+      loadDataForCurrentView(); 
+      fetchQA(); 
+    };
+
+    function loadCache() {
+      const msListStr = localStorage.getItem("aw109_cl_nslist");
+      if(msListStr) {
+        const arr = JSON.parse(msListStr);
+        const sel = document.getElementById("c-staff");
+        if(sel.options.length <= 1) { arr.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`); }
+        const lastNs = localStorage.getItem("aw109_last_ns");
+        if(lastNs) sel.value = lastNs;
+      }
+      const cStr = localStorage.getItem("aw109_cl_masters");
+      if(cStr) {
+        const obj = JSON.parse(cStr);
+        if(Date.now() - obj.timestampMs < CACHE_EXPIRE_MS) {
+          mastersCache = obj.data;
+        }
+      }
+    }
+
+    function saveCache() {
+      localStorage.setItem("aw109_cl_masters", JSON.stringify({ timestampMs: Date.now(), data: mastersCache }));
+    }
+
+    function clearAllCache(isManual) {
+      localStorage.removeItem("aw109_cl_masters");
+      mastersCache = {};
+      loadDataForCurrentView();
+      if(isManual) alert("キャッシュをクリアし、最新の点検マスタを取得しました。");
+    }
+
+    function resetTime() {
+      const now = new Date();
+      document.getElementById("c-date").value = getTodayString();
+      document.getElementById("c-time").value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function showLoader(m1, m2) {
+      document.getElementById("loader-main").innerText = m1; document.getElementById("loader-sub").innerText = m2;
+      document.getElementById("global-loader").style.display = "flex";
+    }
     function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+    function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+    function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
+
+    function sendErrorLog(errMsg) {
+      if(String(errMsg).includes("Load failed")) return;
+      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v13.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
+    }
+
+    async function fetchQA() {
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success" && json.qa) { document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join(""); }
+      } catch(e) {}
+    }
+
+    async function submitQA() {
+      const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
+      document.getElementById("global-loader").style.display = "flex";
+      try {
+        await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" }), redirect: "follow" });
+        alert("要望・報告を送信しました。管理者が確認します。"); document.getElementById("qa-input").value = ""; closeModal('qa');
+      } catch(e) { alert("送信に失敗しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
 
     async function fetchChecklistStatus() {
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: document.getElementById("c-date").value }) });
+        const selectedDate = document.getElementById("c-date").value;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: selectedDate }), redirect: "follow" });
         const json = await res.json();
         if (json.status === "success") {
-          document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('completed'));
-          Object.keys(json.data).forEach(k => { if(json.data[k]) document.getElementById("btn-type-" + k)?.classList.add('completed'); });
+          const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki' };
+          document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('completed'));
+          for (const [type, isCompleted] of Object.entries(json.data)) {
+            if (isCompleted && btnMap[type]) document.getElementById(btnMap[type]).classList.add("completed");
+          }
         }
       } catch(e) {}
     }
 
-    function switchType(type) { currentType = type; document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active')); document.getElementById("current-check-title").innerText = `${type} の入力`; loadDataForCurrentView(); }
-    function loadDataForCurrentView() { fetchMaster(); }
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(`nav-tab-${tab}`).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.getElementById('btn-print').style.display = tab === 'history' ? 'block' : 'none';
+      
+      if(tab === 'history') { document.getElementById('hist-target-type').value = currentType; }
+      loadDataForCurrentView();
+    }
+
+    function switchType(type) {
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki' };
+      if(btnMap[type]) document.getElementById(btnMap[type]).classList.add("active");
+      
+      document.getElementById("current-check-title").innerText = `${type} の入力`;
+      loadDataForCurrentView();
+    }
+
+    function loadDataForCurrentView() {
+      if (currentMainTab === "input") fetchMaster();
+      else fetchHistory();
+    }
 
     async function fetchMaster() {
-      // 🌟 GAS(v2.2)の判定式に100%完全一致させるため、currentTypeをそのままダイレクト送信
-      showLoader(`${currentType} マスタ読込中...`, "項目を生成中");
+      const reqType = currentType;
+      if (mastersCache[reqType]) { filterAndRender(mastersCache[reqType]); return; }
+
+      showLoader(`${currentType} マスタ読込中...`, "点検項目を生成しています");
+      currentData = {}; errorDetails = {};
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: currentType }) });
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: reqType }), redirect: "follow" });
         const json = await res.json();
         if (json.status === "success") {
-          checklistItems = json.items.map((it, idx) => ({ ...it, originalIndex: idx }));
-          if(json.nsList) {
-            document.getElementById("c-staff").innerHTML = json.nsList.map(n => `<option value="${n}">${n}</option>`).join("");
+          const itemsWithIndex = json.items.map((it, idx) => { return { ...it, originalIndex: idx }; });
+          mastersCache[reqType] = itemsWithIndex; saveCache();
+          
+          const sel = document.getElementById("c-staff");
+          if(json.nsList && json.nsList.length > 0) {
             localStorage.setItem("aw109_cl_nslist", JSON.stringify(json.nsList));
+            if(sel.options.length <= 1) { json.nsList.forEach(n => sel.innerHTML += `<option value="${n}">${n}</option>`); const lastNs = localStorage.getItem("aw109_last_ns"); if(lastNs) sel.value = lastNs; }
           }
-          renderChecklist();
-        } else { alert("エラー: " + json.message); }
-      } catch(e) { alert("通信エラー"); } finally { hideLoader(); }
+          filterAndRender(itemsWithIndex);
+        } else { alert(`マスタ読込エラー: ${json.message}`); sendErrorLog(json.message); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
+
+    function filterAndRender(allItems) {
+      if (currentType === '始業点検') checklistItems = allItems.filter(it => it.category.includes('始業'));
+      else if (currentType === '終業点検') checklistItems = allItems.filter(it => it.category.includes('終業'));
+      else checklistItems = allItems;
+      
+      currentData = {}; errorDetails = {};
+      renderChecklist();
     }
 
     function renderChecklist() {
-      const container = document.getElementById("checklist-container"); container.innerHTML = "";
-      let html = `<div class="card">`;
-      checklistItems.forEach(it => {
-        html += `<div class="chk-row" id="row-${it.originalIndex}">
-          <div class="chk-title">${it.name}</div>
-          <div class="toggle-group" style="margin-top:6px;">
-            <button type="button" class="tgl-btn ok" id="btn-ok-${it.originalIndex}" onclick="setVal(${it.originalIndex}, '◯')">◯ 異常なし</button>
-            <button type="button" class="tgl-btn ng" id="btn-ng-${it.originalIndex}" onclick="setVal(${it.originalIndex}, '✕')">✕ 異常あり</button>
-          </div>
-        </div>`;
-      });
-      html += `</div>`; container.innerHTML = html;
+      const container = document.getElementById("checklist-container"); container.innerHTML = ""; document.getElementById("c-remarks").value = "";
+      if(checklistItems.length === 0) { container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--sub);">表示する点検項目がありません。</div>`; return; }
+
+      const grouped = {};
+      checklistItems.forEach((item) => { const groupKey = item.subCategory ? `${item.category}__|__${item.subCategory}` : `${item.category}__|__`; if(!grouped[groupKey]) grouped[groupKey] = []; grouped[groupKey].push(item); });
+
+      for (const [key, items] of Object.entries(grouped)) {
+        const [cat, subCat] = key.split('__|__'); const subCatBadge = subCat ? `<span class="sub-cat-badge">${subCat}</span>` : '';
+        let html = `<div class="card"><div class="card-header">🏷️ ${cat} ${subCatBadge}</div>`;
+        
+        items.forEach(it => {
+          const idx = it.originalIndex; const displayConstant = it.constant ? `<span class="constant-val">定数: ${it.constant}</span>` : '';
+          html += `<div class="chk-row" id="row-${idx}">
+            <div class="chk-title-wrapper"><div class="chk-title">${it.name} ${displayConstant} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div></div>`;
+            
+          const isTextField = String(it.inputType || "").trim().includes("自由") || String(it.inputType || "").trim().includes("数値");
+          if (isTextField) { html += `<input type="text" class="text-input" placeholder="テキストや数値を入力..." onchange="setVal(${idx}, this.value)" style="margin-top:8px;">`; } 
+          else {
+            html += `
+              <div class="toggle-group" style="margin-top:8px;">
+                <div class="tgl-btn ok" id="btn-ok-${idx}" onclick="setVal(${idx}, '◯')">◯ 異常なし</div><div class="tgl-btn ng" id="btn-ng-${idx}" onclick="setVal(${idx}, '✕')">✕ 異常あり</div>
+              </div>
+              <div class="error-reason" id="err-box-${idx}"><input type="text" class="text-input" placeholder="異常の詳細、または対象外の理由を入力..." id="err-txt-${idx}" onchange="errorDetails[${idx}]=this.value" style="border-color:var(--brand); background:var(--brand-light);"></div>`;
+          }
+          html += `</div>`;
+        });
+        html += `</div>`; container.innerHTML += html;
+      }
     }
 
     function setVal(idx, val) {
-      currentData[idx] = val;
-      document.getElementById(`btn-ok-${idx}`).classList.toggle('active', val === '◯');
-      document.getElementById(`btn-ng-${idx}`).classList.toggle('active', val === '✕');
+      currentData[idx] = val; const targetItem = checklistItems.find(it => it.originalIndex === idx); if(!targetItem) return;
+      const isTextField = String(targetItem.inputType || "").trim().includes("自由") || String(targetItem.inputType || "").trim().includes("数値");
+
+      if (!isTextField) {
+        document.getElementById(`btn-ok-${idx}`).classList.toggle('active', val === '◯');
+        document.getElementById(`btn-ng-${idx}`).classList.toggle('active', val === '✕');
+        const errBox = document.getElementById(`err-box-${idx}`);
+        if (val === '✕') { errBox.style.display = 'block'; } 
+        else { errBox.style.display = 'none'; document.getElementById(`err-txt-${idx}`).value = ""; delete errorDetails[idx]; }
+        document.getElementById(`row-${idx}`).classList.remove('error-highlight');
+      }
     }
 
+    function setAllOk() { checklistItems.forEach(item => { const isTextField = String(item.inputType || "").trim().includes("自由") || String(item.inputType || "").trim().includes("数値"); if(!isTextField) setVal(item.originalIndex, '◯'); }); }
+
     async function submitChecklist() {
-      const staff = document.getElementById("c-staff").value; if(!staff) return alert("点検者を選択してください");
-      const payload = { date: document.getElementById("c-date").value, time: document.getElementById("c-time").value, staff: staff, judgment: "異常なし", errorItems: "なし", rawJson: currentData };
-      showLoader("保存中...", "データを書き込み中");
+      const staff = document.getElementById("c-staff").value;
+      if(!staff) { alert("画面上部の「共通 点検者 (Ns)」を選択してください。"); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+
+      let missing = []; let firstMissingId = null;
+      document.querySelectorAll('.chk-row').forEach(el => el.classList.remove('error-highlight'));
+
+      checklistItems.forEach(item => { 
+        const val = currentData[item.originalIndex];
+        if(item.required && (!val || val === "")) {
+          missing.push(`[${item.category}] ${item.name}`); document.getElementById(`row-${item.originalIndex}`).classList.add('error-highlight'); if(!firstMissingId) firstMissingId = `row-${item.originalIndex}`; 
+        }
+      });
+
+      if(missing.length > 0) {
+        if(firstMissingId) { const element = document.getElementById(firstMissingId); const y = element.getBoundingClientRect().top + window.pageYOffset - 120; window.scrollTo({top: y, behavior: 'smooth'}); }
+        setTimeout(() => { alert(`以下の必須項目が未入力です：\n\n${missing.join("\n")}`); }, 100); return; 
+      }
+
+      let judgment = "異常なし"; let errorList = [];
+      checklistItems.forEach(item => { let val = currentData[item.originalIndex]; if (val === "✕") { judgment = "異常あり"; errorList.push(`${item.category} - ${item.name} (${errorDetails[item.originalIndex] || '詳細未記入'})`); } });
+
+      let rawJson = {};
+      checklistItems.forEach(item => { let val = currentData[item.originalIndex] || ""; rawJson[`${item.category}_${item.name}`] = val; if(errorDetails[item.originalIndex]) rawJson[`${item.category}_${item.name}_詳細`] = errorDetails[item.originalIndex]; });
+      rawJson["全体特記事項"] = document.getElementById("c-remarks").value;
+
+      const payload = { date: document.getElementById("c-date").value, time: document.getElementById("c-time").value, staff: staff, judgment: judgment, errorItems: errorList.length > 0 ? errorList.join(" / ") : "なし", rawJson: rawJson };
+
+      if(!confirm(`総合判定: ${judgment}\n【${currentType}】のデータを保存しますか？`)) return;
+
+      const btn = document.getElementById("btn-save"); btn.innerText = "保存中..."; btn.disabled = true;
+      showLoader("データ保存中...", "データベースに書き込んでいます");
+
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: currentType, data: payload }) });
+        const reqType = currentType;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload }), redirect: "follow" });
         const json = await res.json();
-        if(json.status === "success") { alert("保存しました"); fetchChecklistStatus(); }
-      } catch(e) { alert("送信エラー"); } finally { hideLoader(); }
+        if (json.status === "success") { alert("点検を完了しました！"); fetchChecklistStatus(); fetchHistory(true); switchMainTab('history'); } else { throw new Error(json.message); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader(); }
     }
-    function switchMainTab(t) {}
-    function sendErrorLog(m) {}
+
+    function changeHistoryType() { const selectedType = document.getElementById("hist-target-type").value; currentType = selectedType; document.getElementById("print-title").innerText = `【${selectedType}】 点検履歴`; fetchHistory(true); }
+
+    function applyPresetFilter() {
+      const preset = document.getElementById("hist-preset").value; if (preset === "custom") return; 
+      const startInput = document.getElementById("hist-start"); const endInput = document.getElementById("hist-end"); const todayStr = getTodayString();
+      if (preset === "today") { startInput.value = todayStr; endInput.value = todayStr; } 
+      else if (preset === "week") { let d = new Date(todayStr); d.setDate(d.getDate() - 7); startInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; endInput.value = todayStr; } 
+      else if (preset === "month") { let d = new Date(todayStr); d.setDate(d.getDate() - 30); startInput.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; endInput.value = todayStr; } 
+      else { startInput.value = ""; endInput.value = ""; }
+      applyHistoryFilter();
+    }
+
+    async function fetchHistory(force = false) {
+      showLoader(`${currentType} 履歴読込中...`, "データベースから最新の記録を取得しています");
+      const container = document.getElementById("history-container"); container.innerHTML = ""; allHistoryData = []; 
+      try {
+        const reqType = currentType;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: reqType }), redirect: "follow" });
+        const json = await res.json();
+        
+        if (json.status === "success") {
+          let filteredHistory = json.history;
+          if (currentType === '始業点検') filteredHistory = json.history.filter(h => JSON.stringify(h.rawJson).includes('始業'));
+          else if (currentType === '終業点検') filteredHistory = json.history.filter(h => JSON.stringify(h.rawJson).includes('終業'));
+          allHistoryData = filteredHistory;
+          if(document.getElementById("hist-preset").value === "all") { applyHistoryFilter(); } else { document.getElementById("hist-preset").value = "today"; applyPresetFilter(); }
+        } else { alert(`履歴の取得に失敗しました: ${json.message}`); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
+
+    function applyHistoryFilter() {
+      const container = document.getElementById("history-container"); container.innerHTML = "";
+      const sVal = document.getElementById("hist-start").value; const eVal = document.getElementById("hist-end").value;
+      const sDate = sVal ? new Date(sVal + "T00:00:00") : null; const eDate = eVal ? new Date(eVal + "T23:59:59") : null;
+      
+      let filtered = allHistoryData.filter(h => {
+        let hDate = new Date(h.date.replace(/\//g, '-')); if (isNaN(hDate.getTime())) return true; 
+        if (sDate && hDate < sDate) return false; if (eDate && hDate > eDate) return false; return true;
+      });
+
+      if(filtered.length === 0) { container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--sub); font-weight:bold;">指定した期間の履歴はありません。</div>`; return; }
+      
+      filtered.forEach(h => {
+        const isOk = h.judgment === "異常なし"; const badgeClass = isOk ? "h-ok" : "h-ng"; const badgeText = isOk ? "✅ 異常なし" : "⚠️ 異常あり";
+        const remarks = h.rawJson["全体特記事項"] ? `<div class="h-remarks">💬 連絡事項：<br>${h.rawJson["全体特記事項"]}</div>` : "";
+        let detailsHtml = '<div style="margin-top:8px; font-size:12px; color:var(--ink); background:#f9f9f9; padding:8px; border-radius:6px; border:1px solid #e5e5ea; display:grid; gap:4px;">';
+        for(let key in h.rawJson) {
+          if(key !== "全体特記事項" && !key.endsWith("_詳細")) {
+            if (currentType === '始業点検' && !key.includes('始業')) continue; if (currentType === '終業点検' && !key.includes('終業')) continue;
+            let val = h.rawJson[key]; let detailText = h.rawJson[key + "_詳細"] ? ` <span style="color:#c62828; font-weight:bold;">(${h.rawJson[key + "_詳細"]})</span>` : "";
+            detailsHtml += `<div><span style="color:var(--sub);">・${key.replace('_', '：')}</span> <b>${val}</b>${detailText}</div>`;
+          }
+        }
+        detailsHtml += '</div>';
+        container.innerHTML += `
+          <div class="history-item">
+            <div class="h-head"><span class="h-meta">${h.date} ${h.time} ｜ Ns: ${h.staff}</span><span class="h-badge ${badgeClass}">${badgeText}</span></div>
+            ${!isOk ? `<div class="h-err"><b>異常報告：</b><br>${h.errorItems}</div>` : ''} ${remarks}
+            <details style="margin-top:8px; cursor:pointer;">
+              <summary style="font-size:12px; color:var(--blue); font-weight:bold; outline:none; user-select:none;">▶ 全項目の詳細データを見る</summary>${detailsHtml}
+              <div style="margin-top:12px; text-align:right;"><button type="button" class="btn-small" style="background:#ffebee; color:#c62828; border:1px solid #ef5350;" onclick="deleteRecord('${h.id}')">🗑️ この履歴を削除</button></div>
+            </details>
+          </div>
+        `;
+      });
+    }
+
+    async function deleteRecord(recordId) {
+      if(!confirm("本当にこの点検履歴を削除しますか？\n（この操作は取り消せません）")) return;
+      showLoader("削除中...", "データベースから履歴を削除しています");
+      try {
+        const reqType = currentType;
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_checklist_record", password: PIN_CODE, id: recordId, type: reqType }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success") { alert("履歴を削除しました。"); fetchChecklistStatus(); fetchHistory(true); } else { alert("削除に失敗しました: " + json.message); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
+    }
   </script>
 </body>
 </html>
