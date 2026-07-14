@@ -6,38 +6,235 @@
   <title>教育・事案検索コンソール</title>
   <style>
     :root {
-      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
-      --brand: #d32f2f; --blue: #007aff; --line: #c7c7cc;
+      --bg: #f2f2f7; 
+      --card: #ffffff; 
+      --ink: #1c1c1e; 
+      --sub: #8e8e93;
+      --brand: #d32f2f; 
+      --blue: #007aff; 
+      --line: #c7c7cc;
     }
     
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-    body { background: var(--bg); color: var(--ink); padding-bottom: 40px; -webkit-font-smoothing: antialiased; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, sans-serif; 
+    }
     
-    header { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--line); position: sticky; top: 0; z-index: 100; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
-    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+    body { 
+      background: var(--bg); 
+      color: var(--ink); 
+      padding-bottom: 40px; 
+      -webkit-font-smoothing: antialiased; 
+    }
     
-    main { padding: 16px; max-width: 800px; margin: 0 auto; }
-    .filter-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #d1d1d6; }
-    .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px; font-weight: 600; }
+    header { 
+      background: rgba(255,255,255,0.92); 
+      backdrop-filter: blur(20px); 
+      padding: 12px 20px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 0.5px solid var(--line); 
+      position: sticky; 
+      top: 0; 
+      z-index: 100; 
+    }
     
-    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .cross-item { display: flex; flex-direction: column; gap: 4px; }
-    .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
-    input, select { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; }
+    .hdr-btn { 
+      color: var(--blue); 
+      background: none; 
+      border: none; 
+      font-size: 14px; 
+      font-weight: bold; 
+      cursor: pointer; 
+    }
     
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-    .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--bg); }
-    .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .version-tag { 
+      font-size: 10px; 
+      color: #fff; 
+      font-weight: bold; 
+      background: var(--blue); 
+      padding: 2px 6px; 
+      border-radius: 4px; 
+      margin-left: 6px; 
+    }
     
-    .btn-search { width: 100%; padding: 14px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 15px; cursor: pointer; margin-top: 16px; }
+    main { 
+      padding: 16px; 
+      max-width: 800px; 
+      margin: 0 auto; 
+    }
     
-    .result-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #d1d1d6; border-left: 5px solid var(--blue); }
-    .rc-context { font-size: 13px; line-height: 1.6; background: #f9f9f9; padding: 10px; border-radius: 6px; margin-top: 8px; border: 1px solid #e5e5ea; }
-    .t-chip { font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: bold; background: #e3f2fd; color: #0d47a1; display: inline-block; margin-right: 4px; margin-top: 4px; }
+    .filter-card { 
+      background: var(--card); 
+      border-radius: 12px; 
+      padding: 16px; 
+      margin-bottom: 16px; 
+      border: 1px solid #d1d1d6; 
+    }
+    
+    .search-input { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid var(--line); 
+      border-radius: 8px; 
+      font-size: 14px; 
+      outline: none; 
+      margin-bottom: 16px; 
+      font-weight: 600; 
+    }
+    
+    .cross-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+      gap: 12px; 
+      margin-bottom: 16px; 
+    }
+    
+    .cross-item { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 4px; 
+    }
+    
+    .cross-item label { 
+      font-size: 11px; 
+      font-weight: bold; 
+      color: var(--sub); 
+    }
+    
+    input, select { 
+      width: 100%; 
+      padding: 10px; 
+      border: 1px solid var(--line); 
+      border-radius: 6px; 
+      font-size: 14px; 
+      font-weight: 600; 
+      outline: none; 
+    }
+    
+    .chip-grid { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 6px; 
+      margin-bottom: 12px; 
+    }
+    
+    .chip { 
+      padding: 6px 12px; 
+      border: 1px solid var(--line); 
+      border-radius: 20px; 
+      font-size: 12px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      background: var(--bg); 
+    }
+    .chip.active { 
+      background: var(--blue); 
+      color: #fff; 
+      border-color: var(--blue); 
+    }
+    
+    .btn-search { 
+      width: 100%; 
+      padding: 14px; 
+      background: var(--ink); 
+      color: #fff; 
+      font-weight: bold; 
+      border-radius: 8px; 
+      border: none; 
+      font-size: 15px; 
+      cursor: pointer; 
+      margin-top: 16px; 
+    }
+    
+    .result-card { 
+      background: var(--card); 
+      border-radius: 12px; 
+      padding: 16px; 
+      margin-bottom: 16px; 
+      border: 1px solid #d1d1d6; 
+      border-left: 5px solid var(--blue); 
+    }
+    
+    .rc-header { 
+      font-size: 15px; 
+      font-weight: 800; 
+      margin-bottom: 6px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    
+    .rc-context { 
+      font-size: 13px; 
+      line-height: 1.6; 
+      background: #f9f9f9; 
+      padding: 10px; 
+      border-radius: 6px; 
+      margin-top: 8px; 
+      border: 1px solid #e5e5ea; 
+      color: var(--ink);
+    }
+    
+    .t-chip { 
+      font-size: 10px; 
+      padding: 4px 8px; 
+      border-radius: 4px; 
+      font-weight: bold; 
+      background: #e3f2fd; 
+      color: #0d47a1; 
+      display: inline-block; 
+      margin-right: 4px; 
+      margin-top: 4px; 
+    }
+    
+    .badge { 
+      background: #e3f2fd; 
+      color: #0d47a1; 
+      padding: 4px 8px; 
+      border-radius: 4px; 
+      font-size: 12px; 
+      font-weight: bold; 
+    }
+    
+    .btn-edit-case { 
+      background: #fff3e0; 
+      color: #e65100; 
+      border: 1px solid #ffe0b2; 
+      padding: 10px 16px; 
+      border-radius: 8px; 
+      font-size: 13px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      display: block; 
+      width: 100%; 
+      text-align: center; 
+      text-decoration: none; 
+      margin-top: 12px; 
+    }
 
-    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
+    #global-loader { 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(255,255,255,0.95); 
+      z-index: 9999; 
+      display: none; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    .spinner { 
+      width: 40px; 
+      height: 40px; 
+      border: 4px solid rgba(0,122,255,0.2); 
+      border-top: 4px solid var(--blue); 
+      border-radius: 50%; 
+      animation: spin 1s linear infinite; 
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -54,7 +251,7 @@
 </header>
 
 <main>
-  <div class="sync-status" id="sync-status" style="font-size:10px; text-align:right; font-weight:bold; color:var(--sub); margin-bottom:8px;">データ状態: 確認中...</div>
+  <div class="sync-status" id="sync-status">データ状態: 確認中...</div>
   
   <div class="filter-card">
     <input type="text" id="q-free" class="search-input" placeholder="🔍 フリーワード (概要や振り返り内容から検索)">
@@ -68,10 +265,6 @@
       <div class="cross-item"><label>フライトドクター</label><select id="q-dr"><option value="">全て</option></select></div>
       <div class="cross-item"><label>フライトナース</label><select id="q-ns"><option value="">全て</option></select></div>
     </div>
-
-    <div style="font-size:12px; font-weight:bold; color:var(--blue); margin-top:12px; margin-bottom:6px;">📌 疾患・場面タグ指定</div>
-    <div class="chip-grid" id="ui-tags-disease"></div>
-    <div class="chip-grid" id="ui-tags-scene"></div>
     
     <button type="button" class="btn-search" onclick="executeSearch()">この条件で検索する 🔍</button>
   </div>
@@ -88,8 +281,13 @@
 
   let mergedData = []; 
 
-  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
-  function clearTags() { document.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active')); executeSearch(); }
+  function toHalfWidth(ele) { 
+    let val = ele.value; 
+    val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); 
+    ele.value = val; 
+  }
+
+  window.onerror = function(m, s, l) { return false; };
 
   window.onload = async () => {
     const cachedStr = localStorage.getItem(CACHE_KEY);
@@ -109,18 +307,17 @@
   async function fetchLatestData(isBackground, isManualUpdate) {
     document.getElementById("global-loader").style.display = "flex";
     try {
-      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }), redirect: "follow" });
+      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }) });
       const jsonInit = await resInit.json();
       
-      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" });
+      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }) });
       const jianData = (await resJian.json()).data;
 
-      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
+      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
       const debData = (await resDeb.json()).data;
 
       let newData = [];
       debData.forEach(d => {
-        // 🌟 紐付けキーを「要請番号」で完全結合
         const targetId = d["要請番号"];
         const jian = jianData.find(j => String(j["要請番号"]) === String(targetId));
         if(jian) {
@@ -137,6 +334,7 @@
       
       buildUIFromData(newData, jsonInit.masters);
       document.getElementById("sync-status").innerText = `データ状態: 同期完了 (${cacheObj.timestamp})`;
+      if(isManualUpdate) alert("最新データを取得しました。");
     } catch (e) { 
       document.getElementById("sync-status").innerText = `通信エラー`;
     } finally { document.getElementById("global-loader").style.display = "none"; }
@@ -154,13 +352,26 @@
   function executeSearch() {
     const freeW = document.getElementById("q-free").value.trim().toLowerCase(); 
     const qId = document.getElementById("q-id").value.trim(); 
-    const dMonth = document.getElementById("q-month").value;
+    const dMonth = document.getElementById("q-month").value; // 必ず "YYYY-MM"
     const dr = document.getElementById("q-dr").value; 
     const ns = document.getElementById("q-ns").value;
 
     let results = mergedData.filter(m => {
       if (qId && !String(m.id).includes(qId)) return false;
-      if (dMonth && !String(m.date).includes(dMonth)) return false;
+      
+      // 🌟 1桁月日（例: 2026-6-2 や 2026/7/2）を "YYYY-MM" へ強制変換・補正する厳密ロジック
+      if (dMonth) {
+        let dateParts = String(m.date).replace(/\//g, "-").split("-");
+        if (dateParts.length >= 2) {
+          let year = dateParts[0];
+          let month = dateParts[1].padStart(2, '0'); // "7" -> "07" へゼロ埋め
+          let formattedMonth = `${year}-${month}`;   // "2026-07"
+          if (formattedMonth !== dMonth) return false;
+        } else {
+          return false;
+        }
+      }
+      
       if (dr && m.dr !== dr) return false; 
       if (ns && m.ns !== ns) return false;
       if (freeW && !m.summary.toLowerCase().includes(freeW)) return false;
