@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="ja"><head>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>教育・事案検索コンソール</title>
@@ -67,16 +69,26 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     .sync-status { font-size: 10px; color: var(--sub); text-align: right; margin-bottom: 8px; font-weight: bold; }
-  </style></head><body><div id="global-loader">
+  </style>
+</head>
+<body>
+
+<div id="global-loader">
   <div class="spinner"></div>
   <div style="font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px;" id="loader-main-text">データ準備中...</div>
-  <div style="font-size: 13px; font-weight: 600; color: var(--sub);" id="loader-sub-text"></div></div><header>
+  <div style="font-size: 13px; font-weight: 600; color: var(--sub);" id="loader-sub-text"></div>
+</div>
+
+<header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.2</span></div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.4</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
     <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
-  </div></header><main>
+  </div>
+</header>
+
+<main>
   <div class="sync-status" id="sync-status">データ状態: 確認中...</div>
   
   <div class="filter-card">
@@ -87,7 +99,7 @@
       <div class="cross-item"><label>月で探す (◯年◯月)</label><input type="month" id="q-month" onchange="clearDateRange()"></div>
     </div>
 
-    <div class="section-lbl">🚁 搭乗・参加スタッフ</div>
+    <div class="section-lbl">👑 搭乗・参加スタッフ</div>
     <div class="cross-grid">
       <div class="cross-item"><label>フライトドクター</label><select id="q-dr"><option value="">全て</option></select></div>
       <div class="cross-item"><label>フライトナース</label><select id="q-ns"><option value="">全て</option></select></div>
@@ -114,7 +126,10 @@
   </div>
 
   <div id="result-count" style="font-weight:bold; font-size:14px; margin-bottom:12px; color:var(--sub);"></div>
-  <div id="results-area"></div></main><div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+  <div id="results-area"></div>
+</main>
+
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
     <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
@@ -122,12 +137,16 @@
     <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px; background:var(--bg);"></textarea>
     <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
     <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
-  </div></div><script>
+  </div>
+</div>
+
+<script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   const CACHE_KEY = "aw109_debrief_cache_v12";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
+  // 🌟 標準仕様: Load failed 厳格除外のグローバル例外ハンドリング
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -139,6 +158,18 @@
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
+  function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.4)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {} 
+  }
+
   let mergedData = []; 
   let tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
 
@@ -147,34 +178,47 @@
   const DISEASE_MAIN = ["1外傷", "2心大血管", "3脳血管", "4心肺停止(CPA)", "5その他"];
   const SCENE_LIST = ["① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"];
 
+  // 🌟 標準仕様: インテリジェントローダー
   let loaderTimer1, loaderTimer2;
-  function showLoader(msg1, msg2) {
-    document.getElementById("loader-main-text").innerText = msg1; document.getElementById("loader-sub-text").innerHTML = msg2;
-    document.getElementById("global-loader").style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+  function showLoader(msg1 = "通信中...", msg2 = "データベースに接続しています") {
+    const loader = document.getElementById("global-loader");
+    if (loader) {
+      document.getElementById("loader-main-text").innerText = msg1;
+      document.getElementById("loader-sub-text").innerHTML = msg2;
+      loader.style.display = "flex";
+      
+      loaderTimer1 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; 
+      }, 5000);
+      
+      loaderTimer2 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; 
+      }, 15000);
+    }
   }
+  
   function hideLoader() { 
-    clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
-    document.getElementById("global-loader").style.display = "none"; 
+    clearTimeout(loaderTimer1); 
+    clearTimeout(loaderTimer2); 
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "none"; 
   }
   
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
   function clearTags() { document.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active')); executeSearch(); }
-  function clearDateRange() { document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = ""; }
-  function clearMonth() { document.getElementById("q-month").value = ""; }
   
-  function sendErrorLog(errMsg) { 
-    if(String(errMsg).includes("Load failed")) return;
-    try { 
-      fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.2)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
-        redirect: "follow" 
-      }); 
-    } catch(e) {} 
+  // 🌟 Nullセーフ安全保護を適用した制御構造
+  function clearDateRange() { 
+    const startEl = document.getElementById("q-date-start");
+    const endEl = document.getElementById("q-date-end");
+    if (startEl) startEl.value = ""; 
+    if (endEl) endEl.value = ""; 
+  }
+  function clearMonth() { 
+    const monthEl = document.getElementById("q-month");
+    if (monthEl) monthEl.value = ""; 
   }
 
   window.onload = async () => {
@@ -287,14 +331,17 @@
     const activeChips = Array.from(document.querySelectorAll('.chip.active')).map(c => c.innerText);
 
     let results = mergedData.filter(m => {
+      
+      // 🌟 標準仕様: 日付フォーマットのパディング正規化
       let mDate = "";
       if (m.date) {
-        let rawDate = String(m.date).split(" ")[0];
-        let dateParts = rawDate.split(/[\/\-]/);
+        let rawDateStr = String(m.date).split(" ")[0]; 
+        let dateParts = rawDateStr.split(/[\/\-]/);
+        
         if (dateParts.length === 3) {
           mDate = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
         } else {
-          mDate = String(m.date).replace(/\//g, "-");
+          mDate = rawDateStr.replace(/\//g, "-");
         }
       }
 
@@ -354,4 +401,7 @@
       btn.textContent = "送信する ✉️"; 
       btn.disabled = false; 
     }
-  }</script></body></html>
+  }
+</script>
+</body>
+</html>
