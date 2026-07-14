@@ -3,20 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>AW109 資料・プロトコル集</title>
   <style>
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #007aff; --line: rgba(60,60,67,0.12); }
+    :root {
+      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
+      --brand: #007aff; --brand-light: #e3f2fd; --line: rgba(60,60,67,0.12);
+      --brand-danger: #d32f2f; --brand-danger-light: #fef2f2;
+      --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); padding-bottom: 40px; -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--ink); padding-bottom: calc(40px + var(--safe-bot)); -webkit-font-smoothing: antialiased; }
     
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+    .hdr-group { display: flex; gap: 12px; align-items: center; }
     .hdr-btn { color: var(--brand); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .hdr-btn.admin-active { color: var(--brand-danger); }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--brand); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
-    main { margin-top: calc(72px + env(safe-area-inset-top)); padding: 16px; max-width: 1000px; margin-left: auto; margin-right: auto; }
+    main { margin-top: calc(72px + var(--safe-top)); padding: 16px; max-width: 1000px; margin-left: auto; margin-right: auto; }
     
     .search-box { position: relative; margin-bottom: 16px; }
-    .search-box input { width: 100%; padding: 14px 16px 14px 40px; font-size: 15px; font-weight: 600; border: 1px solid var(--line); border-radius: 12px; background: #fff; outline: none; }
+    .search-box input { width: 100%; padding: 14px 16px 14px 40px; font-size: 15px; font-weight: 600; border: 1px solid var(--line); border-radius: 12px; background: #fff; outline: none; color: var(--ink); }
     .search-box::before { content: "🔍"; position: absolute; left: 14px; top: 14px; font-size: 16px; color: var(--sub); }
     
     .filter-card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid var(--line); }
@@ -27,14 +37,16 @@
     .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; background: var(--bg); color: var(--ink); cursor: pointer; border: 1px solid transparent; transition: 0.15s; user-select: none; }
     .chip.active { background: var(--brand); color: #fff; box-shadow: 0 4px 10px rgba(0,122,255,0.25); }
-    .chip-tag { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; background: #fff; border: 1px solid var(--line); color: var(--ink); }
-    .chip-tag.active { background: #e3f2fd; color: #0369a1; border-color: #bae6fd; }
+    .chip-tag { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; background: #fff; border: 1px solid var(--line); color: var(--ink); cursor: pointer; user-select: none; }
+    .chip-tag.active { background: #e3f2fd; color: #0369a1; border-color: #bae6fd; box-shadow: 0 2px 6px rgba(3,105,161,0.1); }
 
     .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
     .doc-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line); position: relative; transition: transform 0.2s; }
+    .doc-card.needs-review { border-color: #f87171; background-color: var(--brand-danger-light); }
     
     .card-top { margin-bottom: 12px; flex: 1; display: flex; flex-direction: column; }
     .cat-badge { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 800; background: #e3f2fd; color: var(--brand); padding: 4px 8px; border-radius: 6px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cat-badge.badge-review { background: #fee2e2; color: #b91c1c; }
     .doc-title { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.4; margin-bottom: 6px; padding-right: 110px; word-break: break-all; }
     .doc-meta { font-size: 11px; color: var(--sub); font-weight: bold; margin-bottom: 8px; }
     .doc-desc { font-size: 13px; color: #48484a; line-height: 1.5; margin-bottom: 12px; white-space: pre-wrap; word-break: break-all; flex: 1; }
@@ -43,9 +55,23 @@
     .doc-tag { font-size: 11px; color: var(--sub); background: #f2f2f7; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
     
     .btn-row { display: flex; gap: 8px; }
-    .btn-view { flex: 1; background: var(--brand); color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; }
-    .btn-info { background: #ffebee; color: #c62828; border: none; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
-    
+    .btn-view { flex: 1; background: var(--brand); color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
+    .btn-view:active { transform: scale(0.98); }
+    .btn-view.btn-review-style { background: #dc2626; }
+    .btn-view.btn-review-style:shadow { box-shadow: 0 2px 6px rgba(220,38,38,0.2); }
+    .btn-qa { background: #fff3e0; color: #d84315; border: 1px solid #ffe0b2; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
+    .btn-edit { background: #e5e5ea; color: #1c1c1e; border: 1px solid #d1d1d6; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
+
+    /* モーダル構造 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; color: var(--ink); }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { block; font-size: 12px; font-weight: bold; color: var(--sub); margin-bottom: 4px; display: block; }
+    .form-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; background: #fff; color: var(--ink); font-weight: 600; outline: none; }
+    .form-input:focus { border-color: var(--brand); background: #f0f8ff; }
+
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--brand); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -55,53 +81,140 @@
 </head>
 <body>
 
-<div id="global-loader" style="display:none;">
-  <div class="spinner"></div>
-  <div class="loader-text" id="loader-main-text">通信中...</div>
-  <div class="loader-subtext" id="loader-sub-text">資料データベースに接続しています</div>
-</div>
-
-<header>
-  <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">資料・プロトコル集 <span class="version-tag">v12.0</span></div>
-  <button type="button" class="hdr-btn no-print" onclick="fetchLibraryData(true)">🔄 更新</button>
-</header>
-
-<main>
-  <div class="search-box">
-    <input type="text" id="search-input" placeholder="資料名、概要、キーワードで検索..." oninput="filterDocs()">
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div class="loader-text" id="loader-main-text">通信中...</div>
+    <div class="loader-subtext" id="loader-sub-text">資料データベースに接続しています</div>
   </div>
 
-  <div class="filter-card">
-    <div class="filter-section">
-      <div class="filter-title">📁 1. 大項目（資料の種類）</div>
-      <div class="chip-grid" id="filter-large">
-        <div class="chip active" onclick="setLargeFilter('全件', this)">全件</div>
+  <header>
+    <div class="hdr-group">
+      <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+    </div>
+    <div class="title-box">資料・プロトコル集 <span class="version-tag">v13.0</span></div>
+    <div class="hdr-group">
+      <button type="button" class="hdr-btn" onclick="fetchLibraryData(true)" style="margin-right:8px;">🔄 更新</button>
+      <button type="button" id="btn-admin-toggle" class="hdr-btn" onclick="toggleAdmin()">管理</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="資料名、概要、キーワードで検索..." oninput="filterDocs()">
+    </div>
+
+    <div class="filter-card">
+      <div class="filter-section">
+        <div class="filter-title">📁 1. 大項目（資料の種類）</div>
+        <div class="chip-grid" id="filter-large">
+          <div class="chip active" onclick="setLargeFilter('全件', this)">全件</div>
+        </div>
+      </div>
+      
+      <div class="filter-section" style="border-top: 1px solid var(--line); padding-top: 12px;">
+        <div class="filter-title">🧭 2. 中項目（対象領域）</div>
+        <select id="filter-medium" onchange="filterDocs()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); font-size:13px; font-weight:700; outline:none; background:#ffffff; color:var(--ink); cursor:pointer;">
+          <option value="全て">🔄 全ての中項目</option>
+        </select>
+      </div>
+      
+      <div class="filter-section" style="border-top: 1px solid var(--line); padding-top: 12px;">
+        <div class="filter-title">＃ 3. キーワード（タグ複数選択可）</div>
+        <div class="chip-grid" id="filter-tags"></div>
       </div>
     </div>
-    
-    <div class="filter-section" style="border-top: 1px dashed var(--line); padding-top: 12px;">
-      <div class="filter-title">🧭 2. 中項目（対象領域）</div>
-      <select id="filter-medium" onchange="filterDocs()" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); font-size:13px; font-weight:700; outline:none; background:#f2f2f7;">
-        <option value="全て">🔄 全ての中項目</option>
-      </select>
-    </div>
-    
-    <div class="filter-section" style="border-top: 1px dashed var(--line); padding-top: 12px;">
-      <div class="filter-title">＃ 3. キーワード（タグ複数選択可）</div>
-      <div class="chip-grid" id="filter-tags"></div>
+
+    <div class="grid-container" id="cards-container"></div>
+  </main>
+
+  <!-- ❓ 質問モーダル -->
+  <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
+    <div class="modal-box">
+      <h3 style="margin-top:0; color: #d84315; margin-bottom:12px;">❓ 資料に関する質問・要望</h3>
+      <input type="hidden" id="qa-target-title">
+      <div class="form-group">
+        <label>質問・要望内容</label>
+        <textarea id="qa-text" rows="5" class="form-input" style="font-weight:500; line-height:1.5;"></textarea>
+      </div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button type="button" class="modal-close" style="margin-top:0; flex:1;" onclick="closeModal('modal-qa')">キャンセル</button>
+        <button type="button" class="btn-view" style="background:#d84315;" onclick="submitQA()">質問を送信する</button>
+      </div>
     </div>
   </div>
 
-  <div class="grid-container" id="cards-container"></div>
-</main>
+  <!-- ✏️ 管理者用事後編集モーダル -->
+  <div class="modal-overlay" id="modal-edit" onclick="if(event.target===this)closeModal('modal-edit')">
+    <div class="modal-box">
+      <h3 style="margin-top:0; margin-bottom:12px; color:var(--ink);">✏️ 資料データの事後編集</h3>
+      <input type="hidden" id="edit-row-idx">
+      
+      <div class="form-group">
+        <label>資料タイトル</label>
+        <input type="text" id="edit-title" class="form-input">
+      </div>
+      <div class="form-group">
+        <label>大分類（資料の種類）</label>
+        <select id="edit-category" class="form-input">
+          <option value="01_公式ガイドライン・規約">01_公式ガイドライン・規約</option>
+          <option value="02_ERマニュアル・自作プロトコル">02_ERマニュアル・自作プロトコル</option>
+          <option value="03_院内勉強会・レクチャー資料">03_院内勉強会・レクチャー資料</option>
+          <option value="04_院外研修・外部セミナー資料">04_院外研修・外部セミナー資料</option>
+          <option value="05_プレホスピタル・航空医療・災害">05_プレホスピタル・航空医療・災害</option>
+          <option value="06_添付文書">06_添付文書</option>
+          <option value="07_取扱説明書">07_取扱説明書</option>
+          <option value="08_企業資料">08_企業資料</option>
+          <option value="★迷ったらここ（未分類・一時保管）">★迷ったらここ（未分類・一時保管）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>中分類（対象領域）</label>
+        <select id="edit-domain" class="form-input">
+          <option value="蘇生・集中治療（心肺停止、ショック、アナフィラキシーなど）">蘇生・集中治療（心肺停止、ショック、アナフィラキシーなど）</option>
+          <option value="中毒・環境障害（急性中毒、熱中症、偶発性低体温など）">中毒・環境障害（急性中毒、熱上症、偶発性低体温など）</option>
+          <option value="感染症・敗血症（敗血症性ショック、感染対策、COVIDなど）">感染症・敗血症（敗血症性ショック、感染対策、COVIDなど）</option>
+          <option value="外傷・整形外科（JATEC、多発外傷、骨折、熱傷など）">外傷・整形外科（JATEC、多発外傷、骨折、熱傷など）</option>
+          <option value="災害・CBRNE災害（シーバーン災害、DMAT、BCPなど）">災害・CBRNE災害（シーバーン災害、DMAT、BCPなど）</option>
+          <option value="周産期・母体救命">周産期・母体救命</option>
+          <option value="小児救急">小児救急</option>
+          <option value="消化器・一般外科">消化器・一般外科</option>
+          <option value="循環器">循環器</option>
+          <option value="呼吸器">呼吸器</option>
+          <option value="その他・全般">その他・全般</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>タグ (カンマ区切り)</label>
+        <input type="text" id="edit-tags" class="form-input">
+      </div>
+      <div class="form-group">
+        <label>概要・特記事項</label>
+        <textarea id="edit-desc" rows="3" class="form-input" style="font-weight:500;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>公開ステータス</label>
+        <select id="edit-status" class="form-input" style="color:var(--brand); font-weight:bold;">
+          <option value="共有中">共有中 (公開)</option>
+          <option value="要確認">要確認 (非公開)</option>
+          <option value="非公開">非公開</option>
+        </select>
+      </div>
+      
+      <div class="btn-row" style="margin-top:20px;">
+        <button type="button" class="modal-close" style="margin-top:0; flex:1;" onclick="closeModal('modal-edit')">キャンセル</button>
+        <button type="button" class="btn-view" onclick="saveEditData()">保存する</button>
+      </div>
+    </div>
+  </div>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_library_cache_v12";
+  const ADMIN_CODE = "9999";
+  const CACHE_KEY = "aw109_library_cache_v13";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
+  // 🌟 標準仕様: 例外フィルター
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -113,16 +226,29 @@
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
-  let allDocs = []; let activeLarge = "全件"; let activeTags = [];
+  let allDocs = []; let activeLarge = "全件"; let activeTags = []; let isAdmin = false;
 
+  // 🌟 標準仕様: インテリジェントローダー
   let loaderTimer1, loaderTimer2;
   function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
-    document.getElementById("loader-main-text").innerText = msg1; document.getElementById("loader-sub-text").innerHTML = msg2;
-    document.getElementById("global-loader").style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:#d32f2f;'>通信タイムアウト<br>リロードしてください。</span>"; }, 15000);
+    const loader = document.getElementById("global-loader");
+    if (loader) {
+      document.getElementById("loader-main-text").innerText = msg1;
+      document.getElementById("loader-sub-text").innerHTML = msg2;
+      loader.style.display = "flex";
+      loaderTimer1 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; 
+      }, 5000);
+      loaderTimer2 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand-danger);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; 
+      }, 15000);
+    }
   }
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
+  function hideLoader() { 
+    clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); 
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "none"; 
+  }
   
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
@@ -130,6 +256,13 @@
   }
 
   window.onload = async () => {
+    if (sessionStorage.getItem('aw109_admin') === 'true') {
+      isAdmin = true;
+      const adminBtn = document.getElementById("btn-admin-toggle");
+      if(adminBtn) { adminBtn.innerText = "管理解除"; adminBtn.classList.add("admin-active"); }
+    }
+    
+    // 🌟 復活：React化の過程で消失していた「6時間ローカルキャッシュ復元制御」
     const cachedStr = localStorage.getItem(CACHE_KEY);
     if(cachedStr) {
       try {
@@ -144,28 +277,74 @@
     fetchLibraryData(false);
   };
 
+  function toggleAdmin() {
+    const adminBtn = document.getElementById("btn-admin-toggle");
+    if (isAdmin) {
+      isAdmin = false;
+      sessionStorage.removeItem('aw109_admin');
+      adminBtn.innerText = "管理";
+      adminBtn.classList.remove("admin-active");
+      filterDocs();
+    } else {
+      const pin = prompt("管理者アクセスコードを入力してください:");
+      if (pin === ADMIN_CODE) {
+        isAdmin = true;
+        sessionStorage.setItem('aw109_admin', 'true');
+        adminBtn.innerText = "管理解除";
+        adminBtn.classList.add("admin-active");
+        filterDocs();
+      } else if (pin) {
+        alert("アクセスコードが違います。");
+      }
+    }
+  }
+
+  // 🌟 日付フォーマットのパディング正規化
+  function normalizeDate(rawDate) {
+    if (!rawDate) return "日付不明";
+    let rawDateStr = String(rawDate).split(" ")[0]; 
+    let dateParts = rawDateStr.split(/[\/\-]/);
+    if (dateParts.length === 3) {
+      return `${dateParts[0]}/${dateParts[1].padStart(2, '0')}/${dateParts[2].padStart(2, '0')}`;
+    }
+    return rawDateStr;
+  }
+
   async function fetchLibraryData(isManualUpdate) {
     showLoader("資料庫同期中...", "アーカイブから最新の資料を取得しています");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_library", password: PIN_CODE }), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success" && json.data) {
-        allDocs = json.data.map((item, index) => {
-          return { id: index, title: item.title || "無題の資料", url: item.url || "", large: item.category || "未分類", medium: item.domain || "全般", keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [], desc: item.desc || "説明・概要はありません", date: item.date || "日付不明" };
+        allDocs = json.data.map((item) => {
+          return { 
+            rowIdx: item.rowIdx,
+            title: item.title || "無題の資料", 
+            url: item.url || "", 
+            large: item.category || "未分類", 
+            medium: item.domain || "全般", 
+            keywords: item.tags ? item.tags.split(/[,，、\s]+/).filter(Boolean) : [], 
+            desc: item.desc || "説明・概要はありません", 
+            date: normalizeDate(item.date),
+            status: item.status || "共有中"
+          };
         });
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: allDocs }));
         buildFilters(); filterDocs();
         if(isManualUpdate) alert("最新の資料情報を取得しました。");
       } else { throw new Error(json.message || "データ同期に失敗しました"); }
     } catch (e) {
-      document.getElementById("cards-container").innerHTML = `<p style='color:red; font-weight:bold; text-align:center; padding:20px;'>通信エラーが発生しました。</p>`;
+      document.getElementById("cards-container").innerHTML = `<p style='color:var(--brand-danger); font-weight:bold; text-align:center; padding:20px;'>通信エラーが発生しました。</p>`;
       sendErrorLog(e.toString());
     } finally { hideLoader(); }
   }
 
   function buildFilters() {
     const largeSet = new Set(); const mediumSet = new Set(); const tagSet = new Set();
-    allDocs.forEach(d => { if(d.large) largeSet.add(d.large); if(d.medium) mediumSet.add(d.medium); d.keywords.forEach(k => tagSet.add(k)); });
+    allDocs.forEach(d => {
+      if (!isAdmin && (d.status === "要確認" || d.status === "非公開")) return;
+      if(d.large) largeSet.add(d.large); if(d.medium) mediumSet.add(d.medium); d.keywords.forEach(k => tagSet.add(k)); 
+    });
 
     const largeBox = document.getElementById("filter-large");
     largeBox.innerHTML = `<div class="chip active" onclick="setLargeFilter('全件', this)">全件</div>`;
@@ -176,7 +355,7 @@
     Array.from(mediumSet).sort().forEach(m => { mediumSelect.innerHTML += `<option value="${m}">${m}</option>`; });
 
     const tagBox = document.getElementById("filter-tags"); tagBox.innerHTML = "";
-    Array.from(tagSet).sort().forEach(t => { tagBox.innerHTML += `<div class="chip-tag" onclick="toggleTagFilter('${t}', this)" style="cursor:pointer;">#${t}</div>`; });
+    Array.from(tagSet).sort().forEach(t => { tagBox.innerHTML += `<div class="chip-tag" onclick="toggleTagFilter('${t}', this)">#${t}</div>`; });
   }
 
   function setLargeFilter(val, element) { activeLarge = val; document.querySelectorAll("#filter-large .chip").forEach(c => c.classList.remove("active")); element.classList.add("active"); filterDocs(); }
@@ -185,6 +364,7 @@
   function filterDocs() {
     const searchQ = document.getElementById("search-input").value.toLowerCase().trim(); const activeMedium = document.getElementById("filter-medium").value;
     const filtered = allDocs.filter(d => {
+      if (!isAdmin && (d.status === "要確認" || d.status === "非公開")) return false;
       if (activeLarge !== "全件" && d.large !== activeLarge) return false;
       if (activeMedium !== "全て" && d.medium !== activeMedium) return false;
       if (activeTags.length > 0 && !activeTags.every(t => d.keywords.includes(t))) return false;
@@ -198,22 +378,96 @@
     const container = document.getElementById("cards-container");
     if (docs.length === 0) { container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--sub); font-weight:bold;">該当する資料が見つかりません。</div>`; return; }
     container.innerHTML = docs.map(d => {
+      const isReview = d.status === "要確認";
+      const cardClass = isReview ? "doc-card needs-review" : "doc-card";
+      const badgeClass = isReview ? "cat-badge badge-review" : "cat-badge";
+      const badgeText = isReview ? "⚠️ 要確認(AI疑義)" : d.large;
+      
+      let adminBtnHtml = "";
+      if (isAdmin) {
+        adminBtnHtml = `<button type="button" class="btn-edit" onclick="openEditModal(${d.rowIdx})">✏️</button>`;
+      }
+
       return `
-        <div class="doc-card">
+        <div class="${cardClass}">
           <div class="card-top">
-            <span class="cat-badge" title="${d.large}">${d.large}</span>
+            <span class="${badgeClass}" title="${d.large}">${badgeText}</span>
             <div class="doc-title">${escapeHtml(d.title)}</div>
             <div class="doc-meta"><span>🧭 領域: <b>${escapeHtml(d.medium)}</b></span><span style="margin-left:12px;">🔄 更新: <b>${d.date}</b></span></div>
             <div class="doc-desc">${escapeHtml(d.desc)}</div>
             <div class="tag-box">${d.keywords.map(k => `<span class="doc-tag">#${escapeHtml(k)}</span>`).join("")}</div>
           </div>
           <div class="btn-row">
-            <a href="${d.url}" target="_blank" class="btn-view"><span>↗️ 資料を閲覧する</span></a>
-            <button type="button" class="btn-info" onclick="alert('【資料詳細情報】\\n■ 資料名: ${escapeHtml(d.title)}\\n■ 対象領域: ${escapeHtml(d.medium)}\\n■ 更新日: ${d.date}\\n■ 概要:\\n${escapeHtml(d.desc)}')">❓</button>
+            <button type="button" onclick="handleLinkClick('${d.url}')" class="btn-view ${isReview ? 'btn-review-style' : ''}"><span>↗️ 資料を閲覧する</span></button>
+            <button type="button" class="btn-qa" onclick="openQaModal('${d.title.replace(/'/g, "\\'")}')">❓</button>
+            ${adminBtnHtml}
           </div>
         </div>`;
     }).join("");
   }
+
+  function handleLinkClick(url) {
+    if (!url || url.trim() === "") { alert("URLが登録されていません。"); return; }
+    let pUrl = url.trim();
+    if (!pUrl.startsWith('http://') && !pUrl.startsWith('https://')) pUrl = 'https://' + pUrl;
+    if(pUrl.includes('drive.google.com')) pUrl = pUrl.replace(/\/view.*$/, '/preview').replace(/\/edit.*$/, '/preview');
+    window.open(pUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  function openQaModal(title) {
+    document.getElementById("qa-target-title").value = title;
+    document.getElementById("qa-text").value = `【${title} についての質問】\n`;
+    openModal("modal-qa");
+  }
+
+  async function submitQA() {
+    const title = document.getElementById("qa-target-title").value;
+    const qText = document.getElementById("qa-text").value.trim();
+    if(!qText || qText === `【${title} についての質問】`) return alert("質問内容を入力してください。");
+    
+    showLoader("質問送信中...", "");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集" }), redirect: "follow" });
+      const json = await res.json();
+      if(json.status === "success") { alert("質問を送信しました。管理者に通知されました。"); closeModal("modal-qa"); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
+  }
+
+  function openEditModal(rowIdx) {
+    const doc = allDocs.find(x => x.rowIdx == rowIdx); if(!doc) return;
+    document.getElementById("edit-row-idx").value = doc.rowIdx;
+    document.getElementById("edit-title").value = doc.title;
+    document.getElementById("edit-category").value = doc.large;
+    document.getElementById("edit-domain").value = doc.medium;
+    document.getElementById("edit-tags").value = doc.keywords.join(", ");
+    document.getElementById("edit-desc").value = doc.desc;
+    document.getElementById("edit-status").value = doc.status;
+    openModal("modal-edit");
+  }
+
+  async function saveEditData() {
+    const rowIdx = document.getElementById("edit-row-idx").value;
+    const editData = {
+      title: document.getElementById("edit-title").value.trim(),
+      categoryRaw: document.getElementById("edit-category").value,
+      domain: document.getElementById("edit-domain").value,
+      tags: document.getElementById("edit-tags").value.trim(),
+      desc: document.getElementById("edit-desc").value.trim(),
+      status: document.getElementById("edit-status").value,
+      url: allDocs.find(x => x.rowIdx == rowIdx).url // 元のURLを保持
+    };
+
+    if(!editData.title) return alert("タイトルを入力してください。");
+    showLoader("資料データ更新中...", "システム全体へ反映させています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_library_record", password: ADMIN_CODE, rowIdx: rowIdx, editData: editData }), redirect: "follow" });
+      const json = await res.json();
+      if(json.status === "success") { alert("資料データを保存しました。"); closeModal("modal-edit"); fetchLibraryData(false); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
   function escapeHtml(str) { if (!str) return ""; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 </script>
 </body>
