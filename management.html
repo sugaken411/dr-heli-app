@@ -49,8 +49,10 @@
 
   <header class="no-print">
     <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div class="font-black text-base">統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded ml-1">v12.0</span></div>
-    <button type="button" class="hdr-btn no-print" onclick="fetchData(true)">🔄 更新</button>
+    <div class="font-black text-base flex items-center gap-2">
+      統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded">v1.4</span>
+      <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden"></span>
+    </div>
     <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
   </header>
 
@@ -75,7 +77,7 @@
       </div>
     </div>
 
-    <!-- 🌟 新機能：業務活動時間の内訳 -->
+    <!-- 業務活動時間の内訳 -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-5 break-after">
       <h3 class="text-sm font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2">⏱️ 業務活動時間（分数）の内訳</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -117,7 +119,7 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
 
-    // 🌟 超高感度エラー監視機能 (Load failed握りつぶし対応済)
+    // 🌟 超高感度エラー監視機能 (Failed to fetch 等のネットワーク切断エラーの抑止完全対応)
     window.onerror = function(message, source, lineno, colno, error) {
       const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
       sendErrorLog(errDetail); 
@@ -125,8 +127,8 @@
     };
     window.addEventListener('unhandledrejection', function(event) {
       const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-      if(String(reason).includes("Load failed")) {
-        console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
+      if(String(reason).includes("Load failed") || String(reason).includes("Failed to fetch")) {
+        console.warn("ネットワーク切断を検知したため、エラーログ送信をキャンセルしました。");
         return;
       }
       sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
@@ -162,7 +164,7 @@
     }
     
     function sendErrorLog(errMsg) { 
-      if(String(errMsg).includes("Load failed")) return;
+      if(String(errMsg).includes("Load failed") || String(errMsg).includes("Failed to fetch")) return;
       try { 
         fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -172,86 +174,90 @@
       } catch(e) {} 
     }
 
-    
-  const CACHE_KEY = "aw109_management_cache_v12";
-  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
-
-  window.onload = () => {
-    document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-    
-    const cachedStr = localStorage.getItem(CACHE_KEY);
-    if(cachedStr) {
-      try {
-        const cacheObj = JSON.parse(cachedStr);
-        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
-          allReports = cacheObj.data;
-          renderViews();
-          // We fetch in background to keep data fresh but UI responsive
-          fetchData(false, true); 
-          return;
-        }
-      } catch(e) {}
-    }
-    fetchData(false);
-  };
-
-  function changeMonth(delta) {
-    currentMonth += delta;
-    if (currentMonth > 12) { currentMonth = 1; currentYear++; } 
-    else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
-    document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-    renderViews(); // Data should already be in allReports
-  }
-
-  function switchView(view) {
-    document.getElementById('view-cal').classList.toggle('hidden', view !== 'cal');
-    document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
-    
-    const btnCal = document.getElementById('btn-view-cal'); const btnList = document.getElementById('btn-view-list');
-    if(view === 'cal') {
-      btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
-      btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
-    } else {
-      btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
-      btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
-    }
-  }
-
-  function timeToMins(tStr) {
-    if(!tStr) return 0;
-    let p = String(tStr).split(':');
-    if(p.length < 2) return 0;
-    return parseInt(p[0]) * 60 + parseInt(p[1]);
-  }
-
-  async function fetchData(isManual = false, isBackground = false) {
-    const pickerVal = document.getElementById("month-picker").value;
-    if(!pickerVal) return;
-    
-    if(!isBackground) showLoader();
-    try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), 
-        redirect: "follow" 
-      });
-      const json = await res.json();
+    // 🌟 日付フォーマットのパディング正規化 (YYYY-MM-DD形式)
+    function normalizeDate(rawDate) {
+      if (!rawDate) return "";
+      let rawDateStr = String(rawDate).split(" ")[0]; 
+      let dateParts = rawDateStr.split(/[\/\-]/);
       
-      if (json.status === "success") {
-        allReports = json.data;
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: allReports }));
-        renderViews();
-        if(isManual) alert("最新データを取得しました。");
-      } else { throw new Error(json.message); }
-    } catch (e) {
-      if(isManual) alert("データ同期に失敗しました。");
-      sendErrorLog(e.toString());
-    } finally {
-      if(!isBackground) hideLoader();
+      if (dateParts.length === 3) {
+        return `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
+      }
+      return rawDateStr.replace(/\//g, "-");
     }
-  }
 
-  function renderViews() {
+    // 🌟 同期完了タイムスタンプの更新
+    function updateSyncTimestamp() {
+      const tsSpan = document.getElementById("sync-timestamp");
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      tsSpan.innerText = `同期: ${timeStr}`;
+      tsSpan.classList.remove("hidden");
+    }
+
+    window.onload = () => {
+      document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      fetchData();
+    };
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; } 
+      else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      document.getElementById("month-picker").value = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      fetchData();
+    }
+
+    function switchView(view) {
+      document.getElementById('view-cal').classList.toggle('hidden', view !== 'cal');
+      document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
+      
+      const btnCal = document.getElementById('btn-view-cal'); const btnList = document.getElementById('btn-view-list');
+      if(view === 'cal') {
+        btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
+        btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
+      } else {
+        btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
+        btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
+      }
+    }
+
+    function timeToMins(tStr) {
+      if(!tStr) return 0;
+      let p = String(tStr).split(':');
+      if(p.length < 2) return 0;
+      return parseInt(p[0]) * 60 + parseInt(p[1]);
+    }
+
+    async function fetchData() {
+      const pickerVal = document.getElementById("month-picker").value;
+      if(!pickerVal) return;
+      [currentYear, currentMonth] = pickerVal.split('-').map(Number);
+      document.getElementById("print-month-title").innerText = `${currentYear}年 ${currentMonth}月`;
+      
+      showLoader();
+      try {
+        const res = await fetch(GAS_API_URL, { 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), 
+          redirect: "follow" 
+        });
+        const json = await res.json();
+        
+        if (json.status === "success") {
+          allReports = json.data;
+          updateSyncTimestamp();
+          renderViews();
+        } else { throw new Error(json.message); }
+      } catch (e) {
+        alert("データ同期に失敗しました。接続を確認してください。");
+        sendErrorLog(e.toString());
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function renderViews() {
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       let monthData = {};
       const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
@@ -263,7 +269,9 @@
       }
 
       allReports.forEach(r => {
-        if(r.date.startsWith(targetPrefix)) {
+        // 🌟 日付を完全に正規化してマッチング (ハイフン区切りの前方一致で安全に比較可能に)
+        const normalizedReportDate = normalizeDate(r.date);
+        if(normalizedReportDate.startsWith(targetPrefix)) {
           let mCount = 0; let cCount = 0;
           if(Array.isArray(r.events)) {
             r.events.forEach(ev => { 
@@ -274,8 +282,8 @@
               }
             });
           }
-          if(monthData[r.date]) {
-            monthData[r.date] = { date: parseInt(r.date.split('-')[2]), dr: r.doctor, ns: r.recorder, reason: r.reason, mission: mCount, cancel: cCount, exists: true };
+          if(monthData[normalizedReportDate]) {
+            monthData[normalizedReportDate] = { date: parseInt(normalizedReportDate.split('-')[2]), dr: r.doctor, ns: r.recorder, reason: r.reason, mission: mCount, cancel: cCount, exists: true };
           }
         }
       });
