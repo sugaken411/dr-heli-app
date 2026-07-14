@@ -23,7 +23,6 @@
     
     #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
     
-    /* 🌟 インテリジェントローダー */
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -43,7 +42,6 @@
     </div>
   </div>
 
-  <!-- 🌟 インテリジェントローダー -->
   <div id="global-loader">
     <div class="spinner"></div>
     <div class="loader-text" id="loader-main-text">通信中...</div>
@@ -53,8 +51,9 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
     </div>
-    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v11.2</span></div>
+    <div style="font-weight:900;">システム管理 <span style="font-size:10px; background:var(--blue); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v12.0</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -113,8 +112,9 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_ADMIN = "9999"; 
+  const CACHE_KEY = "aw109_admin_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
-  // 🌟 エラー監視機能の導入
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -122,10 +122,7 @@
   };
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    if(String(reason).includes("Load failed")) {
-      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
-      return;
-    }
+    if(String(reason).includes("Load failed")) return;
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
@@ -134,22 +131,18 @@
 
   let loaderTimer1, loaderTimer2;
   function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
-    const loader = document.getElementById("global-loader");
     document.getElementById("loader-main-text").innerText = msg1;
     document.getElementById("loader-sub-text").innerHTML = msg2;
-    loader.style.display = "flex";
+    document.getElementById("global-loader").style.display = "flex";
     loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>リロードしてください。</span>"; }, 15000);
   }
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
   
   function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
     try { 
-      fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "システム管理(admin.html)", errorMsg: errMsg, userAgent: navigator.userAgent }),
-        redirect: "follow"
-      }); 
+      fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v12.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); 
     } catch(e) {} 
   }
 
@@ -168,15 +161,47 @@
     if(input === PIN_ADMIN) { 
       document.getElementById("login-overlay").style.display = "none"; 
       startTimer(); 
-      fetchInit(); 
+      initAdminApp(); 
     } else { 
       document.getElementById("login-err").style.display = "block"; 
       document.getElementById("login-pin").value = ""; 
     }
   }
+
+  function initAdminApp() {
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    if(cachedStr) {
+      try {
+        const cacheObj = JSON.parse(cachedStr);
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          applyData(cacheObj.data);
+          return;
+        }
+      } catch(e) {}
+    }
+    fetchLatestData(false, false);
+  }
+
+  function applyData(jsonRes) {
+    const qaBox = document.getElementById("qa-list");
+    const unanswered = jsonRes.qa ? jsonRes.qa.filter(q => q.status !== "◯") : [];
+    
+    if (unanswered.length > 0) {
+      qaBox.innerHTML = unanswered.map((item, i) => `
+        <div style="background:var(--bg); padding:16px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue); border:1px solid var(--line);">
+          <div style="font-size:11px; color:var(--sub); margin-bottom:6px; font-weight:bold;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
+          <div style="color:var(--ink); font-size:14px; font-weight:bold; margin-bottom:12px; line-height:1.4;">Q. ${item.q.replace(/\n/g, '<br>')}</div>
+          <textarea id="ans-${i}" rows="3" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px; margin-bottom:8px; font-size:13px; background:#fff;"></textarea>
+          <button type="button" class="btn-primary" onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="width:100%;">回答を送信・公開</button>
+        </div>
+      `).join("");
+    } else {
+      qaBox.innerHTML = '<div style="text-align:center; padding:30px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">未回答の質問・要望はありません。</div>';
+    }
+  }
   
-  async function fetchInit() {
-    showLoader("システム情報取得中...", "未回答のQ&Aリストを確認しています");
+  async function fetchLatestData(isBackground, isManualUpdate) {
+    if(!isBackground) showLoader("システム情報取得中...", "未回答のQ&Aリストを確認しています");
     try {
       const res = await fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -185,38 +210,22 @@
       const jsonRes = await res.json();
       
       if (jsonRes.status === "success") {
-        const qaBox = document.getElementById("qa-list");
-        const unanswered = jsonRes.qa ? jsonRes.qa.filter(q => q.status !== "◯") : [];
-        
-        if (unanswered.length > 0) {
-          qaBox.innerHTML = unanswered.map((item, i) => `
-            <div style="background:var(--bg); padding:16px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--blue); border:1px solid var(--line);">
-              <div style="font-size:11px; color:var(--sub); margin-bottom:6px; font-weight:bold;">🕒 ${item.date} ｜ 📱 ${item.source}</div>
-              <div style="color:var(--ink); font-size:14px; font-weight:bold; margin-bottom:12px; line-height:1.4;">Q. ${item.q.replace(/\n/g, '<br>')}</div>
-              <textarea id="ans-${i}" rows="3" placeholder="回答を入力して公開..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:10px; margin-bottom:8px; font-size:13px; background:#fff;"></textarea>
-              <button type="button" class="btn-primary" onclick="answerQA('${item.q.replace(/'/g,"\\'")}', 'ans-${i}')" style="width:100%;">回答を送信・公開</button>
-            </div>
-          `).join("");
-        } else {
-          qaBox.innerHTML = '<div style="text-align:center; padding:30px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">未回答の質問・要望はありません。</div>';
-        }
-      } else {
-        throw new Error(jsonRes.message);
-      }
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: jsonRes }));
+        applyData(jsonRes);
+        if(isManualUpdate) alert("最新情報を取得しました。");
+      } else { throw new Error(jsonRes.message); }
     } catch(e) { 
       sendErrorLog(e.toString());
-      alert("通信エラーが発生しました。");
+      if(!isBackground) alert("通信エラーが発生しました。");
     } finally {
-      hideLoader();
+      if(!isBackground) hideLoader();
     }
   }
   
   async function answerQA(qText, textareaId) {
     const ans = document.getElementById(textareaId).value.trim(); 
     if(!ans) return alert("回答を入力してください");
-    
     showLoader("回答を送信中...", "Q&Aデータベースを更新しています");
-    
     try {
       const res = await fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -226,14 +235,10 @@
       
       if(jsonRes.status === "success") {
         alert("回答を公開しました。");
-        fetchInit(); 
-      } else {
-        throw new Error(jsonRes.message);
-      }
+        fetchLatestData(true, false); 
+      } else { throw new Error(jsonRes.message); }
     } catch(e) { 
-      sendErrorLog(e.toString());
-      alert("通信エラーが発生しました。"); 
-      hideLoader();
+      sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); hideLoader();
     }
   }
   
@@ -241,31 +246,23 @@
     const type = document.getElementById("add-type").value; 
     const val1 = document.getElementById("add-val1").value.trim(); 
     const val2 = document.getElementById("add-val2").value.trim();
-    
     if (!val1) return alert("登録する名称（値1）を入力してください。");
     if (type === 'mail' && !val2) return alert("メールアドレス（値2）を入力してください。");
     
     showLoader("マスタデータ追加中...", "システム全体へ即時反映させています");
-    
     try {
       const res = await fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
         body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2 }), redirect: "follow" 
       });
       const json = await res.json();
-      
       if (json.status === "success") { 
         alert("マスタデータベースに正常に追加しました。"); 
         document.getElementById("add-val1").value = ""; 
-      } else {
-        throw new Error(json.message);
-      }
+      } else { throw new Error(json.message); }
     } catch(e) { 
-      sendErrorLog(e.toString());
-      alert("通信エラーが発生しました。"); 
-    } finally {
-      hideLoader();
-    }
+      sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); 
+    } finally { hideLoader(); }
   }
   
   document.getElementById("add-type").addEventListener('change', (e) => { 
