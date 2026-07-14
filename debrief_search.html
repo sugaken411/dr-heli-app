@@ -6,248 +6,86 @@
   <title>教育・事案検索コンソール</title>
   <style>
     :root {
-      --bg: #f2f2f7; 
-      --card: #ffffff; 
-      --ink: #1c1c1e; 
-      --sub: #8e8e93;
-      --brand: #d32f2f; 
-      --blue: #007aff; 
-      --line: #c7c7cc;
+      --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
+      --brand: #d32f2f; --blue: #007aff; --line: #c7c7cc;
     }
     
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      font-family: -apple-system, sans-serif; 
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--ink); padding-bottom: 40px; -webkit-font-smoothing: antialiased; }
     
-    body { 
-      background: var(--bg); 
-      color: var(--ink); 
-      padding-bottom: 40px; 
-      -webkit-font-smoothing: antialiased; 
-    }
+    header { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--line); position: sticky; top: 0; z-index: 100; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+    .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
-    header { 
-      background: rgba(255,255,255,0.92); 
-      backdrop-filter: blur(20px); 
-      padding: 12px 20px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      border-bottom: 0.5px solid var(--line); 
-      position: sticky; 
-      top: 0; 
-      z-index: 100; 
-    }
+    main { padding: 16px; max-width: 800px; margin: 0 auto; }
     
-    .hdr-btn { 
-      color: var(--blue); 
-      background: none; 
-      border: none; 
-      font-size: 14px; 
-      font-weight: bold; 
-      cursor: pointer; 
-    }
+    .filter-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; }
+    .search-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: #fff; outline: none; margin-bottom: 16px; color: var(--ink); font-weight: 600; box-sizing: border-box; appearance: none; }
+    .search-input:focus { border-color: var(--blue); background: #f0f8ff; }
     
-    .version-tag { 
-      font-size: 10px; 
-      color: #fff; 
-      font-weight: bold; 
-      background: var(--blue); 
-      padding: 2px 6px; 
-      border-radius: 4px; 
-      margin-left: 6px; 
-    }
+    .section-lbl { font-size: 12px; font-weight: 800; color: var(--blue); margin-bottom: 8px; text-transform: uppercase; margin-top: 16px; border-bottom: 1px solid #efeff4; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;}
     
-    main { 
-      padding: 16px; 
-      max-width: 800px; 
-      margin: 0 auto; 
-    }
+    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .cross-item { display: flex; flex-direction: column; gap: 4px; }
+    .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
+    input[type="date"], input[type="month"], select, input[type="tel"] { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; background: #fff; color: var(--ink); font-weight: 600; outline: none; box-sizing: border-box; appearance: none; }
     
-    .filter-card { 
-      background: var(--card); 
-      border-radius: 12px; 
-      padding: 16px; 
-      margin-bottom: 16px; 
-      border: 1px solid #d1d1d6; 
-    }
+    .tag-category-title { font-size: 11px; font-weight: bold; color: var(--ink); margin-bottom: 6px; margin-top: 12px; }
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
+    .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
-    .search-input { 
-      width: 100%; 
-      padding: 12px; 
-      border: 1px solid var(--line); 
-      border-radius: 8px; 
-      font-size: 14px; 
-      outline: none; 
-      margin-bottom: 16px; 
-      font-weight: 600; 
-    }
-    
-    .cross-grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-      gap: 12px; 
-      margin-bottom: 16px; 
-    }
-    
-    .cross-item { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 4px; 
-    }
-    
-    .cross-item label { 
-      font-size: 11px; 
-      font-weight: bold; 
-      color: var(--sub); 
-    }
-    
-    input, select { 
-      width: 100%; 
-      padding: 10px; 
-      border: 1px solid var(--line); 
-      border-radius: 6px; 
-      font-size: 14px; 
-      font-weight: 600; 
-      outline: none; 
-    }
-    
-    .chip-grid { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 6px; 
-      margin-bottom: 12px; 
-    }
-    
-    .chip { 
-      padding: 6px 12px; 
-      border: 1px solid var(--line); 
-      border-radius: 20px; 
-      font-size: 12px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      background: var(--bg); 
-    }
-    .chip.active { 
-      background: var(--blue); 
-      color: #fff; 
-      border-color: var(--blue); 
-    }
-    
-    .btn-search { 
-      width: 100%; 
-      padding: 14px; 
-      background: var(--ink); 
-      color: #fff; 
-      font-weight: bold; 
-      border-radius: 8px; 
-      border: none; 
-      font-size: 15px; 
-      cursor: pointer; 
-      margin-top: 16px; 
-    }
-    
-    .result-card { 
-      background: var(--card); 
-      border-radius: 12px; 
-      padding: 16px; 
-      margin-bottom: 16px; 
-      border: 1px solid #d1d1d6; 
-      border-left: 5px solid var(--blue); 
-    }
-    
-    .rc-header { 
-      font-size: 15px; 
-      font-weight: 800; 
-      margin-bottom: 6px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-    }
-    
-    .rc-context { 
-      font-size: 13px; 
-      line-height: 1.6; 
-      background: #f9f9f9; 
-      padding: 10px; 
-      border-radius: 6px; 
-      margin-top: 8px; 
-      border: 1px solid #e5e5ea; 
-      color: var(--ink);
-    }
-    
-    .t-chip { 
-      font-size: 10px; 
-      padding: 4px 8px; 
-      border-radius: 4px; 
-      font-weight: bold; 
-      background: #e3f2fd; 
-      color: #0d47a1; 
-      display: inline-block; 
-      margin-right: 4px; 
-      margin-top: 4px; 
-    }
-    
-    .badge { 
-      background: #e3f2fd; 
-      color: #0d47a1; 
-      padding: 4px 8px; 
-      border-radius: 4px; 
-      font-size: 12px; 
-      font-weight: bold; 
-    }
-    
-    .btn-edit-case { 
-      background: #fff3e0; 
-      color: #e65100; 
-      border: 1px solid #ffe0b2; 
-      padding: 10px 16px; 
-      border-radius: 8px; 
-      font-size: 13px; 
-      font-weight: bold; 
-      cursor: pointer; 
-      display: block; 
-      width: 100%; 
-      text-align: center; 
-      text-decoration: none; 
-      margin-top: 12px; 
-    }
+    .btn-search { width: 100%; padding: 14px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 16px; transition: 0.2s; }
+    .btn-search:active { transform: scale(0.98); }
 
-    #global-loader { 
-      position: fixed; 
-      inset: 0; 
-      background: rgba(255,255,255,0.95); 
-      z-index: 9999; 
-      display: none; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-    }
-    .spinner { 
-      width: 40px; 
-      height: 40px; 
-      border: 4px solid rgba(0,122,255,0.2); 
-      border-top: 4px solid var(--blue); 
-      border-radius: 50%; 
-      animation: spin 1s linear infinite; 
-    }
+    .result-card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; border-left: 5px solid var(--blue); position: relative; }
+    .rc-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
+    .rc-id { font-weight: 800; color: var(--ink); font-size: 15px; } 
+    .rc-date { color: var(--sub); font-size: 12px; font-weight: normal; margin-left: 4px; }
+    .badge { background: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+    
+    .rc-meta { font-size: 12px; color: var(--ink); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .rc-meta span b { color: var(--sub); font-weight: normal; }
+    .rc-contact { font-size: 12px; color: var(--sub); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+
+    .rc-context { font-size: 13px; margin-bottom: 12px; line-height: 1.6; background: #f9f9f9; padding: 10px; border-radius: 6px; color: var(--ink); border: 1px solid #e5e5ea; }
+    
+    .rc-feedback { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px; }
+    .fb-box { padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; border: 1px solid var(--line); background: #fafafa; }
+    .fb-title { font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; border-bottom: 1px dashed #ccc; padding-bottom: 4px; color: var(--ink); }
+    
+    .rc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; } 
+    .t-chip { font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: bold; background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
+    
+    .btn-edit-case { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: block; width: 100%; text-align: center; text-decoration: none; margin-top: 12px; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+
+    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .sync-status { font-size: 10px; color: var(--sub); text-align: right; margin-bottom: 8px; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <div id="global-loader">
   <div class="spinner"></div>
-  <div style="font-size: 16px; font-weight: 800; color: var(--ink); margin-top: 12px;">教育用データ同期中...</div>
+  <div style="font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px;" id="loader-main-text">データ準備中...</div>
+  <div style="font-size: 13px; font-weight: 600; color: var(--sub);" id="loader-sub-text"></div>
 </div>
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.2</span></div>
-  <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.1</span></div>
+  <div style="display:flex; gap:12px;">
+    <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
+    <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  </div>
 </header>
 
 <main>
@@ -256,22 +94,51 @@
   <div class="filter-card">
     <input type="text" id="q-free" class="search-input" placeholder="🔍 フリーワード (概要や振り返り内容から検索)">
     
-    <div class="cross-grid">
-      <div class="cross-item"><label>要請番号</label><input type="tel" id="q-id" placeholder="ID検索" oninput="toHalfWidth(this)"></div>
-      <div class="cross-item"><label>月で探す</label><input type="month" id="q-month"></div>
+    <div class="cross-grid" style="margin-bottom: 8px;">
+      <div class="cross-item"><label>要請番号</label><input type="tel" inputmode="numeric" id="q-id" placeholder="ID検索" oninput="toHalfWidth(this)"></div>
+      <div class="cross-item"><label>月で探す (◯年◯月)</label><input type="month" id="q-month" onchange="clearDateRange()"></div>
     </div>
 
+    <div class="section-lbl">🚁 搭乗・参加スタッフ</div>
     <div class="cross-grid">
       <div class="cross-item"><label>フライトドクター</label><select id="q-dr"><option value="">全て</option></select></div>
       <div class="cross-item"><label>フライトナース</label><select id="q-ns"><option value="">全て</option></select></div>
+      <div class="cross-item"><label>外部参加者 (消防・救急等)</label><select id="q-ext"><option value="">全て</option></select></div>
     </div>
+
+    <div class="section-lbl">📌 カテゴリ・タグ指定 (クロス検索)
+      <button type="button" class="hdr-btn" style="font-size:11px;" onclick="clearTags()">クリア</button>
+    </div>
+    
+    <div class="tag-category-title">🏥 疾患分類</div>
+    <div class="chip-grid" id="ui-tags-disease"></div>
+    
+    <div class="tag-category-title">🚁 活動場面</div>
+    <div class="chip-grid" id="ui-tags-scene"></div>
+
+    <div class="tag-category-title">🧠 チーム連携・状況判断</div>
+    <div class="chip-grid" id="ui-tags-nts"></div>
+
+    <div class="tag-category-title">🛠️ 実務・処置</div>
+    <div class="chip-grid" id="ui-tags-practice"></div>
     
     <button type="button" class="btn-search" onclick="executeSearch()">この条件で検索する 🔍</button>
   </div>
 
-  <div id="result-count" style="font-weight:bold; font-size:14px; margin-bottom:12px; color:var(--sub);">検索結果: 0件</div>
+  <div id="result-count" style="font-weight:bold; font-size:14px; margin-bottom:12px; color:var(--sub);"></div>
   <div id="results-area"></div>
 </main>
+
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px; background:var(--bg);"></textarea>
+    <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">送信</button>
+    <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
+  </div>
+</div>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
@@ -279,23 +146,57 @@
   const CACHE_KEY = "aw109_debrief_cache_v12";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
+  window.onerror = function(message, source, lineno, colno, error) {
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail); 
+    return false;
+  };
+  window.addEventListener('unhandledrejection', function(event) {
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) return;
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
+  });
+
   let mergedData = []; 
+  let tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
 
-  function toHalfWidth(ele) { 
-    let val = ele.value; 
-    val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); 
-    ele.value = val; 
+  const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
+  const PRACTICE_LIST = ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り", "バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー", "胸腔開放", "血糖測定"];
+  const DISEASE_MAIN = ["1外傷", "2心大血管", "3脳血管", "4心肺停止(CPA)", "5その他"];
+  const SCENE_LIST = ["① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"];
+
+  function showLoader(msg1, msg2) {
+    document.getElementById("loader-main-text").innerText = msg1; document.getElementById("loader-sub-text").innerHTML = msg2;
+    document.getElementById("global-loader").style.display = "flex";
   }
-
-  window.onerror = function(m, s, l) { return false; };
+  function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
+  function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+  function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
+  function clearTags() { document.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active')); executeSearch(); }
+  function clearDateRange() { document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = ""; }
+  function clearMonth() { document.getElementById("q-month").value = ""; }
+  
+  function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {} 
+  }
 
   window.onload = async () => {
     const cachedStr = localStorage.getItem(CACHE_KEY);
+    const now = Date.now();
+    
     if (cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
-        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
-          document.getElementById("sync-status").innerText = `データ状態: キャッシュ展開完了 (${cacheObj.timestamp})`;
+        if (now - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          document.getElementById("sync-status").innerText = `データ状態: キャッシュから即時展開しました (${cacheObj.timestamp})`;
           buildUIFromData(cacheObj.data, cacheObj.masters);
           return;
         }
@@ -305,89 +206,166 @@
   };
 
   async function fetchLatestData(isBackground, isManualUpdate) {
-    document.getElementById("global-loader").style.display = "flex";
+    if(!isBackground) showLoader("データベース同期中...", "事案データと振り返りデータを結合しています");
     try {
-      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }) });
+      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }), redirect: "follow" });
       const jsonInit = await resInit.json();
       
-      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }) });
+      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" });
       const jianData = (await resJian.json()).data;
 
-      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }) });
+      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
       const debData = (await resDeb.json()).data;
 
       let newData = [];
       debData.forEach(d => {
-        const targetId = d["要請番号"];
-        const jian = jianData.find(j => String(j["要請番号"]) === String(targetId));
+        const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
         if(jian) {
-          let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"]].map(t => t ? String(t).split(",") : []).flat().map(t => t.trim()).filter(Boolean);
+          let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"]]
+                        .map(t => t ? String(t).split(",") : []).flat().map(t => t.trim()).filter(Boolean);
+          
+          let diagStr = jian["現場診断"] || ""; let diagArr = diagStr.split(",").map(x => x.trim()).filter(Boolean);
+          diagArr.forEach(t => tags.push(t));
+          const uniqueTags = [...new Set(tags)];
+          
           newData.push({
-            id: targetId, date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
-            dr: jian["フライトドクター"], ns: jian["フライトナース"], summary: d["概要"] || "", tags: [...new Set(tags)]
+            id: d["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
+            reqTime: jian["要請時刻・施設間搬送依頼時刻"] || jian["初期離陸時間"] || "--:--",
+            contactTime: jian["接触"] || "--:--", dr: jian["フライトドクター"], ns: jian["フライトナース"], 
+            participants: d["参加者一覧"] || "", summary: d["概要"], evalText: d["症例評価"], 
+            good: d["Good (良かった点)"], bad: d["Bad/Next (課題・次へ)"],
+            tags: uniqueTags, loc: d["振り返り場所"], method: d["振り返り方法"]
           });
         }
       });
       
-      const cacheObj = { timestamp: new Date().toLocaleTimeString(), timestampMs: Date.now(), data: newData, masters: jsonInit.masters };
+      const cacheObj = { 
+        timestamp: Utilities_formatDate(new Date()), timestampMs: Date.now(), 
+        data: newData, masters: jsonInit.masters 
+      };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
       
+      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
+      
       buildUIFromData(newData, jsonInit.masters);
-      document.getElementById("sync-status").innerText = `データ状態: 同期完了 (${cacheObj.timestamp})`;
-      if(isManualUpdate) alert("最新データを取得しました。");
+      document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
+      
+      if(isManualUpdate) alert("最新のデータを取得しました。");
+
     } catch (e) { 
-      document.getElementById("sync-status").innerText = `通信エラー`;
-    } finally { document.getElementById("global-loader").style.display = "none"; }
+      sendErrorLog(e.toString());
+      if(!isBackground) alert("データベース同期エラーが発生しました。"); 
+      document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
+    } finally { 
+      if(!isBackground) hideLoader();
+    }
   }
+
+  function Utilities_formatDate(date) { return `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`; }
 
   function buildUIFromData(data, masters) {
     mergedData = data;
     if(masters) {
       document.getElementById("q-dr").innerHTML = `<option value="">全て</option>` + masters.dr.map(n => `<option value="${n}">${n}</option>`).join("");
       document.getElementById("q-ns").innerHTML = `<option value="">全て</option>` + masters.ns.map(n => `<option value="${n}">${n}</option>`).join("");
+      document.getElementById("q-ext").innerHTML = `<option value="">全て</option>` + masters.extStaff.map(n => `<option value="${n}">${n}</option>`).join("");
     }
+
+    tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
+    mergedData.forEach(m => {
+      m.tags.forEach(t => {
+        if(DISEASE_MAIN.some(d => t.includes(d))) tagsMaster.disease.add(t.split(" ")[0].replace('[','').replace(']',''));
+        else if(SCENE_LIST.includes(t)) tagsMaster.scene.add(t);
+        else if(NTS_LIST.includes(t)) tagsMaster.nts.add(t);
+        else tagsMaster.practice.add(t);
+      });
+    });
+
+    const renderChipHtml = (setObj) => Array.from(setObj).sort().map(t => `<div class="chip" onclick="this.classList.toggle('active')">${t}</div>`).join("");
+    document.getElementById("ui-tags-disease").innerHTML = renderChipHtml(tagsMaster.disease) || '<span style="font-size:11px;color:#ccc;">なし</span>';
+    document.getElementById("ui-tags-scene").innerHTML = renderChipHtml(tagsMaster.scene) || '<span style="font-size:11px;color:#ccc;">なし</span>';
+    document.getElementById("ui-tags-nts").innerHTML = renderChipHtml(tagsMaster.nts) || '<span style="font-size:11px;color:#ccc;">なし</span>';
+    document.getElementById("ui-tags-practice").innerHTML = renderChipHtml(tagsMaster.practice) || '<span style="font-size:11px;color:#ccc;">なし</span>';
+
     executeSearch();
   }
 
   function executeSearch() {
-    const freeW = document.getElementById("q-free").value.trim().toLowerCase(); 
-    const qId = document.getElementById("q-id").value.trim(); 
-    const dMonth = document.getElementById("q-month").value; // 必ず "YYYY-MM"
-    const dr = document.getElementById("q-dr").value; 
-    const ns = document.getElementById("q-ns").value;
+    const freeW = document.getElementById("q-free").value.trim().toLowerCase();
+    const qId = document.getElementById("q-id").value.trim();
+    const dMonth = document.getElementById("q-month").value;
+    const dr = document.getElementById("q-dr").value; const ns = document.getElementById("q-ns").value; const ext = document.getElementById("q-ext").value;
+    const activeChips = Array.from(document.querySelectorAll('.chip.active')).map(c => c.innerText);
 
     let results = mergedData.filter(m => {
-      if (qId && !String(m.id).includes(qId)) return false;
-      
-      // 🌟 1桁月日（例: 2026-6-2 や 2026/7/2）を "YYYY-MM" へ強制変換・補正する厳密ロジック
-      if (dMonth) {
-        let dateParts = String(m.date).replace(/\//g, "-").split("-");
-        if (dateParts.length >= 2) {
-          let year = dateParts[0];
-          let month = dateParts[1].padStart(2, '0'); // "7" -> "07" へゼロ埋め
-          let formattedMonth = `${year}-${month}`;   // "2026-07"
-          if (formattedMonth !== dMonth) return false;
+      // 🌟 1桁月日のパディング補正ロジック
+      let mDate = "";
+      if (m.date) {
+        let rawDate = String(m.date).split(" ")[0];
+        let dateParts = rawDate.split(/[\/\-]/);
+        if (dateParts.length === 3) {
+          mDate = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
         } else {
-          return false;
+          mDate = String(m.date).replace(/\//g, "-");
         }
       }
-      
+
+      if (qId && !String(m.id).includes(qId)) return false;
+      if (dMonth && !mDate.startsWith(dMonth)) return false;
       if (dr && m.dr !== dr) return false; 
-      if (ns && m.ns !== ns) return false;
-      if (freeW && !m.summary.toLowerCase().includes(freeW)) return false;
+      if (ns && m.ns !== ns) return false; 
+      if (ext && !m.participants.includes(ext)) return false;
+      
+      if (activeChips.length > 0) { 
+        const matchTag = activeChips.some(chip => m.tags.some(t => t.includes(chip))); 
+        if (!matchTag) return false; 
+      }
+      
+      if (freeW) { const fullText = (m.summary + " " + m.evalText + " " + m.good + " " + m.bad + " " + m.participants).toLowerCase(); if (!fullText.includes(freeW)) return false; }
       return true;
     });
     
+    results.sort((a,b) => new Date(b.date) - new Date(a.date));
     document.getElementById("result-count").innerText = `検索結果: ${results.length}件`;
-    document.getElementById("results-area").innerHTML = results.map(r => `
+    
+    const resArea = document.getElementById("results-area");
+    if(results.length === 0) { resArea.innerHTML = "<div style='text-align:center; padding:40px; color:var(--sub);'>条件に一致する事例がありません</div>"; return; }
+
+    resArea.innerHTML = results.map(r => `
       <div class="result-card">
-        <div class="rc-header"><b>No.${r.id}</b> (${r.date}) <span class="badge">${r.scheme || '未選択'}</span></div>
-        <div style="font-size:12px; color:var(--sub); margin-bottom:6px;">Dr: ${r.dr || '-'} ｜ Ns: ${r.ns || '-'} ｜ 出場先: ${r.dest || '-'}</div>
-        <div class="rc-context">${r.summary.replace(/\n/g, '<br>')}</div>
-        <div style="margin-top:6px;">${r.tags.map(t => `<span class="t-chip">#${t}</span>`).join('')}</div>
-        <a href="debriefing.html?editId=${r.id}" class="btn-edit-case">✏️ デブリーフィングを編集・追記する</a>
+        <div class="rc-header"><div class="rc-id">No.${r.id} <span class="rc-date">(${r.date})</span></div><div class="badge">${r.scheme || '未選択'}</div></div>
+        <div class="rc-meta"><span><b>Dr:</b> ${r.dr || '-'} ｜ <b>Ns:</b> ${r.ns || '-'}</span><span>[要請 ${String(r.reqTime).substring(0,5)}] 出場先: ${r.dest || '-'}</span></div>
+        <div class="rc-contact"><b style="color:var(--ink);">接触［${String(r.contactTime).substring(0,5)}］</b> ｜ <b>👤参加:</b> ${r.participants || '未記入'}</div>
+        <div class="rc-context"><b>📖 概要</b><br>${r.summary ? r.summary.replace(/\\n/g, '<br>') : '概要の記載なし'}</div>
+        <div class="rc-feedback">
+          ${r.good ? `<div class="fb-box"><div class="fb-title">🟢 Good (良かった点)</div>${r.good.replace(/\\n/g, '<br>')}</div>` : ''}
+          ${r.bad ? `<div class="fb-box"><div class="fb-title">⚠️ Bad / Next (課題とアクション)</div>${r.bad.replace(/\\n/g, '<br>')}</div>` : ''}
+          ${(!r.good && !r.bad) ? `<div class="fb-box" style="color:var(--sub); text-align:center;">振り返りの記載がありません</div>` : ''}
+        </div>
+        <div class="rc-tags">${r.tags.map(t => `<div class="t-chip">${t}</div>`).join('')}</div>
+        <a href="debriefing.html?editId=${r.id}" class="btn-edit-case">✏️ このデブリーフィングを修正・追記する</a>
       </div>
     `).join("");
+  }
+  
+  async function submitQA(event) {
+    const q = document.getElementById("qa-input").value.trim(); if(!q) return alert("入力してください。");
+    const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "教育検索" }), redirect: "follow" });
+      const jsonRes = await res.json();
+      if(jsonRes.status === "success") { 
+        alert("送信しました。管理者に通知されました。"); 
+        document.getElementById("qa-input").value = ""; 
+        closeModal('qa'); 
+      } else { throw new Error(jsonRes.message); }
+    } catch(e) { 
+      sendErrorLog(e.toString()); 
+      alert("通信エラーが発生しました。"); 
+    } finally { 
+      btn.textContent = "送信する ✉️"; 
+      btn.disabled = false; 
+    }
   }
 </script>
 </body>
