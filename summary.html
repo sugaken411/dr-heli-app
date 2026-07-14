@@ -42,9 +42,7 @@
     .filter-btn.active { background: #d48806; color: #fff; border-color: #d48806; }
     .date-input, .staff-select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; }
     
-    /* 検索窓スタイル */
     .search-input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; min-width: 200px; }
-    
     .csv-btn { padding: 10px 16px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; margin-left: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
     .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
@@ -92,8 +90,9 @@
   <header class="no-print">
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button type="button" class="hdr-btn no-print" onclick="fetchData(true)">🔄 更新</button>
     </div>
-    <div class="title-box">JSAMS レジストリ・ダッシュボード</div>
+    <div class="title-box">JSAMS レジストリ・ダッシュボード <span class="version-tag">v12.0</span></div>
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
     </div>
@@ -208,380 +207,201 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
+  const CACHE_KEY = "aw109_summary_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
-  // 🌟 超高感度エラー監視機能の導入
+  // 🌟 エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
     return false;
   };
-  
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    if(String(reason).includes("Load failed")) {
-      console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
-      return;
-    }
+    if(String(reason).includes("Load failed")) return;
     sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
-  let allData = [];
-  let filteredData = [];
-  let chartInstances = {}; 
-  
-  // 統計データ保存用グローバル変数（CSV出力用）
-  let statsForCSV = {};
+  let allData = []; let filteredData = []; let chartInstances = {}; let statsForCSV = {};
 
   let loaderTimer1, loaderTimer2;
   function showLoader() {
     document.getElementById("global-loader").style.display = "flex";
-    document.getElementById("loader-main-text").innerText = "データ集計中...";
-    document.getElementById("loader-sub-text").innerText = "データベースに接続しています";
-    
-    loaderTimer1 = setTimeout(() => {
-      document.getElementById("loader-sub-text").innerText = "データ量が多いか、電波が弱い可能性があります。もう少しお待ちください...";
-    }, 5000);
-    
-    loaderTimer2 = setTimeout(() => {
-      document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信に異常に時間がかかっています。<br>フリーズしている場合はリロードしてください。</span>";
-    }, 15000);
+    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "データ量が多いため少し時間がかかっています..."; }, 5000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
-  
-  function hideLoader() {
-    clearTimeout(loaderTimer1); 
-    clearTimeout(loaderTimer2);
-    document.getElementById("global-loader").style.display = "none";
-  }
+  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
 
   function sendErrorLog(errMsg) {
-    try {
-      fetch(GAS_API_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "error_log", source: "ダッシュボード", errorMsg: errMsg, userAgent: navigator.userAgent }),
-        redirect: "follow"
-      });
-    } catch(e) {}
+    if(String(errMsg).includes("Load failed")) return;
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "ダッシュボード", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
   }
 
-  window.onload = () => { fetchData(); };
+  window.onload = () => { 
+    const cachedStr = localStorage.getItem(CACHE_KEY);
+    if(cachedStr) {
+      try {
+        const cacheObj = JSON.parse(cachedStr);
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          allData = cacheObj.data;
+          populateStaffFilter(); setDateFilter('thisMonth');
+          return;
+        }
+      } catch(e) {}
+    }
+    fetchData(false); 
+  };
 
-  async function fetchData() {
+  async function fetchData(isManualUpdate) {
     showLoader();
     try {
-      const res = await fetch(GAS_API_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), 
-        redirect: "follow"
-      });
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" });
       const json = await res.json();
-      
       if (json.status === "success") {
         allData = json.data || [];
-        populateStaffFilter();
-        setDateFilter('thisMonth');
-      } else {
-        alert("データの取得に失敗しました。");
-        sendErrorLog("Fetch Status Error: " + json.message);
-      }
-    } catch (e) {
-      document.getElementById("loader-sub-text").innerText = "通信エラーが発生しました";
-      alert("通信エラーが発生しました。システム管理者に自動報告を行いました。");
-      sendErrorLog(e.toString());
-    } finally {
-      hideLoader();
-    }
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: allData }));
+        populateStaffFilter(); setDateFilter('thisMonth');
+        if(isManualUpdate) alert("最新データを取得しました。");
+      } else { alert("データの取得に失敗しました。"); sendErrorLog(json.message); }
+    } catch (e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { hideLoader(); }
   }
 
   function populateStaffFilter() {
     let staffSet = new Set();
     allData.forEach(r => { if(r["フライトドクター"]) staffSet.add(r["フライトドクター"]); if(r["フライトナース"]) staffSet.add(r["フライトナース"]); });
-    const sel = document.getElementById("filter-staff");
+    const sel = document.getElementById("filter-staff"); sel.innerHTML = `<option value="">全員 (チーム全体)</option>`;
     Array.from(staffSet).sort().forEach(s => { if(s && s!=="その他") sel.innerHTML += `<option value="${s}">${s}</option>`; });
   }
 
   function setDateFilter(type) {
     const startInput = document.getElementById("filter-start"); const endInput = document.getElementById("filter-end");
     const d = new Date(); document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    
-    if (type === 'thisMonth') { 
-      document.getElementById("btn-this-month").classList.add("active"); 
-      startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; 
-      endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`; 
-    } 
-    else if (type === 'lastMonth') { 
-      document.getElementById("btn-last-month").classList.add("active"); 
-      const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1); 
-      startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`; 
-      endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`; 
-    } 
-    else if (type === 'thisYear') { 
-      document.getElementById("btn-this-year").classList.add("active"); 
-      startInput.value = `${d.getFullYear()}-01-01`; 
-      endInput.value = `${d.getFullYear()}-12-31`; 
-    } 
-    else if (type === 'all') { 
-      document.getElementById("btn-all").classList.add("active"); 
-      startInput.value = ""; 
-      endInput.value = ""; 
-    }
+    if (type === 'thisMonth') { document.getElementById("btn-this-month").classList.add("active"); startInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()}`; } 
+    else if (type === 'lastMonth') { document.getElementById("btn-last-month").classList.add("active"); const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1); startInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-01`; endInput.value = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}-${new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate()}`; } 
+    else if (type === 'thisYear') { document.getElementById("btn-this-year").classList.add("active"); startInput.value = `${d.getFullYear()}-01-01`; endInput.value = `${d.getFullYear()}-12-31`; } 
+    else if (type === 'all') { document.getElementById("btn-all").classList.add("active"); startInput.value = ""; endInput.value = ""; }
     applyFilters();
   }
 
   function applyFilters() {
-    const startStr = document.getElementById("filter-start").value; 
-    const endStr = document.getElementById("filter-end").value; 
-    const staffFilter = document.getElementById("filter-staff").value;
-    const keywordFilter = document.getElementById("filter-keyword").value.toLowerCase().trim();
+    const startStr = document.getElementById("filter-start").value; const endStr = document.getElementById("filter-end").value; 
+    const staffFilter = document.getElementById("filter-staff").value; const keywordFilter = document.getElementById("filter-keyword").value.toLowerCase().trim();
     
     filteredData = allData.filter(row => {
-      // 1. 日付フィルター
       let dateVal = row["日付"] ? String(row["日付"]).replace(/\//g, "-") : "";
-      if (startStr && dateVal < startStr) return false; 
-      if (endStr && dateVal > endStr) return false;
-      
-      // 2. スタッフフィルター
+      if (startStr && dateVal < startStr) return false; if (endStr && dateVal > endStr) return false;
       if (staffFilter && row["フライトドクター"] !== staffFilter && row["フライトナース"] !== staffFilter) return false;
-      
-      // 3. フリーワードフィルター（全ての値を連結して検索）
-      if (keywordFilter) {
-        const rowText = Object.values(row).join(" ").toLowerCase();
-        if (!rowText.includes(keywordFilter)) return false;
-      }
-      
+      if (keywordFilter) { const rowText = Object.values(row).join(" ").toLowerCase(); if (!rowText.includes(keywordFilter)) return false; }
       return true;
     });
-    
-    try {
-      renderDashboard();
-    } catch(e) {
-      console.error(e);
-      sendErrorLog("Dashboard Render Error: " + e.toString());
-      alert("ダッシュボードの描画中にエラーが発生しました。一部のデータが不正な可能性があります。");
-    }
+    try { renderDashboard(); } catch(e) { sendErrorLog(e.toString()); }
   }
 
   function animateValue(id, start, end, duration) {
     if(start === end || isNaN(end)) { document.getElementById(id).innerText = end || 0; return; }
     let range = end - start; let current = start; let increment = end > start ? 1 : -1;
     let stepTime = Math.abs(Math.floor(duration / range)); if(stepTime < 5) stepTime = 5;
-    let obj = document.getElementById(id); 
-    if(!obj) return;
+    let obj = document.getElementById(id); if(!obj) return;
     let timer = setInterval(function() { current += increment; obj.innerText = current; if (current == end) clearInterval(timer); }, stepTime);
   }
 
   function timeToMins(tStr) {
-    if(!tStr) return 0;
-    let parts = String(tStr).split(":");
-    if(parts.length < 2) return 0;
-    let h = parseInt(parts[0]), m = parseInt(parts[1]);
-    if(isNaN(h) || isNaN(m)) return 0;
-    return h * 60 + m;
+    if(!tStr) return 0; let parts = String(tStr).split(":"); if(parts.length < 2) return 0;
+    let h = parseInt(parts[0]), m = parseInt(parts[1]); if(isNaN(h) || isNaN(m)) return 0; return h * 60 + m;
   }
 
   function renderDashboard() {
-    // 統計データ初期化
-    statsForCSV = {
-      kpi: {}, scheme: {}, proc: {}, dr: {}, ns: {}, diag: {}, kw: {}
-    };
+    statsForCSV = { kpi: {}, scheme: {}, proc: {}, dr: {}, ns: {}, diag: {}, kw: {} };
 
-    let total = filteredData.length; let cancel = 0; let intubation = 0;
-    let totalMedTime = 0; let medTimeCount = 0;
-    let scatterData = [];
+    let total = filteredData.length; let cancel = 0; let intubation = 0; let totalMedTime = 0; let medTimeCount = 0; let scatterData = [];
     
     filteredData.forEach(r => {
       const st = String(r["ステータス"] || ""); const scheme = String(r["スキーム選択"] || "");
       if (st.includes("キャンセル")) cancel++;
-      if (String(r["気管挿管"] || "").includes("◯")) intubation++;
-      
-      // スキーム集計
+      if (String(r["気管挿管"] || "").includes("◯") || String(r["簡易処置リスト"] || "").includes("気管挿管")) intubation++;
       if(scheme) { statsForCSV.scheme[scheme] = (statsForCSV.scheme[scheme]||0) + 1; }
       
-      let tReq = timeToMins(r["要請時刻・施設間搬送依頼時刻"]);
-      let tCont = timeToMins(r["接触"]);
-      let tHosp = timeToMins(r["病着"]);
-      
+      let tReq = timeToMins(r["要請時刻・施設間搬送依頼時刻"]); let tCont = timeToMins(r["接触"]); let tHosp = timeToMins(r["病着"]);
       if(tCont && tHosp && !st.includes("キャンセル") && scheme !== "Iターン救急隊のみ") {
-        let diffMed = tHosp - tCont; if(diffMed < 0) diffMed += 1440; // 日またぎ考慮
-        if(diffMed > 0 && diffMed < 300) { totalMedTime += diffMed; medTimeCount++; } // 5時間以上の異常値は排除
+        let diffMed = tHosp - tCont; if(diffMed < 0) diffMed += 1440; 
+        if(diffMed > 0 && diffMed < 300) { totalMedTime += diffMed; medTimeCount++; } 
       }
-      
       if(tReq && tCont && tHosp && !st.includes("キャンセル")) {
         let reqToCont = tCont - tReq; if(reqToCont < 0) reqToCont += 1440;
         let contToHosp = tHosp - tCont; if(contToHosp < 0) contToHosp += 1440;
-        if(reqToCont < 120 && contToHosp < 180) { // 異常値排除
+        if(reqToCont < 120 && contToHosp < 180) { 
           let color = '#007aff'; if(scheme.includes("Uターン")) color = '#ff2d55'; else if(scheme.includes("Iターン")) color = '#34c759';
           scatterData.push({ x: reqToCont, y: contToHosp, scheme: scheme, backgroundColor: color });
         }
       }
     });
     
-    let actual = total - cancel; 
-    let cancelRate = total > 0 ? Math.round((cancel / total) * 100) : 0;
-    let avgMedTime = medTimeCount > 0 ? Math.round(totalMedTime / medTimeCount) : 0;
-    let intubationRate = actual > 0 ? Math.round((intubation / actual) * 100) : 0;
+    let actual = total - cancel; let cancelRate = total > 0 ? Math.round((cancel / total) * 100) : 0;
+    let avgMedTime = medTimeCount > 0 ? Math.round(totalMedTime / medTimeCount) : 0; let intubationRate = actual > 0 ? Math.round((intubation / actual) * 100) : 0;
 
-    // KPI保存
     statsForCSV.kpi = { "総要請件数": total, "実出動件数": actual, "キャンセル率(%)": cancelRate, "平均 接触~病着時間(分)": avgMedTime, "気管挿管 実施率(%)": intubationRate };
 
-    animateValue("kpi-total", 0, total, 500); 
-    animateValue("kpi-actual", 0, actual, 500);
-    animateValue("kpi-cancel-rate", 0, cancelRate, 500);
-    animateValue("kpi-time-med", 0, avgMedTime, 500);
-    animateValue("kpi-intubation", 0, intubationRate, 500);
+    animateValue("kpi-total", 0, total, 500); animateValue("kpi-actual", 0, actual, 500); animateValue("kpi-cancel-rate", 0, cancelRate, 500); animateValue("kpi-time-med", 0, avgMedTime, 500); animateValue("kpi-intubation", 0, intubationRate, 500);
     
-    // 📈 トレンドチャート
     let trendCounts = {};
     filteredData.forEach(r => {
-      let dStr = String(r["日付"] || "不明");
-      let key = dStr.includes("/") ? dStr.substring(0, 7) : (dStr.includes("-") ? dStr.substring(0, 7) : dStr);
+      let dStr = String(r["日付"] || "不明"); let key = dStr.includes("/") ? dStr.substring(0, 7) : (dStr.includes("-") ? dStr.substring(0, 7) : dStr);
       if (!trendCounts[key]) trendCounts[key] = { total: 0, actual: 0 };
       trendCounts[key].total++; if (!String(r["ステータス"]).includes("キャンセル")) trendCounts[key].actual++;
     });
-    drawTrendChart(trendCounts);
-
-    // ⏱️ 散布図チャート描画
-    drawScatterChart(scatterData);
+    drawTrendChart(trendCounts); drawScatterChart(scatterData);
     
-    // 🩺 ランキング集計
     let diagCounts = {}; let kwCounts = {};
     filteredData.forEach(r => {
-      if(r["システムデータ"]) { 
-        try { 
-          const sys = JSON.parse(r["システムデータ"]); 
-          if(sys.tags && sys.tags.diagnosis) sys.tags.diagnosis.forEach(d => { diagCounts[d] = (diagCounts[d]||0)+1; }); 
-          if(sys.tags && sys.tags.keyword) sys.tags.keyword.forEach(k => { kwCounts[k] = (kwCounts[k]||0)+1; }); 
-        } catch(e){} 
-      }
+      if(r["システムデータ"]) { try { const sys = JSON.parse(r["システムデータ"]); if(sys.tags && sys.tags.diagnosis) sys.tags.diagnosis.forEach(d => { diagCounts[d] = (diagCounts[d]||0)+1; }); if(sys.tags && sys.tags.keyword) sys.tags.keyword.forEach(k => { kwCounts[k] = (kwCounts[k]||0)+1; }); } catch(e){} }
       if(r["現場診断"]) r["現場診断"].split(",").map(x=>x.trim()).forEach(d => { if(d) diagCounts[d] = (diagCounts[d]||0)+1; });
     });
-    statsForCSV.diag = diagCounts;
-    statsForCSV.kw = kwCounts;
-    renderList("diag-list", diagCounts, 10, "color:#5b21b6; background:#ede9fe;");
-    renderList("kw-list", kwCounts, 10, "color:#9d174d; background:#fce7f3;");
+    statsForCSV.diag = diagCounts; statsForCSV.kw = kwCounts;
+    renderList("diag-list", diagCounts, 10, "color:#5b21b6; background:#ede9fe;"); renderList("kw-list", kwCounts, 10, "color:#9d174d; background:#fce7f3;");
 
-    // 🕸️ 処置レーダーチャート
     const radarProcs = ["気管挿管", "心エコー", "FAST", "胸腔ドレナージ", "EtCO2", "12誘導心電図"];
     let radarCounts = radarProcs.map(p => { 
-      let c=0; filteredData.forEach(r=>{ if(String(r[p]||"").includes("◯")) c++; }); 
-      statsForCSV.proc[p] = c; // CSV用
+      let c=0; filteredData.forEach(r=>{ if(String(r[p]||"").includes("◯") || String(r["簡易処置リスト"]||"").includes(p)) c++; }); statsForCSV.proc[p] = c; 
       return actual>0 ? Math.round((c/actual)*100) : 0; 
     });
     drawRadarChart(radarProcs, radarCounts);
 
-    // 👨‍⚕️ スタッフ集計
-    statsForCSV.dr = countKey(filteredData, "フライトドクター");
-    statsForCSV.ns = countKey(filteredData, "フライトナース");
-    renderList("dr-list", statsForCSV.dr, 10);
-    renderList("ns-list", statsForCSV.ns, 10);
+    statsForCSV.dr = countKey(filteredData, "フライトドクター"); statsForCSV.ns = countKey(filteredData, "フライトナース");
+    renderList("dr-list", statsForCSV.dr, 10); renderList("ns-list", statsForCSV.ns, 10);
   }
 
-  function countKey(data, keyName) { 
-    let counts = {}; 
-    data.forEach(r => { 
-      const val = String(r[keyName] || "不明").trim(); 
-      if (val === "" || val === "不明") return; 
-      if (!counts[val]) counts[val] = 0; 
-      counts[val]++; 
-    }); 
-    return counts; 
-  }
+  function countKey(data, keyName) { let counts = {}; data.forEach(r => { const val = String(r[keyName] || "不明").trim(); if (val === "" || val === "不明") return; if (!counts[val]) counts[val] = 0; counts[val]++; }); return counts; }
   
   function renderList(elementId, countsObj, limit, badgeStyle="color:var(--blue); background:var(--med-blue);") {
-    const sorted = Object.entries(countsObj).sort((a, b) => b[1] - a[1]).slice(0, limit);
-    const ul = document.getElementById(elementId);
+    const sorted = Object.entries(countsObj).sort((a, b) => b[1] - a[1]).slice(0, limit); const ul = document.getElementById(elementId);
     if (sorted.length === 0) { ul.innerHTML = "<li class='ranking-item'><span class='ranking-name' style='color:var(--sub);'>データなし</span></li>"; return; }
     ul.innerHTML = sorted.map((item, i) => `<li class="ranking-item"><span class="ranking-rank">${i+1}</span><span class="ranking-name">${item[0]}</span><span class="ranking-count" style="${badgeStyle}">${item[1]}件</span></li>`).join("");
   }
 
-  // --- Chart.js 描画関数 ---
   function drawTrendChart(dataObj) {
-    const ctx = document.getElementById('trendChart'); if(!ctx) return;
-    if (chartInstances['trend']) chartInstances['trend'].destroy();
+    const ctx = document.getElementById('trendChart'); if(!ctx) return; if (chartInstances['trend']) chartInstances['trend'].destroy();
     const sortedKeys = Object.keys(dataObj).sort();
-    chartInstances['trend'] = new Chart(ctx.getContext('2d'), { 
-      type: 'bar', 
-      data: { 
-        labels: sortedKeys, 
-        datasets: [ 
-          { label: '実出動件数', data: sortedKeys.map(k => dataObj[k].actual), backgroundColor: '#007aff', borderRadius: 4 }, 
-          { label: '総要請 (キャンセル含)', data: sortedKeys.map(k => dataObj[k].total), backgroundColor: '#e5e5ea', borderRadius: 4 } 
-        ] 
-      }, 
-      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } 
-    });
+    chartInstances['trend'] = new Chart(ctx.getContext('2d'), { type: 'bar', data: { labels: sortedKeys, datasets: [ { label: '実出動件数', data: sortedKeys.map(k => dataObj[k].actual), backgroundColor: '#007aff', borderRadius: 4 }, { label: '総要請 (キャンセル含)', data: sortedKeys.map(k => dataObj[k].total), backgroundColor: '#e5e5ea', borderRadius: 4 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } } });
   }
 
   function drawScatterChart(dataArr) {
-    const ctx = document.getElementById('scatterChart'); if(!ctx) return;
-    if (chartInstances['scatter']) chartInstances['scatter'].destroy();
-    
-    // スキームごとにデータセットを分ける（凡例用）
-    let datasets = [];
-    const schemes = [...new Set(dataArr.map(d => d.scheme))];
-    schemes.forEach(sc => {
-      datasets.push({
-        label: sc || "未選択",
-        data: dataArr.filter(d => d.scheme === sc).map(d => ({x: d.x, y: d.y})),
-        backgroundColor: dataArr.find(d => d.scheme === sc).backgroundColor || '#8e8e93',
-        pointRadius: 5, pointHoverRadius: 7
-      });
-    });
-
-    chartInstances['scatter'] = new Chart(ctx.getContext('2d'), {
-      type: 'scatter',
-      data: { datasets: datasets },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        scales: {
-          x: { title: { display: true, text: '要請〜接触 時間 (分)' }, min: 0 },
-          y: { title: { display: true, text: '現場滞在[接触〜病着] (分)' }, min: 0 }
-        },
-        plugins: { tooltip: { callbacks: { label: function(ctx){ return `${ctx.dataset.label}: 要請〜接触 ${ctx.parsed.x}分, 現場滞在 ${ctx.parsed.y}分`; } } } }
-      }
-    });
+    const ctx = document.getElementById('scatterChart'); if(!ctx) return; if (chartInstances['scatter']) chartInstances['scatter'].destroy();
+    let datasets = []; const schemes = [...new Set(dataArr.map(d => d.scheme))];
+    schemes.forEach(sc => { datasets.push({ label: sc || "未選択", data: dataArr.filter(d => d.scheme === sc).map(d => ({x: d.x, y: d.y})), backgroundColor: dataArr.find(d => d.scheme === sc).backgroundColor || '#8e8e93', pointRadius: 5, pointHoverRadius: 7 }); });
+    chartInstances['scatter'] = new Chart(ctx.getContext('2d'), { type: 'scatter', data: { datasets: datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: '要請〜接触 時間 (分)' }, min: 0 }, y: { title: { display: true, text: '現場滞在[接触〜病着] (分)' }, min: 0 } }, plugins: { tooltip: { callbacks: { label: function(ctx){ return `${ctx.dataset.label}: 要請〜接触 ${ctx.parsed.x}分, 現場滞在 ${ctx.parsed.y}分`; } } } } } });
   }
 
   function drawRadarChart(labels, data) {
-    const ctx = document.getElementById('radarChart'); if(!ctx) return;
-    if (chartInstances['radar']) chartInstances['radar'].destroy();
-    chartInstances['radar'] = new Chart(ctx.getContext('2d'), { 
-      type: 'radar', 
-      data: { 
-        labels: labels, 
-        datasets: [{ label: '実施率 (%)', data: data, backgroundColor: 'rgba(52, 199, 89, 0.2)', borderColor: '#34c759', pointBackgroundColor: '#34c759' }] 
-      }, 
-      options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, suggestedMin: 0, suggestedMax: 100 } }, plugins: { legend: { display: false } } } 
-    });
+    const ctx = document.getElementById('radarChart'); if(!ctx) return; if (chartInstances['radar']) chartInstances['radar'].destroy();
+    chartInstances['radar'] = new Chart(ctx.getContext('2d'), { type: 'radar', data: { labels: labels, datasets: [{ label: '実施率 (%)', data: data, backgroundColor: 'rgba(52, 199, 89, 0.2)', borderColor: '#34c759', pointBackgroundColor: '#34c759' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0,0,0,0.1)' }, suggestedMin: 0, suggestedMax: 100 } }, plugins: { legend: { display: false } } } });
   }
 
-  // 🌟 統計CSVエクスポート機能
   function exportAggregateCSV() {
     if (filteredData.length === 0) return alert("データがありません。");
-    
-    let csvContent = "\uFEFF"; // BOM for Excel Excel文字化け防止
-    const addSection = (title, obj) => {
-      csvContent += `【${title}】\n項目,件数・値\n`;
-      Object.keys(obj).sort((a,b)=>obj[b]-obj[a]).forEach(k => { csvContent += `"${k}","${obj[k]}"\n`; });
-      csvContent += "\n";
-    };
-
-    csvContent += "=== AW109 JSAMS 統計・BIダッシュボード 出力レポート ===\n";
-    csvContent += `出力対象期間: ${document.getElementById("filter-start").value || "全期間"} 〜 ${document.getElementById("filter-end").value || "全期間"}\n`;
-    csvContent += `対象スタッフ: ${document.getElementById("filter-staff").value || "全員"}\n\n`;
-
-    addSection("1. KPIサマリー", statsForCSV.kpi);
-    addSection("2. スキーム別件数", statsForCSV.scheme);
-    addSection("3. 主要処置 実施件数", statsForCSV.proc);
-    addSection("4. 現場診断 (上位)", statsForCSV.diag);
-    addSection("5. キーワード要請 (上位)", statsForCSV.kw);
-    addSection("6. フライトドクター実績", statsForCSV.dr);
-    addSection("7. フライトナース実績", statsForCSV.ns);
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" }); 
-    const link = document.createElement("a"); 
-    link.href = URL.createObjectURL(blob); 
-    link.download = `AW109_統計レポート_${document.getElementById("filter-start").value || "All"}.csv`; 
-    link.click();
+    let csvContent = "\uFEFF"; const addSection = (title, obj) => { csvContent += `【${title}】\n項目,件数・値\n`; Object.keys(obj).sort((a,b)=>obj[b]-obj[a]).forEach(k => { csvContent += `"${k}","${obj[k]}"\n`; }); csvContent += "\n"; };
+    csvContent += "=== AW109 JSAMS 統計・BIダッシュボード 出力レポート ===\n"; csvContent += `出力対象期間: ${document.getElementById("filter-start").value || "全期間"} 〜 ${document.getElementById("filter-end").value || "全期間"}\n`; csvContent += `対象スタッフ: ${document.getElementById("filter-staff").value || "全員"}\n\n`;
+    addSection("1. KPIサマリー", statsForCSV.kpi); addSection("2. スキーム別件数", statsForCSV.scheme); addSection("3. 主要処置 実施件数", statsForCSV.proc); addSection("4. 現場診断 (上位)", statsForCSV.diag); addSection("5. キーワード要請 (上位)", statsForCSV.kw); addSection("6. フライトドクター実績", statsForCSV.dr); addSection("7. フライトナース実績", statsForCSV.ns);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `AW109_統計レポート_${document.getElementById("filter-start").value || "All"}.csv`; link.click();
   }
 </script>
 </body>
