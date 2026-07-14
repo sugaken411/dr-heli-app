@@ -10,7 +10,17 @@
   <meta http-equiv="Expires" content="0">
   <title>AW109 デブリーフィング</title>
   <style>
-    :root { --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93; --brand: #d32f2f; --blue: #007aff; --line: #c7c7cc; --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom); }
+    :root { 
+      --bg: #f2f2f7; 
+      --card: #ffffff; 
+      --ink: #1c1c1e; 
+      --sub: #8e8e93; 
+      --brand: #d32f2f; 
+      --blue: #007aff; 
+      --line: #c7c7cc; 
+      --safe-top: env(safe-area-inset-top); 
+      --safe-bot: env(safe-area-inset-bottom); 
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--bg); color: var(--ink); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
     
@@ -92,8 +102,9 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.9</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v12.2</span></div>
   <div style="display:flex; gap:12px;">
+    <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
 </header>
@@ -251,7 +262,6 @@
   <!-- ================= TAB 4: 保存 ================= -->
   <div id="tab-sec4" class="tab-content">
     <div class="card" style="padding: 0;"><div id="print-area"></div></div>
-    <!-- 🌟 エラー監視表示枠 -->
     <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; padding:16px;"></div>
     <div class="no-print">
       <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
@@ -274,16 +284,18 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
-  const CACHE_KEY = "aw109_debriefing_cache_v118";
+  const CACHE_KEY = "aw109_debriefing_cache_v12";
+  const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
-  // 🌟 超高感度エラー監視機能の導入
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
     return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
-    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) return;
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
   const SCENE_LIST = [
@@ -315,23 +327,20 @@
     evals: [], feedbacks: []
   };
 
+  let loaderTimer1, loaderTimer2;
   function showLoader(msg1, msg2) {
     const loader = document.getElementById("global-loader");
     document.getElementById("loader-main-text").innerText = msg1; 
     document.getElementById("loader-sub-text").innerHTML = msg2;
     loader.style.display = "flex";
+    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。もう少しお待ちください..."; }, 5000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>リロードしてください。</span>"; }, 15000);
   }
-  
-  function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); document.getElementById("global-loader").style.display = "none"; }
   
   function sendErrorLog(errMsg) { 
-    try { 
-      fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.9)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
-        redirect: "follow" 
-      }); 
-    } catch(e) {} 
+    if(String(errMsg).includes("Load failed")) return;
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v12.2)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
   }
 
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
@@ -342,20 +351,24 @@
   window.onload = async () => {
     document.getElementById("s-date").value = new Date().toISOString().split('T')[0];
     const cachedStr = localStorage.getItem(CACHE_KEY);
-    if(cachedStr) {
+    const now = Date.now();
+    
+    if (cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
-        document.getElementById("sync-status").innerText = `データ状態: ${cacheObj.timestamp} 時点のキャッシュを表示中 (裏側で最新データを同期しています...)`;
-        buildUIFromData(cacheObj.allCases, cacheObj.existing, cacheObj.masters);
-        fetchLatestData(true);
-      } catch(e) { fetchLatestData(false); }
-    } else {
-      fetchLatestData(false);
+        if (now - cacheObj.timestampMs < CACHE_EXPIRE_MS) {
+          document.getElementById("sync-status").innerText = `データ状態: キャッシュから即時展開しました (${cacheObj.timestamp})`;
+          buildUIFromData(cacheObj.allCases, cacheObj.existing, cacheObj.masters);
+          handleUrlParams();
+          return;
+        }
+      } catch(e) {}
     }
+    fetchLatestData(false, false);
   };
 
-  async function fetchLatestData(isBackground) {
-    if(!isBackground) showLoader("データベース同期中...", "マスタデータと事案DBを同期しています");
+  async function fetchLatestData(isBackground, isManualUpdate) {
+    if (!isBackground) showLoader("データベース同期中...", "マスタデータと事案DBを同期しています");
     try {
       const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" });
       const jsonInit = await resInit.json();
@@ -368,31 +381,33 @@
       const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
       const debData = (await resDeb.json()).data;
 
-      const cacheObj = {
-        timestamp: Utilities_formatDate(new Date()),
-        allCases: jianData, existing: debData, masters: jsonInit.masters
-      };
+      const cacheObj = { timestamp: Utilities_formatDate(new Date()), timestampMs: Date.now(), allCases: jianData, existing: debData, masters: jsonInit.masters };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
       
       buildUIFromData(jianData, debData, jsonInit.masters);
       document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
-
+      if (isManualUpdate) alert("最新のデータを取得しました。");
+      else handleUrlParams();
     } catch(e) { 
-      if(!isBackground) alert("データベースの同期に失敗しました。電波の良い場所でリロードしてください。");
+      if(!isBackground) alert("データベースの同期に失敗しました。");
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
       sendErrorLog(e.toString());
-    } finally { 
-      if(!isBackground) hideLoader(); 
+    } finally { if(!isBackground) hideLoader(); }
+  }
+
+  function handleUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('editId');
+    if (editId && allCasesData.length > 0) {
+      const targetCaseWrapper = allCasesData.find(c => String(c.id) === String(editId));
+      if (targetCaseWrapper) { selectCase(targetCaseWrapper); window.history.replaceState({}, document.title, window.location.pathname); }
     }
   }
 
   function Utilities_formatDate(date) { return `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`; }
 
   function buildUIFromData(jianData, debData, ms) {
-    allCasesData = jianData;
-    existingDebriefs = debData;
-    masters = ms;
-
+    allCasesData = jianData; existingDebriefs = debData; masters = ms;
     document.getElementById("ext-affil-list").innerHTML = ""; masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
     document.getElementById("ext-staff-list").innerHTML = ""; masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
     document.getElementById("diagnosis-list").innerHTML = ""; masters.diagnosis.forEach(d => document.getElementById("diagnosis-list").innerHTML += `<option value="${d}">`);
@@ -407,10 +422,8 @@
         </div>
       </div>`;
     document.getElementById("fixed-pt-accordions").innerHTML = buildFixedAcc('dr','フライトドクター', masters.dr) + buildFixedAcc('ns','フライトナース', masters.ns) + buildFixedAcc('pilot','機長', masters.pilot) + buildFixedAcc('mechanic','整備士', masters.mechanic) + buildFixedAcc('cs','CS', masters.cs);
-    
     ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
     renderChips('recorder-container', masters.ns, 'recorder', true);
-
     searchCases();
   }
 
@@ -434,26 +447,17 @@
   }
 
   function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
-  
   function renderChips(containerId, list, category, isRadio = false) {
-    const box = document.getElementById(containerId); if(!box) return;
-    box.innerHTML = "";
+    const box = document.getElementById(containerId); if(!box) return; box.innerHTML = "";
     list.forEach(item => { const isOn = sysData.tags[category] && sysData.tags[category].includes(item); box.innerHTML += `<div class="${isOn ? "pill on" : "pill"}" onclick="toggleChip('${category}', '${item}', ${isRadio}, this)">${item}</div>`; });
   }
   
   function toggleChip(cat, item, isRadio, element) {
     if(!sysData.tags[cat]) sysData.tags[cat] = [];
-    if(isRadio) { 
-      sysData.tags[cat] = [item];
-      if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
-    } else { 
-      if(sysData.tags[cat].includes(item)) {
-        sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item);
-        if(element) element.classList.remove('on');
-      } else {
-        sysData.tags[cat].push(item);
-        if(element) element.classList.add('on');
-      } 
+    if(isRadio) { sysData.tags[cat] = [item]; if(cat === 'recorder') renderChips('recorder-container', masters.ns, 'recorder', true); } 
+    else { 
+      if(sysData.tags[cat].includes(item)) { sysData.tags[cat] = sysData.tags[cat].filter(x => x !== item); if(element) element.classList.remove('on'); } 
+      else { sysData.tags[cat].push(item); if(element) element.classList.add('on'); } 
     }
   }
 
@@ -461,21 +465,16 @@
     document.querySelectorAll('[id^="d-main-"]').forEach(el => el.classList.remove('on'));
     const idx = val.charAt(0); document.getElementById(`d-main-${idx}`).classList.add('on');
     sysData.disease.main = val; sysData.disease.cause = ""; sysData.disease.sub = "";
-    
-    const subArea = document.getElementById("disease-sub-area");
-    const cpaAlert = document.getElementById("disease-cpa-alert");
+    const subArea = document.getElementById("disease-sub-area"); const cpaAlert = document.getElementById("disease-cpa-alert");
     
     if(val === "4心肺停止") {
-      cpaAlert.style.display = "block"; subArea.style.display = "block";
-      document.getElementById("d-sub-title").innerText = "原因疾患を選択 (必須)";
+      cpaAlert.style.display = "block"; subArea.style.display = "block"; document.getElementById("d-sub-title").innerText = "原因疾患を選択 (必須)";
       const causeHtml = ["1外傷", "2心大血管", "3脳血管", "5その他"].map(c => `<div class="pill" onclick="setDiseaseCause('${c}', this)">${c}</div>`).join('');
       document.getElementById("d-sub-pills").innerHTML = causeHtml;
     } else {
       cpaAlert.style.display = "none";
-      if(DISEASE_TREE[val]) {
-        subArea.style.display = "block"; document.getElementById("d-sub-title").innerText = "詳細分類";
-        renderDiseaseSub(val);
-      } else { subArea.style.display = "none"; }
+      if(DISEASE_TREE[val]) { subArea.style.display = "block"; document.getElementById("d-sub-title").innerText = "詳細分類"; renderDiseaseSub(val); } 
+      else { subArea.style.display = "none"; }
     }
   }
 
@@ -489,35 +488,18 @@
     }
   }
 
-  function renderDiseaseSub(mainVal) {
-    document.getElementById("d-sub-pills").innerHTML = DISEASE_TREE[mainVal].map(s => `<div class="pill" onclick="setDiseaseSubReal('${s}', this)">${s}</div>`).join('');
-  }
-
-  function setDiseaseSubReal(subVal, btnEl) {
-    sysData.disease.sub = subVal;
-    btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on');
-  }
+  function renderDiseaseSub(mainVal) { document.getElementById("d-sub-pills").innerHTML = DISEASE_TREE[mainVal].map(s => `<div class="pill" onclick="setDiseaseSubReal('${s}', this)">${s}</div>`).join(''); }
+  function setDiseaseSubReal(subVal, btnEl) { sysData.disease.sub = subVal; btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on'); }
 
   async function generateDiagnosis() {
     const name = document.getElementById("diag-name").value.trim(); if(!name) return;
-    const btn = document.getElementById("btn-diag-add");
-    btn.innerText = "追加中..."; btn.disabled = true;
-
+    const btn = document.getElementById("btn-diag-add"); btn.innerText = "追加中..."; btn.disabled = true;
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }), redirect: "follow" });
-
-      if(!sysData.tags.diagnosis) sysData.tags.diagnosis = [];
-      if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
+      if(!sysData.tags.diagnosis) sysData.tags.diagnosis = []; if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
       renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-      
-      if(!masters.diagnosis.includes(name)) masters.diagnosis.push(name);
-      document.getElementById("diag-name").value = "";
-    } catch(e) {
-      alert("マスタの登録に失敗しました");
-      sendErrorLog(e.toString());
-    } finally {
-      btn.innerText = "＋追加"; btn.disabled = false;
-    }
+      if(!masters.diagnosis.includes(name)) masters.diagnosis.push(name); document.getElementById("diag-name").value = "";
+    } catch(e) { sendErrorLog(e.toString()); } finally { btn.innerText = "＋追加"; btn.disabled = false; }
   }
 
   async function addMasterAndChip(cat, inputId, containerId) {
@@ -527,9 +509,8 @@
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: cat, val1: val }), redirect: "follow" });
       if(!masters[cat].includes(val)) masters[cat].push(val); 
       if(!sysData.tags[cat]) sysData.tags[cat] = []; if(!sysData.tags[cat].includes(val)) sysData.tags[cat].push(val);
-      renderChips(containerId, masters[cat], cat); 
-      document.getElementById(inputId).value = "";
-    } catch(e) { alert("エラー"); document.getElementById(inputId).value = ""; }
+      renderChips(containerId, masters[cat], cat); document.getElementById(inputId).value = "";
+    } catch(e) { document.getElementById(inputId).value = ""; }
   }
 
   let extPtCount = 0;
@@ -555,26 +536,18 @@
   }
 
   function searchCases() {
-    const sDate = document.getElementById("s-date").value;
-    const sMonth = document.getElementById("s-month").value;
-    const qId = document.getElementById("s-id").value.trim();
-    
+    const sDate = document.getElementById("s-date").value; const sMonth = document.getElementById("s-month").value; const qId = document.getElementById("s-id").value.trim();
     let results = allCasesData.filter(r => {
-      if(!r.id) return false;
-      let match = true;
+      if(!r.id) return false; let match = true;
       if(qId && !String(r.id).includes(qId)) match = false;
       let rDate = r.date ? String(r.date).replace(/\//g, "-") : ""; 
-      if(sDate && rDate !== sDate) match = false;
-      if(sMonth && !rDate.startsWith(sMonth)) match = false;
+      if(sDate && rDate !== sDate) match = false; if(sMonth && !rDate.startsWith(sMonth)) match = false;
       return match;
     });
-
     results.sort((a,b) => b.id.localeCompare(a.id));
-
     const resArea = document.getElementById("search-results-area");
-    if(results.length === 0) {
-      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>";
-    } else {
+    if(results.length === 0) { resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>"; } 
+    else {
       resArea.innerHTML = results.map(r => {
         const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";
         return `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
@@ -591,8 +564,12 @@
     document.getElementById("search-results-area").style.display = "none"; 
     document.getElementById("case-data-area").style.display = "block";
     
+    // 🌟 修正: 新しい概要抽出ロジック（備考の構造変更に完全対応）
     if(currentCase["備考"]) {
-      document.getElementById("v-summary").value = currentCase["備考"].replace(/⚠️【使用物品・補充予定メモ】[\s\S]*?------------------\n/g, "").trim();
+      let bikoStr = currentCase["備考"];
+      bikoStr = bikoStr.replace(/⚠️【使用物品・補充予定メモ】[\s\S]*?------------------\n/g, "");
+      bikoStr = bikoStr.replace(/【事案概要】\n/g, "");
+      document.getElementById("v-summary").value = bikoStr.trim();
     }
     
     if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) { 
@@ -600,38 +577,52 @@
     }
     renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
 
+    // 🌟 修正: 新しい処置オブジェクト形式(procsState)からの完全復元ロジック
     let importedProcs = [];
-    let procStr = currentCase["簡易処置リスト"] || currentCase["処置リスト"] || currentCase["実施処置"] || currentCase["処置"] || "";
-    let traumaStr = currentCase["外傷処置"] || currentCase["外傷・固定"] || currentCase["外傷"] || "";
-
-    if(procStr) {
-      importedProcs.push(...procStr.split(",").map(s => s.replace(/x\d+/g,'').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim()).filter(Boolean));
+    if (currentCase["システムデータ"]) {
+      try {
+        const pSys = JSON.parse(currentCase["システムデータ"]);
+        if (pSys.procsState) {
+          const ps = pSys.procsState;
+          if (ps.lines) Object.keys(ps.lines).forEach(k => importedProcs.push(`${k} x${ps.lines[k]}`));
+          if (ps.intub) importedProcs.push(`気管挿管(ID${ps.intubSize}mm固定${ps.intubPos}cm)`);
+          if (ps.nppv) importedProcs.push(`NPPV使用(${ps.nppvMask}マスク)`);
+          if (ps.shock) importedProcs.push(`除細動${ps.shockCount}回`);
+          if (ps.pacing) importedProcs.push("経皮ペーシング");
+          if (ps.bg) importedProcs.push(`血液ガス分析(${ps.bgType})`);
+          if (ps.thorax) importedProcs.push(`胸腔ドレナージ(20Fr:${ps.thorax20}本/28Fr:${ps.thorax28}本)`);
+          if (ps.pericardial) importedProcs.push(`心嚢穿刺(${ps.pericardialType})`);
+          if (ps.stomach) importedProcs.push(`胃管挿入(${ps.stomachSize}Fr)`);
+          if (ps.echos) ps.echos.forEach(v => importedProcs.push(`エコー(${v})`));
+          if (ps.others) ps.others.forEach(v => importedProcs.push(v));
+          if (ps.traumas) ps.traumas.forEach(v => importedProcs.push(v));
+        }
+      } catch(e) {}
     }
-    if(traumaStr) {
-      importedProcs.push(...traumaStr.split(",").map(s => s.trim()).filter(Boolean));
+
+    // 互換性フォールバック（古いデータ用）
+    if (importedProcs.length === 0) {
+      let procStr = currentCase["簡易処置リスト"] || currentCase["処置リスト"] || "";
+      let traumaStr = currentCase["外傷処置"] || "";
+      if(procStr) importedProcs.push(...procStr.split(",").map(s => s.trim()).filter(Boolean));
+      if(traumaStr) importedProcs.push(...traumaStr.split(",").map(s => s.trim()).filter(Boolean));
     }
     
-    let procsDisplay = "";
     if(importedProcs.length > 0) {
       const uniqueProcs = [...new Set(importedProcs)];
       sysData.tags.globalTreatment = uniqueProcs;
-      
-      uniqueProcs.forEach(p => {
-        if(!TAG_MASTERS.treatment.items.includes(p)) TAG_MASTERS.treatment.items.unshift(p);
-      });
-      
       const vProcs = document.getElementById("v-fetched-procs");
       vProcs.innerHTML = uniqueProcs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
     }
 
-    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
+    const targetId = currentCase["要請番号"];
+    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(targetId));
     if(past && past["システムデータ"]) {
       if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
         restoreSystemData(JSON.parse(past["システムデータ"]));
         document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       }
     }
-    
     document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
   }
 
@@ -639,79 +630,46 @@
     sysData = sys; document.getElementById("v-summary").value = sys.summary || "";
     if(sys.disease) {
        if(sys.disease.main) setDiseaseMain(sys.disease.main);
-       if(sys.disease.cause) {
-         const btn = Array.from(document.getElementById("d-sub-pills").children).find(e=>e.innerText===sys.disease.cause);
-         if(btn) setDiseaseCause(sys.disease.cause, btn);
-       }
-       if(sys.disease.sub) {
-         const btn = Array.from(document.getElementById("d-sub-pills-2")?.children||[]).find(e=>e.innerText===sys.disease.sub);
-         if(btn) setDiseaseSubReal(sys.disease.sub, btn);
-       }
-       document.getElementById("v-maternal").value = sys.disease.maternal || "なし";
-       document.getElementById("v-worker").value = sys.disease.worker || "なし";
+       if(sys.disease.cause) { const btn = Array.from(document.getElementById("d-sub-pills").children).find(e=>e.innerText===sys.disease.cause); if(btn) setDiseaseCause(sys.disease.cause, btn); }
+       if(sys.disease.sub) { const btn = Array.from(document.getElementById("d-sub-pills-2")?.children||[]).find(e=>e.innerText===sys.disease.sub); if(btn) setDiseaseSubReal(sys.disease.sub, btn); }
+       document.getElementById("v-maternal").value = sys.disease.maternal || "なし"; document.getElementById("v-worker").value = sys.disease.worker || "なし";
     }
-
-    ['dr','ns','pilot','mechanic','cs','diagnosis','recorder'].forEach(cat => {
-      if(sysData.tags[cat]) {
-        if(cat=='diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-        else if(cat=='recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
-        else renderChips(`chip-container-${cat}`, masters[cat], cat);
-      }
-    });
-    
+    ['dr','ns','pilot','mechanic','cs','diagnosis','recorder'].forEach(cat => { if(sysData.tags[cat]) { if(cat=='diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis'); else if(cat=='recorder') renderChips('recorder-container', masters.ns, 'recorder', true); else renderChips(`chip-container-${cat}`, masters[cat], cat); } });
     if(sysData.tags.globalTreatment && sysData.tags.globalTreatment.length > 0) {
-      const vProcs = document.getElementById("v-fetched-procs");
-      vProcs.innerHTML = sysData.tags.globalTreatment.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
+      document.getElementById("v-fetched-procs").innerHTML = sysData.tags.globalTreatment.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
     }
-
     document.getElementById("ext-pt-container").innerHTML = ""; if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
     document.getElementById("ojt-pt-container").innerHTML = ""; if(sys.ojt) sys.ojt.forEach(o => addOjtPt(o.job, o.name));
     renderEvalBlocks(); renderFeedbackBlocks();
   }
 
   function toggleInlineTag(tag, type, idx, element) {
-    let targetArr;
-    if(type === 'eval') targetArr = sysData.evals[idx].tags;
-    else targetArr = sysData.feedbacks[idx].tags;
-    
-    if(targetArr.includes(tag)) { 
-      targetArr.splice(targetArr.indexOf(tag), 1); 
-      element.classList.remove('on');
-    } else { 
-      targetArr.push(tag); 
-      element.classList.add('on');
-    }
+    let targetArr = (type === 'eval') ? sysData.evals[idx].tags : sysData.feedbacks[idx].tags;
+    if(targetArr.includes(tag)) { targetArr.splice(targetArr.indexOf(tag), 1); element.classList.remove('on'); } 
+    else { targetArr.push(tag); element.classList.add('on'); }
   }
 
   function generateInlineTagUI(selectedTags, type, idx) {
-    const isEval = (type === 'eval');
     let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px;">🏷️ 関連タグ・NTS等を選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}" style="padding:12px; border:1px solid var(--line); border-radius:6px; margin-top:4px;">`;
-    
     html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px;">🧠 チーム連携・状況判断 (NTS等)</div><div class="pill-group">`;
     NTS_LIST.forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
-    html += `</div>`;
-
-    html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-top:8px; margin-bottom:4px;">🛠 実務・処置</div><div class="pill-group">`;
+    html += `</div><div style="font-size:11px; font-weight:bold; color:var(--sub); margin-top:8px; margin-bottom:4px;">🛠 実務・処置</div><div class="pill-group">`;
     TAG_MASTERS.practice.items.concat(TAG_MASTERS.treatment.items).forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
-    html += `</div></div>`;
-    return html;
+    html += `</div></div>`; return html;
   }
 
   function addEvalBlock() { sysData.evals.push({ id: Date.now(), scene: "", sceneOther: "", type: "状況評価(NTS等)", desc: "", vitals:{bp1:"",bp2:"",hr:"",rr:"",spo2:"",o2:"",bt:"",jcs:"",gcs:""}, freeABC:"", good: "", bad: "", tags:[] }); renderEvalBlocks(); }
-  
   function renderEvalBlocks() {
     const box = document.getElementById("eval-container"); box.innerHTML = "";
     sysData.evals.forEach((ev, idx) => {
       const isMed = ev.type === "病態評価(ABCDEF)";
       let html = `<div class="eval-block" id="ev-${ev.id}">
         <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold; color:var(--blue); font-size:15px;">📝 評価ポイント #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.evals.splice(${idx},1); renderEvalBlocks()">削除</button></div>
-        
         <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">活動場面</div>
         <select onchange="sysData.evals[${idx}].scene=this.value; document.getElementById('ev-sc-oth-${ev.id}').style.display=(this.value==='⑨ その他'?'block':'none')" style="margin-bottom:8px;">
           <option value="">場面を選択...</option>${SCENE_LIST.map(s => `<option value="${s}" ${ev.scene===s?'selected':''}>${s}</option>`).join('')}
         </select>
         <input type="text" id="ev-sc-oth-${ev.id}" placeholder="その他の場面" value="${ev.sceneOther}" onchange="sysData.evals[${idx}].sceneOther=this.value" style="display:${ev.scene==='⑨ その他'?'block':'none'}; margin-bottom:12px;">
-        
         <div class="radio-group" style="margin-bottom:12px;">
           <label><input type="radio" name="ev-type-${ev.id}" value="状況評価(NTS等)" ${!isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">状況評価 (NTS等)</span></label>
           <label><input type="radio" name="ev-type-${ev.id}" value="病態評価(ABCDEF)" ${isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">病態評価 (ABCDEF)</span></label>
@@ -729,14 +687,11 @@
         </div>
         <textarea rows="3" placeholder="ABCDEF 所見・アセスメント (フリーテキスト)" onchange="sysData.evals[${idx}].freeABC=this.value">${ev.freeABC}</textarea>`;
       }
-      
       html += `<div style="display:flex; gap:8px; margin-top:8px;">
           <textarea rows="2" placeholder="🟢 Good (良かった点・対応)" onchange="sysData.evals[${idx}].good=this.value" style="border-color:#a5d6a7;">${ev.good}</textarea>
           <textarea rows="2" placeholder="⚠️ Bad / Gap (課題・反省点)" onchange="sysData.evals[${idx}].bad=this.value" style="border-color:#fff59d;">${ev.bad}</textarea>
         </div>`;
-      
-      html += generateInlineTagUI(ev.tags, 'eval', idx);
-      html += `</div>`; box.insertAdjacentHTML('beforeend', html);
+      html += generateInlineTagUI(ev.tags, 'eval', idx); html += `</div>`; box.insertAdjacentHTML('beforeend', html);
     });
   }
 
@@ -762,27 +717,19 @@
         <textarea rows="2" placeholder="🟢 Good" onchange="sysData.feedbacks[${idx}].good=this.value" style="border-color:#a5d6a7;">${fb.good}</textarea>
         <textarea rows="2" placeholder="⚠️ Bad / Gap" onchange="sysData.feedbacks[${idx}].bad=this.value" style="border-color:#fff59d;">${fb.bad}</textarea>
         <textarea rows="2" placeholder="🚀 Next" onchange="sysData.feedbacks[${idx}].next=this.value" style="border-color:#bbdefb;">${fb.next}</textarea>`;
-      html += generateInlineTagUI(fb.tags, 'fb', idx);
-      html += `</div>`; box.insertAdjacentHTML('beforeend', html);
+      html += generateInlineTagUI(fb.tags, 'fb', idx); html += `</div>`; box.insertAdjacentHTML('beforeend', html);
     });
   }
 
   function generatePreview() {
     if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;font-weight:bold;'>事案を紐付けしてください。</p>"; return; }
-    
-    let envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
-    let envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
-    
+    let envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || ""; let envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
     let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
     document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
     document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
 
-    sysData.disease.maternal = document.getElementById("v-maternal").value;
-    sysData.disease.worker = document.getElementById("v-worker").value;
-    
-    let diseaseStr = `[${sysData.disease.main}]`; 
-    if(sysData.disease.cause) diseaseStr += ` 原因:${sysData.disease.cause}`;
-    if(sysData.disease.sub) diseaseStr += ` -> ${sysData.disease.sub}`;
+    sysData.disease.maternal = document.getElementById("v-maternal").value; sysData.disease.worker = document.getElementById("v-worker").value;
+    let diseaseStr = `[${sysData.disease.main}]`; if(sysData.disease.cause) diseaseStr += ` 原因:${sysData.disease.cause}`; if(sysData.disease.sub) diseaseStr += ` -> ${sysData.disease.sub}`;
     diseaseStr += ` (母子:${sysData.disease.maternal} 労災:${sysData.disease.worker})`;
 
     let evalHtml = sysData.evals.map((e,i) => {
@@ -806,11 +753,9 @@
     }).join("");
     
     const summaryVal = document.getElementById("v-summary").value || "";
-    
     let displayDiags = [...(sysData.tags.diagnosis||[])];
     const unaddedDiag = document.getElementById("diag-name").value.trim();
     if(unaddedDiag && !displayDiags.includes(unaddedDiag)) displayDiags.push(unaddedDiag);
-
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
     
@@ -818,6 +763,7 @@
       <div style="font-size:14px; line-height:1.6; padding:12px;">
         <h2 style="margin-top:0; color:var(--ink);">AW109 デブリーフィング</h2>
         <div style="background:#f9f9f9; padding:8px; border-radius:6px; margin-bottom:12px;">
+          <b>要請番号:</b> No.${currentCase["要請番号"]}<br>
           <b>疾患分類:</b> ${diseaseStr}<br>
           <b>現場診断:</b> ${displayDiags.join(", ")||'-'}<br>
           <b>事前実施処置:</b> ${activeProcs.join(", ")||'-'}<br>
@@ -836,17 +782,14 @@
 
     const unaddedDiag = document.getElementById("diag-name").value.trim();
     if(unaddedDiag && !sysData.tags.diagnosis.includes(unaddedDiag)) { sysData.tags.diagnosis.push(unaddedDiag); }
-
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
-
     sysData.summary = document.getElementById("v-summary").value;
     sysData.disease.maternal = document.getElementById("v-maternal").value;
     sysData.disease.worker = document.getElementById("v-worker").value;
 
     sysData.ext = []; document.querySelectorAll('.ext-row').forEach(r => sysData.ext.push({affil:r.querySelector('.e-affil').value, name:r.querySelector('.e-name').value}));
     sysData.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sysData.ojt.push({job:r.querySelector('.o-job').value, name:r.querySelector('.o-name').value}));
-
     let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
     sysData.ext.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); }); sysData.ojt.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
 
@@ -860,38 +803,28 @@
     }).join("\n");
 
     let cg="", cb="";
-    sysData.feedbacks.forEach(f => { 
-      f.tags.forEach(t => allUsedTags.push(t));
-      let nm = f.name ? `(${f.name})` : ''; 
-      if(f.good) cg += `【${f.prof}${nm}】\n${f.good}\n`; 
-      if(f.bad||f.next) cb += `【${f.prof}${nm}】\n[Bad] ${f.bad}\n[Next] ${f.next}\n`; 
-    });
-
+    sysData.feedbacks.forEach(f => { f.tags.forEach(t => allUsedTags.push(t)); let nm = f.name ? `(${f.name})` : ''; if(f.good) cg += `【${f.prof}${nm}】\n${f.good}\n`; if(f.bad||f.next) cb += `【${f.prof}${nm}】\n[Bad] ${f.bad}\n[Next] ${f.next}\n`; });
     const uniqueTags = [...new Set(allUsedTags)];
 
+    // 🌟 修正: 固定キーは常に「要請番号」で統一（データの分裂を防ぐ）
     const tagsObj = {
       diseaseMain: sysData.disease.main, diseaseSub: sysData.disease.sub || sysData.disease.cause,
       disease: (sysData.tags['diagnosis']||[]).join(", "),
       scene: [...new Set(sysData.evals.map(e => e.scene=='⑨ その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
       inlineTags: uniqueTags.join(", ")
     };
-
     const envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
     const envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
 
-    const payload = { caseId: currentCase["要親番号"] || currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: envLoc, method: envMethod, participants: ptList.join(", "), systemData: sysData };
+    const payload = { caseId: currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: envLoc, method: envMethod, participants: ptList.join(", "), systemData: sysData };
 
     const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
     showLoader("保存処理中...", "デブリーフィングデータベースへ保存しています");
-    
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
       const json = await res.json(); 
       if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else { throw new Error(json.message); }
-    } catch(e) { 
-      sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);
-      alert("通信エラーが発生しました。入力データは保持されています。電波の良い場所で再度お試しください。"); 
-    } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
+    } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.toString()); } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
   }
 </script>
 </body>
