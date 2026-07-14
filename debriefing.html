@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
+<!DOCTYPE html><html lang="ja"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -76,36 +74,19 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
-  </style>
-</head>
-<body>
-
-<datalist id="ext-affil-list"></datalist>
-<datalist id="ext-staff-list"></datalist>
-<datalist id="diagnosis-list"></datalist>
-
-<div id="global-loader">
+  </style></head><body><datalist id="ext-affil-list"></datalist><datalist id="ext-staff-list"></datalist><datalist id="diagnosis-list"></datalist><div id="global-loader">
   <div class="spinner"></div>
   <div style="font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px;" id="loader-main-text">通信中...</div>
-  <div style="font-size: 13px; font-weight: 600; color: var(--sub); text-align: center;" id="loader-sub-text">データベースに接続しています</div>
-</div>
-
-<header>
+  <div style="font-size: 13px; font-weight: 600; color: var(--sub); text-align: center;" id="loader-sub-text">データベースに接続しています</div></div><header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.10</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.11</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
-  </div>
-</header>
-
-<div class="tab-container no-print">
+  </div></header><div class="tab-container no-print">
   <div class="nav-tab active" onclick="switchTab('sec1')">1.環境・疾患</div>
   <div class="nav-tab" onclick="switchTab('sec2')">2.症例評価</div>
   <div class="nav-tab" onclick="switchTab('sec3')">3.多職種</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.保存</div>
-</div>
-
-<main>
+  <div class="nav-tab" onclick="switchTab('sec4')">4.保存</div></div><main>
   <div class="sync-status no-print" id="sync-status" style="font-size:10px; color:var(--sub); text-align:right; margin-bottom:8px; font-weight:bold;">データ状態: 確認中...</div>
 
   <!-- ================= TAB 1: 環境・疾患 ================= -->
@@ -256,11 +237,7 @@
     <div class="no-print">
       <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
     </div>
-  </div>
-
-</main>
-
-<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+  </div></main><div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
     <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
@@ -268,10 +245,7 @@
     <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px;"></textarea>
     <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
     <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
-  </div>
-</div>
-
-<script>
+  </div></div><script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   const CACHE_KEY = "aw109_debriefing_cache_v118";
@@ -315,20 +289,25 @@
     evals: [], feedbacks: []
   };
 
+  let loaderTimer1, loaderTimer2;
   function showLoader(msg1, msg2) {
     const loader = document.getElementById("global-loader");
     document.getElementById("loader-main-text").innerText = msg1; 
     document.getElementById("loader-sub-text").innerHTML = msg2;
     loader.style.display = "flex";
+    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
   }
-  
-  function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
+  function hideLoader() { 
+    clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
+    document.getElementById("global-loader").style.display = "none"; 
+  }
   
   function sendErrorLog(errMsg) { 
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.10)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.11)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -564,7 +543,6 @@
       let match = true;
       if(qId && !String(r.id).includes(qId)) match = false;
       
-      // 🌟 1桁月日のパディング補正ロジック
       let rDate = "";
       if (r.date) {
         let rawDate = String(r.date).split(" ")[0];
@@ -614,7 +592,6 @@
 
     let importedProcs = [];
 
-    // 🌟 処置JSON（procsState）の安全な自動解釈展開とオブジェクト保護ロジック
     let procStateStr = currentCase["procsState"] || currentCase["処置JSON"] || "";
     if (procStateStr) {
       try {
@@ -933,7 +910,4 @@
       sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);
       alert("通信エラーが発生しました。入力データは保持されています。電波の良い場所で再度お試しください。"); 
     } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
-  }
-</script>
-</body>
-</html>
+  }</script></body></html>
