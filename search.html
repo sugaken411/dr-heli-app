@@ -55,7 +55,7 @@
     .dyn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #eee; }
     .dyn-grid input { font-size: 12px; padding: 6px; }
 
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; }
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
     
@@ -102,7 +102,7 @@
       <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v11.3</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v11.4</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -212,13 +212,23 @@
         <input type="hidden" id="edit-scheme">
       </div>
       
-      <div class="form-group">
-        <label>キーワード選択 (タップで切替)</label>
-        <div class="chip-grid" id="edit-chip-keyword"></div>
+      <!-- 🌟 アコーディオン式に改修 -->
+      <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px;">
+        <label style="margin-bottom:8px;">キーワード選択</label>
+        <div class="chip-grid" id="edit-chip-keyword-selected" style="margin-bottom:8px;"></div>
+        <details>
+          <summary style="font-size:12px; color:var(--blue); font-weight:bold; cursor:pointer; user-select:none; margin-top:8px;">▶ 他のキーワードを追加・変更</summary>
+          <div class="chip-grid" id="edit-chip-keyword-all" style="margin-top:12px;"></div>
+        </details>
       </div>
-      <div class="form-group">
-        <label>現場診断・病名 (タップで切替)</label>
-        <div class="chip-grid" id="edit-chip-diagnosis"></div>
+
+      <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px;">
+        <label style="margin-bottom:8px;">現場診断・病名</label>
+        <div class="chip-grid" id="edit-chip-diagnosis-selected" style="margin-bottom:8px;"></div>
+        <details>
+          <summary style="font-size:12px; color:var(--blue); font-weight:bold; cursor:pointer; user-select:none; margin-top:8px;">▶ 他の病名を追加・変更</summary>
+          <div class="chip-grid" id="edit-chip-diagnosis-all" style="margin-top:12px;"></div>
+        </details>
       </div>
 
       <div class="edit-section-title">👨‍⚕️ 搭乗スタッフ</div>
@@ -239,7 +249,17 @@
         <div class="form-group" style="flex:1;"><label>終了</label><input type="time" id="edit-end"></div>
       </div>
 
+      <!-- 🌟 処置テキスト編集エリアを追加 -->
       <div class="edit-section-title">📦 消費資機材・各種処置</div>
+      <div class="form-group">
+        <label>簡易処置リスト (エコー、挿管、NPPVなどはここを直接編集)</label>
+        <textarea id="edit-procs" rows="3" placeholder="エコー(FAST), 気管挿管..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>外傷処置 (固定・保温など)</label>
+        <input type="text" id="edit-trauma" placeholder="バックボード, 頸椎カラー...">
+      </div>
+
       <div id="edit-supply-container" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;"></div>
 
       <div class="edit-section-title">🌬️ 酸素・人工呼吸器・CPR詳細設定</div>
@@ -307,14 +327,16 @@
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   
-  // 🌟 超高感度エラー監視機能の導入
+  // 🌟 Load failed 無視の最強エラー監視
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
     return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
-    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) return;
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
   let activePin = ""; 
@@ -344,6 +366,7 @@
   }
   
   function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -538,8 +561,11 @@
           const isDone = (r["ステータス"] || "").includes("完了") && !(r["ステータス"] || "").includes("未完了");
           const isKari = String(r["要請番号"] || "").includes("(仮)");
           const idColor = isKari ? "color:var(--brand);" : "color:var(--ink);";
-          const reqTime = r["要請時刻・施設間搬送依頼時刻"] || "--:--";
-          const cntTime = r["接触"] || "--:--";
+          
+          // 🌟 時間のフォーマット処理を安全に
+          const safeTime = (t) => { if(!t) return "--:--"; let s = String(t); if(s.includes("T")) return s.split("T")[1].substring(0,5); return s.substring(0,5); };
+          const reqTime = safeTime(r["要請時刻・施設間搬送依頼時刻"]);
+          const cntTime = safeTime(r["接触"]);
           
           return `
           <div class="res-item" onclick='openDetail(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
@@ -549,10 +575,10 @@
             </div>
             <div style="font-size:12px; color:var(--ink); margin-bottom:4px; display:flex; justify-content:space-between;">
               <span><b>${r["スキーム選択"]||"未選択"}</b></span>
-              <span>[要請 ${String(reqTime).substring(0,5)}] 出場先: ${r["出場先"]||"-"}</span>
+              <span>[要請 ${reqTime}] 出場先: ${r["出場先"]||"-"}</span>
             </div>
             <div style="font-size:12px; color:var(--sub); margin-bottom:4px;"><b>Dr:</b> ${r["フライトドクター"]||"-"} ｜ <b>Ns:</b> ${r["フライトナース"]||"-"}</div>
-            <div style="font-size:12px; color:var(--sub);"><b>接触［${String(cntTime).substring(0,5)}］</b> ｜ <b>病着:</b> ${String(r["病着"]||"--:--").substring(0,5)} ｜ <b>終了:</b> ${String(r["終了"]||"--:--").substring(0,5)}</div>
+            <div style="font-size:12px; color:var(--sub);"><b>接触［${cntTime}］</b> ｜ <b>病着:</b> ${safeTime(r["病着"])} ｜ <b>終了:</b> ${safeTime(r["終了"])}</div>
           </div>`;
         }).join("");
       } else { throw new Error(json.message); }
@@ -574,18 +600,38 @@
     } else { 
       currentEditSysData.tags[cat].push(item); 
     } 
-    renderEditChips('edit-chip-keyword', masters.keyword, 'keyword'); 
-    renderEditChips('edit-chip-diagnosis', masters.diagnosis, 'diagnosis'); 
+    renderEditChips(cat); 
   }
   
-  function renderEditChips(containerId, list, cat) { 
-    const box = document.getElementById(containerId); 
-    box.innerHTML = ""; 
-    list.forEach(item => { 
-      const isOn = currentEditSysData.tags[cat] && currentEditSysData.tags[cat].includes(item); 
-      box.innerHTML += `<div class="${isOn?'chip on':'chip'}" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`; 
-    }); 
+  // 🌟 アコーディオンと選択済みを分けて描画する関数
+  function renderEditChips(cat) { 
+    const selBox = document.getElementById(`edit-chip-${cat}-selected`);
+    const allBox = document.getElementById(`edit-chip-${cat}-all`);
+    selBox.innerHTML = ""; allBox.innerHTML = "";
+    
+    const list = masters[cat] || [];
+    const currentTags = currentEditSysData.tags[cat] || [];
+    
+    currentTags.forEach(item => {
+      selBox.innerHTML += `<div class="chip on" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`;
+    });
+    if(currentTags.length === 0) selBox.innerHTML = `<span style="font-size:12px; color:var(--sub);">選択なし</span>`;
+    
+    list.forEach(item => {
+      if(!currentTags.includes(item)) {
+        allBox.innerHTML += `<div class="chip" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`;
+      }
+    });
   }
+
+  // 🌟 時間のフォーマット処理をより強固に修正（ISO形式のバグ防止）
+  const fmtTime = (t) => { 
+    if(!t) return ""; 
+    let s = String(t);
+    if(s.includes("T")) s = s.split("T")[1];
+    else if(s.includes(" ")) s = s.split(" ")[1];
+    return s.substring(0,5); 
+  };
 
   function openDetail(row) {
     document.getElementById("edit-old-id").value = row["要請番号"]; 
@@ -622,15 +668,15 @@
       currentEditSysData.tags.diagnosis = row["現場診断"].split(",").map(d => d.trim()).filter(Boolean); 
     }
     
-    renderEditChips('edit-chip-keyword', masters.keyword, 'keyword'); 
-    renderEditChips('edit-chip-diagnosis', masters.diagnosis, 'diagnosis');
+    renderEditChips('keyword'); 
+    renderEditChips('diagnosis');
     
     const schemeVal = row["スキーム選択"] || ""; document.getElementById("edit-scheme").value = schemeVal;
     document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => { 
       b.classList.toggle('active', schemeVal && b.innerText.includes(schemeVal.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込"))); 
     });
     
-    const fmtTime = (t) => t ? String(t).substring(0, 5) : "";
+    // 🌟 時間の連携を確実に
     document.getElementById("edit-request").value = fmtTime(row["要請時刻・施設間搬送依頼時刻"]); 
     document.getElementById("edit-takeoff").value = fmtTime(row["初期離陸時間"]); 
     document.getElementById("edit-landing").value = fmtTime(row["最終着陸時間"]); 
@@ -638,10 +684,13 @@
     document.getElementById("edit-arrival").value = fmtTime(row["病着"]); 
     document.getElementById("edit-end").value = fmtTime(row["終了"]);
     
+    // 🌟 処置リストの反映（テキストエリアで直接編集）
+    document.getElementById("edit-procs").value = row["簡易処置リスト"] || "";
+    document.getElementById("edit-trauma").value = row["外傷処置"] || "";
+
     document.getElementById("edit-biko").value = row["備考"] || ""; 
     document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
     
-    // 🌟 処置リストの復元 (胸腔開放・血糖測定を追加)
     let supplyHtml = ""; 
     const lineKeys = ["20G", "18G", "22G", "24G", "ベニューラ", "骨髄針", "28Frトロッカー", "20Frトロッカー"];
     lineKeys.forEach(k => { 
@@ -661,15 +710,13 @@
         </div>`; 
     });
     
-    // 🌟 マスタチェック用
     const chkOnlyKeys = [
       { key: "1%カルボカイン10ml使用", label: "カルボカイン" }, 
       { key: "除細動パッド", label: "除細動パッド" }, 
       { key: "心嚢穿刺・心嚢ドレナージ", label: "心嚢ドレナージ" },
-      { key: "胸腔開放", label: "胸腔開放" }, // 🌟 追加
-      { key: "血糖測定", label: "血糖測定" }  // 🌟 追加
+      { key: "胸腔開放", label: "胸腔開放" },
+      { key: "血糖測定", label: "血糖測定" }
     ];
-    
     chkOnlyKeys.forEach(obj => { 
       let v = String(row[obj.key] || ""); 
       let isChecked = (v.includes("◯") || v.includes("キット")) ? "checked" : ""; 
@@ -794,6 +841,8 @@
       "接触": document.getElementById("edit-contact").value, 
       "病着": document.getElementById("edit-arrival").value, 
       "終了": document.getElementById("edit-end").value, 
+      "簡易処置リスト": document.getElementById("edit-procs").value, // 🌟 処置の保存
+      "外傷処置": document.getElementById("edit-trauma").value, // 🌟 外傷の保存
       "備考": document.getElementById("edit-biko").value, 
       "現場診断": (currentEditSysData.tags.diagnosis||[]).join(", ") 
     };
@@ -809,8 +858,6 @@
     if (document.getElementById("edit-chk-1%カルボカイン10ml使用").checked) payload["1%カルボカイン10ml使用"] = "◯"; else payload["1%カルボカイン10ml使用"] = "";
     if (document.getElementById("edit-chk-除細動パッド").checked) payload["除細動パッド"] = "◯"; else payload["除細動パッド"] = "";
     if (document.getElementById("edit-chk-心嚢穿刺・心嚢ドレナージ").checked) payload["心嚢穿刺・心嚢ドレナージ"] = "キット"; else payload["心嚢穿刺・心嚢ドレナージ"] = "";
-    
-    // 🌟 追加処置の保存
     if (document.getElementById("edit-chk-胸腔開放") && document.getElementById("edit-chk-胸腔開放").checked) payload["胸腔開放"] = "◯"; else payload["胸腔開放"] = "";
     if (document.getElementById("edit-chk-血糖測定") && document.getElementById("edit-chk-血糖測定").checked) payload["血糖測定"] = "◯"; else payload["血糖測定"] = "";
 
