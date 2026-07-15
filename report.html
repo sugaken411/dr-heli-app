@@ -19,6 +19,8 @@
     main { margin-top: calc(56px + env(safe-area-inset-top)); padding: 16px; max-width: 900px; margin-left: auto; margin-right: auto; padding-bottom: 80px; }
     .hidden { display: none !important; }
     
+    /* 🌟 Tailwindの!important干渉を回避する印刷専用定義 */
+    .print-only-container { display: none; }
     @media print { 
       @page { size: portrait; margin: 5mm; } 
       body { background: white; transform: scale(0.65); transform-origin: top left; width: 153%; height: 100%; -webkit-print-color-adjust: exact; margin-top: 0; } 
@@ -26,6 +28,7 @@
       main { margin-top: 0; padding: 0; } 
       .no-print { display: none !important; } 
       #entry-form-container { display: none !important; } 
+      .print-only-container { display: block !important; }
     }
     
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
@@ -48,15 +51,22 @@
       <button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hidden"></span>
     </div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.5</span></div>
+    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.6</span></div>
     <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
   </header>
 
   <main>
-    <div class="hidden print:block mb-4 border-2 border-slate-800 p-3 rounded-lg bg-white">
-      <div class="flex justify-between font-bold text-sm mb-2"><span class="text-lg tracking-widest">業務日報（浜町日誌）</span><span class="text-lg">日付: <span id="print-date"></span></span></div>
-      <div class="flex justify-between font-bold text-sm mb-2"><span>フライトドクター: <span id="print-dr">未入力</span></span><span>記載者(Ns): <span id="print-ns">未入力</span></span></div>
-      <div class="font-bold text-sm border-t border-slate-300 pt-2 mt-1">待機事由/備考: <span id="print-reason">特になし</span></div>
+    <!-- 🌟 印刷時にTailwindのバグを回避して100%表示されるように修正 -->
+    <div class="print-only-container mb-4 border-2 border-slate-800 p-4 rounded-lg bg-white">
+      <div class="flex justify-between font-bold text-sm mb-2">
+        <span class="text-lg tracking-widest font-extrabold">業務日報（浜町日誌）</span>
+        <span class="text-lg">日付: <span id="print-date"></span></span>
+      </div>
+      <div class="flex justify-between font-bold text-sm mb-2 border-t border-slate-200 pt-2">
+        <span>フライトドクター: <span id="print-dr" class="font-black text-slate-800">未入力</span></span>
+        <span>記載者(Ns): <span id="print-ns" class="font-black text-slate-800">未入力</span></span>
+      </div>
+      <div class="font-bold text-sm border-t border-slate-200 pt-2 mt-1">待機事由/備考: <span id="print-reason">特になし</span></div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-4 flex flex-wrap gap-3 justify-between items-center no-print">
@@ -109,7 +119,8 @@
       </div>
       <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
         <div class="md:col-span-3"><label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label><select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700"><option value="mission">🚁 ヘリ活動(実施)</option><option value="cancel">⚠️ キャンセル</option><option value="inspection">⚙️ 始業点検</option><option value="inspection_end">🛠️ 終業点検</option><option value="assistant">🏃 補助者</option><option value="management">📁 管理</option><option value="group">👥 グループ</option><option value="other">💼 その他</option></select></div>
-        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">事案No</label><input type="tel" inputmode="numeric" id="event-no" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold" oninput="toHalfWidth(this)"></div>
+        <!-- 🌟 「事案No」から、手動入力を想定した統一名称「要請番号 / タイトル」へ改善 -->
+        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">要請番号 / タイトル</label><input type="text" id="event-no" placeholder="12345 等" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-bold" oninput="toHalfWidth(this)"></div>
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label><input type="time" id="event-start" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">終了時間</label><input type="time" id="event-end" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
         <div class="md:col-span-2 flex items-center h-10 px-2 bg-white rounded-lg border border-slate-300 mb-[1px]"><label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer w-full justify-center"><input type="checkbox" id="event-continuous" class="w-4 h-4 text-blue-600"> 連続出動</label></div>
@@ -126,7 +137,7 @@
       <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 font-bold text-slate-700 text-sm">📋 リスト</div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm whitespace-nowrap">
-          <thead class="bg-slate-100 text-slate-500 text-xs border-b border-slate-300"><tr><th class="px-4 py-3 w-32">種別</th><th class="px-4 py-3 w-24">No.</th><th class="px-4 py-3 w-32">時間</th><th class="px-4 py-3 w-20">時間</th><th class="px-4 py-3 min-w-[200px]">内容</th><th class="px-4 py-3 w-24 text-center no-print">操作</th></tr></thead>
+          <thead class="bg-slate-100 text-slate-500 text-xs border-b border-slate-300"><tr><th class="px-4 py-3 w-32">種別</th><th class="px-4 py-3 w-24">No / タイトル</th><th class="px-4 py-3 w-32">時間</th><th class="px-4 py-3 w-20">時間</th><th class="px-4 py-3 min-w-[200px]">内容</th><th class="px-4 py-3 w-24 text-center no-print">操作</th></tr></thead>
           <tbody id="list-body" class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
@@ -149,7 +160,6 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     const PIN_CODE = "5740";
 
-    // 🌟 Load failedの握りつぶし付きグローバルエラー制御
     window.onerror = function(message, source, lineno, colno, error) {
       const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
       sendErrorLog(errDetail); 
@@ -158,7 +168,7 @@
     window.addEventListener('unhandledrejection', function(event) {
       const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
       if(String(reason).includes("Load failed") || String(reason).includes("Failed to fetch")) {
-        console.warn("オフライン・ネットワーク切断によるFetchエラーを検知。エラー通知を抑止します。");
+        console.warn("オフライン・通信障害を検知。");
         return;
       }
       sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
@@ -210,7 +220,6 @@
 
     function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
 
-    // 🌟 日付の正規化 (ゼロパディング処理)
     function normalizeDate(rawDate) {
       if (!rawDate) return "";
       let rawDateStr = String(rawDate).split(" ")[0]; 
@@ -221,7 +230,6 @@
       return rawDateStr.replace(/\//g, "-");
     }
 
-    // 🌟 同期完了時間のタイムスタンプ表示更新
     function updateSyncTimestamp() {
       const tsSpan = document.getElementById("sync-timestamp");
       const now = new Date();
@@ -261,7 +269,7 @@
         } else { throw new Error(json.message); }
       } catch(e) { 
         sendErrorLog(e.toString()); 
-        alert("初期通信エラーが発生しました。接続を確認してください。"); 
+        alert("初期通信エラーが発生しました。"); 
       } finally { showLoader(false); }
     }
 
@@ -364,13 +372,24 @@
     function populateSelect(id, array) { const sel = document.getElementById(id); sel.innerHTML = `<option value="">-- 選択 --</option>`; array.forEach(name => sel.innerHTML += `<option value="${name}">${name}</option>`); sel.innerHTML += `<option value="その他">その他(手入力)</option>`; }
     function toggleCustomInput(sId, iId) { const sel = document.getElementById(sId); const inp = document.getElementById(iId); if (sel.value === 'その他') { inp.classList.remove('hidden'); inp.focus(); } else { inp.classList.add('hidden'); inp.value = ''; } updatePrintHeader(); }
     
+    // 🌟 待機終了は17:30か「日没1時間前」の「早い方」を完全厳密計算
     function calculateSun() {
       const dateStr = normalizeDate(document.getElementById('info-date').value); updatePrintHeader();
       if (!dateStr || typeof SunCalc === 'undefined') return;
-      const date = new Date(dateStr.replace(/-/g, '/')); const times = SunCalc.getTimes(date, 31.5602, 130.558);
+      
+      const date = new Date(dateStr.replace(/-/g, '/')); 
+      const times = SunCalc.getTimes(date, 31.5602, 130.558); // 鹿児島浜町
       const fmt = d => d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-      const limit = new Date(date); limit.setHours(17, 30, 0); const standby = (times.sunset.getTime() - 60*60*1000 < limit.getTime()) ? new Date(times.sunset.getTime() - 60*60*1000) : limit;
-      document.getElementById('sun-display').innerHTML = `<span>🌅 日出:${fmt(times.sunrise)}</span><span>🌇 日没:${fmt(times.sunset)}</span><span class="font-bold border-l border-amber-200 pl-3 ml-1 text-amber-900">⏱️ 待機終了:${fmt(standby)}</span>`;
+      
+      const limit1730 = new Date(date); 
+      limit1730.setHours(17, 30, 0, 0); 
+      
+      const sunsetMinus1Hr = new Date(times.sunset.getTime() - 60 * 60 * 1000); 
+      
+      // 早い方を算出 (Math.minを使用)
+      const standbyTime = new Date(Math.min(limit1730.getTime(), sunsetMinus1Hr.getTime()));
+      
+      document.getElementById('sun-display').innerHTML = `<span>🌅 日出:${fmt(times.sunrise)}</span><span>🌇 日没:${fmt(times.sunset)}</span><span class="font-bold border-l border-amber-200 pl-3 ml-1 text-amber-900">⏱️ 待機終了:${fmt(standbyTime)}</span>`;
     }
 
     function drawGrid() {
