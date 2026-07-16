@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="ja"><head>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -74,19 +76,36 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
-  </style></head><body><datalist id="ext-affil-list"></datalist><datalist id="ext-staff-list"></datalist><datalist id="diagnosis-list"></datalist><div id="global-loader">
+  </style>
+</head>
+<body>
+
+<datalist id="ext-affil-list"></datalist>
+<datalist id="ext-staff-list"></datalist>
+<datalist id="diagnosis-list"></datalist>
+
+<div id="global-loader">
   <div class="spinner"></div>
   <div style="font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px;" id="loader-main-text">通信中...</div>
-  <div style="font-size: 13px; font-weight: 600; color: var(--sub); text-align: center;" id="loader-sub-text">データベースに接続しています</div></div><header>
+  <div style="font-size: 13px; font-weight: 600; color: var(--sub); text-align: center;" id="loader-sub-text">データベースに接続しています</div>
+</div>
+
+<header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.11</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.13</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
-  </div></header><div class="tab-container no-print">
+  </div>
+</header>
+
+<div class="tab-container no-print">
   <div class="nav-tab active" onclick="switchTab('sec1')">1.環境・疾患</div>
   <div class="nav-tab" onclick="switchTab('sec2')">2.症例評価</div>
   <div class="nav-tab" onclick="switchTab('sec3')">3.多職種</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.保存</div></div><main>
+  <div class="nav-tab" onclick="switchTab('sec4')">4.保存</div>
+</div>
+
+<main>
   <div class="sync-status no-print" id="sync-status" style="font-size:10px; color:var(--sub); text-align:right; margin-bottom:8px; font-weight:bold;">データ状態: 確認中...</div>
 
   <!-- ================= TAB 1: 環境・疾患 ================= -->
@@ -232,33 +251,50 @@
   <!-- ================= TAB 4: 保存 ================= -->
   <div id="tab-sec4" class="tab-content">
     <div class="card" style="padding: 0;"><div id="print-area"></div></div>
-    <!-- 🌟 エラー監視表示枠 -->
     <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; padding:16px;"></div>
     <div class="no-print">
       <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
     </div>
-  </div></main><div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
     <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px;"></textarea>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px CONTAINER;"></textarea>
     <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
     <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
-  </div></div><script>
+  </div>
+</div>
+
+<script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   const CACHE_KEY = "aw109_debriefing_cache_v118";
 
-  // 🌟 超高感度エラー監視機能の導入
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
     return false;
   };
   window.addEventListener('unhandledrejection', function(event) {
-    sendErrorLog(`Type: PromiseRejection\nReason: ${event.reason ? (event.reason.stack || event.reason) : 'N/A'}`);
+    const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
+    if(String(reason).includes("Load failed")) return;
+    sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
+
+  function sendErrorLog(errMsg) { 
+    if(String(errMsg).includes("Load failed")) return;
+    try { 
+      fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.13)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        redirect: "follow" 
+      }); 
+    } catch(e) {} 
+  }
 
   const SCENE_LIST = [
     "① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", 
@@ -290,27 +326,20 @@
   };
 
   let loaderTimer1, loaderTimer2;
-  function showLoader(msg1, msg2) {
+  function showLoader(msg1 = "通信中...", msg2 = "データベースに接続しています") {
     const loader = document.getElementById("global-loader");
-    document.getElementById("loader-main-text").innerText = msg1; 
-    document.getElementById("loader-sub-text").innerHTML = msg2;
-    loader.style.display = "flex";
-    loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+    if (loader) {
+      document.getElementById("loader-main-text").innerText = msg1;
+      document.getElementById("loader-sub-text").innerHTML = msg2;
+      loader.style.display = "flex";
+      loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+    }
   }
   function hideLoader() { 
     clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
-    document.getElementById("global-loader").style.display = "none"; 
-  }
-  
-  function sendErrorLog(errMsg) { 
-    try { 
-      fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.11)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
-        redirect: "follow" 
-      }); 
-    } catch(e) {} 
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "none"; 
   }
 
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
@@ -324,12 +353,12 @@
     if(cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
-        document.getElementById("sync-status").innerText = `データ状態: ${cacheObj.timestamp} 時点のキャッシュを表示中 (裏側で最新データを同期しています...)`;
-        buildUIFromData(cacheObj.allCases, cacheObj.existing, cacheObj.masters);
+        document.getElementById("sync-status").innerText = `データ状態: ${cacheObj.timestamp} 時点のキャッシュを表示中...`;
+        await buildUIFromData(cacheObj.allCases, cacheObj.existing, cacheObj.masters);
         fetchLatestData(true);
-      } catch(e) { fetchLatestData(false); }
+      } catch(e) { await fetchLatestData(false); }
     } else {
-      fetchLatestData(false);
+      await fetchLatestData(false);
     }
   };
 
@@ -347,27 +376,22 @@
       const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
       const debData = (await resDeb.json()).data;
 
-      const cacheObj = {
-        timestamp: Utilities_formatDate(new Date()),
-        allCases: jianData, existing: debData, masters: jsonInit.masters
-      };
+      const cacheObj = { timestamp: Utilities_formatDate(new Date()), allCases: jianData, existing: debData, masters: jsonInit.masters };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
       
-      buildUIFromData(jianData, debData, jsonInit.masters);
+      await buildUIFromData(jianData, debData, jsonInit.masters);
       document.getElementById("sync-status").innerText = `データ状態: 最新に同期完了 (${cacheObj.timestamp})`;
 
     } catch(e) { 
-      if(!isBackground) alert("データベースの同期に失敗しました。電波の良い場所でリロードしてください。");
+      if(!isBackground) alert("データベースの同期に失敗しました。");
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
       sendErrorLog(e.toString());
-    } finally { 
-      if(!isBackground) hideLoader(); 
-    }
+    } finally { if(!isBackground) hideLoader(); }
   }
 
   function Utilities_formatDate(date) { return `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`; }
 
-  function buildUIFromData(jianData, debData, ms) {
+  async function buildUIFromData(jianData, debData, ms) {
     allCasesData = jianData;
     existingDebriefs = debData;
     masters = ms;
@@ -390,7 +414,20 @@
     ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
     renderChips('recorder-container', masters.ns, 'recorder', true);
 
-    searchCases();
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('editId');
+    if (editId) {
+      document.getElementById('s-id').value = editId;
+      document.getElementById("s-date").value = ""; 
+      let targetRow = allCasesData.find(r => String(r.id) === String(editId));
+      if (targetRow) {
+        selectCase(targetRow);
+      } else {
+        searchCases();
+      }
+    } else {
+      searchCases();
+    }
   }
 
   function switchTab(id) {
@@ -484,16 +521,13 @@
 
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }), redirect: "follow" });
-
       if(!sysData.tags.diagnosis) sysData.tags.diagnosis = [];
       if(!sysData.tags.diagnosis.includes(name)) sysData.tags.diagnosis.push(name);
       renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
-      
       if(!masters.diagnosis.includes(name)) masters.diagnosis.push(name);
       document.getElementById("diag-name").value = "";
     } catch(e) {
       alert("マスタの登録に失敗しました");
-      sendErrorLog(e.toString());
     } finally {
       btn.innerText = "＋追加"; btn.disabled = false;
     }
@@ -545,12 +579,12 @@
       
       let rDate = "";
       if (r.date) {
-        let rawDate = String(r.date).split(" ")[0];
-        let dateParts = rawDate.split(/[\/\-]/);
+        let rawDateStr = String(r.date).split(" ")[0]; 
+        let dateParts = rawDateStr.split(/[\/\-]/);
         if (dateParts.length === 3) {
           rDate = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
         } else {
-          rDate = String(r.date).replace(/\//g, "-");
+          rDate = rawDateStr.replace(/\//g, "-");
         }
       }
 
@@ -577,7 +611,7 @@
   }
 
   function selectCase(rowWrapper) {
-    currentCase = rowWrapper.rawData;
+    currentCase = rowWrapper.rawData || rowWrapper;
     document.getElementById("search-results-area").style.display = "none"; 
     document.getElementById("case-data-area").style.display = "block";
     
@@ -591,7 +625,6 @@
     renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
 
     let importedProcs = [];
-
     let procStateStr = currentCase["procsState"] || currentCase["処置JSON"] || "";
     if (procStateStr) {
       try {
@@ -605,9 +638,7 @@
             }
           });
         }
-      } catch(e) {
-        console.warn("JSON Parse Fallback", e);
-      }
+      } catch(e) {}
     }
 
     let procStr = currentCase["簡易処置リスト"] || currentCase["処置リスト"] || currentCase["実施処置"] || currentCase["処置"] || "";
@@ -629,9 +660,9 @@
       importedProcs.push(...traumaStr.split(",").map(s => s.trim()).filter(Boolean));
     }
     
-    let procsDisplay = "";
     if(importedProcs.length > 0) {
-      const uniqueProcs = [...new Set(importedProcs)];
+      const originalTreatment = sysData.tags.globalTreatment || [];
+      const uniqueProcs = [...new Set([...originalTreatment, ...importedProcs])];
       sysData.tags.globalTreatment = uniqueProcs;
       
       uniqueProcs.forEach(p => {
@@ -644,26 +675,32 @@
 
     const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
     if(past && past["システムデータ"]) {
-      if(confirm("💡 この事案はすでにデブリーフィングが登録されています。データを読み込んで上書き編集しますか？")) {
-        restoreSystemData(JSON.parse(past["システムデータ"]));
-        document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
-      }
+      restoreSystemData(JSON.parse(past["システムデータ"]));
+      document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; 
+      document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
     }
     
     document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
   }
 
   function restoreSystemData(sys) {
-    sysData = sys; document.getElementById("v-summary").value = sys.summary || "";
+    sysData = sys; 
+    document.getElementById("v-summary").value = sys.summary || "";
+    
     if(sys.disease) {
        if(sys.disease.main) setDiseaseMain(sys.disease.main);
        if(sys.disease.cause) {
-         const btn = Array.from(document.getElementById("d-sub-pills").children).find(e=>e.innerText===sys.disease.cause);
-         if(btn) setDiseaseCause(sys.disease.cause, btn);
-       }
-       if(sys.disease.sub) {
-         const btn = Array.from(document.getElementById("d-sub-pills-2")?.children||[]).find(e=>e.innerText===sys.disease.sub);
-         if(btn) setDiseaseSubReal(sys.disease.sub, btn);
+         setTimeout(() => {
+           const btn = Array.from(document.getElementById("d-sub-pills").children).find(e => e.innerText === sys.disease.cause);
+           if(btn) setDiseaseCause(sys.disease.cause, btn);
+           
+           if(sys.disease.sub) {
+             setTimeout(() => {
+               const btn2 = Array.from(document.getElementById("d-sub-pills-2")?.children || []).find(e => e.innerText === sys.disease.sub);
+               if(btn2) setDiseaseSubReal(sys.disease.sub, btn2);
+             }, 50);
+           }
+         }, 50);
        }
        document.getElementById("v-maternal").value = sys.disease.maternal || "なし";
        document.getElementById("v-worker").value = sys.disease.worker || "なし";
@@ -702,13 +739,10 @@
   }
 
   function generateInlineTagUI(selectedTags, type, idx) {
-    const isEval = (type === 'eval');
     let html = `<div class="acc-header" onclick="toggleAcc(this, 'inline-tag-${type}-${idx}')" style="background:#f2f2f7; border-radius:6px; padding:8px 12px; margin-top:8px; font-size:12px;">🏷️ 関連タグ・NTS等を選択 ▼</div><div class="acc-body" id="inline-tag-${type}-${idx}" style="padding:12px; border:1px solid var(--line); border-radius:6px; margin-top:4px;">`;
-    
     html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-bottom:4px;">🧠 チーム連携・状況判断 (NTS等)</div><div class="pill-group">`;
     NTS_LIST.forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
     html += `</div>`;
-
     html += `<div style="font-size:11px; font-weight:bold; color:var(--sub); margin-top:8px; margin-bottom:4px;">🛠 実務・処置</div><div class="pill-group">`;
     TAG_MASTERS.practice.items.concat(TAG_MASTERS.treatment.items).forEach(t => { html += `<div class="${selectedTags.includes(t)?'pill on':'pill'}" onclick="toggleInlineTag('${t}', '${type}', ${idx}, this)">${t}</div>`; });
     html += `</div></div>`;
@@ -723,13 +757,11 @@
       const isMed = ev.type === "病態評価(ABCDEF)";
       let html = `<div class="eval-block" id="ev-${ev.id}">
         <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:bold; color:var(--blue); font-size:15px;">📝 評価ポイント #${idx+1}</div><button type="button" class="btn-small" style="background:#ffcdd2; color:#b71c1c;" onclick="sysData.evals.splice(${idx},1); renderEvalBlocks()">削除</button></div>
-        
         <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">活動場面</div>
-        <select onchange="sysData.evals[${idx}].scene=this.value; document.getElementById('ev-sc-oth-${ev.id}').style.display=(this.value==='⑨ その他'?'block':'none')" style="margin-bottom:8px;">
+        <select onchange="sysData.evals[${idx}].scene=this.value; document.getElementById('ev-sc-oth-${ev.id}').style.display=(this.value==='⑨ その他'?'block':'none')">
           <option value="">場面を選択...</option>${SCENE_LIST.map(s => `<option value="${s}" ${ev.scene===s?'selected':''}>${s}</option>`).join('')}
         </select>
         <input type="text" id="ev-sc-oth-${ev.id}" placeholder="その他の場面" value="${ev.sceneOther}" onchange="sysData.evals[${idx}].sceneOther=this.value" style="display:${ev.scene==='⑨ その他'?'block':'none'}; margin-bottom:12px;">
-        
         <div class="radio-group" style="margin-bottom:12px;">
           <label><input type="radio" name="ev-type-${ev.id}" value="状況評価(NTS等)" ${!isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">状況評価 (NTS等)</span></label>
           <label><input type="radio" name="ev-type-${ev.id}" value="病態評価(ABCDEF)" ${isMed?'checked':''} onchange="sysData.evals[${idx}].type=this.value; renderEvalBlocks()"> <span class="radio-lbl">病態評価 (ABCDEF)</span></label>
@@ -747,12 +779,10 @@
         </div>
         <textarea rows="3" placeholder="ABCDEF 所見・アセスメント (フリーテキスト)" onchange="sysData.evals[${idx}].freeABC=this.value">${ev.freeABC}</textarea>`;
       }
-      
       html += `<div style="display:flex; gap:8px; margin-top:8px;">
           <textarea rows="2" placeholder="🟢 Good (良かった点・対応)" onchange="sysData.evals[${idx}].good=this.value" style="border-color:#a5d6a7;">${ev.good}</textarea>
           <textarea rows="2" placeholder="⚠️ Bad / Gap (課題・反省点)" onchange="sysData.evals[${idx}].bad=this.value" style="border-color:#fff59d;">${ev.bad}</textarea>
         </div>`;
-      
       html += generateInlineTagUI(ev.tags, 'eval', idx);
       html += `</div>`; box.insertAdjacentHTML('beforeend', html);
     });
@@ -787,10 +817,8 @@
 
   function generatePreview() {
     if (!currentCase) { document.getElementById("print-area").innerHTML = "<p style='text-align:center;color:var(--brand);padding:20px;font-weight:bold;'>事案を紐付けしてください。</p>"; return; }
-    
     let envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
     let envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
-    
     let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
     document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
     document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
@@ -824,7 +852,6 @@
     }).join("");
     
     const summaryVal = document.getElementById("v-summary").value || "";
-    
     let displayDiags = [...(sysData.tags.diagnosis||[])];
     const unaddedDiag = document.getElementById("diag-name").value.trim();
     if(unaddedDiag && !displayDiags.includes(unaddedDiag)) displayDiags.push(unaddedDiag);
@@ -886,10 +913,16 @@
     });
 
     const uniqueTags = [...new Set(allUsedTags)];
+    
+    let diseaseComboStr = `[${sysData.disease.main}]`;
+    if(sysData.disease.cause) diseaseComboStr += ` 原因:${sysData.disease.cause}`;
+    if(sysData.disease.sub) diseaseComboStr += ` -> ${sysData.disease.sub}`;
+    if((sysData.tags['diagnosis']||[]).length > 0) diseaseComboStr += ` 診断:${(sysData.tags['diagnosis']||[]).join(", ")}`;
 
     const tagsObj = {
-      diseaseMain: sysData.disease.main, diseaseSub: sysData.disease.sub || sysData.disease.cause,
-      disease: (sysData.tags['diagnosis']||[]).join(", "),
+      diseaseMain: sysData.disease.main, 
+      diseaseSub: sysData.disease.sub || sysData.disease.cause,
+      disease: diseaseComboStr,
       scene: [...new Set(sysData.evals.map(e => e.scene=='⑨ その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
       inlineTags: uniqueTags.join(", ")
     };
@@ -910,4 +943,7 @@
       sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);
       alert("通信エラーが発生しました。入力データは保持されています。電波の良い場所で再度お試しください。"); 
     } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
-  }</script></body></html>
+  }
+</script>
+</body>
+</html>
