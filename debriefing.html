@@ -92,7 +92,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.13</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.14</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -141,8 +141,9 @@
       <div class="card">
         <div class="section-label">📝 紐付けデータ</div>
         <div id="v-fetched-data"></div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:12px; margin-bottom:8px;">🚑 事前実施処置 (症例登録から連携)</div>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:12px; margin-bottom:8px;">🚑 事前実施処置 / 特殊ケースタグ</div>
         <div class="pill-group" id="v-fetched-procs"></div>
+        <div class="pill-group" id="chip-container-special" style="margin-top:4px;"></div>
       </div>
 
       <div class="card">
@@ -179,8 +180,20 @@
       </div>
 
       <div class="card">
-        <div class="section-label">📋 概要と現場診断</div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー (※登録時の備考を自動反映)</div>
+        <div class="section-label">📋 要請区分 と 事案概要</div>
+        <div class="radio-group" style="margin-bottom:16px;">
+          <label><input type="radio" name="req-type" value="KEY WORD" onchange="toggleReqType()"> <span class="radio-lbl">KEY WORD</span></label>
+          <label><input type="radio" name="req-type" value="救急隊現着後" onchange="toggleReqType()"> <span class="radio-lbl">救急隊現着後</span></label>
+          <label><input type="radio" name="req-type" value="D-call Net" onchange="toggleReqType()"> <span class="radio-lbl">D-call Net</span></label>
+          <label><input type="radio" name="req-type" value="施設間" onchange="toggleReqType()"> <span class="radio-lbl">施設間搬送</span></label>
+        </div>
+        
+        <div id="kw-container" style="display:none; margin-bottom:16px; background:#f9f9f9; padding:12px; border-radius:8px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">🔑 キーワード指定</div>
+          <div class="pill-group" id="chip-container-keyword"></div>
+        </div>
+
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー</div>
         <textarea id="v-summary" rows="4" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
         
         <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px; margin-top:12px;">🩺 現場診断 (フリーテキスト/マスタ)</div>
@@ -261,9 +274,9 @@
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
-    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:40vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
+    <div id="qa-list" style="font-size:13px; line-height:1.5; color:var(--sub); margin-bottom:16px; max-height:30vh; overflow-y:auto; border-bottom:1px solid var(--line); padding-bottom:12px;">読込中...</div>
     <div style="font-size:13px; font-weight:700; margin-bottom:8px;">💡 開発チームへ要望を送る</div>
-    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px CONTAINER;"></textarea>
+    <textarea id="qa-input" rows="3" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:10px;"></textarea>
     <button type="button" onclick="submitQA(event)" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700; margin-top:8px;">送信</button>
     <button type="button" class="modal-close" onclick="closeModal('qa')">閉じる</button>
   </div>
@@ -290,7 +303,7 @@
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.13)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.14)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -305,7 +318,8 @@
   const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
   const TAG_MASTERS = {
     practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
-    treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] }
+    treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] },
+    special: { label: "🚨 特殊ケース", items: ["小児", "母性", "多数傷病", "緊急外来搬送", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] }
   };
 
   const DISEASE_TREE = {
@@ -319,9 +333,10 @@
   let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[], keyword:[] };
   
   let sysData = {
+    reqType: "",
     disease: { main: "", cause: "", sub: "", maternal: "なし", worker: "なし" },
     summary: "",
-    tags: { diagnosis:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[], globalTreatment:[] },
+    tags: { diagnosis:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[], globalTreatment:[], special:[], keyword:[] },
     evals: [], feedbacks: []
   };
 
@@ -396,6 +411,11 @@
     existingDebriefs = debData;
     masters = ms;
 
+    if(!masters.keyword || masters.keyword.length === 0) {
+      masters.keyword = ["閉じ込められている", "車外放出された", "山岳部滑落", "その他"];
+    }
+    TAG_MASTERS.keyword = { items: masters.keyword };
+
     document.getElementById("ext-affil-list").innerHTML = ""; masters.extAffil.forEach(a => document.getElementById("ext-affil-list").innerHTML += `<option value="${a}">`);
     document.getElementById("ext-staff-list").innerHTML = ""; masters.extStaff.forEach(s => document.getElementById("ext-staff-list").innerHTML += `<option value="${s}">`);
     document.getElementById("diagnosis-list").innerHTML = ""; masters.diagnosis.forEach(d => document.getElementById("diagnosis-list").innerHTML += `<option value="${d}">`);
@@ -435,6 +455,12 @@
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     event.target.classList.add('active'); document.getElementById('tab-' + id).classList.add('active'); window.scrollTo(0,0);
     if (id === 'sec4') generatePreview();
+  }
+
+  function toggleReqType() {
+    const val = document.querySelector('input[name="req-type"]:checked')?.value || ""; 
+    sysData.reqType = val;
+    document.getElementById('kw-container').style.display = (val === 'KEY WORD') ? 'block' : 'none';
   }
 
   function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
@@ -615,9 +641,8 @@
     document.getElementById("search-results-area").style.display = "none"; 
     document.getElementById("case-data-area").style.display = "block";
     
-    if(currentCase["備考"]) {
-      document.getElementById("v-summary").value = currentCase["備考"].replace(/⚠️【使用物品・補充予定メモ】[\s\S]*?------------------\n/g, "").trim();
-    }
+    // 🌟 ①不具合改修: 物理列からの直接展開 (事案概要)
+    document.getElementById("v-summary").value = currentCase["事案概要"] || currentCase["備考"] || "";
     
     if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) { 
       sysData.tags.diagnosis = currentCase["現場診断"].split(",").map(d => d.trim()).filter(Boolean); 
@@ -625,6 +650,22 @@
     renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
 
     let importedProcs = [];
+    
+    // 🌟 ①不具合改修: 物理列からのスマート展開 (正規表現の全廃とプロパティトラバース)
+    const skipKeys = [
+      "要請番号","日付","出場先","フライトドクター","フライトナース","スキーム選択","要請形態","要請区分","特殊ケース",
+      "要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間","接触","病着","終了","往診料","搬送料","長時間加算",
+      "モニター算定時間","経皮的酸素飽和度","EtCO2算定","人工呼吸器管理料","事案概要","備考","ステータス","更新履歴",
+      "システムデータ","現場診断","酸素デバイス詳細","ヘリ在庫フラグ", "小児フラグ", "母性フラグ", "多数傷病フラグ",
+      "procsState", "処置JSON", "簡易処置リスト", "処置リスト", "実施処置", "処置", "外傷処置", "外傷・固定", "外傷"
+    ];
+    
+    Object.keys(currentCase).forEach(k => {
+      if (!skipKeys.includes(k) && !k.startsWith("【") && currentCase[k] !== "" && currentCase[k] !== "FALSE" && currentCase[k] !== "0") {
+        importedProcs.push(k);
+      }
+    });
+
     let procStateStr = currentCase["procsState"] || currentCase["処置JSON"] || "";
     if (procStateStr) {
       try {
@@ -640,25 +681,6 @@
         }
       } catch(e) {}
     }
-
-    let procStr = currentCase["簡易処置リスト"] || currentCase["処置リスト"] || currentCase["実施処置"] || currentCase["処置"] || "";
-    let traumaStr = currentCase["外傷処置"] || currentCase["外傷・固定"] || currentCase["外傷"] || "";
-
-    if(procStr) {
-      try {
-        if(procStr.startsWith('[') || procStr.startsWith('{')) {
-          let parsed = JSON.parse(procStr);
-          if(Array.isArray(parsed)) importedProcs.push(...parsed);
-        } else {
-          importedProcs.push(...procStr.split(",").map(s => s.replace(/x\d+/g,'').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim()).filter(Boolean));
-        }
-      } catch(e) {
-        importedProcs.push(...procStr.split(",").map(s => s.replace(/x\d+/g,'').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim()).filter(Boolean));
-      }
-    }
-    if(traumaStr) {
-      importedProcs.push(...traumaStr.split(",").map(s => s.trim()).filter(Boolean));
-    }
     
     if(importedProcs.length > 0) {
       const originalTreatment = sysData.tags.globalTreatment || [];
@@ -671,6 +693,30 @@
       
       const vProcs = document.getElementById("v-fetched-procs");
       vProcs.innerHTML = uniqueProcs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
+    }
+
+    // 🌟 ①不具合改修: 特殊フラグの物理列ダイレクト判定
+    let flags = [];
+    if (currentCase["小児フラグ"] === "TRUE" || currentCase["小児フラグ"] === true || currentCase["小児フラグ"] === "✓") flags.push("小児");
+    if (currentCase["母性フラグ"] === "TRUE" || currentCase["母性フラグ"] === true || currentCase["母性フラグ"] === "✓") flags.push("母性");
+    if (currentCase["多数傷病フラグ"] === "TRUE" || currentCase["多数傷病フラグ"] === true || currentCase["多数傷病フラグ"] === "✓") flags.push("多数傷病");
+
+    const originalSpecial = sysData.tags.special || [];
+    const uniqueSpecial = [...new Set([...originalSpecial, ...flags])];
+    sysData.tags.special = uniqueSpecial;
+    uniqueSpecial.forEach(p => { if(!TAG_MASTERS.special.items.includes(p)) TAG_MASTERS.special.items.unshift(p); });
+    renderChips('chip-container-special', TAG_MASTERS.special.items, 'special');
+
+    // 🌟 ①不具合改修: 要請区分のUI展開
+    sysData.reqType = currentCase["要請区分"] || "";
+    if (sysData.reqType) {
+      const el = document.querySelector(`input[name="req-type"][value="${sysData.reqType}"]`);
+      if (el) el.checked = true;
+      toggleReqType();
+    }
+    
+    if(sysData.tags.keyword && sysData.tags.keyword.length > 0) {
+       renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
     }
 
     const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
@@ -687,6 +733,12 @@
     sysData = sys; 
     document.getElementById("v-summary").value = sys.summary || "";
     
+    if (sys.reqType) {
+      const el = document.querySelector(`input[name="req-type"][value="${sys.reqType}"]`);
+      if (el) el.checked = true;
+      toggleReqType();
+    }
+
     if(sys.disease) {
        if(sys.disease.main) setDiseaseMain(sys.disease.main);
        if(sys.disease.cause) {
@@ -706,10 +758,12 @@
        document.getElementById("v-worker").value = sys.disease.worker || "なし";
     }
 
-    ['dr','ns','pilot','mechanic','cs','diagnosis','recorder'].forEach(cat => {
+    ['dr','ns','pilot','mechanic','cs','diagnosis','recorder', 'special', 'keyword'].forEach(cat => {
       if(sysData.tags[cat]) {
         if(cat=='diagnosis') renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
         else if(cat=='recorder') renderChips('recorder-container', masters.ns, 'recorder', true);
+        else if(cat=='keyword') renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
+        else if(cat=='special') renderChips('chip-container-special', TAG_MASTERS.special.items, 'special');
         else renderChips(`chip-container-${cat}`, masters[cat], cat);
       }
     });
@@ -859,10 +913,12 @@
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
     
+    // 🌟 ①不具合改修: レポート見出しを「要請区分」へ変更
     document.getElementById("print-area").innerHTML = `
       <div style="font-size:14px; line-height:1.6; padding:12px;">
         <h2 style="margin-top:0; color:var(--ink);">AW109 デブリーフィング</h2>
         <div style="background:#f9f9f9; padding:8px; border-radius:6px; margin-bottom:12px;">
+          <b>要請区分:</b> ${sysData.reqType || '-'}<br>
           <b>疾患分類:</b> ${diseaseStr}<br>
           <b>現場診断:</b> ${displayDiags.join(", ")||'-'}<br>
           <b>事前実施処置:</b> ${activeProcs.join(", ")||'-'}<br>
@@ -924,7 +980,9 @@
       diseaseSub: sysData.disease.sub || sysData.disease.cause,
       disease: diseaseComboStr,
       scene: [...new Set(sysData.evals.map(e => e.scene=='⑨ その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
-      inlineTags: uniqueTags.join(", ")
+      inlineTags: uniqueTags.join(", "),
+      special: (sysData.tags.special || []).join(", "),
+      keyword: (sysData.tags.keyword || []).join(", ")
     };
 
     const envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
