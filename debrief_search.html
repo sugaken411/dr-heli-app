@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
+<!DOCTYPE html><html lang="ja"><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>教育・事案検索コンソール</title>
@@ -33,7 +31,7 @@
     .tag-category-title { font-size: 11px; font-weight: bold; color: var(--ink); margin-bottom: 6px; margin-top: 12px; }
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
-    .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
+    .chip.active { background: var(--blue); color: #fff; border-color: #blue; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
     .btn-search { width: 100%; padding: 14px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 16px; transition: 0.2s; }
     .btn-search:active { transform: scale(0.98); }
@@ -81,7 +79,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.4</span></div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.5</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
     <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -99,7 +97,7 @@
       <div class="cross-item"><label>月で探す (◯年◯月)</label><input type="month" id="q-month" onchange="clearDateRange()"></div>
     </div>
 
-    <div class="section-lbl">👑 搭乗・参加スタッフ</div>
+    <div class="section-lbl">🚁 搭乗・参加スタッフ</div>
     <div class="cross-grid">
       <div class="cross-item"><label>フライトドクター</label><select id="q-dr"><option value="">全て</option></select></div>
       <div class="cross-item"><label>フライトナース</label><select id="q-ns"><option value="">全て</option></select></div>
@@ -146,7 +144,6 @@
   const CACHE_KEY = "aw109_debrief_cache_v12";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
-  // 🌟 標準仕様: Load failed 厳格除外のグローバル例外ハンドリング
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -164,7 +161,7 @@
       fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.4)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.5)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -178,7 +175,6 @@
   const DISEASE_MAIN = ["1外傷", "2心大血管", "3脳血管", "4心肺停止(CPA)", "5その他"];
   const SCENE_LIST = ["① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"];
 
-  // 🌟 標準仕様: インテリジェントローダー
   let loaderTimer1, loaderTimer2;
   function showLoader(msg1 = "通信中...", msg2 = "データベースに接続しています") {
     const loader = document.getElementById("global-loader");
@@ -209,7 +205,6 @@
   function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
   function clearTags() { document.querySelectorAll('.chip.active').forEach(c => c.classList.remove('active')); executeSearch(); }
   
-  // 🌟 Nullセーフ安全保護を適用した制御構造
   function clearDateRange() { 
     const startEl = document.getElementById("q-date-start");
     const endEl = document.getElementById("q-date-end");
@@ -332,7 +327,6 @@
 
     let results = mergedData.filter(m => {
       
-      // 🌟 標準仕様: 日付フォーマットのパディング正規化
       let mDate = "";
       if (m.date) {
         let rawDateStr = String(m.date).split(" ")[0]; 
@@ -351,9 +345,10 @@
       if (ns && m.ns !== ns) return false; 
       if (ext && !m.participants.includes(ext)) return false;
       
+      // 🌟 ①不具合改修: クロス絞り込み検索（ORから確実なAND結合検索へ修正）
       if (activeChips.length > 0) { 
-        const matchTag = activeChips.some(chip => m.tags.some(t => t.includes(chip))); 
-        if (!matchTag) return false; 
+        const matchAllTags = activeChips.every(chip => m.tags.some(t => t.includes(chip))); 
+        if (!matchAllTags) return false; 
       }
       
       if (freeW) { const fullText = (m.summary + " " + m.evalText + " " + m.good + " " + m.bad + " " + m.participants).toLowerCase(); if (!fullText.includes(freeW)) return false; }
