@@ -1,10 +1,11 @@
-<!DOCTYPE html><html lang="ja"><head>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>AW109 統計・BIダッシュボード</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* 🌟 システム完全統一カラー・変数 */
     :root {
       --bg: #f2f2f7; --card: #ffffff; --ink: #1c1c1e; --sub: #8e8e93;
       --brand: #d32f2f; --brand-light: #ffebeb; --blue: #007aff; --med-blue: #e3f2fd;
@@ -79,8 +80,11 @@
       header, .no-print { display: none !important; }
       .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
     }
-  </style></head><body>
+  </style>
+</head>
+<body>
 
+  <!-- 🌟 1. インテリジェントローダーの標準実装 -->
   <div id="global-loader">
     <div class="spinner"></div>
     <div class="loader-text" id="loader-main-text">データ集計中...</div>
@@ -91,7 +95,7 @@
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div class="title-box">JSAMS レジストリ・ダッシュボード <span class="version-tag">v12.1</span></div>
+    <div class="title-box">JSAMS レジストリ・ダッシュボード <span class="version-tag">v14.0</span></div>
     <div class="hdr-group">
       <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
     </div>
@@ -131,6 +135,7 @@
       </div>
     </div>
 
+    <!-- 📊 KPIサマリー領域（第一段：基本要請・出動、デブリーフィング指標） -->
     <div class="kpi-grid">
       <div class="kpi-box">
         <div class="kpi-label">総要請件数</div>
@@ -154,6 +159,27 @@
       </div>
     </div>
 
+    <!-- 📊 KPIサマリー領域（第二段：新設特殊フラグ集計コンポーネント） -->
+    <div class="kpi-grid">
+      <div class="kpi-box" style="background:#e0f2fe; border-color:#bae6fd;">
+        <div class="kpi-label" style="color:#0369a1;">👶 小児事案数</div>
+        <div><span class="kpi-value blue" id="kpi-pediatric">0</span><span class="kpi-unit" style="color:#0369a1;">件</span></div>
+      </div>
+      <div class="kpi-box" style="background:#fce7f3; border-color:#fbcfe8;">
+        <div class="kpi-label" style="color:#be185d;">🤰 母性事案数</div>
+        <div><span class="kpi-value red" id="kpi-maternal">0</span><span class="kpi-unit" style="color:#be185d;">件</span></div>
+      </div>
+      <div class="kpi-box" style="background:#fef3c7; border-color:#fde68a;">
+        <div class="kpi-label" style="color:#b45309;">👥 多数傷病事案数</div>
+        <div><span class="kpi-value orange" id="kpi-multiple">0</span><span class="kpi-unit" style="color:#b45309;">件</span></div>
+      </div>
+      <div class="kpi-box" style="grid-column: span 2; background:#e8f5e9; border-color:#c8e6c9;">
+        <div class="kpi-label" style="color:#2e7d32;">💉 高度処置 実施率 (平均)</div>
+        <div><span class="kpi-value green" id="kpi-procedure-rate">0</span><span class="kpi-unit" style="color:#2e7d32;">%</span></div>
+      </div>
+    </div>
+
+    <!-- 🚁 統計＆分析クロス集計軸の選択UI -->
     <div class="card no-print" style="background:#f4f9ff; border: 1px solid var(--blue);">
       <div class="card-title" style="color:var(--blue); font-weight:800;">🧭 動的分析コントローラー (ヒートマップクロス軸設定)</div>
       <div style="display:flex; flex-wrap:wrap; gap:16px; padding:8px 0;">
@@ -164,6 +190,7 @@
             <option value="フライトナース" selected>フライトナース</option>
             <option value="出場先">出場先</option>
             <option value="スキーム選択">スキーム選択</option>
+            <option value="要請区分">要請区分</option>
             <option value="振り返り場所">振り返り場所（浜町等）</option>
           </select>
         </div>
@@ -173,6 +200,7 @@
             <option value="曜日" selected>曜日</option>
             <option value="時間帯">時間帯 (要請時刻)</option>
             <option value="スキーム選択">スキーム選択</option>
+            <option value="要請区分">要請区分</option>
             <option value="ステータス">ステータス</option>
           </select>
         </div>
@@ -191,6 +219,22 @@
         <div class="card-title">🌡️ 多次元動的クロスヒートマップ</div>
         <div class="chart-container-large">
           <canvas id="pivotHeatmapChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🌟 円グラフセクション（左：スキーム比率、右：要請区分構成比率） -->
+    <div class="grid-2col">
+      <div class="card">
+        <div class="card-title">🚁 スキーム別 割合</div>
+        <div class="chart-container">
+          <canvas id="schemePieChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📌 要請区分別 構成比率</div>
+        <div class="chart-container">
+          <canvas id="reqTypePieChart"></canvas>
         </div>
       </div>
     </div>
@@ -226,7 +270,7 @@
 
     <div class="grid-2col">
       <div class="card">
-        <div class="card-title">🤝 デブリーフィング振り返り場所 (浜町待機所等の活動比率)</div>
+        <div class="card-title">🤝 デブリーフィング振り返り場所 (浜町等の活動比率)</div>
         <div class="chart-container">
           <canvas id="debriefPlaceChart"></canvas>
         </div>
@@ -249,10 +293,13 @@
       </div>
     </div>
 
-  </main><script>
+  </main>
+
+<script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
   
+  // 🌟 2. Load failed の厳格なグローバル例外除外
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
     sendErrorLog(errDetail); 
@@ -261,7 +308,7 @@
   
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
-    if(String(reason).includes("Load failed")) {
+    if(String(reason).includes("Load failed") || String(reason).includes("Failed to fetch")) {
       console.warn("ネットワーク切断(Load failed)を検知しました。エラー報告をスキップします。");
       return;
     }
@@ -275,25 +322,30 @@
   let chartInstances = {}; 
   let statsForCSV = {};
 
+  // 🌟 1. インテリジェントローダーの標準実装
   let loaderTimer1, loaderTimer2;
-  function showLoader() {
-    document.getElementById("global-loader").style.display = "flex";
-    document.getElementById("loader-main-text").innerText = "多次元データベース集計中...";
-    document.getElementById("loader-sub-text").innerText = "データベースに直接接続しています";
-    
-    loaderTimer1 = setTimeout(() => {
-      document.getElementById("loader-sub-text").innerText = "データ量が多いか、電波が弱い可能性があります。そのままお待ちください...";
-    }, 5000);
-    
-    loaderTimer2 = setTimeout(() => {
-      document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>";
-    }, 15000);
+  function showLoader(msg1 = "多次元データ集計中...", msg2 = "データベースに直接接続しています") {
+    const loader = document.getElementById("global-loader");
+    if (loader) {
+      document.getElementById("loader-main-text").innerText = msg1;
+      document.getElementById("loader-sub-text").innerHTML = msg2;
+      loader.style.display = "flex";
+      
+      loaderTimer1 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; 
+      }, 5000);
+      
+      loaderTimer2 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; 
+      }, 15000);
+    }
   }
   
   function hideLoader() {
     clearTimeout(loaderTimer1); 
     clearTimeout(loaderTimer2);
-    document.getElementById("global-loader").style.display = "none";
+    const loader = document.getElementById("global-loader");
+    if (loader) loader.style.display = "none"; 
   }
 
   function sendErrorLog(errMsg) {
@@ -301,7 +353,7 @@
     try {
       fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "error_log", source: "ダッシュボード v12.1", errorMsg: errMsg, userAgent: navigator.userAgent }),
+        body: JSON.stringify({ action: "error_log", source: "統計ダッシュボード v14.0", errorMsg: errMsg, userAgent: navigator.userAgent }),
         redirect: "follow"
       });
     } catch(e) {}
@@ -310,7 +362,7 @@
   window.onload = () => { fetchData(); };
 
   async function fetchData() {
-    showLoader();
+    showLoader("多次元データ集計中...", "データベースに直接接続しています");
     try {
       const res1 = await fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -319,7 +371,6 @@
       });
       const json1 = await res1.json();
       
-      // 🌟 修正: 未定義の fetch_all_debrief アクションを廃止し、既存の資産である fetch_debriefings アクションに紐付けを最適化
       const res2 = await fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), 
@@ -357,6 +408,7 @@
     });
   }
 
+  // 🌟 3. 日付フォーマットのパディング正規化
   function parseAndNormalizeDate(rawDate) {
     if (!rawDate) return "";
     let rawDateStr = String(rawDate).split(" ")[0]; 
@@ -424,7 +476,6 @@
         const rowText = Object.values(row).join(" ");
         if (!rowText.includes(staffFilter)) return false;
       }
-      
       if (keywordFilter) {
         const rowText = Object.values(row).join(" ").toLowerCase();
         if (!rowText.includes(keywordFilter)) return false;
@@ -454,24 +505,59 @@
     }, stepTime);
   }
 
+  // 🌟 ダッシュボード描画処理（JSONパースをパージし、物理列データをダイレクトに高速パース）
   function renderDashboard() {
     statsForCSV = {
-      kpi: {}, scheme: {}, proc: {}, dr: {}, ns: {}, diag: {}, kw: {}, debrief: {}
+      kpi: {}, scheme: {}, reqType: {}, proc: {}, dr: {}, ns: {}, diag: {}, kw: {}, debrief: {}
     };
 
     let total = filteredData.length; 
     let cancel = 0; 
     
+    // 特殊フラグ＆処置高速集計用変数
+    let pediaCount = 0;
+    let maternalCount = 0;
+    let multiCount = 0;
+    let totalProcSum = 0; 
+    
+    // 🌟 物理ヘッダーと完全一致する要請区分の集計オブジェクト
+    let reqTypeCounts = { "【 KEY WORD 】": 0, "【 救急隊現着後 】": 0, "【 D-call Net 】": 0, "【 施設間 】": 0, "未定義/その他": 0 };
+    let schemeCounts = {};
+
     filteredData.forEach(r => {
       const st = String(r["ステータス"] || ""); 
       const scheme = String(r["スキーム選択"] || "");
+      
       if (st.includes("キャンセル")) cancel++;
-      if (scheme) { statsForCSV.scheme[scheme] = (statsForCSV.scheme[scheme]||0) + 1; }
+      
+      // 🌟 JSON.parseを排除し、物理フラグ列をダイレクトに走査
+      if (r["小児フラグ"] === "◯") pediaCount++;
+      if (r["母性フラグ"] === "◯") maternalCount++;
+      if (r["多数傷病フラグ"] === "◯") multiCount++;
+      
+      ["気管挿管", "心エコー", "FAST", "胸腔ドレナージ", "EtCO2"].forEach(p => {
+        if (String(r[p] || "").includes("◯")) totalProcSum++;
+      });
+
+      if (scheme) { 
+        schemeCounts[scheme] = (schemeCounts[scheme] || 0) + 1; 
+      }
+
+      // 要請区分ダイレクト集計
+      const reqType = String(r["要請区分"] || "").trim();
+      if (reqTypeCounts[reqType] !== undefined) {
+        reqTypeCounts[reqType]++;
+      } else if (reqType) {
+        reqTypeCounts["未定義/その他"]++;
+      } else {
+        reqTypeCounts["未定義/その他"]++;
+      }
     });
     
     let actual = total - cancel; 
     let debriefCount = filteredDebriefData.length;
     let debriefRate = actual > 0 ? Math.round((debriefCount / actual) * 100) : 0;
+    let avgProcRate = actual > 0 ? Math.round((totalProcSum / (actual * 5)) * 100) : 0;
     
     let hamachoCount = 0;
     filteredDebriefData.forEach(r => {
@@ -484,14 +570,23 @@
     statsForCSV.kpi = { 
       "総要請件数": total, "実出動件数": actual, 
       "デブリーフィング実施件数": debriefCount, "デブリーフィング実施率(%)": debriefRate,
-      "浜町待機所活動数": hamachoCount
+      "浜町待機所活動数": hamachoCount,
+      "小児事案数": pediaCount, "母性事案数": maternalCount, "多数傷病事案数": multiCount,
+      "高度処置実施率(%)": avgProcRate
     };
+    statsForCSV.scheme = schemeCounts;
+    statsForCSV.reqType = reqTypeCounts;
 
     animateValue("kpi-total", 0, total, 500); 
     animateValue("kpi-actual", 0, actual, 500);
     animateValue("kpi-debrief-count", 0, debriefCount, 500);
     animateValue("kpi-debrief-rate", 0, debriefRate, 500);
     animateValue("kpi-hamacho-count", 0, hamachoCount, 500);
+    
+    animateValue("kpi-pediatric", 0, pediaCount, 500);
+    animateValue("kpi-maternal", 0, maternalCount, 500);
+    animateValue("kpi-multiple", 0, multiCount, 500);
+    animateValue("kpi-procedure-rate", 0, avgProcRate, 500);
     
     let trendCounts = {};
     filteredData.forEach(r => {
@@ -505,18 +600,14 @@
 
     replotHeatmap();
     replotRadar();
+    drawSchemePieChart(schemeCounts);
+    drawReqTypePieChart(reqTypeCounts); 
     drawDebriefPlaceChart();
     
     let diagCounts = {}; let kwCounts = {};
     filteredData.forEach(r => {
-      if(r["システムデータ"]) { 
-        try { 
-          const sys = JSON.parse(r["システムデータ"]); 
-          if(sys.tags && sys.tags.diagnosis) sys.tags.diagnosis.forEach(d => { diagCounts[d] = (diagCounts[d]||0)+1; }); 
-          if(sys.tags && sys.tags.keyword) sys.tags.keyword.forEach(k => { kwCounts[k] = (kwCounts[k]||0)+1; }); 
-        } catch(e){} 
-      }
       if(r["現場診断"]) r["現場診断"].split(",").map(x=>x.trim()).forEach(d => { if(d) diagCounts[d] = (diagCounts[d]||0)+1; });
+      if(r["キーワード要請"]) r["キーワード要請"].split(",").map(x=>x.trim()).forEach(k => { if(k) kwCounts[k] = (kwCounts[k]||0)+1; });
     });
     statsForCSV.diag = diagCounts;
     statsForCSV.kw = kwCounts;
@@ -561,6 +652,8 @@
     ul.innerHTML = sorted.map((item, i) => `<li class="ranking-item"><span class="ranking-rank">${i+1}</span><span class="ranking-name">${item[0]}</span><span class="ranking-count" style="${badgeStyle}">${item[1]}件</span></li>`).join("");
   }
 
+  // --- Chart.js 描画ロジック ---
+
   function drawTrendChart(dataObj) {
     const ctx = document.getElementById('trendChart'); if(!ctx) return;
     if (chartInstances['trend']) chartInstances['trend'].destroy();
@@ -578,6 +671,7 @@
     });
   }
 
+  // 🌟 ヒートマップの縦軸・横軸の選択肢に「要請区分」を正式統合し、名称も完全バインド
   function replotHeatmap() {
     const ctx = document.getElementById('pivotHeatmapChart'); if(!ctx) return;
     if (chartInstances['heatmap']) chartInstances['heatmap'].destroy();
@@ -592,6 +686,8 @@
       ["日", "月", "火", "水", "木", "金", "土"].forEach(d => xLabelsSet.add(d));
     } else if (xKey === "時間帯") {
       for (let h = 8; h <= 18; h++) xLabelsSet.add(`${h}時`);
+    } else if (xKey === "要請区分") {
+      ["【 KEY WORD 】", "【 救急隊現着後 】", "【 D-call Net 】", "【 施設間 】", "未定義/その他"].forEach(k => xLabelsSet.add(k));
     }
 
     filteredData.forEach(row => {
@@ -638,6 +734,8 @@
           let h = parseInt(time.split(":")[0]);
           xVal = `${h}時`;
         }
+      } else if (xKey === "要請区分") {
+        xVal = row[xKey] || "未定義/その他";
       } else {
         xVal = row[xKey] || "不明";
       }
@@ -666,7 +764,7 @@
           backgroundColor: function(context) {
             if (!context.raw) return 'rgba(0,0,0,0)';
             const intensity = context.raw.r / 19;
-            return `rgba(211, 47, 47, ${Math.min(intensity + 0.2, 1.0)})`;
+            return `rgba(0, 122, 255, ${Math.min(intensity + 0.2, 1.0)})`;
           }
         }]
       },
@@ -697,6 +795,59 @@
     });
   }
 
+  function drawSchemePieChart(schemeCounts) {
+    const ctx = document.getElementById('schemePieChart'); if(!ctx) return;
+    if (chartInstances['schemePie']) chartInstances['schemePie'].destroy();
+
+    const labels = Object.keys(schemeCounts);
+    const data = Object.values(schemeCounts);
+
+    chartInstances['schemePie'] = new Chart(ctx.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: ['#007aff', '#34c759', '#ff9500', '#5856d6', '#ff2d55', '#8e8e93'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right' } },
+        cutout: '65%'
+      }
+    });
+  }
+
+  // 🌟 要請区分別 構成比率 Doughnut チャート
+  function drawReqTypePieChart(reqTypeCounts) {
+    const ctx = document.getElementById('reqTypePieChart'); if(!ctx) return;
+    if (chartInstances['reqTypePie']) chartInstances['reqTypePie'].destroy();
+
+    const labels = Object.keys(reqTypeCounts).filter(k => reqTypeCounts[k] > 0);
+    const data = labels.map(k => reqTypeCounts[k]);
+
+    chartInstances['reqTypePie'] = new Chart(ctx.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: ['#af52de', '#ff9500', '#007aff', '#ff2d55', '#8e8e93'],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right' } },
+        cutout: '65%'
+      }
+    });
+  }
+
   function replotRadar() {
     const ctx = document.getElementById('radarChart'); if(!ctx) return;
     if (chartInstances['radar']) chartInstances['radar'].destroy();
@@ -706,9 +857,7 @@
       selectedProcs.push(cb.value);
     });
 
-    if (selectedProcs.length === 0) {
-      return;
-    }
+    if (selectedProcs.length === 0) return;
 
     let actual = filteredData.filter(r => !String(r["ステータス"] || "").includes("キャンセル")).length;
 
@@ -777,6 +926,7 @@
     });
   }
 
+  // 🌟 特殊フラグ、および「要請区分」の統計結果を独立したセクションとして美しくCSV出力
   function exportAggregateCSV() {
     if (filteredData.length === 0) return alert("出力対象データがありません。");
     
@@ -792,13 +942,14 @@
     csvContent += `対象スタッフ: ${document.getElementById("filter-staff").value || "全員"}\n\n`;
 
     addSection("1. KPIサマリー", statsForCSV.kpi);
-    addSection("2. スキーム別件数", statsForCSV.scheme);
-    addSection("3. 主要処置 登録件数", statsForCSV.proc);
-    addSection("4. 現場診断 (上位)", statsForCSV.diag);
-    addSection("5. キーワード要請 (上位)", statsForCSV.kw);
-    addSection("6. デブリーフィング関連トピック (上位)", statsForCSV.debrief);
-    addSection("7. フライトドクター搭乗実績", statsForCSV.dr);
-    addSection("8. フライトナース搭乗実績", statsForCSV.ns);
+    addSection("2. 要請区分別実績件数", statsForCSV.reqType);
+    addSection("3. スキーム別件数", statsForCSV.scheme);
+    addSection("4. 主要処置 登録件数", statsForCSV.proc);
+    addSection("5. 現場診断 (上位)", statsForCSV.diag);
+    addSection("6. キーワード要請 (上位)", statsForCSV.kw);
+    addSection("7. デブリーフィング関連トピック (上位)", statsForCSV.debrief);
+    addSection("8. フライトドクター搭乗実績", statsForCSV.dr);
+    addSection("9. フライトナース搭乗実績", statsForCSV.ns);
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" }); 
     const link = document.createElement("a"); 
