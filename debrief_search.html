@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="ja"><head>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>教育・事案検索コンソール</title>
@@ -31,7 +33,7 @@
     .tag-category-title { font-size: 11px; font-weight: bold; color: var(--ink); margin-bottom: 6px; margin-top: 12px; }
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
-    .chip.active { background: var(--blue); color: #fff; border-color: #blue; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
+    .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
     .btn-search { width: 100%; padding: 14px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 16px; transition: 0.2s; }
     .btn-search:active { transform: scale(0.98); }
@@ -54,6 +56,7 @@
     
     .rc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; } 
     .t-chip { font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: bold; background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
+    .t-chip.special { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
     
     .btn-edit-case { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: block; width: 100%; text-align: center; text-decoration: none; margin-top: 12px; }
 
@@ -79,7 +82,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.5</span></div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.6</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
     <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -159,9 +162,8 @@
     if(String(errMsg).includes("Load failed")) return;
     try { 
       fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.5)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.6)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -182,14 +184,8 @@
       document.getElementById("loader-main-text").innerText = msg1;
       document.getElementById("loader-sub-text").innerHTML = msg2;
       loader.style.display = "flex";
-      
-      loaderTimer1 = setTimeout(() => { 
-        document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; 
-      }, 5000);
-      
-      loaderTimer2 = setTimeout(() => { 
-        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; 
-      }, 15000);
+      loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
     }
   }
   
@@ -249,6 +245,12 @@
       debData.forEach(d => {
         const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
         if(jian) {
+          // 🌟 ②不具合改修: 物理列値から特殊フラグをダイレクト展開
+          let flags = [];
+          if (jian["小児フラグ"] === "TRUE" || jian["小児フラグ"] === true || jian["小児フラグ"] === "✓") flags.push("小児");
+          if (jian["母性フラグ"] === "TRUE" || jian["母性フラグ"] === true || jian["母性フラグ"] === "✓") flags.push("母性");
+          if (jian["多数傷病フラグ"] === "TRUE" || jian["多数傷病フラグ"] === true || jian["多数傷病フラグ"] === "✓") flags.push("多数傷病");
+
           let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"]]
                         .map(t => t ? String(t).split(",") : []).flat().map(t => t.trim()).filter(Boolean);
           
@@ -262,7 +264,8 @@
             contactTime: jian["接触"] || "--:--", dr: jian["フライトドクター"], ns: jian["フライトナース"], 
             participants: d["参加者一覧"] || "", summary: d["概要"], evalText: d["症例評価"], 
             good: d["Good (良かった点)"], bad: d["Bad/Next (課題・次へ)"],
-            tags: uniqueTags, loc: d["振り返り場所"], method: d["振り返り方法"]
+            tags: uniqueTags, loc: d["振り返り場所"], method: d["振り返り方法"],
+            reqType: jian["要請区分"] || "", specialFlags: flags
           });
         }
       });
@@ -326,12 +329,10 @@
     const activeChips = Array.from(document.querySelectorAll('.chip.active')).map(c => c.innerText);
 
     let results = mergedData.filter(m => {
-      
       let mDate = "";
       if (m.date) {
         let rawDateStr = String(m.date).split(" ")[0]; 
         let dateParts = rawDateStr.split(/[\/\-]/);
-        
         if (dateParts.length === 3) {
           mDate = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
         } else {
@@ -345,7 +346,6 @@
       if (ns && m.ns !== ns) return false; 
       if (ext && !m.participants.includes(ext)) return false;
       
-      // 🌟 ①不具合改修: クロス絞り込み検索（ORから確実なAND結合検索へ修正）
       if (activeChips.length > 0) { 
         const matchAllTags = activeChips.every(chip => m.tags.some(t => t.includes(chip))); 
         if (!matchAllTags) return false; 
@@ -361,21 +361,26 @@
     const resArea = document.getElementById("results-area");
     if(results.length === 0) { resArea.innerHTML = "<div style='text-align:center; padding:40px; color:var(--sub);'>条件に一致する事例がありません</div>"; return; }
 
-    resArea.innerHTML = results.map(r => `
+    resArea.innerHTML = results.map(r => {
+      // 🌟 ③不具合改修: 検索結果カードへの要請区分と個別タグ自動点灯UI
+      let specialHtml = r.specialFlags && r.specialFlags.length > 0 ? r.specialFlags.map(f => `<span class="t-chip special">${f}</span>`).join('') + " " : "";
+      
+      return `
       <div class="result-card">
         <div class="rc-header"><div class="rc-id">No.${r.id} <span class="rc-date">(${r.date})</span></div><div class="badge">${r.scheme || '未選択'}</div></div>
         <div class="rc-meta"><span><b>Dr:</b> ${r.dr || '-'} ｜ <b>Ns:</b> ${r.ns || '-'}</span><span>[要請 ${String(r.reqTime).substring(0,5)}] 出場先: ${r.dest || '-'}</span></div>
-        <div class="rc-contact"><b style="color:var(--ink);">接触［${String(r.contactTime).substring(0,5)}］</b> ｜ <b>👤参加:</b> ${r.participants || '未記入'}</div>
-        <div class="rc-context"><b>📖 概要</b><br>${r.summary ? r.summary.replace(/\\n/g, '<br>') : '概要の記載なし'}</div>
+        <div class="rc-contact"><b style="color:var(--ink);">要請区分: ${r.reqType || '-'}</b> ｜ <b style="color:var(--ink);">接触［${String(r.contactTime).substring(0,5)}］</b> ｜ <b>👤参加:</b> ${r.participants || '未記入'}</div>
+        <div class="rc-context"><b>📖 事案概要</b><br>${r.summary ? r.summary.replace(/\\n/g, '<br>') : '事案概要の記載なし'}</div>
         <div class="rc-feedback">
           ${r.good ? `<div class="fb-box"><div class="fb-title">🟢 Good (良かった点)</div>${r.good.replace(/\\n/g, '<br>')}</div>` : ''}
           ${r.bad ? `<div class="fb-box"><div class="fb-title">⚠️ Bad / Next (課題・アクション)</div>${r.bad.replace(/\\n/g, '<br>')}</div>` : ''}
           ${(!r.good && !r.bad) ? `<div class="fb-box" style="color:var(--sub); text-align:center;">振り返りの記載がありません</div>` : ''}
         </div>
-        <div class="rc-tags">${r.tags.map(t => `<div class="t-chip">${t}</div>`).join('')}</div>
+        <div class="rc-tags">${specialHtml}${r.tags.map(t => `<div class="t-chip">${t}</div>`).join('')}</div>
         <a href="debriefing.html?editId=${r.id}" class="btn-edit-case">✏️ このデブリーフィングを修正・追記する</a>
       </div>
-    `).join("");
+      `;
+    }).join("");
   }
   
   async function submitQA(event) {
