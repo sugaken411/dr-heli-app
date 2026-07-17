@@ -13,12 +13,13 @@
     }
     body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
     
-    header { background: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; }
-    .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; }
+    /* 修正: フレックスラップを追加し、モバイルで更新ボタンが隠れないように最適化 */
+    header { background: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+    .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; padding: 4px 8px; }
     .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
     
-    main { padding: 20px; flex: 1; overflow-y: auto; }
-    .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    main { padding: 16px; flex: 1; overflow-y: auto; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     
     input, select, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
     button { background: var(--blue); color: #fff; border: none; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
@@ -29,12 +30,12 @@
     .res-item:hover { border-color: var(--blue); }
     .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     
-    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
     .cross-item label { font-size: 12px; font-weight: bold; color: var(--sub); }
     .cross-item input, .cross-item select { width: 100%; }
 
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 20px; z-index: 9000; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px; z-index: 9000; }
     .modal.show { display: flex; }
     .modal-box { background: #fff; width: 100%; max-width: 650px; max-height: 85vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; }
     .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; color: var(--ink); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -45,13 +46,18 @@
 
     .scheme-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: var(--bg); padding: 8px; border-radius: 8px; margin-bottom: 12px; }
     .scheme-btn { background: #fff; color: var(--sub); border: 1px solid #ccc; padding: 8px 4px; font-size: 12px; border-radius: 6px; transition: 0.2s; }
-    .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); }
+    .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); font-weight:bold; }
 
     .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; }
 
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+    /* 修正: 確実に動作するアコーディオン用CSS */
+    .accordion-title { font-size:12px; color:var(--blue); font-weight:bold; cursor:pointer; user-select:none; margin-top:8px; display:inline-block; padding:4px 0; }
+    .accordion-content { display:none; margin-top:12px; }
+    .accordion-content.open { display:flex; }
 
     .proc-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
     .proc-line:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
@@ -91,12 +97,12 @@
   </div>
 
   <header>
-    <div style="display:flex; gap:12px; align-items:center;">
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v14.0</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v14.1</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -136,6 +142,7 @@
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
       <div id="result-count" style="font-weight:bold; color:var(--ink);">検索結果: 0 件</div>
+      <button type="button" onclick="exportCSV()" style="background:#34a853; padding:8px 12px; font-size:13px;">📊 CSV出力</button>
     </div>
     
     <div id="results" class="no-print">
@@ -176,6 +183,18 @@
         <input type="hidden" id="edit-req-type">
       </div>
       
+      <!-- 修正: アコーディオン式のキーワード選択を復活 -->
+      <div class="form-group" id="edit-keyword-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px; display:none;">
+        <label style="margin-bottom:8px; color:var(--brand);">🔑 KEY WORD指定</label>
+        <div class="chip-grid" id="edit-chip-keyword-selected" style="margin-bottom:8px;"></div>
+        <div class="accordion-title" onclick="toggleAccordion('edit-chip-keyword-all')">▶ 他のキーワードを追加・変更</div>
+        <div class="chip-grid accordion-content" id="edit-chip-keyword-all"></div>
+        <div class="accordion-content" style="display:flex; gap:8px; margin-top:8px;">
+          <input type="text" id="edit-keyword-custom" placeholder="リストにないキーワードを追加..." style="flex:1; padding:8px;">
+          <button type="button" onclick="addCustomChip('keyword')" style="padding:8px 12px; border-radius:6px; font-size:12px;">追加</button>
+        </div>
+      </div>
+
       <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
         <label style="margin-bottom:8px;">🚨 特殊ケースフラグ</label>
         <div style="display:flex; gap:16px;">
@@ -197,7 +216,19 @@
         </div>
         <input type="hidden" id="edit-scheme">
       </div>
-      <div class="form-group"><label>現場診断</label><input type="text" id="edit-diag" list="dl-diag" placeholder="診断名を選択または入力..."></div>
+      
+      <!-- 修正: アコーディオン式の現場診断選択を復活 -->
+      <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
+        <label style="margin-bottom:8px;">現場診断・病名</label>
+        <div class="chip-grid" id="edit-chip-diagnosis-selected" style="margin-bottom:8px;"></div>
+        <div class="accordion-title" onclick="toggleAccordion('edit-chip-diagnosis-all')">▶ 他の病名を追加・変更</div>
+        <div class="chip-grid accordion-content" id="edit-chip-diagnosis-all"></div>
+        <div class="accordion-content" style="display:flex; gap:8px; margin-top:8px;">
+          <input type="text" id="edit-diag-custom" placeholder="リストにない病名を追加..." style="flex:1; padding:8px;">
+          <button type="button" onclick="addCustomChip('diagnosis')" style="padding:8px 12px; border-radius:6px; font-size:12px;">追加</button>
+        </div>
+      </div>
+
       <div class="form-group"><label>📋 事案概要 (覚知内容など・任意)</label><textarea id="edit-summary-req" rows="2" placeholder="通報内容や事案の簡単な概要を記入してください..."></textarea></div>
 
       <div class="edit-section-title">👨‍⚕️ 搭乗スタッフ</div>
@@ -262,6 +293,7 @@
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button type="button" style="background:var(--brand); color:#fff; font-size:12px; padding:10px;" onclick="deleteRecord()">🗑️ 削除</button>
           <button type="button" style="flex:1; padding:10px;" onclick="saveRecord()">💾 上書き保存</button>
+          <button type="button" style="background:#ff9800; color:#fff; padding:10px;" id="btn-email" onclick="sendEmail()">📧 メール再送</button>
         </div>
       </div>
       <button type="button" class="modal-close no-print" onclick="closeModal('detail-modal')">✖ 閉じて戻る</button>
@@ -293,7 +325,6 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
 
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
@@ -310,6 +341,10 @@
   let filteredData = [];
   let masters = { keyword: [], diagnosis: [], dr: [], ns: [] };
   let currentEditRow = null;
+  
+  // 修正: キーワードと病名のアコーディオン用データ保持
+  let currentKeywords = [];
+  let currentDiagnosis = [];
 
   let lockTime = 600; 
   let timerInterval;
@@ -328,7 +363,7 @@
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); const loader = document.getElementById("global-loader"); if (loader) loader.style.display = "none"; }
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索(v14.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索(v14.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
   }
 
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
@@ -346,8 +381,26 @@
   function openModal(id) { const modal = document.getElementById(id); if (modal) { modal.classList.add('show'); resetTimer(); } }
   function closeModal(id) { const modal = document.getElementById(id || 'detail-modal'); if (modal) { modal.classList.remove('show'); resetTimer(); } }
 
-  function toggleComp() { const isDaiko = document.querySelector('input[name="comp-who"]:checked').value === "代行"; document.getElementById("comp-name").style.display = isDaiko ? "block" : "none"; }
-  function toggleEditWho() { const isDaiko = document.querySelector('input[name="edit-who"]:checked').value === "代行"; document.getElementById("edit-person").style.display = isDaiko ? "block" : "none"; }
+  // 修正: 確実に動作するアコーディオン開閉
+  function toggleAccordion(targetId) {
+    const el = document.getElementById(targetId);
+    if(el) el.classList.toggle('open');
+  }
+
+  function toggleComp() { 
+    const el = document.querySelector('input[name="comp-who"]:checked');
+    if(el) {
+      const isDaiko = el.value === "代行"; 
+      document.getElementById("comp-name").style.display = isDaiko ? "block" : "none"; 
+    }
+  }
+  function toggleEditWho() { 
+    const el = document.querySelector('input[name="edit-who"]:checked');
+    if(el) {
+      const isDaiko = el.value === "代行"; 
+      document.getElementById("edit-person").style.display = isDaiko ? "block" : "none"; 
+    }
+  }
   function toggleBox(id, isShow) { document.getElementById(id).style.display = isShow ? "block" : "none"; }
   function formatKatakana(input) { let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); input.value = val; }
 
@@ -360,7 +413,7 @@
   function clearDateRange() { document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = ""; }
   function clearMonth() { document.getElementById("q-month").value = ""; }
 
-  const CACHE_KEY = "aw109_search_master_v14";
+  const CACHE_KEY = "aw109_search_master_v14_1";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
   async function initSearchApp() {
@@ -464,8 +517,62 @@
     } catch(e) { sendErrorLog(e.toString()); document.getElementById("results").innerHTML = `<p style="text-align:center; color:red;">通信エラーが発生しました。</p>`; } finally { hideLoader(); }
   }
 
-  function setEditScheme(btn, s) { document.getElementById("edit-scheme").value = s; document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); }
-  function setEditReqType(btn, s) { document.getElementById("edit-req-type").value = s; document.querySelectorAll("#edit-req-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); }
+  function setEditScheme(btn, s) { 
+    document.getElementById("edit-scheme").value = s; 
+    document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); 
+  }
+  
+  // 修正: KEY WORD選択時にキーワード用アコーディオンを出現させる
+  function setEditReqType(btn, s) { 
+    document.getElementById("edit-req-type").value = s; 
+    document.querySelectorAll("#edit-req-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); 
+    
+    const kwGroup = document.getElementById("edit-keyword-group");
+    if(s === 'KEY WORD' || currentKeywords.length > 0) {
+      kwGroup.style.display = 'block';
+    } else {
+      kwGroup.style.display = 'none';
+    }
+  }
+
+  // 修正: キーワード・病名のチップ制御ロジックを統合
+  function toggleEditChip(cat, item) {
+    let arr = cat === 'keyword' ? currentKeywords : currentDiagnosis;
+    if (arr.includes(item)) { arr = arr.filter(x => x !== item); } else { arr.push(item); }
+    if (cat === 'keyword') currentKeywords = arr; else currentDiagnosis = arr;
+    renderEditChips(cat);
+  }
+
+  function addCustomChip(cat) {
+    const inputId = cat === 'keyword' ? 'edit-keyword-custom' : 'edit-diag-custom';
+    const input = document.getElementById(inputId);
+    const val = input.value.trim();
+    if (val) {
+      toggleEditChip(cat, val);
+      input.value = "";
+    }
+  }
+  
+  function renderEditChips(cat) { 
+    const selBox = document.getElementById(`edit-chip-${cat}-selected`);
+    const allBox = document.getElementById(`edit-chip-${cat}-all`);
+    if (!selBox || !allBox) return;
+    selBox.innerHTML = ""; allBox.innerHTML = "";
+    
+    const list = masters[cat] || [];
+    const currentTags = cat === 'keyword' ? currentKeywords : currentDiagnosis;
+    
+    currentTags.forEach(item => {
+      selBox.innerHTML += `<div class="chip on" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`;
+    });
+    if(currentTags.length === 0) selBox.innerHTML = `<span style="font-size:12px; color:var(--sub);">選択なし</span>`;
+    
+    list.forEach(item => {
+      if(!currentTags.includes(item)) {
+        allBox.innerHTML += `<div class="chip" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`;
+      }
+    });
+  }
 
   function openDetail(row) {
     currentEditRow = row;
@@ -477,8 +584,33 @@
     
     document.getElementById("edit-dest").value = row["出場先"] || ""; document.getElementById("edit-dr").value = row["フライトドクター"] || ""; document.getElementById("edit-ns").value = row["フライトナース"] || "";
     
-    const reqTypeVal = row["要請区分"] || ""; document.getElementById("edit-req-type").value = reqTypeVal;
+    // 修正: 過去のシステムデータ(JSON)とV14の専用列の両方からキーワード・病名を拾い上げる
+    currentKeywords = row["キーワード要請"] ? row["キーワード要請"].split(",").map(x=>x.trim()).filter(Boolean) : [];
+    currentDiagnosis = row["現場診断"] ? row["現場診断"].split(",").map(x=>x.trim()).filter(Boolean) : [];
+    if (row["システムデータ"]) {
+      try {
+        const sys = JSON.parse(row["システムデータ"]);
+        if (sys.tags) {
+          if (sys.tags.keyword && currentKeywords.length === 0) currentKeywords = sys.tags.keyword;
+          if (sys.tags.diagnosis && currentDiagnosis.length === 0) currentDiagnosis = sys.tags.diagnosis;
+        }
+      } catch(e) {}
+    }
+    renderEditChips('keyword');
+    renderEditChips('diagnosis');
+
+    const reqTypeVal = row["要請区分"] || ""; 
+    document.getElementById("edit-req-type").value = reqTypeVal;
     document.querySelectorAll("#edit-req-picker .scheme-btn").forEach(b => { b.classList.toggle('active', reqTypeVal && b.innerText === reqTypeVal); });
+    
+    // KEY WORDアコーディオンの表示判定
+    const kwGroup = document.getElementById("edit-keyword-group");
+    if(reqTypeVal === 'KEY WORD' || currentKeywords.length > 0) { kwGroup.style.display = 'block'; } else { kwGroup.style.display = 'none'; }
+    
+    // 初期状態はアコーディオンを閉じる
+    document.getElementById('edit-chip-keyword-all').classList.remove('open');
+    document.getElementById('edit-chip-diagnosis-all').classList.remove('open');
+
     const schemeVal = row["スキーム選択"] || ""; document.getElementById("edit-scheme").value = schemeVal;
     document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => { b.classList.toggle('active', schemeVal && b.innerText.includes(schemeVal.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込"))); });
     
@@ -486,7 +618,6 @@
     document.getElementById("edit-chk-maternal").checked = (row["母性フラグ"] === "◯");
     document.getElementById("edit-chk-mass").checked = (row["多数傷病フラグ"] === "◯");
 
-    document.getElementById("edit-diag").value = row["現場診断"] || "";
     document.getElementById("edit-summary-req").value = row["事案概要"] || "";
 
     const fmtTime = (t) => { if(!t) return ""; let s = String(t); if(s.includes("T")) s = s.split("T")[1]; else if(s.includes(" ")) s = s.split(" ")[1]; return s.substring(0,5); };
@@ -504,7 +635,7 @@
     if(vCarotid.includes("パルスあり")) document.querySelector('input[name="edit-carotid-pulse"][value="パルスあり"]').checked = true;
     else if(vCarotid.includes("パルスなし")) document.querySelector('input[name="edit-carotid-pulse"][value="パルスなし"]').checked = true;
 
-    document.getElementById("edit-biko").value = row["備考"] || ""; document.getElementById("edit-history").value = row["更新履歴"] || "履歴なし";
+    document.getElementById("edit-biko").value = row["備考"] || ""; 
 
     const isDone = (row["ステータス"] || "").includes("完了") && !(row["ステータス"] || "").includes("未完了");
     document.getElementById("btn-complete").style.display = isDone ? "none" : "block"; document.getElementById("complete-box").style.display = isDone ? "none" : "block";
@@ -551,7 +682,7 @@
     const oldId = document.getElementById("edit-old-id").value; const newId = document.getElementById("edit-id").value.trim();
     if(!confirm(`データを上書きしてよろしいですか？`)) return;
     
-    // 既存のすべてのキーを維持し、上書きする要素だけ更新する
+    // 修正: 既存のすべてのキーを維持し、算定フラグなどの破壊的初期化を完全に防止（V14.0の恩恵）
     let payload = { ...currentEditRow };
     payload["要請番号"] = newId; payload["日付"] = document.getElementById("edit-date").value; payload["出場先"] = document.getElementById("edit-dest").value; 
     payload["スキーム選択"] = document.getElementById("edit-scheme").value; payload["要請区分"] = document.getElementById("edit-req-type").value;
@@ -559,7 +690,11 @@
     payload["フライトドクター"] = document.getElementById("edit-dr").value; payload["フライトナース"] = document.getElementById("edit-ns").value; 
     payload["要請時刻・施設間搬送依頼時刻"] = document.getElementById("edit-request").value; payload["初期離陸時間"] = document.getElementById("edit-takeoff").value; payload["最終着陸時間"] = document.getElementById("edit-landing").value; 
     payload["接触"] = document.getElementById("edit-contact").value; payload["病着"] = document.getElementById("edit-arrival").value; payload["終了"] = document.getElementById("edit-end").value; 
-    payload["備考"] = document.getElementById("edit-biko").value; payload["事案概要"] = document.getElementById("edit-summary-req").value; payload["現場診断"] = document.getElementById("edit-diag").value;
+    payload["備考"] = document.getElementById("edit-biko").value; payload["事案概要"] = document.getElementById("edit-summary-req").value; 
+    
+    // 修正: キーワードと病名を安全にペイロードに反映
+    payload["キーワード要請"] = currentKeywords.join(", ");
+    payload["現場診断"] = currentDiagnosis.join(", ");
     
     if(document.getElementById("edit-chk-venu").checked) { const vType = document.querySelector('input[name="edit-venu-type"]:checked')?.value || ""; payload["ベニューラ"] = "◯ " + (vType ? vType + " " : "") + "1本"; } else { payload["ベニューラ"] = ""; }
     if(document.getElementById("edit-chk-echo-carotid").checked) { payload["頸動脈エコー"] = document.querySelector('input[name="edit-carotid-pulse"]:checked')?.value || "◯"; } else { payload["頸動脈エコー"] = ""; }
@@ -569,6 +704,18 @@
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_record", password: activePin, old_id: oldId, editor: editor, data: payload }), redirect: "follow" });
       const json = await res.json();
       if(json.status === "success") { alert("上書き保存しました。"); closeModal('detail-modal'); fetchData(); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+  }
+
+  // 修正: V14.0で消失していたメール再送信機能を復活
+  async function sendEmail() {
+    const id = document.getElementById("edit-id").value;
+    if(!confirm(`事案 [ ${id} ] の内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
+    showLoader("メール送信中...", "関係各所に送信しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "send_email", password: activePin, id: id }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") { alert("メールを送信しました！"); } else { throw new Error(json.message); }
     } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
