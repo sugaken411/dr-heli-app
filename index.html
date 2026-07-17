@@ -47,7 +47,16 @@
     .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border: 1px solid #ccc; transition: 0.2s; }
     .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); }
 
-    .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; }
+    /* V14.1 アコーディオン・チップUI用スタイル復活 */
+    .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; transition: background 0.2s; }
+    .edit-section-title.clickable:hover { background: #bbdefb; }
+    .accordion-content { display: none; margin-top: 8px; }
+    .accordion-content.open { display: flex; flex-direction: column; }
+    .accordion-title-sm { font-size:12px; color:var(--blue); font-weight:bold; cursor:pointer; user-select:none; margin-top:8px; display:inline-block; padding:4px 0; }
+    
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
+    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
 
     .dyn-row-container { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e5e5ea; }
     .dyn-grid-time { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
@@ -55,10 +64,6 @@
     .dyn-grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     .dyn-row-container input, .dyn-row-container select { font-size: 13px; padding: 8px; width: 100%; }
     .dyn-label { font-size: 10px; font-weight: bold; color: var(--sub); display: block; margin-bottom: 2px; }
-
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
-    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
-    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
 
     .proc-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
     .proc-line:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
@@ -97,7 +102,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.0</span></div>
+    <div style="font-weight:900;">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.1</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
@@ -134,6 +139,19 @@
             <button type="button" class="scheme-btn" id="req-fac" onclick="setReqType('施設間')">施設間</button>
           </div>
         </div>
+
+        <!-- 復活: KEY WORD展開ロジックとチップUI -->
+        <div class="form-group" id="keyword-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px; display:none;">
+          <label style="margin-bottom:8px; color:var(--brand);">🔑 KEY WORD指定</label>
+          <div class="chip-grid" id="chip-keyword-selected" style="margin-bottom:8px;"></div>
+          <div class="accordion-title-sm" onclick="toggleAccordion('chip-keyword-all')">▶ キーワードを追加・選択</div>
+          <div class="chip-grid accordion-content" id="chip-keyword-all" style="flex-direction:row;"></div>
+          <div class="accordion-content" style="gap:8px; margin-top:8px; flex-direction:row;" id="chip-keyword-custom-box">
+            <input type="text" id="keyword-custom" placeholder="リストにないキーワードを追加..." style="flex:1; padding:8px;">
+            <button type="button" onclick="addCustomChip('keyword')" style="padding:8px 12px; border-radius:6px; font-size:12px;">追加</button>
+          </div>
+        </div>
+
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
           <label style="margin-bottom:8px;">🚨 特殊ケースフラグ</label>
           <div style="display:flex; gap:16px;">
@@ -162,7 +180,19 @@
             </div>
           </div>
         </div>
-        <div class="form-group"><label>現場診断</label><input type="text" id="v-diag" list="dl-diag" placeholder="診断名を選択または入力..."><datalist id="dl-diag"></datalist></div>
+
+        <!-- 復活: 疾患分類（現場診断）のチップ・アコーディオン選択 -->
+        <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
+          <label style="margin-bottom:8px;">現場診断・疾患分類</label>
+          <div class="chip-grid" id="chip-diagnosis-selected" style="margin-bottom:8px;"></div>
+          <div class="accordion-title-sm" onclick="toggleAccordion('chip-diagnosis-all')">▶ 疾患を追加・選択</div>
+          <div class="chip-grid accordion-content" id="chip-diagnosis-all" style="flex-direction:row;"></div>
+          <div class="accordion-content" style="gap:8px; margin-top:8px; flex-direction:row;" id="chip-diagnosis-custom-box">
+            <input type="text" id="diag-custom" placeholder="リストにない病名を追加..." style="flex:1; padding:8px;">
+            <button type="button" onclick="addCustomChip('diagnosis')" style="padding:8px 12px; border-radius:6px; font-size:12px;">追加</button>
+          </div>
+        </div>
+
         <div class="form-group"><label>📋 事案概要 (覚知内容など・任意)</label><textarea id="v-summary-req" rows="2" placeholder="通報内容や事案の簡単な概要を記入してください..."></textarea></div>
       </div>
 
@@ -193,55 +223,60 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="edit-section-title" style="margin-top:0;">💉 確保ライン</div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-20G">末梢静脈路(20G)</label><div class="proc-count" id="cnt-20G"><input type="number" inputmode="numeric" value="1" min="1" id="val-20G">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-22G">末梢静脈路(22G)</label><div class="proc-count" id="cnt-22G"><input type="number" inputmode="numeric" value="1" min="1" id="val-22G">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-24G">末梢静脈路(24G)</label><div class="proc-count" id="cnt-24G"><input type="number" inputmode="numeric" value="1" min="1" id="val-24G">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-18G">末梢静脈路(18G)</label><div class="proc-count" id="cnt-18G"><input type="number" inputmode="numeric" value="1" min="1" id="val-18G">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-ez">骨髄路(EZ-IO等)</label><div class="proc-count" id="cnt-ez"><input type="number" inputmode="numeric" value="1" min="1" id="val-ez">本</div></div>
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-big">骨髄路(BIG等)</label><div class="proc-count" id="cnt-big"><input type="number" inputmode="numeric" value="1" min="1" id="val-big">本</div></div>
-        <div class="proc-line" style="flex-direction:column; align-items:flex-start;">
-          <div style="display:flex; justify-content:space-between; width:100%;">
-            <label class="proc-lbl"><input type="checkbox" onchange="toggleBox('box-venu-det', this.checked); toggleBox('cnt-venu', this.checked)" id="chk-venu">ベニューラ</label>
-            <div class="proc-count" id="cnt-venu" style="display:none;"><input type="number" inputmode="numeric" value="1" min="1" id="val-venu">本</div>
-          </div>
-          <div id="box-venu-det" style="display:none; margin-top:8px; width:100%;">
-            <div class="radio-group" style="padding-left: 28px;">
-              <label><input type="radio" name="venu-type" value="V1"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">V1</span></label>
-              <label><input type="radio" name="venu-type" value="V2"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">V2</span></label>
-              <label><input type="radio" name="venu-type" value="V3"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">V3</span></label>
+      <!-- 復活: 処置関連のアコーディオン化 -->
+      <div class="card" style="padding:16px;">
+        <div class="edit-section-title clickable" style="margin-top:0; margin-bottom:0; cursor:pointer;" onclick="toggleAccordion('acc-line')">▶ 💉 確保ラインを追加</div>
+        <div class="accordion-content" id="acc-line" style="margin-top:12px;">
+          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-20G">末梢静脈路(20G)</label><div class="proc-count" id="cnt-20G"><input type="number" inputmode="numeric" value="1" min="1" id="val-20G">本</div></div>
+          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-22G">末梢静脈路(22G)</label><div class="proc-count" id="cnt-22G"><input type="number" inputmode="numeric" value="1" min="1" id="val-22G">本</div></div>
+          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-24G">末梢静脈路(24G)</label><div class="proc-count" id="cnt-24G"><input type="number" inputmode="numeric" value="1" min="1" id="val-24G">本</div></div>
+          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-18G">末梢静脈路(18G)</label><div class="proc-count" id="cnt-18G"><input type="number" inputmode="numeric" value="1" min="1" id="val-18G">本</div></div>
+          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-ez">骨髄路(EZ-IO等)</label><div class="proc-count" id="cnt-ez"><input type="number" inputmode="numeric" value="1" min="1" id="val-ez">本</div></div>
+          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-big">骨髄路(BIG等)</label><div class="proc-count" id="cnt-big"><input type="number" inputmode="numeric" value="1" min="1" id="val-big">本</div></div>
+          <div class="proc-line" style="flex-direction:column; align-items:flex-start;">
+            <div style="display:flex; justify-content:space-between; width:100%;">
+              <label class="proc-lbl"><input type="checkbox" onchange="toggleBox('box-venu-det', this.checked); toggleBox('cnt-venu', this.checked)" id="chk-venu">ベニューラ</label>
+              <div class="proc-count" id="cnt-venu" style="display:none;"><input type="number" inputmode="numeric" value="1" min="1" id="val-venu">本</div>
+            </div>
+            <div id="box-venu-det" style="display:none; margin-top:8px; width:100%;">
+              <div class="radio-group" style="padding-left: 28px;">
+                <label><input type="radio" name="venu-type" value="V1"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">V1</span></label>
+                <label><input type="radio" name="venu-type" value="V2"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">V2</span></label>
+                <label><input type="radio" name="venu-type" value="V3"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">V3</span></label>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="edit-section-title" style="margin-top:0;">👑 エコー検査</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-bottom:8px;">
-          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="FAST">FAST</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="心エコー">心エコー</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="大血管評価">大血管</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="消化器系エコー">消化器系</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="婦人女性生殖器系エコー">女性生殖器系</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="泌尿器系エコー">泌尿器系</label>
-          <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="下肢静脈エコー">下肢静脈</label>
-          <div style="grid-column: span 2; border: 1px solid #eee; padding:8px; border-radius:6px; background:#f9f9f9; margin-top:4px;">
-            <label class="proc-lbl"><input type="checkbox" id="chk-echo-carotid" onchange="toggleBox('box-echo-carotid', this.checked)">頸動脈エコー</label>
-            <div id="box-echo-carotid" style="display:none; margin-top:8px; padding-left:28px;">
-               <div class="radio-group">
-                 <label><input type="radio" name="carotid-pulse" value="パルスあり"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">パルスあり</span></label>
-                 <label><input type="radio" name="carotid-pulse" value="パルスなし"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">パルスなし</span></label>
-               </div>
+      <div class="card" style="padding:16px;">
+        <div class="edit-section-title clickable" style="margin-top:0; margin-bottom:0; cursor:pointer;" onclick="toggleAccordion('acc-echo')">▶ 👑 エコー検査を追加</div>
+        <div class="accordion-content" id="acc-echo" style="margin-top:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-bottom:8px;">
+            <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="FAST">FAST</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="心エコー">心エコー</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="大血管評価">大血管</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="消化器系エコー">消化器系</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="婦人女性生殖器系エコー">女性生殖器系</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="泌尿器系エコー">泌尿器系</label>
+            <label class="proc-lbl"><input type="checkbox" class="chk-echo" value="下肢静脈エコー">下肢静脈</label>
+            <div style="grid-column: span 2; border: 1px solid #eee; padding:8px; border-radius:6px; background:#f9f9f9; margin-top:4px;">
+              <label class="proc-lbl"><input type="checkbox" id="chk-echo-carotid" onchange="toggleBox('box-echo-carotid', this.checked)">頸動脈エコー</label>
+              <div id="box-echo-carotid" style="display:none; margin-top:8px; padding-left:28px;">
+                 <div class="radio-group">
+                   <label><input type="radio" name="carotid-pulse" value="パルスあり"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">パルスあり</span></label>
+                   <label><input type="radio" name="carotid-pulse" value="パルスなし"> <span class="radio-lbl" style="padding:4px 8px; font-size:11px;">パルスなし</span></label>
+                 </div>
+              </div>
             </div>
+            <div style="grid-column: span 2;"><input type="text" id="v-echo-other" placeholder="その他エコー (フリーテキスト)" style="width:100%;"></div>
           </div>
-          <div style="grid-column: span 2;"><input type="text" id="v-echo-other" placeholder="その他エコー (フリーテキスト)" style="width:100%;"></div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="edit-section-title" style="margin-top:0;">🩺 処置・高度医療</div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
+      <div class="card" style="padding:16px;">
+        <div class="edit-section-title clickable" style="margin-top:0; margin-bottom:0; cursor:pointer;" onclick="toggleAccordion('acc-proc')">▶ 🩺 処置・高度医療を追加</div>
+        <div class="accordion-content" id="acc-proc" style="margin-top:12px; gap:8px;">
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-bg" onchange="toggleBox('box-bg-det', this.checked)">血液ガス分析</label>
             <div id="box-bg-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
@@ -400,8 +435,13 @@
   });
 
   let state = { reqType: "", scheme: "", calc: { oshin: 0, hansou: 0, long: 0, monitor: 0, spo2: 0, etco2: 0, resp: 0 }, calcVals: { oshin: ["","往診料"], hansou: ["","搬送料","搬送料(新生児)"], long: ["","あり"], monitor:["","自動計算"], spo2:["","あり"], etco2:["","あり"], resp:["","あり"] } };
-  const CACHE_KEY = "aw109_master_cache_v14";
+  const CACHE_KEY = "aw109_master_cache_v14_1";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
+  
+  // V14.1: チップ選択用データ
+  let currentKeywords = [];
+  let currentDiagnosis = [];
+  let masters = { keyword: [], diagnosis: [], dr: [], ns: [], dest: [], mailOptions: [] };
 
   window.onload = () => {
     const now = new Date(); const jst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
@@ -417,12 +457,69 @@
   };
 
   function applyMasters(m) {
+    masters = m;
     const pop = (id, arr) => { const el = document.getElementById(id); if (el) { el.innerHTML = ""; arr.forEach(a => { const opt = document.createElement("option"); opt.value = a; opt.innerText = a; el.appendChild(opt); }); } };
-    pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest); pop("dl-diag", m.diagnosis); pop("dl-key", m.keyword);
+    pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest);
+    
+    // V14.1: キーワードと診断のチップを描画
+    renderChips('keyword');
+    renderChips('diagnosis');
+
     const lastDr = localStorage.getItem("aw109_last_dr"); const lastNs = localStorage.getItem("aw109_last_ns");
     if(lastDr) document.getElementById("v-dr").value = lastDr; if(lastNs) document.getElementById("v-ns").value = lastNs;
     const mbox = document.getElementById("mail-options-box"); 
     if (mbox) { mbox.innerHTML = ""; m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; }); }
+  }
+
+  // V14.1: アコーディオン開閉ロジック
+  function toggleAccordion(id) {
+    const el = document.getElementById(id);
+    if(el) {
+      el.classList.toggle('open');
+      const title = el.previousElementSibling;
+      if(title && (title.innerText.includes('▶') || title.innerText.includes('▼'))) {
+        if(el.classList.contains('open')) {
+          title.innerText = title.innerText.replace('▶', '▼');
+        } else {
+          title.innerText = title.innerText.replace('▼', '▶');
+        }
+      }
+    }
+  }
+
+  // V14.1: チップ選択ロジック
+  function toggleChip(cat, item) {
+    let arr = cat === 'keyword' ? currentKeywords : currentDiagnosis;
+    if (arr.includes(item)) { arr = arr.filter(x => x !== item); } else { arr.push(item); }
+    if (cat === 'keyword') currentKeywords = arr; else currentDiagnosis = arr;
+    renderChips(cat);
+  }
+  
+  function addCustomChip(cat) {
+    const input = document.getElementById(cat === 'keyword' ? 'keyword-custom' : 'diag-custom');
+    const val = input.value.trim();
+    if (val) { toggleChip(cat, val); input.value = ""; }
+  }
+
+  function renderChips(cat) {
+    const selBox = document.getElementById(`chip-${cat}-selected`);
+    const allBox = document.getElementById(`chip-${cat}-all`);
+    if (!selBox || !allBox) return;
+    selBox.innerHTML = ""; allBox.innerHTML = "";
+    
+    const list = masters[cat] || [];
+    const currentTags = cat === 'keyword' ? currentKeywords : currentDiagnosis;
+    
+    currentTags.forEach(item => {
+      selBox.innerHTML += `<div class="chip on" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
+    });
+    if(currentTags.length === 0) selBox.innerHTML = `<span style="font-size:12px; color:var(--sub);">選択なし</span>`;
+    
+    list.forEach(item => {
+      if(!currentTags.includes(item)) {
+        allBox.innerHTML += `<div class="chip" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
+      }
+    });
   }
 
   async function fetchLatestData(isBackground, isManualUpdate) {
@@ -456,7 +553,7 @@
 
   function sendErrorLog(errMsg) {
     if(String(errMsg).includes("Load failed")) return;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "症例登録(v14.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "症例登録(v14.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
   }
 
   function switchTab(tab) {
@@ -474,10 +571,18 @@
     if(isIntub||isNppv) setCalc('resp', 1); else setCalc('resp', 0); if(isIntub) setCalc('etco2', 1); else setCalc('etco2', 0);
   }
 
+  // V14.1: 要請区分に応じたキーワード領域の表示制御
   function setReqType(val) {
     state.reqType = val; document.querySelectorAll('[id^="req-"]').forEach(el => el.classList.remove('active'));
     const idMap = { 'KEY WORD': 'req-keyword', '救急隊現着後': 'req-amb', 'D-call Net': 'req-dcall', '施設間': 'req-fac' }; document.getElementById(idMap[val]).classList.add('active');
     if(val === '施設間') setScheme('施設間');
+    
+    const kwGroup = document.getElementById("keyword-group");
+    if(val === 'KEY WORD' || currentKeywords.length > 0) {
+      kwGroup.style.display = 'block';
+    } else {
+      kwGroup.style.display = 'none';
+    }
   }
 
   function setScheme(val) {
@@ -576,7 +681,7 @@
       "往診料": state.calcVals.oshin[state.calc.oshin] || "", "搬送料": state.calcVals.hansou[state.calc.hansou] || "", "長時間加算": state.calcVals.long[state.calc.long] || "",
       "モニター算定時間": state.calc.monitor > 0 ? document.getElementById("l-monitor").innerText : "", "経皮的酸素飽和度": state.calcVals.spo2[state.calc.spo2] || "",
       "EtCO2算定": document.getElementById("chk-etco2").checked ? "あり" : "", "人工呼吸器管理料": document.getElementById("chk-ls-vent").checked ? "あり" : "", 
-      "現場診断": document.getElementById("v-diag").value, "事案概要": document.getElementById("v-summary-req").value.trim()
+      "現場診断": currentDiagnosis.join(", "), "キーワード要請": currentKeywords.join(", "), "事案概要": document.getElementById("v-summary-req").value.trim()
     };
 
     const lineKeys = [{ id: "20G", name: "20G" }, { id: "22G", name: "22G" }, { id: "24G", name: "24G" }, { id: "18G", name: "18G" }, { id: "ez", name: "骨髄針" }, { id: "big", name: "BIG等" }];
@@ -613,7 +718,14 @@
     let biko = document.getElementById("v-biko").value || "";
     if(document.getElementById("chk-er").checked) biko = `【緊急外来搬送先: ${document.getElementById("v-er-hosp").value}】\n` + biko;
     payload["備考"] = biko.trim();
-    payload["追加送信先"] = document.getElementById("custom-email").value;
+    
+    // V14.1 メール送信オプションの動的取得
+    let selMails = [];
+    document.querySelectorAll('.mail-opt-chk:checked').forEach(cb => selMails.push(cb.value));
+    const manualMail = document.getElementById("custom-email").value.trim();
+    if (manualMail) selMails.push(manualMail);
+    payload["追加送信先"] = selMails.join(",");
+    
     return payload;
   }
 
