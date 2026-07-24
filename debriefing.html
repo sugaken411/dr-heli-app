@@ -92,7 +92,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.14</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.16</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -141,9 +141,33 @@
       <div class="card">
         <div class="section-label">📝 紐付けデータ</div>
         <div id="v-fetched-data"></div>
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-top:12px; margin-bottom:8px;">🚑 事前実施処置 / 特殊ケースタグ</div>
+      </div>
+
+      <div class="card">
+        <div class="section-label">🚑 事前実施処置 (症例登録連携)</div>
+        <div style="font-size:11px; color:var(--sub); margin-bottom:8px;">現場で実施された処置の一覧です。追加・削除が可能です。</div>
         <div class="pill-group" id="v-fetched-procs"></div>
-        <div class="pill-group" id="chip-container-special" style="margin-top:4px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-label">🚨 要請区分・特殊ケース と 概要</div>
+        <div class="radio-group" style="margin-bottom:12px;">
+          <label><input type="radio" name="req-type" value="KEY WORD" onchange="toggleReqType()"> <span class="radio-lbl">KEY WORD</span></label>
+          <label><input type="radio" name="req-type" value="救急隊現着後" onchange="toggleReqType()"> <span class="radio-lbl">救急隊現着後</span></label>
+          <label><input type="radio" name="req-type" value="D-call Net" onchange="toggleReqType()"> <span class="radio-lbl">D-call Net</span></label>
+          <label><input type="radio" name="req-type" value="施設間" onchange="toggleReqType()"> <span class="radio-lbl">施設間搬送</span></label>
+        </div>
+        
+        <div id="kw-container" style="display:none; margin-bottom:16px; background:#f9f9f9; padding:12px; border-radius:8px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">🔑 キーワード指定</div>
+          <div class="pill-group" id="chip-container-keyword"></div>
+        </div>
+
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">🚨 特殊ケースフラグ</div>
+        <div class="pill-group" id="chip-container-special" style="margin-bottom:16px;"></div>
+
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー</div>
+        <textarea id="v-summary" rows="4" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
       </div>
 
       <div class="card">
@@ -167,7 +191,7 @@
           <div class="pill-group" id="d-sub-pills"></div>
         </div>
 
-        <div style="display:flex; gap:16px; margin-top:12px; border-top:1px dashed var(--line); padding-top:12px;">
+        <div style="display:flex; gap:16px; margin-top:12px; border-top:1px dashed var(--line); padding-top:12px; margin-bottom:16px;">
           <label style="font-size:13px; font-weight:bold; display:flex; align-items:center; gap:8px;">
             母子・周産期: 
             <select id="v-maternal" style="width:auto; margin:0; padding:6px; font-size:13px;"><option value="なし">なし</option><option value="あり">あり</option></select>
@@ -177,25 +201,7 @@
             <select id="v-worker" style="width:auto; margin:0; padding:6px; font-size:13px;"><option value="なし">なし</option><option value="あり">あり</option></select>
           </label>
         </div>
-      </div>
 
-      <div class="card">
-        <div class="section-label">📋 要請区分 と 事案概要</div>
-        <div class="radio-group" style="margin-bottom:16px;">
-          <label><input type="radio" name="req-type" value="KEY WORD" onchange="toggleReqType()"> <span class="radio-lbl">KEY WORD</span></label>
-          <label><input type="radio" name="req-type" value="救急隊現着後" onchange="toggleReqType()"> <span class="radio-lbl">救急隊現着後</span></label>
-          <label><input type="radio" name="req-type" value="D-call Net" onchange="toggleReqType()"> <span class="radio-lbl">D-call Net</span></label>
-          <label><input type="radio" name="req-type" value="施設間" onchange="toggleReqType()"> <span class="radio-lbl">施設間搬送</span></label>
-        </div>
-        
-        <div id="kw-container" style="display:none; margin-bottom:16px; background:#f9f9f9; padding:12px; border-radius:8px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">🔑 キーワード指定</div>
-          <div class="pill-group" id="chip-container-keyword"></div>
-        </div>
-
-        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:4px;">📖 事案概要・ストーリー</div>
-        <textarea id="v-summary" rows="4" placeholder="事案の発生から結末までの全体的な流れや背景..."></textarea>
-        
         <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px; margin-top:12px;">🩺 現場診断 (フリーテキスト/マスタ)</div>
         <div class="pill-group" id="chip-container-diagnosis" style="margin-bottom:8px;"></div>
         <div style="display:flex; gap:8px;">
@@ -303,7 +309,7 @@
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.14)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.16)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -439,7 +445,8 @@
     if (editId) {
       document.getElementById('s-id').value = editId;
       document.getElementById("s-date").value = ""; 
-      let targetRow = allCasesData.find(r => String(r.id) === String(editId));
+      // 🌟 UUID（sysId）または要請番号（displayId）で合致判定
+      let targetRow = allCasesData.find(r => String(r.id) === String(editId) || String(r.displayId) === String(editId));
       if (targetRow) {
         selectCase(targetRow);
       } else {
@@ -601,7 +608,7 @@
     let results = allCasesData.filter(r => {
       if(!r.id) return false;
       let match = true;
-      if(qId && !String(r.id).includes(qId)) match = false;
+      if(qId && !String(r.id).includes(qId) && !String(r.displayId).includes(qId)) match = false;
       
       let rDate = "";
       if (r.date) {
@@ -628,7 +635,7 @@
       resArea.innerHTML = results.map(r => {
         const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";
         return `<div class="search-result-item" onclick='selectCase(${JSON.stringify(r).replace(/'/g, "&apos;")})'>
-          <b>No.${r.id}</b> ｜ ${r.date} ｜ ${r.scheme || '未選択'}<br>
+          <b>No.${r.displayId || r.id}</b> ｜ ${r.date} ｜ ${r.scheme || '未選択'}<br>
           <span style="font-size:12px;color:var(--sub);">[${time}] 出場先: ${r.dest} ｜ Dr:${r.rawData["フライトドクター"] || '-'} Ns:${r.rawData["フライトナース"] || '-'}</span>
         </div>`;
       }).join("");
@@ -641,7 +648,6 @@
     document.getElementById("search-results-area").style.display = "none"; 
     document.getElementById("case-data-area").style.display = "block";
     
-    // 🌟 ①不具合改修: 物理列からの直接展開 (事案概要)
     document.getElementById("v-summary").value = currentCase["事案概要"] || currentCase["備考"] || "";
     
     if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) { 
@@ -651,7 +657,6 @@
 
     let importedProcs = [];
     
-    // 🌟 ①不具合改修: 物理列からのスマート展開 (正規表現の全廃とプロパティトラバース)
     const skipKeys = [
       "要請番号","日付","出場先","フライトドクター","フライトナース","スキーム選択","要請形態","要請区分","特殊ケース",
       "要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間","接触","病着","終了","往診料","搬送料","長時間加算",
@@ -695,7 +700,6 @@
       vProcs.innerHTML = uniqueProcs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
     }
 
-    // 🌟 ①不具合改修: 特殊フラグの物理列ダイレクト判定
     let flags = [];
     if (currentCase["小児フラグ"] === "TRUE" || currentCase["小児フラグ"] === true || currentCase["小児フラグ"] === "✓") flags.push("小児");
     if (currentCase["母性フラグ"] === "TRUE" || currentCase["母性フラグ"] === true || currentCase["母性フラグ"] === "✓") flags.push("母性");
@@ -707,7 +711,6 @@
     uniqueSpecial.forEach(p => { if(!TAG_MASTERS.special.items.includes(p)) TAG_MASTERS.special.items.unshift(p); });
     renderChips('chip-container-special', TAG_MASTERS.special.items, 'special');
 
-    // 🌟 ①不具合改修: 要請区分のUI展開
     sysData.reqType = currentCase["要請区分"] || "";
     if (sysData.reqType) {
       const el = document.querySelector(`input[name="req-type"][value="${sysData.reqType}"]`);
@@ -719,7 +722,8 @@
        renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
     }
 
-    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(currentCase["要請番号"]));
+    // 🌟 既存デブリーフィングデータの引き当て復元
+    const past = existingDebriefs.find(d => String(d["要請番号"]) === String(rowWrapper.id) || String(d["要請番号"]) === String(currentCase["要請番号"]));
     if(past && past["システムデータ"]) {
       restoreSystemData(JSON.parse(past["システムデータ"]));
       document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; 
@@ -913,7 +917,6 @@
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
     
-    // 🌟 ①不具合改修: レポート見出しを「要請区分」へ変更
     document.getElementById("print-area").innerHTML = `
       <div style="font-size:14px; line-height:1.6; padding:12px;">
         <h2 style="margin-top:0; color:var(--ink);">AW109 デブリーフィング</h2>
@@ -978,17 +981,26 @@
     const tagsObj = {
       diseaseMain: sysData.disease.main, 
       diseaseSub: sysData.disease.sub || sysData.disease.cause,
+      maternal: sysData.disease.maternal, 
+      worker: sysData.disease.worker,     
       disease: diseaseComboStr,
       scene: [...new Set(sysData.evals.map(e => e.scene=='⑨ その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
       inlineTags: uniqueTags.join(", "),
       special: (sysData.tags.special || []).join(", "),
-      keyword: (sysData.tags.keyword || []).join(", ")
+      keyword: (sysData.tags.keyword || []).join(", "),
+      reqType: sysData.reqType            
     };
 
     const envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
     const envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
 
-    const payload = { caseId: currentCase["要親番号"] || currentCase["要請番号"], recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: envLoc, method: envMethod, participants: ptList.join(", "), systemData: sysData };
+    // 🌟 一意ID（sysId）が存在すれば優先送信、なければ要請番号
+    let submitId = currentCase["要請番号"];
+    if (currentCase["システムデータ"]) {
+      try { const sData = JSON.parse(currentCase["システムデータ"]); if(sData.sysId) submitId = sData.sysId; } catch(e) {}
+    }
+
+    const payload = { caseId: submitId, recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: envLoc, method: envMethod, participants: ptList.join(", "), systemData: sysData };
 
     const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
     showLoader("保存処理中...", "デブリーフィングデータベースへ保存しています");
