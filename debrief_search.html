@@ -82,7 +82,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.6</span></div>
+  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.8</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
     <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
@@ -111,6 +111,9 @@
       <button type="button" class="hdr-btn" style="font-size:11px;" onclick="clearTags()">クリア</button>
     </div>
     
+    <div class="tag-category-title">🚨 特殊ケース・要請区分</div>
+    <div class="chip-grid" id="ui-tags-special"></div>
+
     <div class="tag-category-title">🏥 疾患分類</div>
     <div class="chip-grid" id="ui-tags-disease"></div>
     
@@ -163,17 +166,16 @@
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.6)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "事案検索・教育(v12.8)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
         redirect: "follow" 
       }); 
     } catch(e) {} 
   }
 
   let mergedData = []; 
-  let tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
+  let tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set(), special: new Set() };
 
   const NTS_LIST = ["状況認識", "意思決定", "コミュニケーション", "チームワーク", "リーダーシップ", "タスク管理"];
-  const PRACTICE_LIST = ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り", "バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー", "胸腔開放", "血糖測定"];
   const DISEASE_MAIN = ["1外傷", "2心大血管", "3脳血管", "4心肺停止(CPA)", "5その他"];
   const SCENE_LIST = ["① 要請〜離陸前", "② 離陸〜ランデブーポイント着陸", "③ 着陸〜患者接触前(現場投入時等)", "④ 患者接触〜初期評価・処置", "⑤ 搬送前準備〜現場出発", "⑥ 搬送中(機内・救急車内)", "⑦ 病院到着〜引き継ぎ完了", "⑧ 次事案への準備・帰投", "⑨ その他"];
 
@@ -245,24 +247,26 @@
       debData.forEach(d => {
         const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
         if(jian) {
-          // 🌟 ②不具合改修: 物理列値から特殊フラグをダイレクト展開
           let flags = [];
           if (jian["小児フラグ"] === "TRUE" || jian["小児フラグ"] === true || jian["小児フラグ"] === "✓") flags.push("小児");
           if (jian["母性フラグ"] === "TRUE" || jian["母性フラグ"] === true || jian["母性フラグ"] === "✓") flags.push("母性");
           if (jian["多数傷病フラグ"] === "TRUE" || jian["多数傷病フラグ"] === true || jian["多数傷病フラグ"] === "✓") flags.push("多数傷病");
 
-          let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"]]
+          let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"], jian["要請区分"]]
                         .map(t => t ? String(t).split(",") : []).flat().map(t => t.trim()).filter(Boolean);
           
           let diagStr = jian["現場診断"] || ""; let diagArr = diagStr.split(",").map(x => x.trim()).filter(Boolean);
           diagArr.forEach(t => tags.push(t));
+          
+          tags.push(...flags);
           const uniqueTags = [...new Set(tags)];
           
+          // GASから返却される id を使用（sysId または 要請番号）
           newData.push({
-            id: d["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
+            id: jian.id || d["要請番号"], displayId: jian["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
             reqTime: jian["要請時刻・施設間搬送依頼時刻"] || jian["初期離陸時間"] || "--:--",
             contactTime: jian["接触"] || "--:--", dr: jian["フライトドクター"], ns: jian["フライトナース"], 
-            participants: d["参加者一覧"] || "", summary: d["概要"], evalText: d["症例評価"], 
+            participants: d["参加者一覧"] || "", summary: d["概要"] || jian["事案概要"] || jian["備考"], evalText: d["症例評価"], 
             good: d["Good (良かった点)"], bad: d["Bad/Next (課題・次へ)"],
             tags: uniqueTags, loc: d["振り返り場所"], method: d["振り返り方法"],
             reqType: jian["要請区分"] || "", specialFlags: flags
@@ -302,17 +306,21 @@
       document.getElementById("q-ext").innerHTML = `<option value="">全て</option>` + masters.extStaff.map(n => `<option value="${n}">${n}</option>`).join("");
     }
 
-    tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set() };
+    tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set(), special: new Set() };
+    ["小児", "母性", "多数傷病", "KEY WORD", "救急隊現着後", "D-call Net", "施設間"].forEach(t => tagsMaster.special.add(t));
+    
     mergedData.forEach(m => {
       m.tags.forEach(t => {
         if(DISEASE_MAIN.some(d => t.includes(d))) tagsMaster.disease.add(t.split(" ")[0].replace('[','').replace(']',''));
         else if(SCENE_LIST.includes(t)) tagsMaster.scene.add(t);
         else if(NTS_LIST.includes(t)) tagsMaster.nts.add(t);
+        else if(tagsMaster.special.has(t) || t.includes("キーワード")) tagsMaster.special.add(t);
         else tagsMaster.practice.add(t);
       });
     });
 
     const renderChipHtml = (setObj) => Array.from(setObj).sort().map(t => `<div class="chip" onclick="this.classList.toggle('active')">${t}</div>`).join("");
+    document.getElementById("ui-tags-special").innerHTML = renderChipHtml(tagsMaster.special) || '<span style="font-size:11px;color:#ccc;">なし</span>';
     document.getElementById("ui-tags-disease").innerHTML = renderChipHtml(tagsMaster.disease) || '<span style="font-size:11px;color:#ccc;">なし</span>';
     document.getElementById("ui-tags-scene").innerHTML = renderChipHtml(tagsMaster.scene) || '<span style="font-size:11px;color:#ccc;">なし</span>';
     document.getElementById("ui-tags-nts").innerHTML = renderChipHtml(tagsMaster.nts) || '<span style="font-size:11px;color:#ccc;">なし</span>';
@@ -340,12 +348,13 @@
         }
       }
 
-      if (qId && !String(m.id).includes(qId)) return false;
+      if (qId && !String(m.displayId || m.id).includes(qId)) return false;
       if (dMonth && !mDate.startsWith(dMonth)) return false;
       if (dr && m.dr !== dr) return false; 
       if (ns && m.ns !== ns) return false; 
       if (ext && !m.participants.includes(ext)) return false;
       
+      // 🌟 AND検索の保証
       if (activeChips.length > 0) { 
         const matchAllTags = activeChips.every(chip => m.tags.some(t => t.includes(chip))); 
         if (!matchAllTags) return false; 
@@ -362,12 +371,11 @@
     if(results.length === 0) { resArea.innerHTML = "<div style='text-align:center; padding:40px; color:var(--sub);'>条件に一致する事例がありません</div>"; return; }
 
     resArea.innerHTML = results.map(r => {
-      // 🌟 ③不具合改修: 検索結果カードへの要請区分と個別タグ自動点灯UI
       let specialHtml = r.specialFlags && r.specialFlags.length > 0 ? r.specialFlags.map(f => `<span class="t-chip special">${f}</span>`).join('') + " " : "";
       
       return `
       <div class="result-card">
-        <div class="rc-header"><div class="rc-id">No.${r.id} <span class="rc-date">(${r.date})</span></div><div class="badge">${r.scheme || '未選択'}</div></div>
+        <div class="rc-header"><div class="rc-id">No.${r.displayId || r.id} <span class="rc-date">(${r.date})</span></div><div class="badge">${r.scheme || '未選択'}</div></div>
         <div class="rc-meta"><span><b>Dr:</b> ${r.dr || '-'} ｜ <b>Ns:</b> ${r.ns || '-'}</span><span>[要請 ${String(r.reqTime).substring(0,5)}] 出場先: ${r.dest || '-'}</span></div>
         <div class="rc-contact"><b style="color:var(--ink);">要請区分: ${r.reqType || '-'}</b> ｜ <b style="color:var(--ink);">接触［${String(r.contactTime).substring(0,5)}］</b> ｜ <b>👤参加:</b> ${r.participants || '未記入'}</div>
         <div class="rc-context"><b>📖 事案概要</b><br>${r.summary ? r.summary.replace(/\\n/g, '<br>') : '事案概要の記載なし'}</div>
@@ -377,7 +385,7 @@
           ${(!r.good && !r.bad) ? `<div class="fb-box" style="color:var(--sub); text-align:center;">振り返りの記載がありません</div>` : ''}
         </div>
         <div class="rc-tags">${specialHtml}${r.tags.map(t => `<div class="t-chip">${t}</div>`).join('')}</div>
-        <a href="debriefing.html?editId=${r.id}" class="btn-edit-case">✏️ このデブリーフィングを修正・追記する</a>
+        <a href="debriefing.html?editId=${encodeURIComponent(r.id)}" class="btn-edit-case">✏️ このデブリーフィングを修正・追記する</a>
       </div>
       `;
     }).join("");
