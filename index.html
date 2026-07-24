@@ -108,8 +108,9 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
     </div>
-    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.5</span></div>
+    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.6</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
@@ -150,7 +151,13 @@
 
         <div class="form-group" id="keyword-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px; display:none;">
           <label style="margin-bottom:8px; color:var(--brand);">🔑 KEY WORD指定</label>
-          <div class="pill-group" id="chip-container-keyword" style="margin-bottom:8px;"></div>
+          <div class="pill-group" id="chip-keyword-selected" style="margin-bottom:8px;"></div>
+          <div class="accordion-title-sm" onclick="toggleAccordion('chip-keyword-all')">▶ キーワードを追加・選択</div>
+          <div class="pill-group accordion-content" id="chip-keyword-all" style="flex-direction:row;"></div>
+          <div class="accordion-content" style="gap:8px; margin-top:8px; flex-direction:row;" id="chip-keyword-custom-box">
+            <input type="text" id="keyword-custom" placeholder="リストにないキーワードを追加..." style="flex:1; padding:8px;">
+            <button type="button" class="btn-blue" onclick="addCustomChip('keyword')" style="padding:8px 12px; border-radius:6px; font-size:12px; width:auto;">追加</button>
+          </div>
         </div>
 
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
@@ -185,7 +192,6 @@
         </div>
       </div>
 
-      <!-- 🌟 疾患分類と現場診断のUIをデブリーフィング仕様へ統一 -->
       <div class="card">
         <div class="edit-section-title" style="margin-top:0;">🏥 疾患分類・現場診断</div>
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
@@ -208,10 +214,12 @@
 
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
           <label style="margin-bottom:8px;">現場診断 (フリーテキスト/マスタ)</label>
-          <div class="pill-group" id="chip-container-diagnosis" style="margin-bottom:8px;"></div>
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin:0; flex:1;">
-            <button type="button" id="btn-diag-add" class="btn-small" style="background:var(--blue); color:#fff; padding:10px 16px;" onclick="generateDiagnosis()">＋追加</button>
+          <div class="pill-group" id="chip-diagnosis-selected" style="margin-bottom:8px;"></div>
+          <div class="accordion-title-sm" onclick="toggleAccordion('chip-diagnosis-all')">▶ 他の病名を追加・選択</div>
+          <div class="pill-group accordion-content" id="chip-diagnosis-all" style="flex-direction:row;"></div>
+          <div class="accordion-content" style="gap:8px; margin-top:8px; flex-direction:row;" id="chip-diagnosis-custom-box">
+            <input type="text" id="diag-custom" list="diagnosis-list" placeholder="病名を入力・選択" style="margin:0; flex:1; padding:8px;">
+            <button type="button" class="btn-blue" onclick="addCustomChip('diagnosis')" style="padding:8px 12px; border-radius:6px; font-size:12px; width:auto;">追加</button>
           </div>
         </div>
 
@@ -363,8 +371,7 @@
             <div style="font-size:12px; font-weight:900; color:var(--blue); margin-bottom:8px; border-bottom:1px solid #bbdefb; padding-bottom:4px;">📈 生体モニタ・算定連動</div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
               <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2算定" onchange="toggleCalc('etco2', this.checked ? 1 : 0)">EtCO2</label>
-              <label class="proc-lbl"><input type="checkbox" id="chk-spo2" class="chk-other" value="経皮的酸素飽和度" onchange="toggleCalc('spo2', this.checked ? 1 : 0)">SpO2</label>
-              <label class="proc-lbl"><input type="checkbox" id="chk-monitor" class="chk-other" value="モニター算定時間" onchange="toggleCalc('monitor', this.checked ? 1 : 0)">モニター</label>
+              <label class="proc-lbl" style="font-size:11px; color:var(--sub);">(SpO2とモニターはタイムラインから自動算定されます)</label>
             </div>
           </div>
 
@@ -375,6 +382,12 @@
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心膜開窓">心膜開窓</label>
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="開胸心マッサージ">開胸心マッサージ</label>
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="1%カルボカイン10ml使用">1%カルボカイン10ml使用</label>
+            <div style="margin-top:4px; padding-top:8px; border-top:1px dashed #ccc;">
+              <label class="proc-lbl"><input type="checkbox" id="chk-other-surg" onchange="toggleBox('box-other-surg', this.checked)">その他外科処置</label>
+              <div id="box-other-surg" style="display:none; margin-top:8px; padding-left:28px;">
+                <input type="text" id="v-other-surg" placeholder="処置内容をフリー入力..." style="width:100%;">
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -494,7 +507,7 @@
   let diseaseCauseVal = "";
   let diseaseSubVal = "";
 
-  const CACHE_KEY = "aw109_master_cache_v14_5";
+  const CACHE_KEY = "aw109_master_cache_v14_6";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
   let currentKeywords = [];
@@ -518,13 +531,13 @@
     if (cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
-        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) { applyMasters(cacheObj.masters, cacheObj.qa); checkRouting(); return; }
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) { applyMasters(cacheObj.masters, cacheObj.qa, cacheObj.timestampMs); checkRouting(); return; }
       } catch(e) {}
     }
     fetchLatestData(false, false);
   };
 
-  function applyMasters(m, qaList) {
+  function applyMasters(m, qaList, timestampMs) {
     if(!m) return;
     masters = m;
     const pop = (id, arr) => { const el = document.getElementById(id); if (el) { el.innerHTML = ""; arr.forEach(a => { const opt = document.createElement("option"); opt.value = a; opt.innerText = a; el.appendChild(opt); }); } };
@@ -546,6 +559,11 @@
 
     if (qaList) {
       document.getElementById("qa-list").innerHTML = qaList.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
+    }
+    
+    if (timestampMs) {
+      const d = new Date(timestampMs);
+      document.getElementById("master-sync-info").innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     }
   }
 
@@ -699,6 +717,12 @@
     document.getElementById("v-echo-other").value = row["その他エコー"] || "";
 
     document.querySelectorAll('.chk-other').forEach(cb => { if(String(row[cb.value]).includes("◯") || String(row[cb.value]).includes("あり")) cb.checked = true; });
+    
+    const surg = String(row["その他外科処置"] || "");
+    if(surg) {
+        document.getElementById("chk-other-surg").checked = true; toggleBox('box-other-surg', true);
+        document.getElementById("v-other-surg").value = surg.replace(/^◯\s*/, '');
+    }
     
     document.getElementById("chk-ls-vent").checked = String(row["管理料_人工呼吸器"]).includes("あり");
     document.getElementById("chk-ls-shock").checked = String(row["管理料_除細動装置"]).includes("あり");
@@ -872,7 +896,7 @@
       if (json.status === "success") {
         const m = json.masters; const now = Date.now();
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: now, masters: m, qa: json.qa }));
-        applyMasters(m, json.qa);
+        applyMasters(m, json.qa, now);
         if(!isEditMode) checkRouting();
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       }
@@ -1067,9 +1091,8 @@
       "要請時刻・施設間搬送依頼時刻": document.getElementById("t-req").value, "初期離陸時間": document.getElementById("t-dep1").value, "最終着陸時間": document.getElementById("t-arr1").value,
       "接触": document.getElementById("t-contact").value, "病着": document.getElementById("t-hosp").value, "終了": document.getElementById("t-end").value,
       "往診料": state.calcVals.oshin[state.calc.oshin] || "", "搬送料": state.calcVals.hansou[state.calc.hansou] || "", "長時間加算": state.calcVals.long[state.calc.long] || "",
-      "モニター算定時間": state.calc.monitor > 0 ? document.getElementById("l-monitor").innerText : "", "経皮的酸素飽和度": state.calcVals.spo2[state.calc.spo2] || "",
       "EtCO2算定": document.getElementById("chk-etco2").checked ? "あり" : "", 
-      "現場診断": currentDiagnosis.join(", "), "キーワード": currentKeywords.join(", "), "事案概要": document.getElementById("v-summary-req").value.trim()
+      "現場診断": currentDiagnosis.join(", "), "キーワード要請": currentKeywords.join(", "), "事案概要": document.getElementById("v-summary-req").value.trim()
     };
     
     payload["管理料_人工呼吸器"] = document.getElementById("chk-ls-vent").checked ? "あり" : "";
@@ -1096,6 +1119,10 @@
     if(document.getElementById("chk-echo-carotid")?.checked) payload["頸動脈エコー"] = document.querySelector('input[name="carotid-pulse"]:checked')?.value || "◯";
     if(document.getElementById("v-echo-other")?.value) payload["その他エコー"] = document.getElementById("v-echo-other").value;
     Array.from(document.querySelectorAll('.chk-other:checked')).forEach(cb => payload[cb.value] = "◯");
+
+    if(document.getElementById("chk-other-surg")?.checked) {
+      payload["その他外科処置"] = "◯ " + document.getElementById("v-other-surg").value;
+    }
 
     let dynText = "";
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
@@ -1131,7 +1158,6 @@
       html += `<b>🏥 医療:</b> 接触[${d["接触"]||"-"}] 病着[${isNoHosp ? '対象外' : (d["病着"]||"-")}] 終了[${d["終了"]||"-"}]<br><br>`;
       html += `<b>💰 算定:</b> 往診[${d["往診料"]||"-"}] 搬送料[${d["搬送料"]||"-"}] 長時間[${d["長時間加算"]||"-"}]<br>`;
       
-      // 🌟 疾患プレビューの改善
       let diseaseComboStr = `[${d["疾患大分類"] || '未選択'}]`;
       if(d["疾患原因"]) diseaseComboStr += ` 原因:${d["疾患原因"]}`;
       if(d["詳細分類"]) diseaseComboStr += ` -> ${d["詳細分類"]}`;
