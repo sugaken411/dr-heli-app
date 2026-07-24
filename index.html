@@ -47,7 +47,6 @@
     .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border: 1px solid #ccc; transition: 0.2s; }
     .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); }
 
-    /* V14.1 アコーディオン・チップUI用スタイル復活 */
     .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; transition: background 0.2s; }
     .edit-section-title.clickable:hover { background: #bbdefb; }
     .accordion-content { display: none; margin-top: 8px; }
@@ -102,7 +101,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.1</span></div>
+    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.2</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
@@ -129,7 +128,7 @@
       </div>
 
       <div class="card">
-        <div class="edit-section-title" style="margin-top:0;">📞 要請区分・特殊ケース・診断</div>
+        <div class="edit-section-title" id="edit-scheme-section" style="margin-top:0;">📞 要請区分・特殊ケース・診断</div>
         <div class="form-group">
           <label>要請区分 <span style="color:var(--brand); font-size:10px;">(必須)</span></label>
           <div class="scheme-picker" style="grid-template-columns: repeat(2, 1fr);">
@@ -140,7 +139,6 @@
           </div>
         </div>
 
-        <!-- 復活: KEY WORD展開ロジックとチップUI -->
         <div class="form-group" id="keyword-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px; display:none;">
           <label style="margin-bottom:8px; color:var(--brand);">🔑 KEY WORD指定</label>
           <div class="chip-grid" id="chip-keyword-selected" style="margin-bottom:8px;"></div>
@@ -181,7 +179,6 @@
           </div>
         </div>
 
-        <!-- 復活: 疾患分類（現場診断）のチップ・アコーディオン選択 -->
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
           <label style="margin-bottom:8px;">現場診断・疾患分類</label>
           <div class="chip-grid" id="chip-diagnosis-selected" style="margin-bottom:8px;"></div>
@@ -223,7 +220,6 @@
         </div>
       </div>
 
-      <!-- 復活: 処置関連のアコーディオン化 -->
       <div class="card" style="padding:16px;">
         <div class="edit-section-title clickable" style="margin-top:0; margin-bottom:0; cursor:pointer;" onclick="toggleAccordion('acc-line')">▶ 💉 確保ラインを追加</div>
         <div class="accordion-content" id="acc-line" style="margin-top:12px;">
@@ -395,7 +391,34 @@
         <div id="mail-options-box" style="margin-bottom:12px; display:flex; flex-direction:column; gap:8px;"></div>
         <input type="email" id="custom-email" placeholder="手入力 (カンマ区切り可)" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:14px; background:#fff;">
 
-        <button type="button" id="btn-submit" onclick="submitData()" style="width:100%; background:var(--brand); padding:16px; border-radius:12px; font-size:16px; font-weight:bold; color:#fff; border:none; box-shadow:0 4px 12px rgba(211,47,47,0.3); margin-top:20px;">🚀 この内容で送信する</button>
+        <button type="button" id="btn-submit-main" onclick="submitData('submit')" style="width:100%; background:var(--brand); padding:16px; border-radius:12px; font-size:16px; font-weight:bold; color:#fff; border:none; box-shadow:0 4px 12px rgba(211,47,47,0.3); margin-top:20px;">🚀 この内容で送信する</button>
+        
+        <!-- 🌟 アーキテクチャ改修: 編集モード専用コントロールパネル -->
+        <div id="edit-mode-panel" style="display:none; margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
+          <div id="complete-box" style="padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid #ccc;">
+            <p style="font-size:12px; font-weight:bold; color:var(--blue); margin:0 0 8px 0;">✅ カルテ完了処理</p>
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <label style="font-size:13px; font-weight:bold;"><input type="radio" name="comp-who" value="本人" checked onchange="toggleComp()"> 本人(担当Ns)</label>
+              <label style="font-size:13px; font-weight:bold;"><input type="radio" name="comp-who" value="代行" onchange="toggleComp()"> 代行入力</label>
+            </div>
+            <input type="text" id="comp-name" placeholder="代行入力者名 (※代行時必須)" style="display:none; width:100%; margin-bottom:8px;" oninput="formatKatakana(this)">
+            <button type="button" style="width:100%; padding:14px; background:#34c759; border-radius:8px; border:none; color:#fff; font-weight:bold; cursor:pointer;" id="btn-complete" onclick="markComplete()">カルテ完了状態にする</button>
+          </div>
+
+          <p style="font-size:12px; font-weight:bold; color:var(--brand); margin:0 0 8px 0;">※修正する場合は担当を選択し「上書き保存」を押してください。</p>
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <label style="font-size:13px; font-weight:bold;"><input type="radio" name="edit-who" value="本人" checked onchange="toggleEditWho()"> 本人(担当Ns)</label>
+            <label style="font-size:13px; font-weight:bold;"><input type="radio" name="edit-who" value="代行" onchange="toggleEditWho()"> その他(代行修正)</label>
+          </div>
+          <input type="text" id="edit-person" placeholder="修正担当者名 (※その他の場合必須)" style="display:none; width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
+
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            <button type="button" style="background:var(--brand); color:#fff; font-size:12px; padding:14px; border-radius:8px; border:none; cursor:pointer; font-weight:bold;" onclick="deleteRecord()">🗑️ 削除</button>
+            <button type="button" style="flex:1; padding:14px; background:var(--blue); color:#fff; border-radius:8px; border:none; cursor:pointer; font-weight:bold;" onclick="submitData('update')">💾 上書き保存</button>
+            <button type="button" style="background:#ff9800; color:#fff; padding:14px; border-radius:8px; border:none; cursor:pointer; font-weight:bold;" onclick="sendEmail()">📧 メール再送</button>
+          </div>
+        </div>
+        
       </div>
     </div>
   </main>
@@ -435,13 +458,16 @@
   });
 
   let state = { reqType: "", scheme: "", calc: { oshin: 0, hansou: 0, long: 0, monitor: 0, spo2: 0, etco2: 0, resp: 0 }, calcVals: { oshin: ["","往診料"], hansou: ["","搬送料","搬送料(新生児)"], long: ["","あり"], monitor:["","自動計算"], spo2:["","あり"], etco2:["","あり"], resp:["","あり"] } };
-  const CACHE_KEY = "aw109_master_cache_v14_1";
+  const CACHE_KEY = "aw109_master_cache_v14_2";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
-  // V14.1: チップ選択用データ
   let currentKeywords = [];
   let currentDiagnosis = [];
   let masters = { keyword: [], diagnosis: [], dr: [], ns: [], dest: [], mailOptions: [] };
+  
+  // 編集モード用グローバル変数
+  let isEditMode = false;
+  let editTargetSysId = "";
 
   window.onload = () => {
     const now = new Date(); const jst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
@@ -450,7 +476,7 @@
     if (cachedStr) {
       try {
         const cacheObj = JSON.parse(cachedStr);
-        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) { applyMasters(cacheObj.masters); return; }
+        if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) { applyMasters(cacheObj.masters); checkRouting(); return; }
       } catch(e) {}
     }
     fetchLatestData(false, false);
@@ -460,10 +486,7 @@
     masters = m;
     const pop = (id, arr) => { const el = document.getElementById(id); if (el) { el.innerHTML = ""; arr.forEach(a => { const opt = document.createElement("option"); opt.value = a; opt.innerText = a; el.appendChild(opt); }); } };
     pop("v-dr", ["", ...m.dr]); pop("v-ns", ["", ...m.ns]); pop("dl-dest", m.dest);
-    
-    // V14.1: キーワードと診断のチップを描画
-    renderChips('keyword');
-    renderChips('diagnosis');
+    renderChips('keyword'); renderChips('diagnosis');
 
     const lastDr = localStorage.getItem("aw109_last_dr"); const lastNs = localStorage.getItem("aw109_last_ns");
     if(lastDr) document.getElementById("v-dr").value = lastDr; if(lastNs) document.getElementById("v-ns").value = lastNs;
@@ -471,98 +494,252 @@
     if (mbox) { mbox.innerHTML = ""; m.mailOptions.forEach(opt => { mbox.innerHTML += `<label style="display:block; font-size:13px; color:var(--ink); font-weight:600;"><input type="checkbox" class="mail-opt-chk" value="${opt.email}" style="margin-right:8px;">${opt.name}</label>`; }); }
   }
 
-  // V14.1: アコーディオン開閉ロジック
+  // 🌟 アーキテクチャ改修: URLパラメータからの自動復元ルーティング
+  function checkRouting() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('editId');
+    if (editId) {
+      isEditMode = true;
+      editTargetSysId = editId;
+      document.getElementById('app-title').innerHTML = `AW109 症例登録 <span style="font-size:11px; background:#ff9800; color:#fff; padding:3px 6px; border-radius:4px;">編集中</span>`;
+      fetchCaseForEdit(editId);
+    }
+  }
+
+  async function fetchCaseForEdit(targetId) {
+    showLoader("事案データ読み込み中...", "過去のカルテを復元しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
+      const json = await res.json();
+      if(json.status === "success") {
+        const row = json.data.find(r => String(r.id) === String(targetId) || String(r.displayId) === String(targetId));
+        if (row) {
+          restoreData(row.rawData);
+        } else {
+          alert("指定された事案データが見つかりませんでした。");
+          isEditMode = false;
+        }
+      } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("データ復元に失敗しました。"); } finally { hideLoader(); }
+  }
+
+  // 🌟 アーキテクチャ改修: DBからの完全復元ロジック (SSOT)
+  function restoreData(row) {
+    document.getElementById("v-id").value = row["要請番号"] || "";
+    document.getElementById("v-id").readOnly = true; 
+    
+    let rawDateStr = String(row["日付"] || "").split(" ")[0]; 
+    let dateParts = rawDateStr.split(/[\/\-]/);
+    if (dateParts.length === 3) {
+      document.getElementById("v-date").value = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
+    } else {
+      document.getElementById("v-date").value = rawDateStr.replace(/\//g, "-");
+    }
+
+    document.getElementById("v-dest").value = row["出場先"] || "";
+    document.getElementById("v-dr").value = row["フライトドクター"] || "";
+    document.getElementById("v-ns").value = row["フライトナース"] || "";
+    document.getElementById("v-summary-req").value = row["事案概要"] || "";
+
+    if(String(row["要請番号"]).includes("-")) {
+        document.getElementById("chk-edaban").checked = true;
+        document.getElementById("v-edaban").value = String(row["要請番号"]).split("-")[1].replace(/^0+/, '');
+        toggleBox('box-edaban', true);
+    }
+    if(String(row["備考"]).includes("【緊急外来搬送先:")) {
+        document.getElementById("chk-er").checked = true;
+        toggleBox('box-er', true);
+        let match = String(row["備考"]).match(/【緊急外来搬送先:\s*(.*?)】/);
+        if(match) document.getElementById("v-er-hosp").value = match[1];
+        document.getElementById("v-biko").value = String(row["備考"]).replace(/【緊急外来搬送先:.*?】\n?/g, "");
+    } else {
+        document.getElementById("v-biko").value = row["備考"] || "";
+    }
+
+    setScheme(row["スキーム選択"] || "");
+    setReqType(row["要請区分"] || "");
+
+    document.getElementById("chk-pediatric").checked = String(row["小児フラグ"]).includes("◯");
+    document.getElementById("chk-maternal").checked = String(row["母性フラグ"]).includes("◯");
+    document.getElementById("chk-mass").checked = String(row["多数傷病フラグ"]).includes("◯");
+
+    currentKeywords = (row["キーワード要請"] || "").split(",").map(s=>s.trim()).filter(Boolean);
+    currentDiagnosis = (row["現場診断"] || "").split(",").map(s=>s.trim()).filter(Boolean);
+    renderChips('keyword'); renderChips('diagnosis');
+
+    const fmtTime = (t) => { if(!t) return ""; let s = String(t); if(s.includes("T")) s = s.split("T")[1]; else if(s.includes(" ")) s = s.split(" ")[1]; return s.substring(0,5); };
+    document.getElementById("t-req").value = fmtTime(row["要請時刻・施設間搬送依頼時刻"]); document.getElementById("t-dep1").value = fmtTime(row["初期離陸時間"]); document.getElementById("t-arr1").value = fmtTime(row["最終着陸時間"]);
+    document.getElementById("t-contact").value = fmtTime(row["接触"]); document.getElementById("t-hosp").value = fmtTime(row["病着"]); document.getElementById("t-end").value = fmtTime(row["終了"]);
+
+    const chkMap = { "20G":"20G", "22G":"22G", "24G":"24G", "18G":"18G", "ez":"骨髄針", "big":"BIG等" };
+    Object.keys(chkMap).forEach(id => {
+        const dbVal = String(row[chkMap[id]] || "");
+        const el = document.getElementById(`chk-${id}`);
+        if(dbVal.includes("◯")) { el.checked = true; const num = dbVal.replace(/[^0-9]/g, ''); if(num) document.getElementById(`val-${id}`).value = num; toggleProcCount(el); }
+    });
+
+    const venu = String(row["ベニューラ"] || "");
+    if(venu.includes("◯")) {
+        document.getElementById("chk-venu").checked = true; toggleBox('box-venu-det', true); toggleBox('cnt-venu', true);
+        const num = venu.replace(/[^0-9]/g, '');
+        if(num && !venu.includes("V"+num)) document.getElementById("val-venu").value = num; 
+        if(venu.includes("V1")) document.querySelector('input[name="venu-type"][value="V1"]').checked = true;
+        if(venu.includes("V2")) document.querySelector('input[name="venu-type"][value="V2"]').checked = true;
+        if(venu.includes("V3")) document.querySelector('input[name="venu-type"][value="V3"]').checked = true;
+    }
+
+    const bg = String(row["血ガス"] || "");
+    if(bg.includes("採血")) {
+        document.getElementById("chk-bg").checked = true; toggleBox('box-bg-det', true);
+        if(bg.includes("動脈")) { document.querySelector('input[name="bg-type"][value="動脈血採血"]').checked = true; toggleBox('box-bg-art', true); } 
+        else { document.querySelector('input[name="bg-type"][value="静脈血採血"]').checked = true; toggleBox('box-bg-art', false); }
+    }
+
+    const intub = String(row["気管挿管"] || "");
+    if(intub.includes("◯")) {
+        document.getElementById("chk-intub").checked = true; toggleBox('box-intub-det', true);
+        if(intub.includes("吸引あり")) document.getElementById("intub-cuff").checked = true;
+        let mSize = intub.match(/ID([0-9\.]+)mm/); if(mSize) document.getElementById("intub-size").value = mSize[1];
+        let mPos = intub.match(/([0-9\.]+)cm/); if(mPos) document.getElementById("intub-pos").value = mPos[1];
+    }
+
+    const nppv = String(row["NPPV"] || "");
+    if(nppv.includes("◯")) {
+        document.getElementById("chk-nppv").checked = true; toggleBox('box-nppv-det', true);
+        if(nppv.includes("Sサイズ")) document.getElementById("nppv-mask").value = "S";
+        if(nppv.includes("Mサイズ")) document.getElementById("nppv-mask").value = "M";
+        if(nppv.includes("Lサイズ")) document.getElementById("nppv-mask").value = "L";
+    }
+
+    const shock = String(row["除細動パッド"] || "");
+    if(shock.includes("◯")) { document.getElementById("chk-shock").checked = true; toggleBox('box-shock-det', true); document.getElementById("chk-shock-pad").checked = true; }
+
+    const pacing = String(row["経皮ペーシング"] || "");
+    if(pacing.includes("◯")) { document.getElementById("chk-pacing").checked = true; toggleBox('box-pacing-det', true); }
+
+    const thorax = String(row["胸腔ドレナージ"] || "");
+    if(thorax.includes("◯")) {
+        document.getElementById("chk-thorax").checked = true; toggleBox('box-thorax-det', true);
+        let m20 = thorax.match(/20Fr:(\d+)/); if(m20) document.getElementById("thorax-20").value = m20[1];
+        let m28 = thorax.match(/28Fr:(\d+)/); if(m28) document.getElementById("thorax-28").value = m28[1];
+    }
+
+    const peri = String(row["心嚢穿刺・心嚢ドレナージ"] || "");
+    if(peri) {
+        document.getElementById("chk-pericardial").checked = true; toggleBox('box-pericardial-det', true);
+        const rEl = document.querySelector(`input[name="pericardial-type"][value="${peri}"]`); if(rEl) rEl.checked = true;
+    }
+
+    document.querySelectorAll('.chk-echo').forEach(cb => { if(String(row[cb.value]).includes("◯")) cb.checked = true; });
+
+    const caro = String(row["頸動脈エコー"] || "");
+    if(caro.includes("パルス")) {
+        document.getElementById("chk-echo-carotid").checked = true; toggleBox('box-echo-carotid', true);
+        const rEl = document.querySelector(`input[name="carotid-pulse"][value="${caro}"]`); if(rEl) rEl.checked = true;
+    }
+
+    document.getElementById("v-echo-other").value = row["その他エコー"] || "";
+
+    document.querySelectorAll('.chk-other').forEach(cb => { if(String(row[cb.value]).includes("◯") || String(row[cb.value]).includes("あり")) cb.checked = true; });
+    
+    document.getElementById("chk-ls-vent").checked = String(row["人工呼吸器管理料"]).includes("あり");
+
+    // Dynamic Rows Restore
+    ["酸素", "呼吸器", "圧迫"].forEach(type => {
+      clearDyn(type === '酸素' ? 'dyn-o2' : type === '呼吸器' ? 'dyn-vent' : 'dyn-cpr');
+      for(let i=1; i<=5; i++) {
+        let s = row[`${type}${i}開始`]; let e = row[`${type}${i}終了`];
+        if(s || e) {
+          const dynId = type === '酸素' ? 'o2' : type === '呼吸器' ? 'vent' : 'cpr';
+          addDyn(dynId);
+          const rows = document.getElementById(`dyn-${dynId}`).querySelectorAll('.dyn-row-container');
+          const lastRow = rows[rows.length - 1];
+          lastRow.querySelector('.v-start').value = s || "";
+          lastRow.querySelector('.v-end').value = e || "";
+          if(type === '酸素' || type === '呼吸器') {
+            if(row[`${type}${i}流量`]) lastRow.querySelector('.v-val').value = row[`${type}${i}流量`];
+            if(row[`${type}${i}FiO2`]) lastRow.querySelector('.v-val2').value = row[`${type}${i}FiO2`];
+          }
+        }
+      }
+    });
+    
+    if(row["圧迫1開始"]) calcCPR();
+    calcMonitor(); handleLifeSupport();
+    
+    // Status Check
+    const isDone = (row["ステータス"] || "").includes("完了") && !(row["ステータス"] || "").includes("未完了");
+    document.getElementById("btn-complete").style.display = isDone ? "none" : "block"; 
+    document.getElementById("complete-box").style.display = isDone ? "none" : "block";
+    
+    document.querySelector('input[name="comp-who"][value="本人"]').checked = true; 
+    document.querySelector('input[name="edit-who"][value="本人"]').checked = true; 
+    toggleComp(); toggleEditWho(); 
+    document.getElementById("comp-name").value = ""; 
+    document.getElementById("edit-person").value = row["フライトナース"] || "";
+    
+    // Toggle UI
+    document.getElementById("btn-submit-main").style.display = "none";
+    document.getElementById("edit-mode-panel").style.display = "block";
+    
+    // Force show kw accordion if needed
+    if(currentKeywords.length > 0) toggleAccordion('chip-keyword-all');
+    if(currentDiagnosis.length > 0) toggleAccordion('chip-diagnosis-all');
+
+    switchTab('input');
+  }
+
+  // 編集モード関連のアクション
+  function toggleComp() { const el = document.querySelector('input[name="comp-who"]:checked'); if(el) document.getElementById("comp-name").style.display = el.value === "代行" ? "block" : "none"; }
+  function toggleEditWho() { const el = document.querySelector('input[name="edit-who"]:checked'); if(el) document.getElementById("edit-person").style.display = el.value === "代行" ? "block" : "none"; }
+
+  async function deleteRecord() {
+    const p = prompt("この事案データを完全に削除しますか？\n実行するにはアクセスコードを入力してください。");
+    if (p !== PIN_CODE) { if (p !== null) alert("パスワードが一致しません。削除は中止されました。"); return; }
+    showLoader("削除処理中...", "データベースからレコードを削除しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_record", password: PIN_CODE, id: editTargetSysId }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") { alert("事案を削除しました。"); location.href = "search.html"; } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+  }
+
+  async function markComplete() {
+    const type = document.querySelector('input[name="comp-who"]:checked').value; let who = type;
+    if (type === "代行") { const name = document.getElementById("comp-name").value.trim(); if(!name) return alert("代行入力者の名前を入力してください。"); who = "代行: " + name; } else { who = document.getElementById("edit-person").value || document.getElementById("v-ns").value || "本人"; }
+    if (!state.scheme) return alert("最終スキームを選択してください。");
+    if (!confirm(`カルテを完了にしますか？\n（記録: ${who}）`)) return;
+    showLoader("完了処理中...", "電子カルテの完了ステータスを更新しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: editTargetSysId, who: who }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") { alert("完了しました！"); location.href = "search.html"; } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+  }
+
+  async function sendEmail() {
+    if(!confirm(`事案内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
+    showLoader("メール送信中...", "関係各所に送信しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "send_email", password: PIN_CODE, id: editTargetSysId }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") { alert("メールを送信しました！"); } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+  }
+
   function toggleAccordion(id) {
     const el = document.getElementById(id);
     if(el) {
       el.classList.toggle('open');
       const title = el.previousElementSibling;
       if(title && (title.innerText.includes('▶') || title.innerText.includes('▼'))) {
-        if(el.classList.contains('open')) {
-          title.innerText = title.innerText.replace('▶', '▼');
-        } else {
-          title.innerText = title.innerText.replace('▼', '▶');
-        }
+        if(el.classList.contains('open')) title.innerText = title.innerText.replace('▶', '▼');
+        else title.innerText = title.innerText.replace('▼', '▶');
       }
     }
-  }
-
-  // V14.1: チップ選択ロジック
-  function toggleChip(cat, item) {
-    let arr = cat === 'keyword' ? currentKeywords : currentDiagnosis;
-    if (arr.includes(item)) { arr = arr.filter(x => x !== item); } else { arr.push(item); }
-    if (cat === 'keyword') currentKeywords = arr; else currentDiagnosis = arr;
-    renderChips(cat);
-  }
-  
-  function addCustomChip(cat) {
-    const input = document.getElementById(cat === 'keyword' ? 'keyword-custom' : 'diag-custom');
-    const val = input.value.trim();
-    if (val) { toggleChip(cat, val); input.value = ""; }
-  }
-
-  function renderChips(cat) {
-    const selBox = document.getElementById(`chip-${cat}-selected`);
-    const allBox = document.getElementById(`chip-${cat}-all`);
-    if (!selBox || !allBox) return;
-    selBox.innerHTML = ""; allBox.innerHTML = "";
-    
-    const list = masters[cat] || [];
-    const currentTags = cat === 'keyword' ? currentKeywords : currentDiagnosis;
-    
-    currentTags.forEach(item => {
-      selBox.innerHTML += `<div class="chip on" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
-    });
-    if(currentTags.length === 0) selBox.innerHTML = `<span style="font-size:12px; color:var(--sub);">選択なし</span>`;
-    
-    list.forEach(item => {
-      if(!currentTags.includes(item)) {
-        allBox.innerHTML += `<div class="chip" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
-      }
-    });
-  }
-
-  async function fetchLatestData(isBackground, isManualUpdate) {
-    if(!isBackground) showLoader("マスタデータ同期中...", "システムを初期化しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") {
-        const m = json.masters; const now = Date.now();
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: now, masters: m }));
-        applyMasters(m);
-        if(isManualUpdate) alert("最新のマスタデータを取得しました。");
-      }
-    } catch(e) { sendErrorLog(e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
-  }
-
-  function saveLastStaff(type, val) { localStorage.setItem(`aw109_last_${type}`, val); }
-
-  let loaderTimer1, loaderTimer2;
-  function showLoader(m1, m2) {
-    const loader = document.getElementById("global-loader");
-    if(loader) {
-      document.getElementById("loader-main-text").innerText = m1; document.getElementById("loader-sub-text").innerText = m2; loader.style.display = "flex";
-      loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
-    }
-  }
-  function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); const loader = document.getElementById("global-loader"); if(loader) loader.style.display = "none"; }
-  function openModal(id) { document.getElementById(id).classList.add('show'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-  function sendErrorLog(errMsg) {
-    if(String(errMsg).includes("Load failed")) return;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "症例登録(v14.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {}
-  }
-
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.add('active'); document.getElementById(`tb-${tab}`).classList.add('active'); window.scrollTo(0, 0);
   }
 
   function toggleBox(id, isShow) { document.getElementById(id).style.display = isShow ? "block" : "none"; }
-  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
   function toggleProcCount(cb) { const cntBox = cb.parentElement.nextElementSibling; cntBox.style.display = cb.checked ? "flex" : "none"; }
 
   function handleLifeSupport() {
@@ -571,18 +748,12 @@
     if(isIntub||isNppv) setCalc('resp', 1); else setCalc('resp', 0); if(isIntub) setCalc('etco2', 1); else setCalc('etco2', 0);
   }
 
-  // V14.1: 要請区分に応じたキーワード領域の表示制御
   function setReqType(val) {
     state.reqType = val; document.querySelectorAll('[id^="req-"]').forEach(el => el.classList.remove('active'));
     const idMap = { 'KEY WORD': 'req-keyword', '救急隊現着後': 'req-amb', 'D-call Net': 'req-dcall', '施設間': 'req-fac' }; document.getElementById(idMap[val]).classList.add('active');
     if(val === '施設間') setScheme('施設間');
-    
     const kwGroup = document.getElementById("keyword-group");
-    if(val === 'KEY WORD' || currentKeywords.length > 0) {
-      kwGroup.style.display = 'block';
-    } else {
-      kwGroup.style.display = 'none';
-    }
+    if(val === 'KEY WORD' || currentKeywords.length > 0) { kwGroup.style.display = 'block'; } else { kwGroup.style.display = 'none'; }
   }
 
   function setScheme(val) {
@@ -655,15 +826,18 @@
     document.getElementById('lbl-cpr-total').innerText = total;
   }
 
-  async function submitQA(event) {
-    const qName = document.getElementById("qa-name").value.trim(); const qEmail = document.getElementById("qa-email").value.trim(); const qText = document.getElementById("qa-input").value.trim(); 
-    if(!qText) return alert("質問内容を入力してください。");
-    const finalQuestion = `【送信者】${qName || "未入力"}\n【連絡先】${qEmail || "未入力"}\n\n${qText}`;
-    showLoader("送信中...", "");
+  async function fetchLatestData(isBackground, isManualUpdate) {
+    if(!isBackground) showLoader("マスタデータ同期中...", "システムを初期化しています");
     try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" }), redirect: "follow" });
-      alert("要望・報告を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa');
-    } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") {
+        const m = json.masters; const now = Date.now();
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: now, masters: m }));
+        applyMasters(m); checkRouting();
+        if(isManualUpdate) alert("最新のマスタデータを取得しました。");
+      }
+    } catch(e) { sendErrorLog(e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
   }
 
   function getCollectData() {
@@ -719,7 +893,7 @@
     if(document.getElementById("chk-er").checked) biko = `【緊急外来搬送先: ${document.getElementById("v-er-hosp").value}】\n` + biko;
     payload["備考"] = biko.trim();
     
-    // V14.1 メール送信オプションの動的取得
+    // メール送信オプション
     let selMails = [];
     document.querySelectorAll('.mail-opt-chk:checked').forEach(cb => selMails.push(cb.value));
     const manualMail = document.getElementById("custom-email").value.trim();
@@ -742,16 +916,39 @@
     } catch(e) { document.getElementById("preview-error").style.display = "block"; document.getElementById("preview-error").innerText = "プレビュー生成失敗。"; sendErrorLog("buildPreview error: " + e.message); }
   }
 
-  async function submitData() {
+  // 🌟 アーキテクチャ改修: 新規登録(submit)と上書き(update_record)を統合
+  async function submitData(mode = 'submit') {
     if (!state.scheme) return alert("最終スキーム選択は必須入力項目です。");
-    const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
+    
+    let editor = "担当Ns";
+    if (mode === 'update') {
+      const editType = document.querySelector('input[name="edit-who"]:checked').value;
+      if (editType === "代行") editor = document.getElementById("edit-person").value.trim();
+      else editor = document.getElementById("v-ns").value || "担当Ns";
+      if (!editor) return alert("「修正担当者名」を入力するか、フライトNsを選択してください。");
+      if(!confirm(`データを上書きしてよろしいですか？`)) return;
+    }
+
+    const payload = getCollectData();
+    const btn = document.getElementById(mode === 'submit' ? "btn-submit-main" : "btn-submit-main"); // fallback target
+    
     showLoader("症例データ送信中...", "事案データベースへレコードを登録しています");
     try {
-      const payload = getCollectData();
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit", password: PIN_CODE, data: payload }), redirect: "follow" });
+      let actionName = mode === 'update' ? 'update_record' : 'submit';
+      let reqBody = { action: actionName, password: PIN_CODE, data: payload };
+      if (mode === 'update') {
+        reqBody.old_id = editTargetSysId; // 🌟 外部キー(UUID)または元の要請番号を渡す
+        reqBody.editor = editor;
+      }
+
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(reqBody), redirect: "follow" });
       const json = await res.json();
-      if (json.status === "success") { alert("事案の新規登録が正常に完了しました。"); location.reload(); } else { throw new Error(json.message || "サーバー側で登録が拒否されました"); }
-    } catch(e) { sendErrorLog(`Submit Data Error: ${e.message}`); alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); } finally { btn.disabled = false; btn.innerText = "🚀 この内容で送信する"; hideLoader(); }
+      if (json.status === "success") { 
+        alert(mode === 'update' ? "上書き保存しました。" : "事案の新規登録が完了しました。"); 
+        if(mode === 'update') location.href = "search.html"; // 更新後は検索画面へ戻る
+        else location.reload(); 
+      } else { throw new Error(json.message || "サーバー側で登録が拒否されました"); }
+    } catch(e) { sendErrorLog(`Submit Data Error: ${e.message}`); alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); } finally { hideLoader(); }
   }
 </script>
 </body>
