@@ -14,20 +14,23 @@
       --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding-bottom: 80px; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; }
-    main { margin-top: calc(56px + var(--safe-top)); margin-bottom: calc(60px + var(--safe-bot)); padding: 16px 16px 24px; }
+    main { margin-top: calc(56px + var(--safe-top)); padding: 16px 16px 24px; max-width: 800px; margin-left: auto; margin-right: auto; }
     
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; transition: background 0.2s; }
+    .edit-section-title.clickable:hover { background: #bbdefb; }
     
     input, select, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
     button { background: var(--blue); color: #fff; border: none; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
     button:hover { opacity: 0.8; }
     .btn-clear { background: none; border: none; color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; }
     .btn-add-action { background: var(--blue); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
     
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
@@ -47,16 +50,18 @@
     .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border: 1px solid #ccc; transition: 0.2s; }
     .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); }
 
-    .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; transition: background 0.2s; }
-    .edit-section-title.clickable:hover { background: #bbdefb; }
     .accordion-content { display: none; margin-top: 8px; }
     .accordion-content.open { display: flex; flex-direction: column; }
     .accordion-title-sm { font-size:12px; color:var(--blue); font-weight:bold; cursor:pointer; user-select:none; margin-top:8px; display:inline-block; padding:4px 0; }
     
+    .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .pill { border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
+    .pill.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
+    .pill.sub-on { background: #ff9800; border-color: #ff9800; color: #fff; box-shadow: 0 2px 6px rgba(255,152,0,0.2); }
+
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
     .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
-    .chip.sub-on { background: #ff9800; border-color: #ff9800; color: #fff; }
 
     .dyn-row-container { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e5e5ea; }
     .dyn-grid-time { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
@@ -92,6 +97,8 @@
 </head>
 <body>
 
+  <datalist id="diagnosis-list"></datalist>
+
   <div id="global-loader">
     <div class="spinner"></div>
     <div class="loader-text" id="loader-main-text">通信中...</div>
@@ -102,7 +109,7 @@
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
     </div>
-    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.4</span></div>
+    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.5</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
@@ -143,13 +150,7 @@
 
         <div class="form-group" id="keyword-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px; display:none;">
           <label style="margin-bottom:8px; color:var(--brand);">🔑 KEY WORD指定</label>
-          <div class="chip-grid" id="chip-keyword-selected" style="margin-bottom:8px;"></div>
-          <div class="accordion-title-sm" onclick="toggleAccordion('chip-keyword-all')">▶ キーワードを追加・選択</div>
-          <div class="chip-grid accordion-content" id="chip-keyword-all" style="flex-direction:row;"></div>
-          <div class="accordion-content" style="gap:8px; margin-top:8px; flex-direction:row;" id="chip-keyword-custom-box">
-            <input type="text" id="keyword-custom" placeholder="リストにないキーワードを追加..." style="flex:1; padding:8px;">
-            <button type="button" class="btn-blue" onclick="addCustomChip('keyword')" style="padding:8px 12px; border-radius:6px; font-size:12px; width:auto;">追加</button>
-          </div>
+          <div class="pill-group" id="chip-container-keyword" style="margin-bottom:8px;"></div>
         </div>
 
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
@@ -184,34 +185,33 @@
         </div>
       </div>
 
+      <!-- 🌟 疾患分類と現場診断のUIをデブリーフィング仕様へ統一 -->
       <div class="card">
         <div class="edit-section-title" style="margin-top:0;">🏥 疾患分類・現場診断</div>
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
           <label style="margin-bottom:8px;">疾患大分類</label>
-          <div class="chip-grid">
-            <div class="chip" id="d-main-1" onclick="setDiseaseMain('1外傷')">1 外傷</div>
-            <div class="chip" id="d-main-2" onclick="setDiseaseMain('2心大血管')">2 心大血管</div>
-            <div class="chip" id="d-main-3" onclick="setDiseaseMain('3脳血管')">3 脳血管</div>
-            <div class="chip" id="d-main-4" onclick="setDiseaseMain('4心肺停止')">4 心肺停止(CPA)</div>
-            <div class="chip" id="d-main-5" onclick="setDiseaseMain('5その他')">5 その他</div>
+          <div class="pill-group">
+            <div class="pill" id="d-main-1" onclick="setDiseaseMain('1外傷')">1 外傷</div>
+            <div class="pill" id="d-main-2" onclick="setDiseaseMain('2心大血管')">2 心大血管</div>
+            <div class="pill" id="d-main-3" onclick="setDiseaseMain('3脳血管')">3 脳血管</div>
+            <div class="pill" id="d-main-4" onclick="setDiseaseMain('4心肺停止')">4 心肺停止(CPA)</div>
+            <div class="pill" id="d-main-5" onclick="setDiseaseMain('5その他')">5 その他</div>
           </div>
           <div id="disease-cpa-alert" style="display:none; background:#ffebee; color:#c62828; padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; margin-top:8px; border:1px solid #ffcdd2;">
             ※CPAの場合は、原因疾患を以下から選択してください。
           </div>
           <div id="disease-sub-area" style="display:none; margin-top:12px;">
             <label id="d-sub-title" style="margin-bottom:8px; color:var(--sub); font-size:11px;">詳細分類</label>
-            <div class="chip-grid" id="d-sub-pills"></div>
+            <div class="pill-group" id="d-sub-pills"></div>
           </div>
         </div>
 
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
           <label style="margin-bottom:8px;">現場診断 (フリーテキスト/マスタ)</label>
-          <div class="chip-grid" id="chip-diagnosis-selected" style="margin-bottom:8px;"></div>
-          <div class="accordion-title-sm" onclick="toggleAccordion('chip-diagnosis-all')">▶ 他の病名を追加・選択</div>
-          <div class="chip-grid accordion-content" id="chip-diagnosis-all" style="flex-direction:row;"></div>
-          <div class="accordion-content" style="gap:8px; margin-top:8px; flex-direction:row;" id="chip-diagnosis-custom-box">
-            <input type="text" id="diag-custom" placeholder="リストにない病名を追加..." style="flex:1; padding:8px;">
-            <button type="button" class="btn-blue" onclick="addCustomChip('diagnosis')" style="padding:8px 12px; border-radius:6px; font-size:12px; width:auto;">追加</button>
+          <div class="pill-group" id="chip-container-diagnosis" style="margin-bottom:8px;"></div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin:0; flex:1;">
+            <button type="button" id="btn-diag-add" class="btn-small" style="background:var(--blue); color:#fff; padding:10px 16px;" onclick="generateDiagnosis()">＋追加</button>
           </div>
         </div>
 
@@ -425,7 +425,6 @@
 
         <button type="button" id="btn-submit-main" onclick="submitData('submit')" style="width:100%; background:var(--brand); padding:16px; border-radius:12px; font-size:16px; font-weight:bold; color:#fff; border:none; box-shadow:0 4px 12px rgba(211,47,47,0.3); margin-top:20px;">🚀 この内容で送信する</button>
         
-        <!-- 🌟 編集モード専用コントロールパネル -->
         <div id="edit-mode-panel" style="display:none; margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
           <div id="complete-box" style="padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid #ccc;">
             <p style="font-size:12px; font-weight:bold; color:var(--blue); margin:0 0 8px 0;">✅ カルテ完了処理</p>
@@ -495,7 +494,7 @@
   let diseaseCauseVal = "";
   let diseaseSubVal = "";
 
-  const CACHE_KEY = "aw109_master_cache_v14_4";
+  const CACHE_KEY = "aw109_master_cache_v14_5";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
   let currentKeywords = [];
@@ -534,6 +533,10 @@
     if (!masters.keyword || masters.keyword.length === 0) {
       masters.keyword = ["閉じ込められている", "車外放出された", "山岳部滑落", "その他"];
     }
+    
+    document.getElementById("diagnosis-list").innerHTML = ""; 
+    masters.diagnosis.forEach(d => document.getElementById("diagnosis-list").innerHTML += `<option value="${d}">`);
+
     renderChips('keyword'); renderChips('diagnosis');
 
     const lastDr = localStorage.getItem("aw109_last_dr"); const lastNs = localStorage.getItem("aw109_last_ns");
@@ -697,7 +700,6 @@
 
     document.querySelectorAll('.chk-other').forEach(cb => { if(String(row[cb.value]).includes("◯") || String(row[cb.value]).includes("あり")) cb.checked = true; });
     
-    // 🌟 管理料プレフィックスによる復元
     document.getElementById("chk-ls-vent").checked = String(row["管理料_人工呼吸器"]).includes("あり");
     document.getElementById("chk-ls-shock").checked = String(row["管理料_除細動装置"]).includes("あり");
     document.getElementById("chk-ls-hoiku").checked = String(row["管理料_閉鎖式保育器"]).includes("あり");
@@ -769,6 +771,27 @@
     renderChips(cat);
   }
   
+  async function generateDiagnosis() {
+    const name = document.getElementById("diag-name").value.trim(); if(!name) return;
+    const btn = document.getElementById("btn-diag-add");
+    btn.innerText = "追加中..."; btn.disabled = true;
+
+    try {
+      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_CODE, type: "diagnosis", val1: name }), redirect: "follow" });
+      if(!currentDiagnosis.includes(name)) currentDiagnosis.push(name);
+      renderChips('diagnosis');
+      if(!masters.diagnosis.includes(name)) {
+        masters.diagnosis.push(name);
+        document.getElementById("diagnosis-list").innerHTML += `<option value="${name}">`;
+      }
+      document.getElementById("diag-name").value = "";
+    } catch(e) {
+      alert("マスタの登録に失敗しました");
+    } finally {
+      btn.innerText = "＋追加"; btn.disabled = false;
+    }
+  }
+
   async function addCustomChip(cat) {
     const input = document.getElementById(cat === 'keyword' ? 'keyword-custom' : 'diag-custom');
     const val = input.value.trim();
@@ -793,13 +816,13 @@
     const currentTags = cat === 'keyword' ? currentKeywords : currentDiagnosis;
     
     currentTags.forEach(item => {
-      selBox.innerHTML += `<div class="chip on" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
+      selBox.innerHTML += `<div class="pill on" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
     });
     if(currentTags.length === 0) selBox.innerHTML = `<span style="font-size:12px; color:var(--sub);">選択なし</span>`;
     
     list.forEach(item => {
       if(!currentTags.includes(item)) {
-        allBox.innerHTML += `<div class="chip" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
+        allBox.innerHTML += `<div class="pill" onclick="toggleChip('${cat}', '${item}')">${item}</div>`;
       }
     });
   }
@@ -1049,7 +1072,6 @@
       "現場診断": currentDiagnosis.join(", "), "キーワード": currentKeywords.join(", "), "事案概要": document.getElementById("v-summary-req").value.trim()
     };
     
-    // 🌟 管理料プレフィックスによる送信ロジックへの完全切り替え
     payload["管理料_人工呼吸器"] = document.getElementById("chk-ls-vent").checked ? "あり" : "";
     payload["管理料_除細動装置"] = document.getElementById("chk-ls-shock").checked ? "あり" : "";
     payload["管理料_閉鎖式保育器"] = document.getElementById("chk-ls-hoiku").checked ? "あり" : "";
@@ -1108,13 +1130,20 @@
       const isNoHosp = (d["スキーム選択"] === 'Iターン救急隊' || (d["スキーム選択"] && d["スキーム選択"].includes('キャンセル')));
       html += `<b>🏥 医療:</b> 接触[${d["接触"]||"-"}] 病着[${isNoHosp ? '対象外' : (d["病着"]||"-")}] 終了[${d["終了"]||"-"}]<br><br>`;
       html += `<b>💰 算定:</b> 往診[${d["往診料"]||"-"}] 搬送料[${d["搬送料"]||"-"}] 長時間[${d["長時間加算"]||"-"}]<br>`;
-      html += `<b>🩺 診断:</b> ${d["現場診断"]||"-"}<br><b>📋 概要:</b> ${d["事案概要"]||"-"}<br>`;
+      
+      // 🌟 疾患プレビューの改善
+      let diseaseComboStr = `[${d["疾患大分類"] || '未選択'}]`;
+      if(d["疾患原因"]) diseaseComboStr += ` 原因:${d["疾患原因"]}`;
+      if(d["詳細分類"]) diseaseComboStr += ` -> ${d["詳細分類"]}`;
+      
+      html += `<b>🩺 疾患:</b> ${diseaseComboStr}<br><b>🩺 診断:</b> ${d["現場診断"]||"-"}<br><b>📋 概要:</b> ${d["事案概要"]||"-"}<br>`;
       document.getElementById("preview-box").innerHTML = html;
     } catch(e) { document.getElementById("preview-error").style.display = "block"; document.getElementById("preview-error").innerText = "プレビュー生成失敗。必須項目を確認してください。"; sendErrorLog("buildPreview error: " + e.message); }
   }
 
   async function submitData(mode = 'submit') {
     if (!state.scheme) return alert("最終スキーム選択は必須入力項目です。");
+    if (diseaseMainVal === "4心肺停止" && !diseaseCauseVal) return alert("心肺停止(CPA)の場合は、必ず「原因疾患」を選択してください。");
     
     let editor = "担当Ns";
     if (mode === 'update') {
