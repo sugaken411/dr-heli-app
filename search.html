@@ -13,7 +13,6 @@
     }
     body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
     
-    /* 修正: フレックスラップを追加し、モバイルで更新ボタンが隠れないように最適化 */
     header { background: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
     .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; padding: 4px 8px; }
     .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
@@ -39,35 +38,7 @@
     .modal.show { display: flex; }
     .modal-box { background: #fff; width: 100%; max-width: 650px; max-height: 85vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; }
     .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; color: var(--ink); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px; color: var(--sub); }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; }
 
-    .scheme-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: var(--bg); padding: 8px; border-radius: 8px; margin-bottom: 12px; }
-    .scheme-btn { background: #fff; color: var(--sub); border: 1px solid #ccc; padding: 8px 4px; font-size: 12px; border-radius: 6px; transition: 0.2s; }
-    .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); font-weight:bold; }
-
-    .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; }
-
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
-    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
-    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
-
-    /* 修正: 確実に動作するアコーディオン用CSS */
-    .accordion-title { font-size:12px; color:var(--blue); font-weight:bold; cursor:pointer; user-select:none; margin-top:8px; display:inline-block; padding:4px 0; }
-    .accordion-content { display:none; margin-top:12px; }
-    .accordion-content.open { display:flex; }
-
-    .proc-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
-    .proc-line:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-    .proc-lbl { font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .proc-lbl input[type="checkbox"] { width: 18px; height: 18px; }
-    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
-    .radio-lbl { display: inline-block; padding: 6px 10px; background: #fff; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
-    input[type="radio"] { display: none; }
-    input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
-    
     #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
@@ -102,7 +73,7 @@
       <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v14.1</span></div>
+    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v14.2</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
@@ -149,164 +120,6 @@
       <p style="text-align:center; color:var(--sub); padding:40px; background:#fff; border-radius:12px;">条件を指定して「検索実行」を押してください。</p>
     </div>
   </main>
-
-  <div class="modal" id="detail-modal" onclick="if(event.target===this)closeModal('detail-modal')">
-    <div class="modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:16px;">
-        <h3 style="margin:0;">事案詳細・修正</h3>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="no-print" onclick="window.print()" style="background:#e5e5ea; color:var(--ink); padding:8px 16px;">🖨️ 印刷</button>
-          <button type="button" class="no-print" onclick="closeModal('detail-modal')" style="background:#1c1c1e; color:#fff; padding:8px 16px;">✖ 戻る</button>
-        </div>
-      </div>
-      
-      <input type="hidden" id="edit-old-id">
-      
-      <div class="edit-section-title">📅 基本情報</div>
-      <div style="display:flex; gap:12px;">
-        <div class="form-group" style="flex:1;"><label>要請番号</label><input type="text" id="edit-id" oninput="toHalfWidth(this)"></div>
-        <div class="form-group" style="flex:1;"><label>日付</label><input type="date" id="edit-date"></div>
-      </div>
-      <div style="display:flex; gap:12px;">
-        <div class="form-group" style="flex:1;"><label>出場先</label><select id="edit-dest"></select></div>
-      </div>
-
-      <div class="edit-section-title" id="edit-scheme-section">📞 要請区分・特殊ケース・診断</div>
-      <div class="form-group">
-        <label>要請区分 <span style="color:var(--brand); font-size:10px;">(必須)</span></label>
-        <div class="scheme-picker" style="grid-template-columns: repeat(2, 1fr);" id="edit-req-picker">
-          <button type="button" class="scheme-btn" onclick="setEditReqType(this,'KEY WORD')">KEY WORD</button>
-          <button type="button" class="scheme-btn" onclick="setEditReqType(this,'救急隊現着後')">救急隊現着後</button>
-          <button type="button" class="scheme-btn" onclick="setEditReqType(this,'D-call Net')">D-call Net</button>
-          <button type="button" class="scheme-btn" onclick="setEditReqType(this,'施設間')">施設間</button>
-        </div>
-        <input type="hidden" id="edit-req-type">
-      </div>
-      
-      <!-- 修正: アコーディオン式のキーワード選択を復活 -->
-      <div class="form-group" id="edit-keyword-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px; display:none;">
-        <label style="margin-bottom:8px; color:var(--brand);">🔑 KEY WORD指定</label>
-        <div class="chip-grid" id="edit-chip-keyword-selected" style="margin-bottom:8px;"></div>
-        <div class="accordion-title" onclick="toggleAccordion('edit-chip-keyword-all')">▶ 他のキーワードを追加・変更</div>
-        <div class="chip-grid accordion-content" id="edit-chip-keyword-all"></div>
-        <div class="accordion-content" style="display:flex; gap:8px; margin-top:8px;">
-          <input type="text" id="edit-keyword-custom" placeholder="リストにないキーワードを追加..." style="flex:1; padding:8px;">
-          <button type="button" onclick="addCustomChip('keyword')" style="padding:8px 12px; border-radius:6px; font-size:12px;">追加</button>
-        </div>
-      </div>
-
-      <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
-        <label style="margin-bottom:8px;">🚨 特殊ケースフラグ</label>
-        <div style="display:flex; gap:16px;">
-          <label class="proc-lbl"><input type="checkbox" id="edit-chk-pediatric"> 小児</label>
-          <label class="proc-lbl"><input type="checkbox" id="edit-chk-maternal"> 母性</label>
-          <label class="proc-lbl"><input type="checkbox" id="edit-chk-mass"> 多数傷病</label>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>🚁 最終スキーム選択 <span style="color:var(--brand); font-size:10px;">(必須)</span></label>
-        <div class="scheme-picker" style="grid-template-columns: repeat(3, 1fr);" id="edit-scheme-picker">
-          <button type="button" class="scheme-btn" onclick="setEditScheme(this,'Uターン')">Uターン</button>
-          <button type="button" class="scheme-btn" onclick="setEditScheme(this,'Jターン')">Jターン</button>
-          <button type="button" class="scheme-btn" onclick="setEditScheme(this,'施設間')">施設間</button>
-          <button type="button" class="scheme-btn" onclick="setEditScheme(this,'Iターン乗込')">Iターン乗込</button>
-          <button type="button" class="scheme-btn" onclick="setEditScheme(this,'Iターン救急隊')">Iターン救急隊</button>
-          <button type="button" class="scheme-btn" onclick="setEditScheme(this,'キャンセル')">キャンセル</button>
-        </div>
-        <input type="hidden" id="edit-scheme">
-      </div>
-      
-      <!-- 修正: アコーディオン式の現場診断選択を復活 -->
-      <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
-        <label style="margin-bottom:8px;">現場診断・病名</label>
-        <div class="chip-grid" id="edit-chip-diagnosis-selected" style="margin-bottom:8px;"></div>
-        <div class="accordion-title" onclick="toggleAccordion('edit-chip-diagnosis-all')">▶ 他の病名を追加・変更</div>
-        <div class="chip-grid accordion-content" id="edit-chip-diagnosis-all"></div>
-        <div class="accordion-content" style="display:flex; gap:8px; margin-top:8px;">
-          <input type="text" id="edit-diag-custom" placeholder="リストにない病名を追加..." style="flex:1; padding:8px;">
-          <button type="button" onclick="addCustomChip('diagnosis')" style="padding:8px 12px; border-radius:6px; font-size:12px;">追加</button>
-        </div>
-      </div>
-
-      <div class="form-group"><label>📋 事案概要 (覚知内容など・任意)</label><textarea id="edit-summary-req" rows="2" placeholder="通報内容や事案の簡単な概要を記入してください..."></textarea></div>
-
-      <div class="edit-section-title">👨‍⚕️ 搭乗スタッフ</div>
-      <div style="display:flex; gap:12px;">
-        <div class="form-group" style="flex:1;"><label>フライトDr</label><select id="edit-dr"></select></div>
-        <div class="form-group" style="flex:1;"><label>フライトNs</label><select id="edit-ns"></select></div>
-      </div>
-
-      <div class="edit-section-title">⏱️ タイムライン</div>
-      <div style="display:flex; gap:12px;">
-        <div class="form-group" style="flex:1;"><label>要請</label><input type="time" id="edit-request"></div>
-        <div class="form-group" style="flex:1;"><label>離陸</label><input type="time" id="edit-takeoff"></div>
-        <div class="form-group" style="flex:1;"><label>着陸</label><input type="time" id="edit-landing"></div>
-      </div>
-      <div style="display:flex; gap:12px;">
-        <div class="form-group" style="flex:1;"><label>接触</label><input type="time" id="edit-contact"></div>
-        <div class="form-group" style="flex:1;"><label>病着</label><input type="time" id="edit-arrival"></div>
-        <div class="form-group" style="flex:1;"><label>終了</label><input type="time" id="edit-end"></div>
-      </div>
-
-      <div class="edit-section-title">📦 消費資機材・各種処置</div>
-      <div style="background:#f9f9f9; padding:12px; border-radius:8px;">
-        <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleBox('box-edit-venu-det', this.checked)" id="edit-chk-venu">ベニューラ</label></div>
-        <div id="box-edit-venu-det" style="display:none; padding-left: 28px; margin-bottom: 8px;">
-          <div class="radio-group">
-            <label><input type="radio" name="edit-venu-type" value="V1"> <span class="radio-lbl">V1</span></label>
-            <label><input type="radio" name="edit-venu-type" value="V2"> <span class="radio-lbl">V2</span></label>
-            <label><input type="radio" name="edit-venu-type" value="V3"> <span class="radio-lbl">V3</span></label>
-          </div>
-        </div>
-
-        <div class="proc-line" style="border-top:1px dashed #ccc; padding-top:10px;"><label class="proc-lbl"><input type="checkbox" id="edit-chk-echo-carotid" onchange="toggleBox('box-edit-echo-carotid', this.checked)">頸動脈エコー</label></div>
-        <div id="box-edit-echo-carotid" style="display:none; padding-left:28px; margin-bottom: 8px;">
-           <div class="radio-group">
-             <label><input type="radio" name="edit-carotid-pulse" value="パルスあり"> <span class="radio-lbl">パルスあり</span></label>
-             <label><input type="radio" name="edit-carotid-pulse" value="パルスなし"> <span class="radio-lbl">パルスなし</span></label>
-           </div>
-        </div>
-      </div>
-      
-      <div class="edit-section-title">📝 備考</div>
-      <div class="form-group"><textarea id="edit-biko" rows="4" style="width:100%;"></textarea></div>
-      
-      <div class="no-print" style="margin-top:20px; border-top:1px dashed #ccc; padding-top:16px; background:#fff9db; padding:12px; border-radius:8px;">
-        <div id="complete-box" style="padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid #ccc;">
-          <p style="font-size:12px; font-weight:bold; color:var(--blue); margin:0 0 8px 0;">✅ カルテ完了処理</p>
-          <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <label style="font-size:13px; font-weight:bold;"><input type="radio" name="comp-who" value="本人" checked onchange="toggleComp()"> 本人(担当Ns)</label>
-            <label style="font-size:13px; font-weight:bold;"><input type="radio" name="comp-who" value="代行" onchange="toggleComp()"> 代行入力</label>
-          </div>
-          <input type="text" id="comp-name" placeholder="代行入力者名 (※代行時必須)" style="display:none; width:100%;" oninput="formatKatakana(this)">
-          <button type="button" style="width:100%; background:#34c759; margin-top:8px;" id="btn-complete" onclick="markComplete()">カルテ完了状態にする</button>
-        </div>
-
-        <p style="font-size:12px; font-weight:bold; color:var(--brand); margin:0 0 8px 0;">※修正する場合は担当を選択し「上書き保存」を押してください。</p>
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
-          <label style="font-size:13px; font-weight:bold;"><input type="radio" name="edit-who" value="本人" checked onchange="toggleEditWho()"> 本人(担当Ns)</label>
-          <label style="font-size:13px; font-weight:bold;"><input type="radio" name="edit-who" value="代行" onchange="toggleEditWho()"> その他(代行修正)</label>
-        </div>
-        <input type="text" id="edit-person" placeholder="修正担当者名 (※その他の場合必須)" style="display:none; width:100%; margin-bottom:12px;" oninput="formatKatakana(this)">
-
-        <div style="display:flex; gap:8px; margin-top:12px;">
-          <button type="button" style="background:var(--brand); color:#fff; font-size:12px; padding:10px;" onclick="deleteRecord()">🗑️ 削除</button>
-          <button type="button" style="flex:1; padding:10px;" onclick="saveRecord()">💾 上書き保存</button>
-          <button type="button" style="background:#ff9800; color:#fff; padding:10px;" id="btn-email" onclick="sendEmail()">📧 メール再送</button>
-        </div>
-      </div>
-      <button type="button" class="modal-close no-print" onclick="closeModal('detail-modal')">✖ 閉じて戻る</button>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-manual" onclick="if(event.target===this)closeModal('modal-manual')">
-    <div class="modal-box">
-      <h3 style="margin-top:0;">📖 取扱説明書 (検索用)</h3>
-      <div id="manual-list" style="font-size:14px; line-height:1.6; color:var(--sub);">読込中...</div>
-      <button type="button" class="modal-close" onclick="closeModal('modal-manual')">閉じる</button>
-    </div>
-  </div>
   
   <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
     <div class="modal-box">
@@ -325,6 +138,7 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  const PIN_CODE = "5740";
 
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
@@ -339,23 +153,15 @@
   let activePin = ""; 
   let allData = []; 
   let filteredData = [];
-  let masters = { keyword: [], diagnosis: [], dr: [], ns: [] };
-  let currentEditRow = null;
   
-  // 修正: キーワードと病名のアコーディオン用データ保持
-  let currentKeywords = [];
-  let currentDiagnosis = [];
-
   let lockTime = 600; 
   let timerInterval;
   
   let loaderTimer1, loaderTimer2;
-  function showLoader(msg1="通信中...", msg2="データベースに接続しています") {
+  function showLoader(m1="通信中...", m2="データベースに接続しています") {
     const loader = document.getElementById("global-loader");
-    if (loader) {
-      document.getElementById("loader-main-text").innerText = msg1;
-      document.getElementById("loader-sub-text").innerHTML = msg2;
-      loader.style.display = "flex";
+    if(loader) {
+      document.getElementById("loader-main-text").innerText = m1; document.getElementById("loader-sub-text").innerText = m2; loader.style.display = "flex";
       loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱く同期に時間がかかっています。そのままお待ちください..."; }, 5000);
       loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
     }
@@ -363,7 +169,7 @@
   function hideLoader() { clearTimeout(loaderTimer1); clearTimeout(loaderTimer2); const loader = document.getElementById("global-loader"); if (loader) loader.style.display = "none"; }
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索(v14.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "事案検索(v14.2)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
   }
 
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
@@ -379,30 +185,7 @@
   }
 
   function openModal(id) { const modal = document.getElementById(id); if (modal) { modal.classList.add('show'); resetTimer(); } }
-  function closeModal(id) { const modal = document.getElementById(id || 'detail-modal'); if (modal) { modal.classList.remove('show'); resetTimer(); } }
-
-  // 修正: 確実に動作するアコーディオン開閉
-  function toggleAccordion(targetId) {
-    const el = document.getElementById(targetId);
-    if(el) el.classList.toggle('open');
-  }
-
-  function toggleComp() { 
-    const el = document.querySelector('input[name="comp-who"]:checked');
-    if(el) {
-      const isDaiko = el.value === "代行"; 
-      document.getElementById("comp-name").style.display = isDaiko ? "block" : "none"; 
-    }
-  }
-  function toggleEditWho() { 
-    const el = document.querySelector('input[name="edit-who"]:checked');
-    if(el) {
-      const isDaiko = el.value === "代行"; 
-      document.getElementById("edit-person").style.display = isDaiko ? "block" : "none"; 
-    }
-  }
-  function toggleBox(id, isShow) { document.getElementById(id).style.display = isShow ? "block" : "none"; }
-  function formatKatakana(input) { let val = input.value; val = val.replace(/[\u3041-\u3096]/g, function(m) { return String.fromCharCode(m.charCodeAt(0) + 0x60); }); input.value = val; }
+  function closeModal(id) { const modal = document.getElementById(id); if (modal) { modal.classList.remove('show'); resetTimer(); } }
 
   function quickFilter(type) {
     ["q-id", "q-date-start", "q-date-end", "q-month", "q-status", "q-dest", "q-dr", "q-ns"].forEach(id => document.getElementById(id).value = "");
@@ -413,7 +196,7 @@
   function clearDateRange() { document.getElementById("q-date-start").value = ""; document.getElementById("q-date-end").value = ""; }
   function clearMonth() { document.getElementById("q-month").value = ""; }
 
-  const CACHE_KEY = "aw109_search_master_v14_1";
+  const CACHE_KEY = "aw109_search_master_v14_2";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
   async function initSearchApp() {
@@ -434,14 +217,11 @@
 
   function applySearchMasters(jsonRes) {
     if (jsonRes.masters) {
-      masters = jsonRes.masters;
       const pop = (id, arr) => { const el = document.getElementById(id); if (el) { el.innerHTML = ""; arr.forEach(a => { const opt = document.createElement("option"); opt.value = a; opt.innerText = a; el.appendChild(opt); }); } };
-      const destOpts = '<option value="">全出場先</option>' + masters.dest.map(v => `<option value="${v}">${v}</option>`).join("");
-      document.getElementById("q-dest").innerHTML = destOpts; document.getElementById("edit-dest").innerHTML = destOpts.replace("全出場先", "選択...");
-      document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + masters.dr.map(v => `<option value="${v}">${v}</option>`).join("");
-      document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
-      const staffEditOpts = '<option value="">選択...</option>' + [...new Set([...masters.dr, ...masters.ns])].map(v => `<option value="${v}">${v}</option>`).join("") + '<option value="その他">その他</option>';
-      document.getElementById("edit-dr").innerHTML = staffEditOpts; document.getElementById("edit-ns").innerHTML = staffEditOpts;
+      const destOpts = '<option value="">全出場先</option>' + jsonRes.masters.dest.map(v => `<option value="${v}">${v}</option>`).join("");
+      document.getElementById("q-dest").innerHTML = destOpts; 
+      document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + jsonRes.masters.dr.map(v => `<option value="${v}">${v}</option>`).join("");
+      document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + jsonRes.masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
     }
     if (jsonRes.qa) { document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>'; }
     const urlParams = new URLSearchParams(window.location.search); if (urlParams.get('auto_filter') === 'uncompleted') { document.getElementById('q-status').value = '未完了'; fetchData(); }
@@ -517,206 +297,15 @@
     } catch(e) { sendErrorLog(e.toString()); document.getElementById("results").innerHTML = `<p style="text-align:center; color:red;">通信エラーが発生しました。</p>`; } finally { hideLoader(); }
   }
 
-  function setEditScheme(btn, s) { 
-    document.getElementById("edit-scheme").value = s; 
-    document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); 
-  }
-  
-  // 修正: KEY WORD選択時にキーワード用アコーディオンを出現させる
-  function setEditReqType(btn, s) { 
-    document.getElementById("edit-req-type").value = s; 
-    document.querySelectorAll("#edit-req-picker .scheme-btn").forEach(b => b.classList.toggle('active', b === btn)); 
-    
-    const kwGroup = document.getElementById("edit-keyword-group");
-    if(s === 'KEY WORD' || currentKeywords.length > 0) {
-      kwGroup.style.display = 'block';
-    } else {
-      kwGroup.style.display = 'none';
-    }
-  }
-
-  // 修正: キーワード・病名のチップ制御ロジックを統合
-  function toggleEditChip(cat, item) {
-    let arr = cat === 'keyword' ? currentKeywords : currentDiagnosis;
-    if (arr.includes(item)) { arr = arr.filter(x => x !== item); } else { arr.push(item); }
-    if (cat === 'keyword') currentKeywords = arr; else currentDiagnosis = arr;
-    renderEditChips(cat);
-  }
-
-  function addCustomChip(cat) {
-    const inputId = cat === 'keyword' ? 'edit-keyword-custom' : 'edit-diag-custom';
-    const input = document.getElementById(inputId);
-    const val = input.value.trim();
-    if (val) {
-      toggleEditChip(cat, val);
-      input.value = "";
-    }
-  }
-  
-  function renderEditChips(cat) { 
-    const selBox = document.getElementById(`edit-chip-${cat}-selected`);
-    const allBox = document.getElementById(`edit-chip-${cat}-all`);
-    if (!selBox || !allBox) return;
-    selBox.innerHTML = ""; allBox.innerHTML = "";
-    
-    const list = masters[cat] || [];
-    const currentTags = cat === 'keyword' ? currentKeywords : currentDiagnosis;
-    
-    currentTags.forEach(item => {
-      selBox.innerHTML += `<div class="chip on" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`;
-    });
-    if(currentTags.length === 0) selBox.innerHTML = `<span style="font-size:12px; color:var(--sub);">選択なし</span>`;
-    
-    list.forEach(item => {
-      if(!currentTags.includes(item)) {
-        allBox.innerHTML += `<div class="chip" onclick="toggleEditChip('${cat}', '${item}')">${item}</div>`;
-      }
-    });
-  }
-
+  // 🌟 アーキテクチャ改修: 巨大編集モーダルをパージし、入力画面(index.html)へパラメータ付きでルーティング
   function openDetail(row) {
-    currentEditRow = row;
-    document.getElementById("edit-old-id").value = row["要請番号"]; 
-    const idEl = document.getElementById("edit-id"); idEl.value = row["要請番号"]; idEl.style.color = row["要請番号"].includes("(仮)") ? "var(--brand)" : "var(--ink)"; idEl.style.fontWeight = row["要請番号"].includes("(仮)") ? "bold" : "normal";
-
-    let dVal = row["日付"] || ""; 
-    if (dVal) { let rawDateStr = String(dVal).split(" ")[0]; let dateParts = rawDateStr.split(/[\/\-]/); if (dateParts.length === 3) { document.getElementById("edit-date").value = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`; } else { document.getElementById("edit-date").value = rawDateStr.replace(/\//g, "-"); } } else { document.getElementById("edit-date").value = ""; }
-    
-    document.getElementById("edit-dest").value = row["出場先"] || ""; document.getElementById("edit-dr").value = row["フライトドクター"] || ""; document.getElementById("edit-ns").value = row["フライトナース"] || "";
-    
-    // 修正: 過去のシステムデータ(JSON)とV14の専用列の両方からキーワード・病名を拾い上げる
-    currentKeywords = row["キーワード要請"] ? row["キーワード要請"].split(",").map(x=>x.trim()).filter(Boolean) : [];
-    currentDiagnosis = row["現場診断"] ? row["現場診断"].split(",").map(x=>x.trim()).filter(Boolean) : [];
-    if (row["システムデータ"]) {
-      try {
-        const sys = JSON.parse(row["システムデータ"]);
-        if (sys.tags) {
-          if (sys.tags.keyword && currentKeywords.length === 0) currentKeywords = sys.tags.keyword;
-          if (sys.tags.diagnosis && currentDiagnosis.length === 0) currentDiagnosis = sys.tags.diagnosis;
-        }
-      } catch(e) {}
+    showLoader("画面遷移中...", "編集画面へ移動しています");
+    // 不変のシステム一意ID(sysId)が存在する場合はそれを優先、なければ要請番号でフォールバック
+    let targetId = row["要請番号"];
+    if(row["システムデータ"]) {
+      try { const sData = JSON.parse(row["システムデータ"]); if(sData.sysId) targetId = sData.sysId; } catch(e) {}
     }
-    renderEditChips('keyword');
-    renderEditChips('diagnosis');
-
-    const reqTypeVal = row["要請区分"] || ""; 
-    document.getElementById("edit-req-type").value = reqTypeVal;
-    document.querySelectorAll("#edit-req-picker .scheme-btn").forEach(b => { b.classList.toggle('active', reqTypeVal && b.innerText === reqTypeVal); });
-    
-    // KEY WORDアコーディオンの表示判定
-    const kwGroup = document.getElementById("edit-keyword-group");
-    if(reqTypeVal === 'KEY WORD' || currentKeywords.length > 0) { kwGroup.style.display = 'block'; } else { kwGroup.style.display = 'none'; }
-    
-    // 初期状態はアコーディオンを閉じる
-    document.getElementById('edit-chip-keyword-all').classList.remove('open');
-    document.getElementById('edit-chip-diagnosis-all').classList.remove('open');
-
-    const schemeVal = row["スキーム選択"] || ""; document.getElementById("edit-scheme").value = schemeVal;
-    document.querySelectorAll("#edit-scheme-picker .scheme-btn").forEach(b => { b.classList.toggle('active', schemeVal && b.innerText.includes(schemeVal.replace("Iターン救急隊のみ","救急隊").replace("Iターン乗り込み","乗込"))); });
-    
-    document.getElementById("edit-chk-pediatric").checked = (row["小児フラグ"] === "◯");
-    document.getElementById("edit-chk-maternal").checked = (row["母性フラグ"] === "◯");
-    document.getElementById("edit-chk-mass").checked = (row["多数傷病フラグ"] === "◯");
-
-    document.getElementById("edit-summary-req").value = row["事案概要"] || "";
-
-    const fmtTime = (t) => { if(!t) return ""; let s = String(t); if(s.includes("T")) s = s.split("T")[1]; else if(s.includes(" ")) s = s.split(" ")[1]; return s.substring(0,5); };
-    document.getElementById("edit-request").value = fmtTime(row["要請時刻・施設間搬送依頼時刻"]); document.getElementById("edit-takeoff").value = fmtTime(row["初期離陸時間"]); document.getElementById("edit-landing").value = fmtTime(row["最終着陸時間"]); 
-    document.getElementById("edit-contact").value = fmtTime(row["接触"]); document.getElementById("edit-arrival").value = fmtTime(row["病着"]); document.getElementById("edit-end").value = fmtTime(row["終了"]);
-    
-    // ベニューラの復元
-    const vVenu = String(row["ベニューラ"] || ""); document.getElementById("edit-chk-venu").checked = vVenu.includes("◯"); toggleBox("box-edit-venu-det", vVenu.includes("◯"));
-    if(vVenu.includes("V1")) document.querySelector('input[name="edit-venu-type"][value="V1"]').checked = true;
-    else if(vVenu.includes("V2")) document.querySelector('input[name="edit-venu-type"][value="V2"]').checked = true;
-    else if(vVenu.includes("V3")) document.querySelector('input[name="edit-venu-type"][value="V3"]').checked = true;
-
-    // 頸動脈エコーの復元
-    const vCarotid = String(row["頸動脈エコー"] || ""); document.getElementById("edit-chk-echo-carotid").checked = vCarotid.includes("◯") || vCarotid.includes("パルス"); toggleBox("box-edit-echo-carotid", vCarotid.includes("◯") || vCarotid.includes("パルス"));
-    if(vCarotid.includes("パルスあり")) document.querySelector('input[name="edit-carotid-pulse"][value="パルスあり"]').checked = true;
-    else if(vCarotid.includes("パルスなし")) document.querySelector('input[name="edit-carotid-pulse"][value="パルスなし"]').checked = true;
-
-    document.getElementById("edit-biko").value = row["備考"] || ""; 
-
-    const isDone = (row["ステータス"] || "").includes("完了") && !(row["ステータス"] || "").includes("未完了");
-    document.getElementById("btn-complete").style.display = isDone ? "none" : "block"; document.getElementById("complete-box").style.display = isDone ? "none" : "block";
-    document.querySelector('input[name="comp-who"][value="本人"]').checked = true; document.querySelector('input[name="edit-who"][value="本人"]').checked = true; toggleComp(); toggleEditWho(); document.getElementById("comp-name").value = ""; document.getElementById("edit-person").value = row["フライトナース"] || "";
-    openModal("detail-modal");
-  }
-
-  async function deleteRecord() {
-    const p = prompt("この事案データを完全に削除しますか？\n実行するにはアクセスコードを入力してください。");
-    if (p !== activePin) { if (p !== null) alert("パスワードが一致しません。削除は中止されました。"); return; }
-    const id = document.getElementById("edit-old-id").value; showLoader("削除処理中...", "データベースからレコードを削除しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_record", password: activePin, id: id }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") { alert("事案を削除しました。"); closeModal('detail-modal'); fetchData(); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
-  }
-
-  async function markComplete() {
-    const id = document.getElementById("edit-old-id").value; const type = document.querySelector('input[name="comp-who"]:checked').value; let who = type;
-    if (type === "代行") { const name = document.getElementById("comp-name").value.trim(); if(!name) return alert("代行入力者の名前を入力してください。"); who = "代行: " + name; } else { who = document.getElementById("edit-ns").value || "本人"; }
-    if (!document.getElementById("edit-scheme").value) {
-      alert("最終スキームを選択してください。");
-      setTimeout(() => { const el = document.getElementById("edit-scheme-section"); document.getElementById("detail-modal").querySelector(".modal-box").scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' }); }, 100); return;
-    }
-    if (!confirm(`事案 [ ${id} ] を完了にしますか？\n（記録: ${who}）`)) return;
-    showLoader("完了処理中...", "電子カルテの完了ステータスを更新しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_status", password: activePin, id: id, who: who }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") { alert("完了しました！"); closeModal('detail-modal'); fetchData(); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
-  }
-
-  async function saveRecord() {
-    let editor = document.getElementById("edit-person").value.trim(); const editType = document.querySelector('input[name="edit-who"]:checked').value;
-    if (editType === "本人") editor = document.getElementById("edit-ns").value || "担当Ns";
-    if(!editor) return alert("「修正担当者名」を入力するか、フライトNsを選択してください。");
-    if (!document.getElementById("edit-scheme").value) {
-      alert("最終スキームを選択してください。");
-      setTimeout(() => { const el = document.getElementById("edit-scheme-section"); document.getElementById("detail-modal").querySelector(".modal-box").scrollTo({ top: el.offsetTop - 20, behavior: 'smooth' }); }, 100); return;
-    }
-    
-    const oldId = document.getElementById("edit-old-id").value; const newId = document.getElementById("edit-id").value.trim();
-    if(!confirm(`データを上書きしてよろしいですか？`)) return;
-    
-    // 修正: 既存のすべてのキーを維持し、算定フラグなどの破壊的初期化を完全に防止（V14.0の恩恵）
-    let payload = { ...currentEditRow };
-    payload["要請番号"] = newId; payload["日付"] = document.getElementById("edit-date").value; payload["出場先"] = document.getElementById("edit-dest").value; 
-    payload["スキーム選択"] = document.getElementById("edit-scheme").value; payload["要請区分"] = document.getElementById("edit-req-type").value;
-    payload["小児フラグ"] = document.getElementById("edit-chk-pediatric").checked ? "◯" : ""; payload["母性フラグ"] = document.getElementById("edit-chk-maternal").checked ? "◯" : ""; payload["多数傷病フラグ"] = document.getElementById("edit-chk-mass").checked ? "◯" : "";
-    payload["フライトドクター"] = document.getElementById("edit-dr").value; payload["フライトナース"] = document.getElementById("edit-ns").value; 
-    payload["要請時刻・施設間搬送依頼時刻"] = document.getElementById("edit-request").value; payload["初期離陸時間"] = document.getElementById("edit-takeoff").value; payload["最終着陸時間"] = document.getElementById("edit-landing").value; 
-    payload["接触"] = document.getElementById("edit-contact").value; payload["病着"] = document.getElementById("edit-arrival").value; payload["終了"] = document.getElementById("edit-end").value; 
-    payload["備考"] = document.getElementById("edit-biko").value; payload["事案概要"] = document.getElementById("edit-summary-req").value; 
-    
-    // 修正: キーワードと病名を安全にペイロードに反映
-    payload["キーワード要請"] = currentKeywords.join(", ");
-    payload["現場診断"] = currentDiagnosis.join(", ");
-    
-    if(document.getElementById("edit-chk-venu").checked) { const vType = document.querySelector('input[name="edit-venu-type"]:checked')?.value || ""; payload["ベニューラ"] = "◯ " + (vType ? vType + " " : "") + "1本"; } else { payload["ベニューラ"] = ""; }
-    if(document.getElementById("edit-chk-echo-carotid").checked) { payload["頸動脈エコー"] = document.querySelector('input[name="edit-carotid-pulse"]:checked')?.value || "◯"; } else { payload["頸動脈エコー"] = ""; }
-
-    showLoader("上書き保存中...", "データを更新しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_record", password: activePin, old_id: oldId, editor: editor, data: payload }), redirect: "follow" });
-      const json = await res.json();
-      if(json.status === "success") { alert("上書き保存しました。"); closeModal('detail-modal'); fetchData(); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
-  }
-
-  // 修正: V14.0で消失していたメール再送信機能を復活
-  async function sendEmail() {
-    const id = document.getElementById("edit-id").value;
-    if(!confirm(`事案 [ ${id} ] の内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
-    showLoader("メール送信中...", "関係各所に送信しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "send_email", password: activePin, id: id }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") { alert("メールを送信しました！"); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+    location.href = 'index.html?editId=' + encodeURIComponent(targetId);
   }
 
   function exportCSV() {
