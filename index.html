@@ -661,7 +661,13 @@
     
     if (timestampMs) {
       const d = new Date(timestampMs);
-      document.getElementById("master-sync-info").innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const ageMin = Math.floor((Date.now() - timestampMs) / 60000);
+      const ageLabel = ageMin < 60 ? `${ageMin}分前` : `${Math.floor(ageMin/60)}時間${ageMin%60}分前`;
+      const isStale = ageMin >= 5 * 60; // 5時間経過で黄色警告(キャッシュ有効期限6時間の手前)
+      const el = document.getElementById("master-sync-info");
+      el.innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} (${ageLabel})`;
+      el.style.color = isStale ? "#e65100" : "var(--sub)";
+      el.style.fontWeight = isStale ? "bold" : "normal";
     }
   }
 
@@ -957,8 +963,14 @@
     }
   }
 
-  function setDiseaseMain(val) {
+function setDiseaseMain(val) {
     document.querySelectorAll('[id^="d-main-"]').forEach(el => el.classList.remove('on'));
+    if (diseaseMainVal === val) { // 同じボタンをもう一度押したら解除
+      diseaseMainVal = ""; diseaseCauseVal = ""; diseaseSubVal = "";
+      document.getElementById("disease-sub-area").style.display = "none";
+      document.getElementById("disease-cpa-alert").style.display = "none";
+      return;
+    }
     const idx = val.charAt(0); document.getElementById(`d-main-${idx}`).classList.add('on');
     diseaseMainVal = val; diseaseCauseVal = ""; diseaseSubVal = "";
     
@@ -979,7 +991,13 @@
     }
   }
 
-  function setDiseaseCause(causeVal, btnEl) {
+ function setDiseaseCause(causeVal, btnEl) {
+    if (diseaseCauseVal === causeVal) { // 解除
+      diseaseCauseVal = ""; diseaseSubVal = "";
+      btnEl.classList.remove('sub-on');
+      const exist = document.getElementById("d-sub-pills-2"); if(exist) exist.remove();
+      return;
+    }
     diseaseCauseVal = causeVal; diseaseSubVal = "";
     btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on');
     if(DISEASE_TREE[causeVal]) {
@@ -989,7 +1007,12 @@
     }
   }
 
-  function setDiseaseSubReal(subVal, btnEl) {
+function setDiseaseSubReal(subVal, btnEl) {
+    if (diseaseSubVal === subVal) { // 解除
+      diseaseSubVal = "";
+      btnEl.classList.remove('sub-on');
+      return;
+    }
     diseaseSubVal = subVal;
     btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on');
   }
@@ -1034,7 +1057,13 @@
   }
 
   function setReqType(val) {
-    state.reqType = val; document.querySelectorAll('[id^="req-"]').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('[id^="req-"]').forEach(el => el.classList.remove('active'));
+    if (state.reqType === val) { // 同じボタンをもう一度押したら解除
+      state.reqType = "";
+      document.getElementById("keyword-group").style.display = currentKeywords.length > 0 ? 'block' : 'none';
+      return;
+    }
+    state.reqType = val;
     const idMap = { 'KEY WORD': 'req-keyword', '救急隊現着後': 'req-amb', 'D-call Net': 'req-dcall', '施設間': 'req-fac' }; document.getElementById(idMap[val]).classList.add('active');
     if(val === '施設間') setScheme('施設間');
     
@@ -1047,7 +1076,16 @@
   }
 
   function setScheme(val) {
-    state.scheme = val; document.querySelectorAll('[id^="sch-"]').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('[id^="sch-"]').forEach(el => el.classList.remove('active'));
+    if (state.scheme === val) { // 同じボタンをもう一度押したら解除
+      state.scheme = "";
+      document.getElementById('box-cancel-detail').style.display = "none";
+      document.getElementById('lbl-end-time').innerText = "終了";
+      document.getElementById("t-hosp").disabled = false; document.getElementById("box-hosp-time").style.opacity = "1";
+      document.getElementById("t-contact").disabled = false; document.getElementById("box-contact-time").style.opacity = "1";
+      return;
+    }
+    state.scheme = val;
     const idMap = { 'Uターン': 'sch-u', 'Jターン': 'sch-j', '施設間': 'sch-fac', 'Iターン乗込': 'sch-i-ride', 'Iターン救急隊': 'sch-i-amb', 'キャンセル': 'sch-cancel' };
     if(idMap[val]) document.getElementById(idMap[val]).classList.add('active');
     
