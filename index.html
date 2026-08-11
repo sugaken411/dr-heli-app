@@ -1553,6 +1553,7 @@
       document.getElementById("shock-count").value = row["除細動回数"]; 
     }
     document.getElementById("chk-shock-pad").checked = row["除細動パッド"] === "◯";
+    document.getElementById("chk-etco2").checked = String(row["EtCO2算定"]).includes("あり");
 
     if(row["経皮ペーシング"] === "◯") { 
       document.getElementById("chk-pacing").checked = true; 
@@ -1654,7 +1655,18 @@
     
     if(row["圧迫1開始"]) calcCPR();
     calcMonitor(); handleLifeSupport();
-    
+
+    const addlMails = String(row["追加送信先"] || "").split(",").map(s => s.trim()).filter(Boolean);
+    if (addlMails.length > 0) {
+      const unmatched = [];
+      addlMails.forEach(email => {
+        const cb = document.querySelector(`input.mail-opt-chk[value="${CSS.escape(email)}"]`);
+        if (cb) cb.checked = true; else unmatched.push(email);
+      });
+      if (unmatched.length > 0) document.getElementById("custom-email").value = unmatched.join(", ");
+    }
+
+
     const isDone = (row["ステータス"] || "").includes("完了") && !(row["ステータス"] || "").includes("未完了");
     document.getElementById("btn-complete").style.display = isDone ? "none" : "block"; 
     document.getElementById("complete-box").style.display = isDone ? "none" : "block";
