@@ -8,92 +8,554 @@
   <title>AW109 症例登録</title>
   <style>
     :root {
-      --bg: #f2f2f7; --brand: #d32f2f; --ink: #1c1c1e; --sub: #8e8e93;
-      --blue: #007aff; --line: rgba(60,60,67,0.12); --card: #ffffff;
-      --brand-light: #ffebeb; --med-blue: #e3f2fd; --med-blue-text: #1565c0;
-      --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
+      --bg: #f2f2f7;
+      --brand: #d32f2f;
+      --ink: #1c1c1e;
+      --sub: #8e8e93;
+      --blue: #007aff;
+      --line: rgba(60,60,67,0.12);
+      --card: #ffffff;
+      --brand-light: #ffebeb;
+      --med-blue: #e3f2fd;
+      --med-blue-text: #1565c0;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bot: env(safe-area-inset-bottom);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; padding-bottom: 90px; }
     
-    header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + var(--safe-bot)); padding-bottom: var(--safe-bot); background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--line); display: flex; z-index: 100; }
-    main { margin-top: calc(56px + var(--safe-top)); padding: 16px 16px 24px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
     
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .edit-section-title { background: #e3f2fd; color: #0d47a1; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 12px; border: 1px solid #bbdefb; transition: background 0.2s; }
-    .edit-section-title.clickable:hover { background: #bbdefb; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 90px;
+    }
     
-    input, select, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
-    button { background: var(--blue); color: #fff; border: none; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-    button:hover { opacity: 0.85; }
-    .btn-clear { background: none; border: 1px solid #ccc; color: var(--brand); font-size: 12px; font-weight: 700; cursor: pointer; border-radius: 6px; }
-    .btn-add-action { background: var(--blue); color: #fff; border: none; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-    .btn-small { background: #e5e5ea; color: var(--ink); border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-    .btn-blue { background: var(--blue); color: #fff; border: none; cursor: pointer; }
-
-    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .cross-item { display: flex; flex-direction: column; gap: 4px; }
-    .cross-item label { font-size: 12px; font-weight: bold; color: var(--sub); }
-    .cross-item input, .cross-item select { width: 100%; }
-
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 20px; z-index: 9000; }
-    .modal.show { display: flex; }
-    .modal-box { background: #fff; width: 100%; max-width: 650px; max-height: 85vh; overflow-y: auto; border-radius: 12px; padding: 20px; position: relative; }
-    .modal-close { display: block; width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; color: var(--ink); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + var(--safe-top));
+      padding-top: var(--safe-top);
+      padding-left: 16px;
+      padding-right: 16px;
+      background: rgba(242,242,247,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 0.5px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+    }
     
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px; color: var(--sub); }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; }
-
-    .scheme-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: var(--bg); padding: 8px; border-radius: 8px; margin-bottom: 12px; }
-    .scheme-btn { padding: 10px 4px; border: none; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 700; color: var(--sub); cursor: pointer; border: 1px solid #ccc; transition: 0.2s; }
-    .scheme-btn.active { background: var(--card); color: var(--brand); border-color: var(--brand); box-shadow: 0 2px 4px rgba(211,47,47,0.2); }
-
-    .accordion-content { display: none; margin-top: 8px; }
-    .accordion-content.open { display: flex; flex-direction: column; }
-    .accordion-title-sm { font-size:12px; color:var(--blue); font-weight:bold; cursor:pointer; user-select:none; margin-top:8px; display:inline-block; padding:4px 0; }
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + var(--safe-bot));
+      padding-bottom: var(--safe-bot);
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 0.5px solid var(--line);
+      display: flex;
+      z-index: 100;
+    }
     
-    .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .pill { border: 1px solid var(--line); border-radius: 20px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
-    .pill.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
-    .pill.sub-on { background: #ff9800; border-color: #ff9800; color: #fff; box-shadow: 0 2px 6px rgba(255,152,0,0.2); }
+    main {
+      margin-top: calc(56px + var(--safe-top));
+      padding: 16px 16px 24px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .hdr-btn {
+      color: var(--blue);
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .edit-section-title {
+      background: #e3f2fd;
+      color: #0d47a1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 12px;
+      border: 1px solid #bbdefb;
+      transition: background 0.2s;
+    }
+    
+    .edit-section-title.clickable:hover {
+      background: #bbdefb;
+    }
+    
+    input, select, button, textarea {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    button {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    
+    button:hover {
+      opacity: 0.85;
+    }
+    
+    .btn-clear {
+      background: none;
+      border: 1px solid #ccc;
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    
+    .btn-add-action {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    .btn-small {
+      background: #e5e5ea;
+      color: var(--ink);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .btn-blue {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
 
-    .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
-    .chip { border: 1px solid var(--line); border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink); background: var(--bg); transition: 0.15s; user-select: none; }
-    .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .cross-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .cross-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .cross-item label {
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--sub);
+    }
+    
+    .cross-item input, .cross-item select {
+      width: 100%;
+    }
 
-    .dyn-row-container { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e5e5ea; }
-    .dyn-grid-time { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .dyn-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .dyn-grid-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .dyn-row-container input, .dyn-row-container select { font-size: 13px; padding: 8px; width: 100%; }
-    .dyn-label { font-size: 10px; font-weight: bold; color: var(--sub); display: block; margin-bottom: 2px; }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 9000;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-box {
+      background: #fff;
+      width: 100%;
+      max-width: 650px;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .modal-close {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      background: #e5e5ea;
+      color: var(--ink);
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .form-group {
+      margin-bottom: 12px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: var(--sub);
+    }
+    
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+    }
 
-    .proc-line { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ccc; }
-    .proc-line:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-    .proc-lbl { font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .proc-lbl input[type="checkbox"] { width: 18px; height: 18px; }
-    .proc-count { display: none; align-items: center; gap: 6px; }
-    .proc-count input { width: 60px; text-align: center; }
-    .radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
-    .radio-lbl { display: inline-block; padding: 6px 10px; background: #fff; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; font-weight: bold; color: var(--sub); cursor: pointer; transition: 0.2s; user-select: none; }
-    input[type="radio"] { display: none; }
-    input[type="radio"]:checked + .radio-lbl { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .scheme-picker {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      background: var(--bg);
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .scheme-btn {
+      padding: 10px 4px;
+      border: none;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--sub);
+      cursor: pointer;
+      border: 1px solid #ccc;
+      transition: 0.2s;
+    }
+    
+    .scheme-btn.active {
+      background: var(--card);
+      color: var(--brand);
+      border-color: var(--brand);
+      box-shadow: 0 2px 4px rgba(211,47,47,0.2);
+    }
 
-    .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: none; background: none; color: var(--sub); font-size: 11px; font-weight: 700; cursor: pointer; }
-    .tab-btn.active { color: var(--brand); }
-    .tab-icon { font-size: 22px; line-height: 1; margin-bottom: 2px; }
-    .tab-content { display: none; animation: fadeIn 0.2s ease; }
-    .tab-content.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .accordion-content {
+      display: none;
+      margin-top: 8px;
+    }
+    
+    .accordion-content.open {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .accordion-title-sm {
+      font-size: 12px;
+      color: var(--blue);
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      margin-top: 8px;
+      display: inline-block;
+      padding: 4px 0;
+    }
+    
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--ink);
+      background: var(--bg);
+      transition: 0.15s;
+      user-select: none;
+    }
+    
+    .pill.on {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,122,255,0.2);
+    }
+    
+    .pill.sub-on {
+      background: #ff9800;
+      border-color: #ff9800;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(255,152,0,0.2);
+    }
 
-    #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
-    .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
-    .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--ink);
+      background: var(--bg);
+      transition: 0.15s;
+      user-select: none;
+    }
+    
+    .chip.on {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .dyn-row-container {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #e5e5ea;
+    }
+    
+    .dyn-grid-time {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .dyn-grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .dyn-grid-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .dyn-row-container input, .dyn-row-container select {
+      font-size: 13px;
+      padding: 8px;
+      width: 100%;
+    }
+    
+    .dyn-label {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--sub);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .proc-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #ccc;
+    }
+    
+    .proc-line:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .proc-lbl {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    
+    .proc-lbl input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .proc-count {
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .proc-count input {
+      width: 60px;
+      text-align: center;
+    }
+    
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .radio-lbl {
+      display: inline-block;
+      padding: 6px 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      color: var(--sub);
+      cursor: pointer;
+      transition: 0.2s;
+      user-select: none;
+    }
+    
+    input[type="radio"] {
+      display: none;
+    }
+    
+    input[type="radio"]:checked + .radio-lbl {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      background: none;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    
+    .tab-btn.active {
+      color: var(--brand);
+    }
+    
+    .tab-icon {
+      font-size: 22px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #global-loader {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.95);
+      z-index: 9998;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(0,122,255,0.2);
+      border-top: 4px solid var(--blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .loader-text {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    
+    .loader-subtext {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sub);
+      text-align: center;
+      max-width: 80%;
+    }
     
     @media print {
       header, .tab-bar, .no-print { display: none !important; }
@@ -123,25 +585,63 @@
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
   </header>
+  
   <div id="master-sync-info" style="text-align:right; font-size:10px; color:var(--sub); padding:4px 16px 0 0; background:var(--bg);">マスタ同期確認中...</div>
 
   <main>
     <div id="tab-input" class="tab-content active">
       <div class="card">
         <div class="cross-grid">
-          <div class="cross-item"><label>要請番号 (未入力で仮ID)</label><input type="tel" id="v-id" placeholder="入力..." oninput="toHalfWidth(this)"></div>
-          <div class="cross-item"><label>日付</label><input type="date" id="v-date"></div>
+          <div class="cross-item">
+            <label>要請番号 (未入力で仮ID)</label>
+            <input type="tel" id="v-id" placeholder="入力..." oninput="toHalfWidth(this)">
+          </div>
+          <div class="cross-item">
+            <label>日付</label>
+            <input type="date" id="v-date">
+          </div>
         </div>
+        
         <div style="background:#f9f9f9; padding: 10px; border-radius:8px; display:flex; gap:16px; font-size:13px; font-weight:700; margin-bottom:12px;">
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="chk-edaban" onchange="toggleBox('box-edaban', this.checked)">枝番あり</label>
-          <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" id="chk-er" onchange="toggleBox('box-er', this.checked)">緊急外来搬送</label>
+          <label style="display:flex; align-items:center; gap:4px;">
+            <input type="checkbox" id="chk-edaban" onchange="toggleBox('box-edaban', this.checked)">枝番あり
+          </label>
+          <label style="display:flex; align-items:center; gap:4px;">
+            <input type="checkbox" id="chk-er" onchange="toggleBox('box-er', this.checked)">緊急外来搬送
+          </label>
         </div>
-        <div id="box-edaban" style="display:none; padding:12px; border-radius:8px; margin-bottom:12px; background:#fffde7;"><div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; font-weight:bold; color:#f57f17;">枝番:</span><input type="number" inputmode="numeric" id="v-edaban" placeholder="例: 1" style="width:80px; text-align:center;"></div></div>
-        <div id="box-er" style="display:none; padding:12px; border-radius:8px; margin-bottom:12px; background:#ffebee;"><div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; font-weight:bold; color:#c62828;">搬入先:</span><input type="text" id="v-er-hosp" list="dl-dest" placeholder="緊急外来の病院名..."></div></div>
+        
+        <div id="box-edaban" style="display:none; padding:12px; border-radius:8px; margin-bottom:12px; background:#fffde7;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; font-weight:bold; color:#f57f17;">枝番:</span>
+            <input type="number" inputmode="numeric" id="v-edaban" placeholder="例: 1" style="width:80px; text-align:center;">
+          </div>
+        </div>
+        
+        <div id="box-er" style="display:none; padding:12px; border-radius:8px; margin-bottom:12px; background:#ffebee;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; font-weight:bold; color:#c62828;">搬入先:</span>
+            <input type="text" id="v-er-hosp" list="dl-dest" placeholder="緊急外来の病院名...">
+          </div>
+        </div>
+        
         <div class="cross-grid">
-          <div class="cross-item"><label>出場先</label><input type="text" id="v-dest" list="dl-dest" placeholder="選択/入力..."></div>
-          <div class="cross-item"><label>フライトDr</label><select id="v-dr" onchange="localStorage.setItem('aw109_last_dr', this.value)"><option value="">選択...</option></select></div>
-          <div class="cross-item"><label>フライトNs</label><select id="v-ns" onchange="localStorage.setItem('aw109_last_ns', this.value)"><option value="">選択...</option></select></div>
+          <div class="cross-item">
+            <label>出場先</label>
+            <input type="text" id="v-dest" list="dl-dest" placeholder="選択/入力...">
+          </div>
+          <div class="cross-item">
+            <label>フライトDr</label>
+            <select id="v-dr" onchange="localStorage.setItem('aw109_last_dr', this.value)">
+              <option value="">選択...</option>
+            </select>
+          </div>
+          <div class="cross-item">
+            <label>フライトNs</label>
+            <select id="v-ns" onchange="localStorage.setItem('aw109_last_ns', this.value)">
+              <option value="">選択...</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -158,7 +658,7 @@
         </div>
 
         <div class="form-group" id="keyword-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px; display:none;">
-          <label style="margin-bottom:8px; color:var(--brand);">🔑 KEY WORD指定 (複数選択可能)</label>
+          <label style="margin-bottom:8px; color:var(--brand);">🔑 キーワード指定 (複数選択可能)</label>
           <div class="pill-group" id="chip-keyword-selected" style="margin-bottom:8px;"></div>
           <div class="accordion-title-sm" onclick="toggleAccordion('chip-keyword-all')">▶ キーワード一覧から選択・追加</div>
           <div class="pill-group accordion-content" id="chip-keyword-all" style="flex-direction:row;"></div>
@@ -226,7 +726,10 @@
           </div>
         </div>
 
-        <div class="form-group"><label>📋 事案概要 (覚知内容など・任意)</label><textarea id="v-summary-req" rows="2" placeholder="通報内容や事案の簡単な概要を記入してください..."></textarea></div>
+        <div class="form-group">
+          <label>📋 事案概要 (覚知内容など・任意)</label>
+          <textarea id="v-summary-req" rows="2" placeholder="通報内容や事案の簡単な概要を記入してください..."></textarea>
+        </div>
       </div>
 
       <div class="card" id="card-timeline">
@@ -235,14 +738,32 @@
           <button type="button" class="btn-clear" style="padding:2px 8px; font-size:11px;" onclick="clearTime('all')">クリア</button>
         </div>
         <div class="cross-grid">
-          <div class="cross-item"><label>要請</label><input type="time" id="t-req"></div>
-          <div class="cross-item"><label>初期離陸</label><input type="time" id="t-dep1"></div>
-          <div class="cross-item"><label>最終着陸</label><input type="time" id="t-arr1"></div>
+          <div class="cross-item">
+            <label>要請</label>
+            <input type="time" id="t-req">
+          </div>
+          <div class="cross-item">
+            <label>初期離陸</label>
+            <input type="time" id="t-dep1">
+          </div>
+          <div class="cross-item">
+            <label>最終着陸</label>
+            <input type="time" id="t-arr1">
+          </div>
         </div>
         <div class="cross-grid" id="box-med-time">
-          <div class="cross-item" id="box-contact-time"><label>接触</label><input type="time" id="t-contact" onchange="calcMonitor()"></div>
-          <div class="cross-item" id="box-hosp-time"><label>病着</label><input type="time" id="t-hosp" onchange="calcMonitor()"></div>
-          <div class="cross-item"><label id="lbl-end-time">終了</label><input type="time" id="t-end" onchange="calcMonitor()"></div>
+          <div class="cross-item" id="box-contact-time">
+            <label>接触</label>
+            <input type="time" id="t-contact" onchange="calcMonitor()">
+          </div>
+          <div class="cross-item" id="box-hosp-time">
+            <label>病着</label>
+            <input type="time" id="t-hosp" onchange="calcMonitor()">
+          </div>
+          <div class="cross-item">
+            <label id="lbl-end-time">終了</label>
+            <input type="time" id="t-end" onchange="calcMonitor()">
+          </div>
         </div>
       </div>
 
@@ -262,12 +783,30 @@
       <div class="card" style="padding:16px;">
         <div class="edit-section-title clickable" style="margin-top:0; margin-bottom:0; cursor:pointer;" onclick="toggleAccordion('acc-line')">▶ 💉 確保ラインを追加</div>
         <div class="accordion-content" id="acc-line" style="margin-top:12px;">
-          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-20G">末梢静脈路(20G)</label><div class="proc-count" id="cnt-20G"><input type="number" inputmode="numeric" value="1" min="1" id="val-20G">本</div></div>
-          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-22G">末梢静脈路(22G)</label><div class="proc-count" id="cnt-22G"><input type="number" inputmode="numeric" value="1" min="1" id="val-22G">本</div></div>
-          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-24G">末梢静脈路(24G)</label><div class="proc-count" id="cnt-24G"><input type="number" inputmode="numeric" value="1" min="1" id="val-24G">本</div></div>
-          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-18G">末梢静脈路(18G)</label><div class="proc-count" id="cnt-18G"><input type="number" inputmode="numeric" value="1" min="1" id="val-18G">本</div></div>
-          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-ez">骨髄路(EZ-IO等)</label><div class="proc-count" id="cnt-ez"><input type="number" inputmode="numeric" value="1" min="1" id="val-ez">本</div></div>
-          <div class="proc-line"><label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-big">骨髄路(BIG等)</label><div class="proc-count" id="cnt-big"><input type="number" inputmode="numeric" value="1" min="1" id="val-big">本</div></div>
+          <div class="proc-line">
+            <label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-20G">末梢静脈路(20G)</label>
+            <div class="proc-count" id="cnt-20G"><input type="number" inputmode="numeric" value="1" min="1" id="val-20G">本</div>
+          </div>
+          <div class="proc-line">
+            <label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-22G">末梢静脈路(22G)</label>
+            <div class="proc-count" id="cnt-22G"><input type="number" inputmode="numeric" value="1" min="1" id="val-22G">本</div>
+          </div>
+          <div class="proc-line">
+            <label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-24G">末梢静脈路(24G)</label>
+            <div class="proc-count" id="cnt-24G"><input type="number" inputmode="numeric" value="1" min="1" id="val-24G">本</div>
+          </div>
+          <div class="proc-line">
+            <label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-18G">末梢静脈路(18G)</label>
+            <div class="proc-count" id="cnt-18G"><input type="number" inputmode="numeric" value="1" min="1" id="val-18G">本</div>
+          </div>
+          <div class="proc-line">
+            <label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-ez">骨髄路(EZ-IO等)</label>
+            <div class="proc-count" id="cnt-ez"><input type="number" inputmode="numeric" value="1" min="1" id="val-ez">本</div>
+          </div>
+          <div class="proc-line">
+            <label class="proc-lbl"><input type="checkbox" onchange="toggleProcCount(this)" id="chk-big">骨髄路(BIG等)</label>
+            <div class="proc-count" id="cnt-big"><input type="number" inputmode="numeric" value="1" min="1" id="val-big">本</div>
+          </div>
           <div class="proc-line" style="flex-direction:column; align-items:flex-start;">
             <div style="display:flex; justify-content:space-between; width:100%;">
               <label class="proc-lbl"><input type="checkbox" onchange="toggleBox('box-venu-det', this.checked); toggleBox('cnt-venu', this.checked)" id="chk-venu">ベニューラ</label>
@@ -304,7 +843,9 @@
                  </div>
               </div>
             </div>
-            <div style="grid-column: span 2;"><input type="text" id="v-echo-other" placeholder="その他エコー (フリーテキスト)" style="width:100%;"></div>
+            <div style="grid-column: span 2;">
+              <input type="text" id="v-echo-other" placeholder="その他エコー (フリーテキスト)" style="width:100%;">
+            </div>
           </div>
         </div>
       </div>
@@ -319,50 +860,89 @@
                 <label><input type="radio" name="bg-type" value="静脈血採血" checked onchange="toggleBox('box-bg-art', false)"> <span class="radio-lbl">静脈血</span></label>
                 <label><input type="radio" name="bg-type" value="動脈血採血" onchange="toggleBox('box-bg-art', true)"> <span class="radio-lbl">動脈血</span></label>
               </div>
-              <div id="box-bg-art" style="display:none; margin-top:8px;"><select id="bg-art-loc" style="width:100%; border:1px solid #bbdefb; padding:10px; background:#fff;"><option value="橈骨動脈">橈骨動脈</option><option value="大腿動脈">大腿動脈</option><option value="上腕動脈">上腕動脈</option></select></div>
+              <div id="box-bg-art" style="display:none; margin-top:8px;">
+                <select id="bg-art-loc" style="width:100%; border:1px solid #bbdefb; padding:10px; background:#fff;">
+                  <option value="橈骨動脈">橈骨動脈</option>
+                  <option value="大腿動脈">大腿動脈</option>
+                  <option value="上腕動脈">上腕動脈</option>
+                </select>
+              </div>
             </div>
           </div>
 
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-intub" onchange="toggleBox('box-intub-det', this.checked); handleLifeSupport()">気管挿管</label>
             <div id="box-intub-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
-              <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="number" inputmode="decimal" id="intub-size" placeholder="サイズ(ID mm)" style="flex:1; border:1px solid #bbdefb;"><input type="number" inputmode="decimal" id="intub-pos" placeholder="固定位置(cm)" style="flex:1; border:1px solid #bbdefb;"></div>
-              <label style="font-size:13px; font-weight:bold; color:#0d47a1;"><input type="checkbox" id="intub-cuff"> カフ上吸引あり</label>
+              <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <input type="number" inputmode="decimal" id="intub-size" placeholder="サイズ(ID mm)" style="flex:1; border:1px solid #bbdefb;">
+                <input type="number" inputmode="decimal" id="intub-pos" placeholder="固定位置(cm)" style="flex:1; border:1px solid #bbdefb;">
+              </div>
+              <label style="font-size:13px; font-weight:bold; color:#0d47a1;">
+                <input type="checkbox" id="intub-cuff"> カフ上吸引あり
+              </label>
             </div>
           </div>
 
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-nppv" onchange="toggleBox('box-nppv-det', this.checked); handleLifeSupport()">NPPV使用</label>
             <div id="box-nppv-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
-              <select id="nppv-mask" style="width:100%; border:1px solid #bbdefb; padding:10px; background:#fff;"><option value="">マスクサイズを選択...</option><option value="S">Sサイズ</option><option value="M">Mサイズ</option><option value="L">Lサイズ</option></select>
+              <select id="nppv-mask" style="width:100%; border:1px solid #bbdefb; padding:10px; background:#fff;">
+                <option value="">マスクサイズを選択...</option>
+                <option value="S">Sサイズ</option>
+                <option value="M">Mサイズ</option>
+                <option value="L">Lサイズ</option>
+              </select>
             </div>
           </div>
 
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-shock" onchange="toggleBox('box-shock-det', this.checked); handleLifeSupport()">除細動（ショック）</label>
             <div id="box-shock-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
-              <label style="font-size:13px; font-weight:bold; color:#0d47a1;"><input type="checkbox" id="chk-shock-pad"> 除細動パッドを使用</label>
-              <div style="display:flex; align-items:center; gap:8px; margin-top:8px;"><span style="font-size:12px; font-weight:bold; color:#0d47a1;">ショック回数:</span><input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #bbdefb; border-radius:4px;"> <span style="color:#0d47a1; font-weight:bold;">回</span></div>
+              <label style="font-size:13px; font-weight:bold; color:#0d47a1;">
+                <input type="checkbox" id="chk-shock-pad"> 除細動パッドを使用
+              </label>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                <span style="font-size:12px; font-weight:bold; color:#0d47a1;">ショック回数:</span>
+                <input type="number" inputmode="numeric" id="shock-count" value="1" style="width:60px; text-align:center; padding:6px; border:1px solid #bbdefb; border-radius:4px;"> 
+                <span style="color:#0d47a1; font-weight:bold;">回</span>
+              </div>
             </div>
           </div>
 
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-pacing" onchange="toggleBox('box-pacing-det', this.checked)">経皮ペーシング</label>
-            <div id="box-pacing-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;"><label style="font-size:13px; font-weight:bold; color:#0d47a1;"><input type="checkbox" id="chk-pacing-pad"> ペーシングパッドを使用</label></div>
+            <div id="box-pacing-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
+              <label style="font-size:13px; font-weight:bold; color:#0d47a1;">
+                <input type="checkbox" id="chk-pacing-pad"> ペーシングパッドを使用
+              </label>
+            </div>
           </div>
 
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-thorax" onchange="toggleBox('box-thorax-det', this.checked)">胸腔ドレナージ</label>
             <div id="box-thorax-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-size:12px; font-weight:bold; color:#0d47a1;">20Fr:</span><input type="number" inputmode="numeric" id="thorax-20" value="0" min="0" style="width:60px; padding:6px; border:1px solid #bbdefb; border-radius:4px;"> <span style="color:#0d47a1; font-weight:bold;">本</span></div>
-              <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; font-weight:bold; color:#0d47a1;">28Fr:</span><input type="number" inputmode="numeric" id="thorax-28" value="0" min="0" style="width:60px; padding:6px; border:1px solid #bbdefb; border-radius:4px;"> <span style="color:#0d47a1; font-weight:bold;">本</span></div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                <span style="font-size:12px; font-weight:bold; color:#0d47a1;">20Fr:</span>
+                <input type="number" inputmode="numeric" id="thorax-20" value="0" min="0" style="width:60px; padding:6px; border:1px solid #bbdefb; border-radius:4px;"> 
+                <span style="color:#0d47a1; font-weight:bold;">本</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; font-weight:bold; color:#0d47a1;">28Fr:</span>
+                <input type="number" inputmode="numeric" id="thorax-28" value="0" min="0" style="width:60px; padding:6px; border:1px solid #bbdefb; border-radius:4px;"> 
+                <span style="color:#0d47a1; font-weight:bold;">本</span>
+              </div>
             </div>
           </div>
 
           <div style="border: 1px solid var(--blue); border-radius: 8px; padding: 12px; background: #f0f8ff;">
             <label class="proc-lbl" style="color:#0d47a1;"><input type="checkbox" id="chk-pericardial" onchange="toggleBox('box-pericardial-det', this.checked)">心嚢穿刺・心嚢ドレナージ</label>
             <div id="box-pericardial-det" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #90caf9;">
-              <div class="radio-group"><label><input type="radio" name="pericardial-type" value="キット" checked> <span class="radio-lbl">キット使用</span></label><label><input type="radio" name="pericardial-type" value="V1"> <span class="radio-lbl">V1</span></label><label><input type="radio" name="pericardial-type" value="V2"> <span class="radio-lbl">V2</span></label><label><input type="radio" name="pericardial-type" value="V3"> <span class="radio-lbl">V3</span></label></div>
+              <div class="radio-group">
+                <label><input type="radio" name="pericardial-type" value="キット" checked> <span class="radio-lbl">キット使用</span></label>
+                <label><input type="radio" name="pericardial-type" value="V1"> <span class="radio-lbl">V1</span></label>
+                <label><input type="radio" name="pericardial-type" value="V2"> <span class="radio-lbl">V2</span></label>
+                <label><input type="radio" name="pericardial-type" value="V3"> <span class="radio-lbl">V3</span></label>
+              </div>
             </div>
           </div>
 
@@ -422,7 +1002,10 @@
       <div class="card">
         <div class="edit-section-title" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
           <span>🌬️ 移動用酸素</span>
-          <div style="display:flex; gap:8px;"><button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-o2')">クリア</button><button type="button" class="btn-add-action" onclick="addDyn('o2')">＋ 追加</button></div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-o2')">クリア</button>
+            <button type="button" class="btn-add-action" onclick="addDyn('o2')">＋ 追加</button>
+          </div>
         </div>
         <div id="dyn-o2"></div>
       </div>
@@ -430,7 +1013,10 @@
       <div class="card">
         <div class="edit-section-title" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
           <span>🤖 人工呼吸器詳細</span>
-          <div style="display:flex; gap:8px;"><button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-vent')">クリア</button><button type="button" class="btn-add-action" onclick="addDyn('vent')">＋ 追加</button></div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-vent')">クリア</button>
+            <button type="button" class="btn-add-action" onclick="addDyn('vent')">＋ 追加</button>
+          </div>
         </div>
         <div id="dyn-vent"></div>
       </div>
@@ -438,7 +1024,10 @@
       <div class="card">
         <div class="edit-section-title" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
           <span>💓 胸骨圧迫 <span style="color:var(--ink); margin-left:8px;">計: <span id="lbl-cpr-total">0</span> 分</span></span>
-          <div style="display:flex; gap:8px;"><button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-cpr'); calcCPR()">クリア</button><button type="button" class="btn-add-action" onclick="addDyn('cpr')">＋ 追加</button></div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-cpr'); calcCPR();">クリア</button>
+            <button type="button" class="btn-add-action" onclick="addDyn('cpr')">＋ 追加</button>
+          </div>
         </div>
         <div id="dyn-cpr"></div>
       </div>
@@ -514,8 +1103,12 @@
   </main>
 
   <nav class="tab-bar">
-    <button type="button" class="tab-btn active" id="tb-input" onclick="switchTab('input')"><span class="tab-icon">📝</span><span>入力</span></button>
-    <button type="button" class="tab-btn" id="tb-send" onclick="switchTab('send'); buildPreview();"><span class="tab-icon">✉️</span><span>確認・送信</span></button>
+    <button type="button" class="tab-btn active" id="tb-input" onclick="switchTab('input')">
+      <span class="tab-icon">📝</span><span>入力</span>
+    </button>
+    <button type="button" class="tab-btn" id="tb-send" onclick="switchTab('send'); buildPreview();">
+      <span class="tab-icon">✉️</span><span>確認・送信</span>
+    </button>
   </nav>
 
   <div class="modal" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
@@ -527,7 +1120,7 @@
         <input type="text" id="qa-name" placeholder="お名前 (任意)" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;">
         <input type="email" id="qa-email" placeholder="返信先メールアドレス (任意)" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;">
         <textarea id="qa-input" rows="3" placeholder="項目の追加依頼や不具合報告など..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
-        <button type="button" onclick="submitQA(event)" style="width:100%; padding:10px; border-radius:6px; background:var(--blue); color:#fff;">送信する ✉️</button>
+        <button type="button" onclick="submitQA(this)" style="width:100%; padding:10px; border-radius:6px; background:var(--blue); color:#fff;">送信する ✉️</button>
       </div>
       <button type="button" class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
     </div>
@@ -564,8 +1157,12 @@
       document.getElementById("loader-main-text").innerText = mainText || "通信中...";
       document.getElementById("loader-sub-text").innerText = subText || "データベースに接続しています";
       loader.style.display = "flex";
-      loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+      loaderTimer1 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; 
+      }, 5000);
+      loaderTimer2 = setTimeout(() => { 
+        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; 
+      }, 15000);
     }
   }
 
@@ -580,10 +1177,12 @@
     const el = document.getElementById(id); 
     if(el) el.classList.add("show"); 
   }
+  
   function closeModal(id) { 
     const el = document.getElementById(id); 
     if(el) el.classList.remove("show"); 
   }
+  
   function toHalfWidth(el) { 
     if(!el) return; 
     el.value = el.value.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) { 
@@ -591,7 +1190,6 @@
     }).replace(/—/g, "-").replace(/ー/g, "-"); 
   }
 
-  // 🌟 上書き後や戻るボタン押下時に検索コンソールの状態を維持して戻る
   function goBackOrHome() {
     if (document.referrer && document.referrer.includes("search.html")) {
       window.history.back();
@@ -685,7 +1283,9 @@
       let masterReasons = (m.phrases || []).map(p => p.replace("キャンセル", "").trim()).filter(Boolean);
       let allReasons = masterReasons.length > 0 ? [...new Set(masterReasons)] : ["上空キャンセル", "現場キャンセル", "天候不良キャンセル", "その他"];
       if (!allReasons.includes("その他")) allReasons.push("その他"); 
-      cancelGroup.innerHTML = allReasons.map(r => `<label><input type="radio" name="cancel-reason" value="${r}"> <span class="radio-lbl">${r}</span></label>`).join("");
+      cancelGroup.innerHTML = allReasons.map(r => `
+        <label><input type="radio" name="cancel-reason" value="${r}"> <span class="radio-lbl">${r}</span></label>
+      `).join("");
     }
 
     renderChips('keyword'); 
@@ -781,7 +1381,6 @@
         document.getElementById("v-biko").value = row["備考"] || "";
     }
 
-    // 🌟 V14.12 システムデータからの完全復元処理
     let sys = {};
     if (row["システムデータ"]) {
       try { sys = JSON.parse(row["システムデータ"]); } catch(e){}
@@ -829,7 +1428,6 @@
     document.getElementById("t-hosp").value = fmtTime(row["病着"]); 
     document.getElementById("t-end").value = fmtTime(row["終了"]);
 
-    // 🌟 ライン類の完全な同期復元
     document.getElementById("chk-20G").checked = !!row["末梢静脈路_20G"];
     if(row["末梢静脈路_20G"]) { 
       document.getElementById("val-20G").value = row["末梢静脈路_20G"].replace("本", "").replace("◯", "").trim() || "1"; 
@@ -866,7 +1464,6 @@
       toggleProcCount(document.getElementById("chk-big")); 
     }
 
-    // 🌟 ベニューラの「本数」と「種類」の分離復元
     const venu = String(row["ベニューラ"] || "");
     if(venu.includes("◯")) {
         document.getElementById("chk-venu").checked = true; 
@@ -944,7 +1541,6 @@
       document.getElementById("stomach-size").value = row["胃管挿入サイズ"]; 
     }
 
-    // 🌟 エコー関連の完全なDB列一致
     ["FAST", "心エコー", "大血管エコー", "消化器系エコー", "婦人女性生殖器系エコー", "泌尿器系エコー", "下肢静脈エコー"].forEach(k => { 
       if(row[k] === "◯") { 
         const el = document.querySelector(`.chk-echo[value="${k}"]`); 
@@ -963,7 +1559,6 @@
     }
     document.getElementById("v-echo-other").value = row["その他エコー"] || "";
 
-    // 🌟 処置・外傷類の完全なDB列一致
     ["12誘導心電図", "喀痰吸引", "血糖測定", "輪状甲状靭帯", "心膜開窓術", "開胸心マッサージ", "胸腔開放", "止血帯", "サムスリング", "シーネ固定", "バックボード", "頸椎カラー", "保温"].forEach(k => {
         if(row[k] === "◯") { 
           const el = document.querySelector(`input.chk-other[value="${k}"], input.chk-trauma[value="${k}"]`); 
@@ -971,7 +1566,6 @@
         }
     });
     
-    // 🌟 古いデータ互換用のフォールバックも維持
     if(row["簡易処置リスト"]) {
       const rText = row["簡易処置リスト"];
       if(rText.includes("喀痰吸引")) { const el = document.querySelector('input.chk-other[value="喀痰吸引"]'); if(el) el.checked = true; }
@@ -1018,7 +1612,6 @@
     document.getElementById("btn-complete").style.display = isDone ? "none" : "block"; 
     document.getElementById("complete-box").style.display = isDone ? "none" : "block";
     
-    // 🌟 代行か本人かを安全に復元する
     const whoVal = row["ステータス"] || "";
     if(whoVal.includes("代行")) {
       document.querySelector('input[name="comp-who"][value="代行"]').checked = true;
@@ -1353,7 +1946,10 @@
     html += `<div style="text-align:right; margin-top:8px;"><button type="button" class="btn-clear" style="color:var(--brand); border-color:var(--brand); font-size:12px; padding:4px 10px;" onclick="document.getElementById('dyn-${id}').remove(); if('${type}'==='cpr')calcCPR();">削除</button></div></div>`;
     box.insertAdjacentHTML('beforeend', html);
   }
-  function clearDyn(id) { document.getElementById(id).innerHTML = ""; }
+
+  function clearDyn(id) { 
+    document.getElementById(id).innerHTML = ""; 
+  }
   
   function calcCPR() {
     let total = 0;
@@ -1376,14 +1972,13 @@
     
     const finalQuestion = `【送信者】${qName || "未入力"}\n【連絡先】${qEmail || "未入力"}\n\n${qText}`;
 
-    showLoader("送信中...", "");
+    showLoader("送信中...", "要望・報告データをサーバーに送信しています");
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" }), redirect: "follow" });
       alert("要望・報告を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa');
     } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
-  // 🌟 V14.12 完全に列構成と一致するパッキングロジック
   function getCollectData() {
     let rawId = document.getElementById("v-id").value.trim();
     if (!rawId) {
@@ -1395,14 +1990,31 @@
     let finalScheme = state.scheme || ""; if(finalScheme === 'キャンセル') { const reason = document.querySelector('input[name="cancel-reason"]:checked')?.value || "未選択"; finalScheme = `キャンセル(${reason})`; }
 
     let payload = {
-      "要請番号": finalId, "日付": document.getElementById("v-date").value, "出場先": document.getElementById("v-dest").value,
-      "フライトドクター": document.getElementById("v-dr").value, "フライトナース": document.getElementById("v-ns").value, "スキーム選択": finalScheme,
-      "要請区分": state.reqType, "キーワード": currentKeywords.join(", "),
-      "疾患大分類": diseaseMainVal, "疾患原因": diseaseCauseVal, "詳細分類": diseaseSubVal, "現場診断": currentDiagnosis.join(", "),
-      "小児フラグ": document.getElementById("chk-pediatric").checked ? "◯" : "", "母性フラグ": document.getElementById("chk-maternal").checked ? "◯" : "", "多数傷病フラグ": document.getElementById("chk-mass").checked ? "◯" : "", "労災フラグ": document.getElementById("chk-worker").checked ? "◯" : "",
-      "要請時刻・施設間搬送依頼時刻": document.getElementById("t-req").value, "初期離陸時間": document.getElementById("t-dep1").value, "最終着陸時間": document.getElementById("t-arr1").value,
-      "接触": document.getElementById("t-contact").value, "病着": document.getElementById("t-hosp").value, "終了": document.getElementById("t-end").value,
-      "往診料": state.calcVals.oshin[state.calc.oshin] || "", "搬送料": state.calcVals.hansou[state.calc.hansou] || "", "長時間加算": state.calcVals.long[state.calc.long] || "",
+      "要請番号": finalId, 
+      "日付": document.getElementById("v-date").value, 
+      "出場先": document.getElementById("v-dest").value,
+      "フライトドクター": document.getElementById("v-dr").value, 
+      "フライトナース": document.getElementById("v-ns").value, 
+      "スキーム選択": finalScheme,
+      "要請区分": state.reqType, 
+      "キーワード": currentKeywords.join(", "),
+      "疾患大分類": diseaseMainVal, 
+      "疾患原因": diseaseCauseVal, 
+      "詳細分類": diseaseSubVal, 
+      "現場診断": currentDiagnosis.join(", "),
+      "小児フラグ": document.getElementById("chk-pediatric").checked ? "◯" : "", 
+      "母性フラグ": document.getElementById("chk-maternal").checked ? "◯" : "", 
+      "多数傷病フラグ": document.getElementById("chk-mass").checked ? "◯" : "", 
+      "労災フラグ": document.getElementById("chk-worker").checked ? "◯" : "",
+      "要請時刻・施設間搬送依頼時刻": document.getElementById("t-req").value, 
+      "初期離陸時間": document.getElementById("t-dep1").value, 
+      "最終着陸時間": document.getElementById("t-arr1").value,
+      "接触": document.getElementById("t-contact").value, 
+      "病着": document.getElementById("t-hosp").value, 
+      "終了": document.getElementById("t-end").value,
+      "往診料": state.calcVals.oshin[state.calc.oshin] || "", 
+      "搬送料": state.calcVals.hansou[state.calc.hansou] || "", 
+      "長時間加算": state.calcVals.long[state.calc.long] || "",
       "モニター算定時間": state.calc.monitor > 0 ? document.getElementById("l-monitor").innerText : "",
       "経皮的酸素飽和度": state.calcVals.spo2[state.calc.spo2] || "",
       "EtCO2算定": document.getElementById("chk-etco2").checked ? "あり" : "", 
@@ -1415,15 +2027,15 @@
     };
 
     // 🌟 ライン類・処置類の完全分離バインディング
-    payload["末梢静脈路_20G"] = document.getElementById("chk-20G").checked ? document.getElementById("val-20G").value + "本" : "";
-    payload["末梢静脈路_22G"] = document.getElementById("chk-22G").checked ? document.getElementById("val-22G").value + "本" : "";
-    payload["末梢静脈路_24G"] = document.getElementById("chk-24G").checked ? document.getElementById("val-24G").value + "本" : "";
-    payload["末梢静脈路_18G"] = document.getElementById("chk-18G").checked ? document.getElementById("val-18G").value + "本" : "";
+    payload["末梢静脈路_20G"] = document.getElementById("chk-20G").checked ? "◯ " + (document.getElementById("val-20G").value || "1") + "本" : "";
+    payload["末梢静脈路_22G"] = document.getElementById("chk-22G").checked ? "◯ " + (document.getElementById("val-22G").value || "1") + "本" : "";
+    payload["末梢静脈路_24G"] = document.getElementById("chk-24G").checked ? "◯ " + (document.getElementById("val-24G").value || "1") + "本" : "";
+    payload["末梢静脈路_18G"] = document.getElementById("chk-18G").checked ? "◯ " + (document.getElementById("val-18G").value || "1") + "本" : "";
     
-    payload["骨髄路_EZ-IO"] = document.getElementById("chk-ez").checked ? document.getElementById("val-ez").value + "本" : "";
-    payload["骨髄路_BIG"] = document.getElementById("chk-big").checked ? document.getElementById("val-big").value + "本" : "";
+    payload["骨髄路_EZ-IO"] = document.getElementById("chk-ez").checked ? "◯ " + (document.getElementById("val-ez").value || "1") + "本" : "";
+    payload["骨髄路_BIG"] = document.getElementById("chk-big").checked ? "◯ " + (document.getElementById("val-big").value || "1") + "本" : "";
     
-    payload["ベニューラ"] = document.getElementById("chk-venu").checked ? document.getElementById("val-venu").value + "本" : "";
+    payload["ベニューラ"] = document.getElementById("chk-venu").checked ? "◯ " + (document.getElementById("val-venu").value || "1") + "本" : "";
     payload["ベニューラタイプ"] = document.getElementById("chk-venu").checked ? (document.querySelector('input[name="venu-type"]:checked')?.value || "") : "";
     
     payload["血液ガス分析"] = document.getElementById("chk-bg")?.checked ? "◯" : "";
@@ -1447,7 +2059,9 @@
     payload["心嚢穿刺タイプ"] = document.getElementById("chk-pericardial")?.checked ? document.querySelector('input[name="pericardial-type"]:checked')?.value : "";
     payload["胃管挿入サイズ"] = document.getElementById("chk-stomach")?.checked ? document.getElementById("stomach-size").value : "";
 
-    ["FAST", "心エコー", "大血管エコー", "消化器系エコー", "婦人女性生殖器系エコー", "泌尿器系エコー", "下肢静脈エコー"].forEach(k => { payload[k] = document.querySelector(`.chk-echo[value="${k}"]`)?.checked ? "◯" : ""; });
+    ["FAST", "心エコー", "大血管エコー", "消化器系エコー", "婦人女性生殖器系エコー", "泌尿器系エコー", "下肢静脈エコー"].forEach(k => { 
+      payload[k] = document.querySelector(`.chk-echo[value="${k}"]`)?.checked ? "◯" : ""; 
+    });
     
     payload["頸動脈エコー"] = document.getElementById("chk-echo-carotid")?.checked ? (document.querySelector('input[name="carotid-pulse"]:checked')?.value || "◯") : "";
     payload["その他エコー"] = document.getElementById("v-echo-other")?.value || "";
@@ -1461,33 +2075,76 @@
       let idx = 1;
       document.querySelectorAll(`#dyn-${type} .dyn-row-container`).forEach(row => {
         if(idx <= 5) {
-          payload[`${type}${idx}開始`] = row.querySelector('.v-start').value; payload[`${type}${idx}終了`] = row.querySelector('.v-end').value;
-          if(type === '酸素' || type === '呼吸器') { payload[`${type}${idx}FiO2`] = row.querySelector('.v-val2').value; payload[`${type}${idx}流量`] = row.querySelector('.v-val').value; }
-          const s = row.querySelector('.v-start').value || "--:--"; const e = row.querySelector('.v-end').value || "--:--";
-          if(type === '酸素') { dynText += `[酸素] ${row.querySelector('.v-type').value} ${row.querySelector('.v-val').value}L/min ${row.querySelector('.v-val2').value}% (${s}~${e})<br>`; } 
-          else if(type === '呼吸器') { dynText += `[呼吸器] ${row.querySelector('.v-type').value} FiO2:${row.querySelector('.v-val').value} PEEP:${row.querySelector('.v-val2').value} (${s}~${e})<br>`; } 
-          else if(type === '圧迫') { dynText += `[CPR] ${s}~${e}<br>`; }
+          payload[`${type}${idx}開始`] = row.querySelector('.v-start').value; 
+          payload[`${type}${idx}終了`] = row.querySelector('.v-end').value;
+          if(type === '酸素' || type === '呼吸器') { 
+            payload[`${type}${idx}FiO2`] = row.querySelector('.v-val2').value; 
+            payload[`${type}${idx}流量`] = row.querySelector('.v-val').value; 
+          }
+          
+          const s = row.querySelector('.v-start').value || "--:--";
+          const e = row.querySelector('.v-end').value || "--:--";
+          if(type === '酸素') {
+            const vType = row.querySelector('.v-type').value;
+            const flow = row.querySelector('.v-val').value;
+            const fio2 = row.querySelector('.v-val2').value;
+            dynText += `[酸素] ${vType} ${flow}L/min ${fio2}% (${s}~${e})<br>`;
+          } else if(type === '呼吸器') {
+            const mode = row.querySelector('.v-type').value;
+            const fio2 = row.querySelector('.v-val').value;
+            const peep = row.querySelector('.v-val2').value;
+            dynText += `[呼吸器] ${mode} FiO2:${fio2} PEEP:${peep} (${s}~${e})<br>`;
+          } else if(type === '圧迫') {
+            dynText += `[CPR] ${s}~${e}<br>`;
+          }
           idx++;
         }
       });
     });
-    let cprTot = document.getElementById('lbl-cpr-total').innerText; if(cprTot !== "0") dynText += `(胸骨圧迫トータル: ${cprTot}分)<br>`;
+    let cprTot = document.getElementById('lbl-cpr-total').innerText; 
+    if(cprTot !== "0") dynText += `(胸骨圧迫トータル: ${cprTot}分)<br>`;
     
     let biko = document.getElementById("v-biko").value || "";
     if(document.getElementById("chk-er").checked) biko = `【緊急外来搬送先: ${document.getElementById("v-er-hosp").value}】\n` + biko;
-    if(document.getElementById("chk-med").checked && document.getElementById("v-med-detail").value.trim()) { biko = `💊【使用薬剤メモ】\n${document.getElementById("v-med-detail").value.trim()}\n------------------\n` + biko; }
-    if(document.getElementById("chk-stock").checked && document.getElementById("v-stock-detail").value.trim()) { biko = `⚠️【使用物品・補充予定メモ】\n${document.getElementById("v-stock-detail").value.trim()}\n------------------\n` + biko; }
+    
+    if(document.getElementById("chk-med").checked && document.getElementById("v-med-detail").value.trim()) {
+      biko = `💊【使用薬剤メモ】\n${document.getElementById("v-med-detail").value.trim()}\n------------------\n` + biko;
+    }
+    if(document.getElementById("chk-stock").checked && document.getElementById("v-stock-detail").value.trim()) {
+      biko = `⚠️【使用物品・補充予定メモ】\n${document.getElementById("v-stock-detail").value.trim()}\n------------------\n` + biko;
+    }
 
     payload["備考"] = biko.trim();
     
-    let selMails = []; document.querySelectorAll('.mail-opt-chk:checked').forEach(cb => selMails.push(cb.value));
-    const manualMail = document.getElementById("custom-email").value.trim(); if (manualMail) selMails.push(manualMail);
+    let selMails = [];
+    document.querySelectorAll('.mail-opt-chk:checked').forEach(cb => selMails.push(cb.value));
+    const manualMail = document.getElementById("custom-email").value.trim();
+    if (manualMail) selMails.push(manualMail);
     payload["追加送信先"] = selMails.join(",");
 
     payload["_dynTextForPreview"] = dynText;
     
-    // システム一意ID（UUID）の保存
-    let sysData = { sysId: isEditMode ? editTargetSysId : "" };
+    let sysData = { 
+      sysId: isEditMode ? editTargetSysId : "",
+      reqType: state.reqType,
+      flags: {
+        pediatric: document.getElementById("chk-pediatric").checked,
+        maternal: document.getElementById("chk-maternal").checked,
+        mass: document.getElementById("chk-mass").checked,
+        worker: document.getElementById("chk-worker").checked
+      },
+      disease: {
+        main: diseaseMainVal,
+        cause: diseaseCauseVal,
+        sub: diseaseSubVal
+      },
+      summaryReq: document.getElementById("v-summary-req").value.trim(),
+      tags: {
+        keyword: currentKeywords,
+        diagnosis: currentDiagnosis
+      },
+      traumas: Array.from(document.querySelectorAll('.chk-trauma:checked')).map(cb=>cb.value)
+    };
     payload["システムデータ"] = JSON.stringify(sysData);
     
     return payload;
@@ -1495,24 +2152,43 @@
 
   function buildPreview() {
     try {
-      document.getElementById("preview-error").style.display = "none"; const d = getCollectData();
+      document.getElementById("preview-error").style.display = "none"; 
+      const d = getCollectData();
+      
+      let sys = {};
+      if(d["システムデータ"]) {
+        try { sys = JSON.parse(d["システムデータ"]); } catch(e){}
+      }
       
       let flags = [];
-      if(d["小児フラグ"]) flags.push("小児"); if(d["母性フラグ"]) flags.push("母性"); if(d["多数傷病フラグ"]) flags.push("多数傷病"); if(d["労災フラグ"]) flags.push("労災");
+      if(sys.flags && sys.flags.pediatric) flags.push("小児");
+      if(sys.flags && sys.flags.maternal) flags.push("母性");
+      if(sys.flags && sys.flags.mass) flags.push("多数傷病");
+      if(sys.flags && sys.flags.worker) flags.push("労災");
 
-      let html = `<b>要請No:</b> No.${d["要請番号"]||"未入力"}<br><b>日付:</b> ${d["日付"]}<br><b>出場先:</b> ${d["出場先"]||"未入力"}<br><b>Dr/Ns:</b> ${d["フライトドクター"]||"-"} / ${d["フライトナース"]||"-"}<br><b>区分:</b> ${d["要請区分"]||"未選択"} <b>スキーム:</b> ${d["スキーム選択"]||"未選択"}<br><b>特殊ケース:</b> ${flags.length > 0 ? flags.join(", ") : "なし"}<br><br>`;
+      let html = `<b>要請No:</b> No.${d["要請番号"]||"未入力"}<br><b>日付:</b> ${d["日付"]}<br><b>出場先:</b> ${d["出場先"]||"未入力"}<br><b>Dr/Ns:</b> ${d["フライトドクター"]||"-"} / ${d["フライトナース"]||"-"}<br><b>区分:</b> ${sys.reqType||"未選択"} <b>スキーム:</b> ${d["スキーム選択"]||"未選択"}<br><b>特殊ケース:</b> ${flags.length > 0 ? flags.join(", ") : "なし"}<br><br>`;
+      
       html += `<b>✈️ 航空:</b> 要請[${d["要請時刻・施設間搬送依頼時刻"]||"-"}] 離陸[${d["初期離陸時間"]||"-"}] 着陸[${d["最終着陸時間"]||"-"}]<br>`;
       const isNoHosp = (d["スキーム選択"] === 'Iターン救急隊' || (d["スキーム選択"] && d["スキーム選択"].includes('キャンセル')));
       html += `<b>🏥 医療:</b> 接触[${d["接触"]||"-"}] 病着[${isNoHosp ? '対象外' : (d["病着"]||"-")}] 終了[${d["終了"]||"-"}]<br><br>`;
       
       let costItems = [];
-      if(d["往診料"]) costItems.push(`往診料(${d["往診料"]})`); if(d["搬送料"]) costItems.push(`搬送料(${d["搬送料"]})`); if(d["長時間加算"]) costItems.push(`長時間加算`);
-      if(d["モニター算定時間"]) costItems.push(`モニター(${d["モニター算定時間"]})`); if(d["経皮的酸素飽和度"]) costItems.push(`SpO2`); if(d["EtCO2算定"]) costItems.push(`EtCO2`);
-      if(d["管理料_人工呼吸器"]) costItems.push(`人工呼吸器`); if(d["管理料_除細動装置"]) costItems.push(`除細動装置`); if(d["管理料_閉鎖式保育器"]) costItems.push(`閉鎖式保育器`);
-      if(d["管理料_補助循環装置"]) costItems.push(`PCPS等(補助循環)`); if(d["管理料_人工心肺装置"]) costItems.push(`人工心肺`);
+      if(d["往診料"]) costItems.push(`往診料(${d["往診料"]})`);
+      if(d["搬送料"]) costItems.push(`搬送料(${d["搬送料"]})`);
+      if(d["長時間加算"]) costItems.push(`長時間加算`);
+      if(d["モニター算定時間"]) costItems.push(`モニター(${d["モニター算定時間"]})`);
+      if(d["経皮的酸素飽和度"]) costItems.push(`SpO2`);
+      if(d["EtCO2算定"]) costItems.push(`EtCO2`);
+      if(d["管理料_人工呼吸器"]) costItems.push(`人工呼吸器`);
+      if(d["管理料_除細動装置"]) costItems.push(`除細動装置`);
+      if(d["管理料_閉鎖式保育器"]) costItems.push(`閉鎖式保育器`);
+      if(d["管理料_補助循環装置"]) costItems.push(`PCPS等(補助循環)`);
+      if(d["管理料_人工心肺装置"]) costItems.push(`人工心肺`);
 
       let procs = [];
-      ["末梢静脈路_20G", "末梢静脈路_22G", "末梢静脈路_24G", "末梢静脈路_18G", "骨髄路_EZ-IO", "骨髄路_BIG"].forEach(k => { if(d[k]) procs.push(`${k.split('_')[1]}(${d[k].replace('◯ ','')})`); });
+      ["末梢静脈路_20G", "末梢静脈路_22G", "末梢静脈路_24G", "末梢静脈路_18G", "骨髄路_EZ-IO", "骨髄路_BIG"].forEach(k => { 
+        if(d[k]) procs.push(`${k.split('_')[1]}(${d[k].replace('◯ ','')})`); 
+      });
       if(d["ベニューラ"]) procs.push(`ベニューラ${d["ベニューラタイプ"] ? "("+d["ベニューラタイプ"]+")" : ""}(${d["ベニューラ"].replace('◯ ','')})`);
       if(d["血液ガス分析"]) procs.push(`血ガス(${d["血液ガスタイプ"]})`);
       if(d["気管挿管サイズ"]) procs.push(`気管挿管(ID${d["気管挿管サイズ"]}mm, ${d["気管挿管位置"]}cm${d["カフ上吸引"]?"カフ吸引あり":""})`);
@@ -1525,7 +2201,9 @@
       if(d["胃管挿入サイズ"]) procs.push(`胃管挿入(${d["胃管挿入サイズ"]}Fr)`);
       
       let echos = [];
-      ["FAST", "心エコー", "大血管エコー", "消化器系エコー", "婦人女性生殖器系エコー", "泌尿器系エコー", "下肢静脈エコー"].forEach(k => { if(d[k]) echos.push(k.replace('エコー','')); });
+      ["FAST", "心エコー", "大血管エコー", "消化器系エコー", "婦人女性生殖器系エコー", "泌尿器系エコー", "下肢静脈エコー"].forEach(k => { 
+        if(d[k]) echos.push(k.replace('エコー','')); 
+      });
       if(d["頸動脈エコー"]) echos.push(`頸動脈(${d["頸動脈エコー"]})`);
       if(d["その他エコー"]) echos.push(`その他(${d["その他エコー"]})`);
 
@@ -1550,18 +2228,112 @@
         html += `${d["_dynTextForPreview"]}</div>`;
       }
 
-      let diseaseComboStr = `[${d["疾患大分類"] || '未選択'}]`;
-      if(d["疾患原因"]) diseaseComboStr += ` 原因:${d["疾患原因"]}`;
-      if(d["詳細分類"]) diseaseComboStr += ` -> ${d["詳細分類"]}`;
+      let diseaseComboStr = `[${sys.disease ? sys.disease.main : '未選択'}]`;
+      if(sys.disease && sys.disease.cause) diseaseComboStr += ` 原因:${sys.disease.cause}`;
+      if(sys.disease && sys.disease.sub) diseaseComboStr += ` -> ${sys.disease.sub}`;
       
       html += `<div style="background:#f3e5f5; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #c8e6c9;">`;
       html += `<div style="font-weight:bold; color:#1b5e20; margin-bottom:4px;">🩺 疾患・診断・概要</div>`;
-      html += `<b>疾患分類:</b> ${diseaseComboStr}<br><b>現場診断:</b> ${d["現場診断"]||"なし"}<br><b>キーワード:</b> ${d["キーワード"]||"なし"}<br><b>概要:</b> ${d["事案概要"]||"なし"}</div>`;
+      html += `<b>疾患分類:</b> ${diseaseComboStr}<br><b>現場診断:</b> ${d["現場診断"]||"なし"}<br><b>キーワード:</b> ${sys.tags && sys.tags.keyword ? sys.tags.keyword.join(", ") : "なし"}<br><b>概要:</b> ${sys.summaryReq||"なし"}</div>`;
       
       if(d["備考"]) html += `<b>📝 備考 (物品メモ等含む):</b><br>${d["備考"].replace(/\n/g, '<br>')}<br>`;
 
       document.getElementById("preview-box").innerHTML = html;
-    } catch(e) { document.getElementById("preview-error").style.display = "block"; document.getElementById("preview-error").innerText = "プレビュー生成失敗。必須項目を確認してください。"; sendErrorLog("buildPreview error: " + e.message); }
+    } catch(e) { 
+      document.getElementById("preview-error").style.display = "block"; 
+      document.getElementById("preview-error").innerText = "プレビュー生成失敗。必須項目を確認してください。"; 
+      sendErrorLog("buildPreview error: " + e.message); 
+    }
+  }
+
+  // 🌟 メール再送機能
+  async function sendEmail() {
+    if(!confirm(`事案内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
+    showLoader("メール送信中...", "関係各所に送信しています");
+    try {
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "send_email", password: PIN_CODE, id: editTargetSysId }), 
+        redirect: "follow" 
+      });
+      const json = await res.json();
+      if (json.status === "success") { 
+        alert("メールを送信しました！"); 
+      } else { 
+        throw new Error(json.message); 
+      }
+    } catch(e) { 
+      sendErrorLog(e.toString()); 
+      alert("通信エラーが発生しました。"); 
+    } finally { 
+      hideLoader(); 
+    }
+  }
+
+  async function deleteRecord() {
+    const p = prompt("この事案データを完全に削除しますか？\n実行するにはアクセスコードを入力してください。");
+    if (p !== PIN_CODE) { 
+      if (p !== null) alert("パスワードが一致しません。削除は中止されました。"); 
+      return; 
+    }
+    showLoader("削除処理中...", "データベースからレコードを削除しています");
+    try {
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "delete_record", password: PIN_CODE, id: editTargetSysId }), 
+        redirect: "follow" 
+      });
+      const json = await res.json();
+      if (json.status === "success") { 
+        alert("事案を削除しました。"); 
+        goBackOrHome();
+      } else { 
+        throw new Error(json.message); 
+      }
+    } catch(e) { 
+      sendErrorLog(e.toString()); 
+      alert("通信エラーが発生しました。"); 
+    } finally { 
+      hideLoader(); 
+    }
+  }
+
+  async function markComplete() {
+    const type = document.querySelector('input[name="comp-who"]:checked').value; 
+    let who = type;
+    if (type === "代行") { 
+      const name = document.getElementById("comp-name").value.trim(); 
+      if(!name) return alert("代行入力者の名前を入力してください。"); 
+      who = "代行: " + name; 
+    } else { 
+      who = document.getElementById("edit-person").value || document.getElementById("v-ns").value || "本人"; 
+    }
+    
+    if (!state.scheme) return alert("最終スキームを選択してください。");
+    if (diseaseMainVal === "4心肺停止" && !diseaseCauseVal) return alert("心肺停止(CPA)の場合は、必ず「原因疾患」を選択してください。");
+    
+    if (!confirm(`カルテを完了にしますか？\n（記録: ${who}）`)) return;
+    showLoader("完了処理中...", "電子カルテの完了ステータスを更新しています");
+    
+    try {
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: editTargetSysId, who: who }), 
+        redirect: "follow" 
+      });
+      const json = await res.json();
+      if (json.status === "success") { 
+        alert("完了しました！"); 
+        goBackOrHome();
+      } else { 
+        throw new Error(json.message); 
+      }
+    } catch(e) { 
+      sendErrorLog(e.toString()); 
+      alert("通信エラーが発生しました。"); 
+    } finally { 
+      hideLoader(); 
+    }
   }
 
   async function submitData(mode = 'submit') {
@@ -1593,7 +2365,11 @@
         reqBody.editor = editor;
       }
 
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(reqBody), redirect: "follow" });
+      const res = await fetch(GAS_API_URL, { 
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        body: JSON.stringify(reqBody), 
+        redirect: "follow" 
+      });
       const json = await res.json();
       if (json.status === "success") { 
         alert(mode === 'update' ? "上書き保存しました。" : "事案の新規登録が正常に完了しました。"); 
@@ -1602,8 +2378,17 @@
         } else {
           location.reload(); 
         }
-      } else { throw new Error(json.message || "サーバー側で登録が拒否されました"); }
-    } catch(e) { sendErrorLog(`Submit Data Error: ${e.message}`); alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); } finally { btn.disabled = false; btn.innerText = "🚀 この内容で送信する"; hideLoader(); }
+      } else { 
+        throw new Error(json.message || "サーバー側で登録が拒否されました"); 
+      }
+    } catch(e) { 
+      sendErrorLog(`Submit Data Error: ${e.message}`); 
+      alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); 
+    } finally { 
+      btn.disabled = false; 
+      btn.innerText = "🚀 この内容で送信する"; 
+      hideLoader(); 
+    }
   }
 </script>
 </body>
