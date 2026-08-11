@@ -482,7 +482,7 @@ function doPost(e) {
        });
      }
     
-     return ContentService.createTextOutput(JSON.stringify({ status: "success", masters: mastersData, qa: qaData, manuals: manuals, alerts: alerts, news: newsData })).setMimeType(ContentService.MimeType.JSON);
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", masters: mastersData, qa: qaData, manuals: manuals, alerts: alerts, news: newsData, gasVersion: GAS_VERSION })).setMimeType(ContentService.MimeType.JSON);
    }
 
 

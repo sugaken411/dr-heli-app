@@ -35,6 +35,9 @@
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .progress-bar-track { width: 200px; height: 6px; background: rgba(0,122,255,0.15); border-radius: 3px; overflow: hidden; margin-bottom: 16px; position: relative; }
+    .progress-bar-fill { position: absolute; top: 0; left: -40%; height: 100%; width: 40%; background: var(--blue); border-radius: 3px; animation: indeterminate 1.1s ease-in-out infinite; }
+    @keyframes indeterminate { 0% { left: -40%; } 100% { left: 100%; } }
     .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
     .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
     
@@ -71,7 +74,7 @@
 <body>
 
 <div id="global-loader" style="display:none;">
-  <div class="spinner"></div>
+  <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
   <div class="loader-text" id="loader-main-text">最新データを同期中...</div>
   <div class="loader-subtext" id="loader-sub-text">データベースに接続しています</div>
 </div>
@@ -240,10 +243,11 @@
     } catch(e) {} 
   }
 
-  function updateSyncTimestamp(ts) {
+  function updateSyncTimestamp(ts, gasVersion) {
     const d = new Date(ts);
     const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-    document.getElementById("master-sync-info").innerText = `最終同期: ${timeStr}`;
+    const verStr = gasVersion ? ` ｜ GAS ${gasVersion}` : "";
+    document.getElementById("master-sync-info").innerText = `最終同期: ${timeStr}${verStr}`;
   }
 
   window.onload = () => {
@@ -254,7 +258,7 @@
       try {
         const cacheObj = JSON.parse(cachedStr);
         renderPortal(cacheObj.data);
-        updateSyncTimestamp(cacheObj.timestampMs);
+        updateSyncTimestamp(cacheObj.timestampMs, cacheObj.data.gasVersion);
         hasCache = true;
       } catch(e) { localStorage.removeItem(CACHE_KEY); }
     }
@@ -277,8 +281,8 @@
       if (json.status === "success") { 
         const nowMs = Date.now();
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: nowMs, data: json })); 
-        renderPortal(json); 
-        updateSyncTimestamp(nowMs);
+        renderPortal(json);
+        updateSyncTimestamp(nowMs, json.gasVersion);
       } else { throw new Error(json.message); }
     } catch (e) {
       if(!localStorage.getItem(CACHE_KEY)) { 

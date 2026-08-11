@@ -77,6 +77,9 @@
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .progress-bar-track { width: 200px; height: 6px; background: rgba(0,122,255,0.15); border-radius: 3px; overflow: hidden; margin-bottom: 16px; position: relative; }
+    .progress-bar-fill { position: absolute; top: 0; left: -40%; height: 100%; width: 40%; background: var(--blue); border-radius: 3px; animation: indeterminate 1.1s ease-in-out infinite; }
+    @keyframes indeterminate { 0% { left: -40%; } 100% { left: 100%; } }
     
     @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
   </style>
@@ -88,7 +91,7 @@
 <datalist id="diagnosis-list"></datalist>
 
 <div id="global-loader">
-  <div class="spinner"></div>
+  <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
   <div style="font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px;" id="loader-main-text">通信中...</div>
   <div style="font-size: 13px; font-weight: 600; color: var(--sub); text-align: center;" id="loader-sub-text">データベースに接続しています</div>
 </div>
@@ -414,16 +417,17 @@
   async function fetchLatestData(isBackground) {
     if(!isBackground) showLoader("データベース同期中...", "マスタデータと事案DBを同期しています");
     try {
-      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" });
+      // 🌟 3つの通信を並列実行（直列だと3倍の待ち時間がかかっていたため）
+      const [resInit, resJian, resDeb] = await Promise.all([
+        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" }),
+        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" }),
+        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" })
+      ]);
       const jsonInit = await resInit.json();
-      
-      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
-      
-      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
       const jianData = (await resJian.json()).data;
-
-      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
       const debData = (await resDeb.json()).data;
+
+      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
 
       const cacheObj = { timestamp: Utilities_formatDate(new Date()), allCases: jianData, existing: debData, masters: jsonInit.masters };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
@@ -746,16 +750,18 @@
       toggleReqType();
     }
     
-    if(sysData.tags.keyword && sysData.tags.keyword.length > 0) {
-       renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
-    }
+    renderChips('chip-container-keyword', TAG_MASTERS.keyword.items, 'keyword');
 
     // 🌟 既存デブリーフィングデータの引き当て復元
     const past = existingDebriefs.find(d => String(d["要請番号"]) === String(rowWrapper.id) || String(d["要請番号"]) === String(currentCase["要請番号"]));
     if(past && past["システムデータ"]) {
-      restoreSystemData(JSON.parse(past["システムデータ"]));
-      document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存"; 
-      document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
+      try {
+        restoreSystemData(JSON.parse(past["システムデータ"]));
+        document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存";
+        document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
+      } catch(e) {
+        sendErrorLog(`restoreSystemData parse error: ${e.stack || e.toString()}`);
+      }
     }
     
     document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
