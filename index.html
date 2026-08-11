@@ -2102,6 +2102,8 @@
       payload[k] = document.querySelector(`input.chk-other[value="${k}"], input.chk-trauma[value="${k}"]`)?.checked ? "◯" : "";
     });
 
+    payload["その他外科処置"] = document.getElementById("chk-other-surg")?.checked ? "◯ " + document.getElementById("v-other-surg").value.trim() : "";
+
     let dynText = "";
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       let idx = 1;
@@ -2381,15 +2383,15 @@
       if(!confirm(`データを上書きしてよろしいですか？`)) return;
     }
 
-    const payload = getCollectData();
-    delete payload["_dynTextForPreview"]; 
-    
     const btn = document.getElementById(mode === 'submit' ? "btn-submit-main" : "btn-submit-main");
     btn.disabled = true;
     btn.innerText = "送信中... 🚁";
-    
+
     showLoader("症例データ送信中...", "事案データベースへレコードを登録しています");
     try {
+      const payload = getCollectData();
+      delete payload["_dynTextForPreview"];
+
       let actionName = mode === 'update' ? 'update_record' : 'submit';
       let reqBody = { action: actionName, password: PIN_CODE, data: payload };
       if (mode === 'update') {

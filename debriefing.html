@@ -733,9 +733,9 @@
     }
 
     let flags = [];
-    if (currentCase["小児フラグ"] === "TRUE" || currentCase["小児フラグ"] === true || currentCase["小児フラグ"] === "✓") flags.push("小児");
-    if (currentCase["母性フラグ"] === "TRUE" || currentCase["母性フラグ"] === true || currentCase["母性フラグ"] === "✓") flags.push("母性");
-    if (currentCase["多数傷病フラグ"] === "TRUE" || currentCase["多数傷病フラグ"] === true || currentCase["多数傷病フラグ"] === "✓") flags.push("多数傷病");
+    if (currentCase["小児フラグ"] === "TRUE" || currentCase["小児フラグ"] === true || currentCase["小児フラグ"] === "◯" || currentCase["小児フラグ"] === "✓") flags.push("小児");
+    if (currentCase["母性フラグ"] === "TRUE" || currentCase["母性フラグ"] === true || currentCase["母性フラグ"] === "◯" || currentCase["母性フラグ"] === "✓") flags.push("母性");
+    if (currentCase["多数傷病フラグ"] === "TRUE" || currentCase["多数傷病フラグ"] === true || currentCase["多数傷病フラグ"] === "◯" || currentCase["多数傷病フラグ"] === "✓") flags.push("多数傷病");
 
     const originalSpecial = sysData.tags.special || [];
     const uniqueSpecial = [...new Set([...originalSpecial, ...flags])];
@@ -757,6 +757,11 @@
     if(past && past["システムデータ"]) {
       try {
         restoreSystemData(JSON.parse(past["システムデータ"]));
+        // 🌟 事前準備ギャップ等はシステムデータJSONではなく別列に保存されているため、ここで個別に復元する
+        document.getElementById("v-gap").value = past["事前準備ギャップ"] || "";
+        document.getElementById("v-team").value = past["チーム連携評価"] || "";
+        document.getElementById("v-master-gap").value = past["マスタ・システム改善要望"] || "";
+        document.getElementById("v-action").value = past["総括・次回アクション"] || "";
         document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存";
         document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       } catch(e) {
@@ -970,7 +975,14 @@
         </div>
         <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 事案概要</h3><div style="padding:4px; margin-bottom:12px;">${summaryVal.replace(/\n/g,'<br>')}</div>
         <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 症例評価</h3><div style="padding:4px; margin-bottom:12px;">${evalHtml}</div>
-        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 多職種振り返り</h3><div style="padding:4px;">${fbHtml}</div>
+        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 多職種振り返り</h3><div style="padding:4px; margin-bottom:12px;">${fbHtml}</div>
+        <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 総括・振り返り</h3>
+        <div style="padding:4px;">
+          <b>事前準備ギャップ:</b> ${(document.getElementById("v-gap").value.trim() || '-').replace(/\n/g,'<br>')}<br><br>
+          <b>チーム連携評価:</b> ${(document.getElementById("v-team").value.trim() || '-').replace(/\n/g,'<br>')}<br><br>
+          <b>マスタ・システム改善要望:</b> ${(document.getElementById("v-master-gap").value.trim() || '-').replace(/\n/g,'<br>')}<br><br>
+          <b>総括・次回アクション:</b> ${(document.getElementById("v-action").value.trim() || '-').replace(/\n/g,'<br>')}
+        </div>
       </div>`;
   }
 

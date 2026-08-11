@@ -237,14 +237,15 @@
   async function fetchLatestData(isBackground, isManualUpdate) {
     if(!isBackground) showLoader("データベース同期中...", "事案データと振り返りデータを結合しています");
     try {
-      const resInit = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }), redirect: "follow" });
+      // 🌟 3つの通信を並列実行（直列だと3倍の待ち時間がかかり、電波の弱い現場でタイムアウトしやすくなっていたため）
+      const [resInit, resJian, resDeb] = await Promise.all([
+        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }), redirect: "follow" }),
+        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" }),
+        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" })
+      ]);
       const jsonInit = await resInit.json();
-      
-      const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" });
       // 🌟 fetch_allは {id, displayId, ..., rawData} の入れ子構造で返る
       const jianList = (await resJian.json()).data || [];
-
-      const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
       const debData = (await resDeb.json()).data;
 
       let newData = [];
