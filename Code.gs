@@ -1,8 +1,62 @@
-const GAS_VERSION = "v2.9"; // 一項目一セル標準化 ＋ マスタ列完全同期（固定送信先・システム管理者対応）
+const GAS_VERSION = "v3.0"; // メール+パスワード認証(移行期間中はPIN併用) ＋ 一項目一セル標準化
 const PIN_MEMBER = "5740";
 const PIN_ADMIN = "9999";
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 const LIBRARY_DB_ID = "17ejBS_Uq6cWxkagnFQknfycbMGnoaV2q7234U5Pwqnc";
+
+// 🌟 認証まわりのヘルパー群
+// トークン署名用の秘密鍵はコードに書かず、スクリプトプロパティ(非公開領域)に自動生成して保存する
+function getAuthSecret() {
+  const props = PropertiesService.getScriptProperties();
+  let secret = props.getProperty('AUTH_SECRET');
+  if (!secret) {
+    secret = Utilities.getUuid() + Utilities.getUuid();
+    props.setProperty('AUTH_SECRET', secret);
+  }
+  return secret;
+}
+
+function bytesToHex(bytes) {
+  return bytes.map(b => (b < 0 ? b + 256 : b).toString(16).padStart(2, '0')).join('');
+}
+
+function hashPassword(password, salt) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(salt) + String(password));
+  return bytesToHex(bytes);
+}
+
+function base64UrlEncodeStr(str) {
+  return Utilities.base64EncodeWebSafe(str, Utilities.Charset.UTF_8).replace(/=+$/, '');
+}
+
+function base64UrlDecodeStr(str) {
+  return Utilities.newBlob(Utilities.base64DecodeWebSafe(str)).getDataAsString();
+}
+
+function signToken(payloadObj) {
+  const payloadB64 = base64UrlEncodeStr(JSON.stringify(payloadObj));
+  const sigBytes = Utilities.computeHmacSha256Signature(payloadB64, getAuthSecret());
+  const sigB64 = Utilities.base64EncodeWebSafe(sigBytes).replace(/=+$/, '');
+  return payloadB64 + '.' + sigB64;
+}
+
+// 有効なトークンならペイロード(email/name/isAdmin等)を返す。無効・期限切れならnull
+function verifyToken(token) {
+  if (!token || token.indexOf('.') === -1) return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const payloadB64 = parts[0], sigB64 = parts[1];
+  const expectedSigBytes = Utilities.computeHmacSha256Signature(payloadB64, getAuthSecret());
+  const expectedSigB64 = Utilities.base64EncodeWebSafe(expectedSigBytes).replace(/=+$/, '');
+  if (expectedSigB64 !== sigB64) return null;
+  try {
+    const payload = JSON.parse(base64UrlDecodeStr(payloadB64));
+    if (payload.exp && Date.now() > payload.exp) return null;
+    return payload;
+  } catch (e) {
+    return null;
+  }
+}
 
 
 const TYPE_TO_SHEET_MAP = {
@@ -181,17 +235,18 @@ function doPost(e) {
   
    const allowed = [
      "submit", "error_log", "fetch_init", "fetch_daily_report", "save_daily_report",
-     "fetch_all_reports", "fetch_library", "update_library_record", "fetch_all",
+     "fetch_all_reports", "fetch_library", "fetch_all",
      "fetch_recent_cases", "fetch_debriefings", "submit_debriefing", "update_review_status", "update_status",
      "update_record", "delete_record", "send_email", "add_master", "submit_question",
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
-     "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full"
+     "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full",
+     "update_library_record", "auth_register", "auth_login"
    ];
-  
+
    if (!allowed.includes(action)) {
      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "不明なアクション" })).setMimeType(ContentService.MimeType.JSON);
    }
-  
+
    if (action === "error_log") {
      const cache = CacheService.getScriptCache();
      const dedupKey = "errlog_" + Utilities.base64Encode(Utilities.newBlob(String(requestData.errorMsg||"") + String(requestData.source||"")).getBytes()).substring(0, 40);
@@ -203,19 +258,96 @@ function doPost(e) {
 
      const emails = getAdminMailList();
      if (emails) {
+       const nowStr = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss");
+       const whoStr = requestData.authName || "不明(PIN利用/未ログイン)";
        MailApp.sendEmail({
          to: emails,
          subject: `【AW109 EMS】システムエラー自動報告`,
-         body: `現場の端末でシステムエラーが発生しました。\n\n・画面: ${requestData.source || "不明"}\n・内容: ${requestData.errorMsg || "不明なエラー"}\n・ユーザー環境: ${requestData.userAgent || "不明"}\n\nシステムの確認をお願いします。`
+         body: `現場の端末でシステムエラーが発生しました。\n\n・発生日時: ${nowStr}\n・画面: ${requestData.source || "不明"}\n・操作者: ${whoStr}\n・内容: ${requestData.errorMsg || "不明なエラー"}\n・ユーザー環境: ${requestData.userAgent || "不明"}\n\nシステムの確認をお願いします。`
        });
      }
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
-  
-   if (pass !== PIN_MEMBER && pass !== PIN_ADMIN) {
-     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "認証エラー" })).setMimeType(ContentService.MimeType.JSON);
+
+   if (action === "auth_register") {
+     const email = String(requestData.email || "").trim().toLowerCase();
+     const newPassword = String(requestData.newPassword || "");
+     if (!email || newPassword.length < 4) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "メールアドレスと4文字以上のパスワードを入力してください" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     const msSheet = getSheetFlexible(SpreadsheetApp.getActiveSpreadsheet(), ["マスタ_基本設定", "マスタデータ"]);
+     if (!msSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタシートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+     const data = msSheet.getDataRange().getDisplayValues();
+     const headers = data[0].map(h => String(h).trim());
+     const cMail = headers.indexOf("メールアドレス");
+     const cHash = headers.indexOf("パスワードハッシュ");
+     const cSalt = headers.indexOf("パスワードソルト");
+     if (cMail === -1 || cHash === -1 || cSalt === -1) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタ_基本設定に必要な列（メールアドレス/パスワードハッシュ/パスワードソルト）がありません" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     let rowIndex = -1;
+     for (let i = 1; i < data.length; i++) {
+       if (String(data[i][cMail]).trim().toLowerCase() === email) { rowIndex = i + 1; break; }
+     }
+     if (rowIndex === -1) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "登録されていないメールアドレスです。管理者にマスタ登録を依頼してください" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     if (data[rowIndex - 1][cHash]) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "このメールアドレスは既に登録済みです。ログインしてください" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     const salt = Utilities.getUuid();
+     const hash = hashPassword(newPassword, salt);
+     msSheet.getRange(rowIndex, cSalt + 1).setValue(salt);
+     msSheet.getRange(rowIndex, cHash + 1).setValue(hash);
+     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
-  
+
+   if (action === "auth_login") {
+     const email = String(requestData.email || "").trim().toLowerCase();
+     const password = String(requestData.loginPassword || "");
+     const msSheet = getSheetFlexible(SpreadsheetApp.getActiveSpreadsheet(), ["マスタ_基本設定", "マスタデータ"]);
+     if (!msSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタシートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+     const data = msSheet.getDataRange().getDisplayValues();
+     const headers = data[0].map(h => String(h).trim());
+     const cMail = headers.indexOf("メールアドレス");
+     const cHash = headers.indexOf("パスワードハッシュ");
+     const cSalt = headers.indexOf("パスワードソルト");
+     const cName = headers.indexOf("宛先名");
+     const cAdmin = headers.indexOf("システム管理者");
+     if (cMail === -1 || cHash === -1 || cSalt === -1) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタ_基本設定に必要な列がありません" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     let found = null;
+     for (let i = 1; i < data.length; i++) {
+       if (String(data[i][cMail]).trim().toLowerCase() === email) { found = data[i]; break; }
+     }
+     if (!found || !found[cHash]) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "メールアドレスまたはパスワードが違います" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     if (hashPassword(password, found[cSalt]) !== found[cHash]) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "メールアドレスまたはパスワードが違います" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     const isAdmin = cAdmin !== -1 && String(found[cAdmin]).split(",").map(s => s.trim().toLowerCase()).includes(email);
+     const name = cName !== -1 && found[cName] ? found[cName] : email;
+     const token = signToken({ email: email, name: name, isAdmin: isAdmin, iat: Date.now(), exp: Date.now() + 90 * 24 * 60 * 60 * 1000 });
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", token: token, name: name, isAdmin: isAdmin })).setMimeType(ContentService.MimeType.JSON);
+   }
+
+   // 🌟 認証: 従来のPIN、または新しいログイントークンのどちらかを受け付ける（移行期間中の併用）
+   let isAdminUser = false;
+   let authName = "";
+   if (pass === PIN_MEMBER || pass === PIN_ADMIN) {
+     isAdminUser = (pass === PIN_ADMIN);
+   } else {
+     const tokenPayload = verifyToken(pass);
+     if (!tokenPayload) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "認証エラー" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     isAdminUser = !!tokenPayload.isAdmin;
+     authName = tokenPayload.name || tokenPayload.email || "";
+   }
+   if (authName) requestData.authName = authName;
+
    const ss = SpreadsheetApp.getActiveSpreadsheet();
 
 
@@ -496,7 +628,7 @@ function doPost(e) {
 
 
    if (action === "manage_news") {
-     if (pass !== PIN_ADMIN) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
+     if (!isAdminUser) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
      const sheet = getSheetFlexible(ss, ["DB_お知らせ", "お知らせデータベース"]);
      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "シートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
     
@@ -513,7 +645,7 @@ function doPost(e) {
 
 
    if (action === "manage_manual") {
-     if (pass !== PIN_ADMIN) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
+     if (!isAdminUser) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
      const sheet = getSheetFlexible(ss, ["マスタ_取扱説明書", "取扱説明書_現場", "取扱説明書_検索"]);
      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "シートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
     
@@ -534,7 +666,7 @@ function doPost(e) {
 
 
    if (action === "manage_qa_full") {
-     if (pass !== PIN_ADMIN) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
+     if (!isAdminUser) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
      const sheet = getSheetFlexible(ss, ["DB_QA", "Q&Aデータベース"]);
      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "シートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
     
@@ -1113,7 +1245,7 @@ function doPost(e) {
 
 
    if (action === "update_library_record") {
-     if (pass !== PIN_ADMIN) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
+     if (!isAdminUser) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
      const libSs = SpreadsheetApp.openById(LIBRARY_DB_ID);
      const libSheet = getSheetFlexible(libSs, ["資料データベース"]);
      if (!libSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "資料データベースシートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);

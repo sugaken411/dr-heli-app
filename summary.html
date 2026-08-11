@@ -300,7 +300,7 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
+  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "5740"; // 🌟 ログイン済みならトークンを使う（移行期間中はPIN併用）
   
   // 🌟 2. Load failed の厳格なグローバル例外除外
   window.onerror = function(message, source, lineno, colno, error) {
@@ -356,7 +356,7 @@
     try {
       fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "error_log", source: "統計ダッシュボード v14.0", errorMsg: errMsg, userAgent: navigator.userAgent }),
+        body: JSON.stringify({ action: "error_log", source: "統計ダッシュボード v14.0", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
         redirect: "follow"
       });
     } catch(e) {}

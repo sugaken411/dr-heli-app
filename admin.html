@@ -223,7 +223,8 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_ADMIN = "9999"; 
+  // 🌟 管理者権限でログイン済みならトークンを使う（移行期間中はPIN併用）
+  const PIN_ADMIN = (localStorage.getItem('aw109_auth_token') && localStorage.getItem('aw109_auth_isAdmin') === 'true') ? localStorage.getItem('aw109_auth_token') : "9999";
   let currentData = { qa: [], news: [], manuals: [] };
   
   window.onerror = function(msg, src, line, col, err) { sendErrorLog(`GlobalError: ${msg}\nLine: ${line}:${col}\nStack: ${err ? err.stack : 'N/A'}`); return false; };
@@ -237,7 +238,7 @@
     document.getElementById("global-loader").style.display = "flex";
   }
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v14.0)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} }
+  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v14.0)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {} }
 
   function toHalfWidth(ele) { ele.value = ele.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)); }
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
@@ -249,8 +250,16 @@
     ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); 
   }
   
+  // 🌟 管理者としてログイン済みの場合、PIN入力を省略して自動解錠する
+  if (localStorage.getItem('aw109_auth_token') && localStorage.getItem('aw109_auth_isAdmin') === 'true') {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("login-overlay").style.display = "none";
+      startTimer(); fetchLatestData(false, false);
+    });
+  }
+
   function checkLogin() {
-    if(document.getElementById("login-pin").value === PIN_ADMIN) { 
+    if(document.getElementById("login-pin").value === PIN_ADMIN || document.getElementById("login-pin").value === "9999") {
       document.getElementById("login-overlay").style.display = "none"; 
       startTimer(); fetchLatestData(false, false); 
     } else { 

@@ -230,7 +230,7 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
+  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "5740"; // 🌟 ログイン済みならトークンを使う（移行期間中はPIN併用）
   const ADMIN_CODE = "9999";
   const CACHE_KEY = "aw109_library_cache_v13";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
@@ -271,7 +271,7 @@
   
   function sendErrorLog(errMsg) { 
     if(String(errMsg).includes("Load failed")) return;
-    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent }), redirect: "follow" }); } catch(e) {} 
+    try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "資料集(library.html)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {}
   }
 
   function updateSyncTimestamp(ts) {

@@ -177,13 +177,13 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
+  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "5740"; // 🌟 ログイン済みならトークンを使う（移行期間中はPIN併用）
 
   function sendErrorLog(detail) {
     console.error("[System Error Log]", detail);
     fetch(GAS_API_URL, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "error_log", password: PIN_CODE, errorMsg: detail, source: "AW109_Search(v14.12)" }),
+      body: JSON.stringify({ action: "error_log", password: PIN_CODE, errorMsg: detail, source: "AW109_Search(v14.12)", authName: localStorage.getItem('aw109_auth_name') || '' }),
       redirect: "follow"
     }).catch(err => console.error("Error log dispatch failed:", err));
   }

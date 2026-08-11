@@ -80,7 +80,7 @@
 </div>
 
 <header>
-  <div class="hdr-group"></div>
+  <div class="hdr-group"><button type="button" class="hdr-btn" id="btn-account" onclick="openModal('modal-account')">🔐 ログイン</button></div>
   <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.1</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 取説</button>
@@ -188,6 +188,46 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-account" onclick="if(event.target===this)closeModal('modal-account')">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">🔐 アカウント</h3>
+    <div style="font-size:12px; color:var(--sub); margin-bottom:12px;">従来のPINでも引き続き利用できます。ログインは任意です（設定するとエラー報告に氏名が記録され、PINより安全です）。</div>
+
+    <div id="account-logged-out">
+      <div id="account-tabs" style="display:flex; gap:8px; margin-bottom:12px;">
+        <button type="button" class="hdr-btn" id="tab-login" onclick="switchAccountTab('login')" style="flex:1;">ログイン</button>
+        <button type="button" class="hdr-btn" id="tab-register" onclick="switchAccountTab('register')" style="flex:1;">初めての方（パスワード設定）</button>
+      </div>
+
+      <div id="account-login-box">
+        <input type="email" id="login-email" placeholder="メールアドレス" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; margin-bottom:8px; background:var(--bg);">
+        <input type="password" id="login-password" placeholder="パスワード" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; margin-bottom:8px; background:var(--bg);">
+        <button type="button" onclick="doLogin()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">ログイン</button>
+      </div>
+
+      <div id="account-register-box" style="display:none;">
+        <div style="font-size:12px; color:var(--sub); margin-bottom:8px;">マスタ_基本設定に登録済みのメールアドレスのみ設定できます。既に設定済みの場合は「ログイン」を使ってください。</div>
+        <input type="email" id="register-email" placeholder="メールアドレス" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; margin-bottom:8px; background:var(--bg);">
+        <input type="password" id="register-password" placeholder="新しいパスワード (4文字以上)" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; margin-bottom:8px; background:var(--bg);">
+        <button type="button" onclick="doRegister()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">パスワードを設定する</button>
+      </div>
+
+      <div id="account-msg" style="margin-top:12px; font-size:13px; font-weight:700; text-align:center;"></div>
+    </div>
+
+    <div id="account-logged-in" style="display:none;">
+      <div style="padding:16px; background:var(--bg); border-radius:8px; text-align:center; margin-bottom:12px;">
+        <div style="font-size:13px; color:var(--sub);">ログイン中</div>
+        <div style="font-size:16px; font-weight:800;" id="account-name-display"></div>
+        <div id="account-admin-badge" style="display:none; font-size:11px; color:#fff; background:var(--blue); padding:2px 8px; border-radius:4px; display:inline-block; margin-top:4px;">管理者</div>
+      </div>
+      <button type="button" onclick="doLogout()" style="width:100%; padding:12px; background:#eee; color:var(--ink); border:none; border-radius:8px; font-weight:700;">ログアウト（PINに戻す）</button>
+    </div>
+
+    <button type="button" class="modal-close" onclick="closeModal('modal-account')">閉じる</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-qa" onclick="if(event.target===this)closeModal('modal-qa')">
   <div class="modal-box">
     <h3 style="margin-top:0;">❓ Q&A ＆ 要望BOX</h3>
@@ -201,8 +241,91 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = "5740";
+  // 🌟 ログイン済みならトークンを、そうでなければ従来のPINを使う（移行期間中の併用）
+  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "5740";
   const CACHE_KEY = "aw109_portal_cache_v13";
+
+  function switchAccountTab(tab) {
+    document.getElementById('account-login-box').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('account-register-box').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('tab-login').style.backgroundColor = tab === 'login' ? 'var(--blue)' : '';
+    document.getElementById('tab-login').style.color = tab === 'login' ? '#fff' : '';
+    document.getElementById('tab-register').style.backgroundColor = tab === 'register' ? 'var(--blue)' : '';
+    document.getElementById('tab-register').style.color = tab === 'register' ? '#fff' : '';
+    document.getElementById('account-msg').innerText = '';
+  }
+
+  function updateAccountUI() {
+    const token = localStorage.getItem('aw109_auth_token');
+    const name = localStorage.getItem('aw109_auth_name');
+    const isAdmin = localStorage.getItem('aw109_auth_isAdmin') === 'true';
+    const btn = document.getElementById('btn-account');
+    if (token && name) {
+      btn.innerText = `🔐 ${name}`;
+      document.getElementById('account-logged-out').style.display = 'none';
+      document.getElementById('account-logged-in').style.display = 'block';
+      document.getElementById('account-name-display').innerText = name;
+      document.getElementById('account-admin-badge').style.display = isAdmin ? 'inline-block' : 'none';
+    } else {
+      btn.innerText = '🔐 ログイン';
+      document.getElementById('account-logged-out').style.display = 'block';
+      document.getElementById('account-logged-in').style.display = 'none';
+    }
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const msgEl = document.getElementById('account-msg');
+    if (!email || !password) { msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = 'メールアドレスとパスワードを入力してください。'; return; }
+    msgEl.style.color = 'var(--sub)'; msgEl.innerText = 'ログイン中...';
+    try {
+      const json = await fetchGasJson({ action: 'auth_login', email: email, loginPassword: password });
+      if (json.status === 'success') {
+        localStorage.setItem('aw109_auth_token', json.token);
+        localStorage.setItem('aw109_auth_name', json.name);
+        localStorage.setItem('aw109_auth_isAdmin', json.isAdmin ? 'true' : 'false');
+        msgEl.style.color = '#2e7d32'; msgEl.innerText = 'ログインしました。';
+        updateAccountUI();
+        setTimeout(() => closeModal('modal-account'), 800);
+      } else {
+        msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = json.message || 'ログインに失敗しました。';
+      }
+    } catch (e) {
+      sendErrorLog(e.stack || e.toString());
+      msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = '通信エラーが発生しました。';
+    }
+  }
+
+  async function doRegister() {
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const msgEl = document.getElementById('account-msg');
+    if (!email || password.length < 4) { msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = 'メールアドレスと4文字以上のパスワードを入力してください。'; return; }
+    msgEl.style.color = 'var(--sub)'; msgEl.innerText = '登録中...';
+    try {
+      const json = await fetchGasJson({ action: 'auth_register', email: email, newPassword: password });
+      if (json.status === 'success') {
+        msgEl.style.color = '#2e7d32'; msgEl.innerText = 'パスワードを設定しました。続けてログインしてください。';
+        document.getElementById('login-email').value = email;
+        switchAccountTab('login');
+      } else {
+        msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = json.message || '登録に失敗しました。';
+      }
+    } catch (e) {
+      sendErrorLog(e.stack || e.toString());
+      msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = '通信エラーが発生しました。';
+    }
+  }
+
+  function doLogout() {
+    localStorage.removeItem('aw109_auth_token');
+    localStorage.removeItem('aw109_auth_name');
+    localStorage.removeItem('aw109_auth_isAdmin');
+    updateAccountUI();
+    alert('ログアウトしました。ページを再読み込みします。');
+    location.reload();
+  }
 
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
@@ -237,7 +360,7 @@
       fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.1)", errorMsg: errMsg, userAgent: navigator.userAgent }), 
+        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.1)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -251,6 +374,7 @@
   }
 
   window.onload = () => {
+    updateAccountUI();
     // 🌟 キャッシュが存在する場合は即時展開し、サイレント同期フラグを立てる
     const cachedStr = localStorage.getItem(CACHE_KEY);
     let hasCache = false;
