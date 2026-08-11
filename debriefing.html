@@ -774,6 +774,7 @@
     if(sys.disease) {
        if(sys.disease.main) setDiseaseMain(sys.disease.main);
        if(sys.disease.cause) {
+         // CPA(心肺停止)の場合：原因疾患 → 詳細分類 の2段階復元
          setTimeout(() => {
            const btn = Array.from(document.getElementById("d-sub-pills").children).find(e => e.innerText === sys.disease.cause);
            if(btn) setDiseaseCause(sys.disease.cause, btn);
@@ -784,6 +785,12 @@
                if(btn2) setDiseaseSubReal(sys.disease.sub, btn2);
              }, 50);
            }
+         }, 50);
+       } else if(sys.disease.sub) {
+         // CPA以外(外傷・心大血管等)の場合：詳細分類を直接1段階で復元
+         setTimeout(() => {
+           const btn = Array.from(document.getElementById("d-sub-pills").children).find(e => e.innerText === sys.disease.sub);
+           if(btn) setDiseaseSubReal(sys.disease.sub, btn);
          }, 50);
        }
        document.getElementById("v-maternal").value = sys.disease.maternal || "なし";
