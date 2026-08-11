@@ -234,19 +234,32 @@
     fetchLatestData(false, false);
   };
 
+  // 🌟 電波不良でレスポンスが途中で切れJSON解析に失敗した場合、1回だけ自動リトライする
+  async function fetchGasJson(bodyObj, retries) {
+    if (retries === undefined) retries = 1;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow" });
+        return await res.json();
+      } catch (e) {
+        if (attempt >= retries) throw e;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+  }
+
   async function fetchLatestData(isBackground, isManualUpdate) {
     if(!isBackground) showLoader("データベース同期中...", "事案データと振り返りデータを結合しています");
     try {
-      // 🌟 3つの通信を並列実行（直列だと3倍の待ち時間がかかり、電波の弱い現場でタイムアウトしやすくなっていたため）
-      const [resInit, resJian, resDeb] = await Promise.all([
-        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }), redirect: "follow" }),
-        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" }),
-        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" })
+      // 🌟 3つの通信を並列実行（直列だと3倍の待ち時間がかかり、電波の弱い現場でタイムアウトしやすくなっていたため）。各通信は失敗時1回リトライする
+      const [jsonInit, jianRes, debRes] = await Promise.all([
+        fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "教育検索" }),
+        fetchGasJson({ action: "fetch_all", password: PIN_CODE }),
+        fetchGasJson({ action: "fetch_debriefings", password: PIN_CODE })
       ]);
-      const jsonInit = await resInit.json();
       // 🌟 fetch_allは {id, displayId, ..., rawData} の入れ子構造で返る
-      const jianList = (await resJian.json()).data || [];
-      const debData = (await resDeb.json()).data;
+      const jianList = jianRes.data || [];
+      const debData = debRes.data || [];
 
       let newData = [];
       debData.forEach(d => {

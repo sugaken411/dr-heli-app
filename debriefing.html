@@ -422,18 +422,31 @@
     }
   };
 
+  // 🌟 電波不良でレスポンスが途中で切れJSON解析に失敗した場合、1回だけ自動リトライする
+  async function fetchGasJson(bodyObj, retries) {
+    if (retries === undefined) retries = 1;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow" });
+        return await res.json();
+      } catch (e) {
+        if (attempt >= retries) throw e;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+  }
+
   async function fetchLatestData(isBackground) {
     if(!isBackground) showLoader("データベース同期中...", "マスタデータと事案DBを同期しています");
     try {
-      // 🌟 3つの通信を並列実行（直列だと3倍の待ち時間がかかっていたため）
-      const [resInit, resJian, resDeb] = await Promise.all([
-        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }), redirect: "follow" }),
-        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" }),
-        fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" })
+      // 🌟 3つの通信を並列実行（直列だと3倍の待ち時間がかかっていたため）。各通信は失敗時1回リトライする
+      const [jsonInit, jianRes, debRes] = await Promise.all([
+        fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "デブリーフィング" }),
+        fetchGasJson({ action: "fetch_recent_cases", password: PIN_CODE }),
+        fetchGasJson({ action: "fetch_debriefings", password: PIN_CODE })
       ]);
-      const jsonInit = await resInit.json();
-      const jianData = (await resJian.json()).data;
-      const debData = (await resDeb.json()).data;
+      const jianData = jianRes.data;
+      const debData = debRes.data;
 
       if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
 
@@ -690,10 +703,16 @@
     
     document.getElementById("v-summary").value = currentCase["事案概要"] || currentCase["備考"] || "";
     
-    if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) { 
-      sysData.tags.diagnosis = currentCase["現場診断"].split(",").map(d => d.trim()).filter(Boolean); 
+    if(sysData.tags.diagnosis.length === 0 && currentCase["現場診断"]) {
+      sysData.tags.diagnosis = currentCase["現場診断"].split(",").map(d => d.trim()).filter(Boolean);
     }
     renderChips('chip-container-diagnosis', sysData.tags.diagnosis, 'diagnosis');
+
+    // 🌟 症例登録側の「キーワード」列を、デブリーフィングのキーワードタグに引き継ぐ
+    if((!sysData.tags.keyword || sysData.tags.keyword.length === 0) && currentCase["キーワード"]) {
+      sysData.tags.keyword = currentCase["キーワード"].split(",").map(k => k.trim()).filter(Boolean);
+      sysData.tags.keyword.forEach(k => { if(!TAG_MASTERS.keyword.items.includes(k)) TAG_MASTERS.keyword.items.unshift(k); });
+    }
 
     let importedProcs = [];
     
@@ -770,11 +789,40 @@
         document.getElementById("v-team").value = past["チーム連携評価"] || "";
         document.getElementById("v-master-gap").value = past["マスタ・システム改善要望"] || "";
         document.getElementById("v-action").value = past["総括・次回アクション"] || "";
+        document.getElementById("d-date").value = past["実施日"] || "";
+        document.getElementById("d-time").value = past["開始時間"] || "";
+        document.getElementById("d-time-end").value = past["終了時間"] || "";
         document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存";
         document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       } catch(e) {
         sendErrorLog(`restoreSystemData parse error: ${e.stack || e.toString()}`);
       }
+    } else if (!sysData.disease.main && currentCase["疾患大分類"]) {
+      // 🌟 過去のデブリーフィングが無い（初回）場合、症例登録側の疾患分類をそのまま引き継ぐ
+      const dMain = currentCase["疾患大分類"];
+      const dCause = currentCase["疾患原因"];
+      const dSub = currentCase["詳細分類"];
+      setDiseaseMain(dMain);
+      setTimeout(() => {
+        if (dMain === "4心肺停止") {
+          if (dCause) {
+            const p1 = document.getElementById("d-sub-pills");
+            const btn = p1 ? Array.from(p1.children).find(e => e.innerText === dCause) : null;
+            if (btn) setDiseaseCause(dCause, btn);
+            setTimeout(() => {
+              if (dSub) {
+                const p2 = document.getElementById("d-sub-pills-2");
+                const btn2 = p2 ? Array.from(p2.children).find(e => e.innerText === dSub) : null;
+                if (btn2) setDiseaseSubReal(dSub, btn2);
+              }
+            }, 50);
+          }
+        } else if (dSub) {
+          const p1 = document.getElementById("d-sub-pills");
+          const btn = p1 ? Array.from(p1.children).find(e => e.innerText === dSub) : null;
+          if (btn) setDiseaseSubReal(dSub, btn);
+        }
+      }, 50);
     }
 
     if(past) {

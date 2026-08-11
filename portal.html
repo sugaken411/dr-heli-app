@@ -265,20 +265,28 @@
     fetchInit(hasCache);
   };
 
+  // 🌟 電波不良でレスポンスが途中で切れJSON解析に失敗した場合、1回だけ自動リトライする
+  async function fetchGasJson(bodyObj, retries) {
+    if (retries === undefined) retries = 1;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow" });
+        return await res.json();
+      } catch (e) {
+        if (attempt >= retries) throw e;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+  }
+
   async function fetchInit(isSilent) {
     // 🌟 キャッシュがない場合（初回起動等）のみローダーを強制表示してロックする
     if (!isSilent) {
       showLoader("初期データ読込中...", "マスターデータベースへ初回接続しています");
     }
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "ポータル" }), 
-        redirect: "follow" 
-      });
-      const json = await res.json();
-      if (json.status === "success") { 
+      const json = await fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "ポータル" });
+      if (json.status === "success") {
         const nowMs = Date.now();
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: nowMs, data: json })); 
         renderPortal(json);
