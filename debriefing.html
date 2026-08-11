@@ -158,7 +158,7 @@
       </div>
 
       <div class="card">
-        <div class="section-label">🚑 事前実施処置 (症例登録連携)</div>
+        <div class="section-label">🚑 処置・使用薬剤 (症例登録連携)</div>
         <div style="font-size:11px; color:var(--sub); margin-bottom:8px;">現場で実施された処置の一覧です。追加・削除が可能です。</div>
         <div class="pill-group" id="v-fetched-procs"></div>
       </div>
@@ -721,14 +721,20 @@
       "要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間","接触","病着","終了","往診料","搬送料","長時間加算",
       "モニター算定時間","経皮的酸素飽和度","EtCO2算定","人工呼吸器管理料","事案概要","備考","ステータス","更新履歴",
       "システムデータ","現場診断","酸素デバイス詳細","ヘリ在庫フラグ", "小児フラグ", "母性フラグ", "多数傷病フラグ",
-      "procsState", "処置JSON", "簡易処置リスト", "処置リスト", "実施処置", "処置", "外傷処置", "外傷・固定", "外傷"
+      "procsState", "処置JSON", "簡易処置リスト", "処置リスト", "実施処置", "処置", "外傷処置", "外傷・固定", "外傷",
+      "使用薬剤リスト"
     ];
-    
+
     Object.keys(currentCase).forEach(k => {
       if (!skipKeys.includes(k) && !k.startsWith("【") && currentCase[k] !== "" && currentCase[k] !== "FALSE" && currentCase[k] !== "0") {
         importedProcs.push(k);
       }
     });
+
+    // 🌟 使用薬剤リストは列名ではなく中身(カンマ区切りの薬剤名)を個別のタグとしてインポートする
+    if (currentCase["使用薬剤リスト"]) {
+      currentCase["使用薬剤リスト"].split(",").map(s => s.trim()).filter(Boolean).forEach(name => importedProcs.push(name));
+    }
 
     let procStateStr = currentCase["procsState"] || currentCase["処置JSON"] || "";
     if (procStateStr) {
@@ -1051,7 +1057,7 @@
           <b>要請区分:</b> ${sysData.reqType || '-'}<br>
           <b>疾患分類:</b> ${diseaseStr}<br>
           <b>現場診断:</b> ${displayDiags.join(", ")||'-'}<br>
-          <b>事前実施処置:</b> ${activeProcs.join(", ")||'-'}<br>
+          <b>処置・使用薬剤:</b> ${activeProcs.join(", ")||'-'}<br>
           <b>環境/参加:</b> ${envLoc}・${envMethod} / ${ptList.join(", ")||'未記入'}
         </div>
         <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 事案概要</h3><div style="padding:4px; margin-bottom:12px;">${summaryVal.replace(/\n/g,'<br>')}</div>
