@@ -10,23 +10,26 @@
     :root {
       --bg: #f2f2f7; --brand: #d32f2f; --ink: #1c1c1e; --sub: #8e8e93;
       --blue: #007aff; --line: rgba(60,60,67,0.12); --card: #ffffff;
+      --safe-top: env(safe-area-inset-top);
     }
-    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
     
-    header { background: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+    header { background: #fff; padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
     .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; padding: 4px 8px; }
     .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
     
-    main { padding: 16px; flex: 1; overflow-y: auto; }
+    main { padding: 16px; flex: 1; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; }
     .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     
     input, select, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
     button { background: var(--blue); color: #fff; border: none; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-    button:hover { opacity: 0.8; }
+    button:hover { opacity: 0.85; }
     .filter-btn { background: #e5e5ea; color: var(--ink); margin-right: 8px; margin-bottom: 8px; padding: 8px 12px; font-size: 13px; }
     
-    .res-item { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.2s; }
-    .res-item:hover { border-color: var(--blue); }
+    .res-item { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .res-item:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,122,255,0.1); }
+    .res-item::after { content: "編集 ➔"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--blue); font-weight: bold; opacity: 0; transition: opacity 0.2s; }
+    .res-item:hover::after { opacity: 1; }
     .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -48,8 +51,8 @@
     
     @media print {
       body * { visibility: hidden; }
-      .modal-box, .modal-box * { visibility: visible; }
-      .modal-box { position: absolute; left: 0; top: 0; width: 100%; max-height: none; overflow: visible; box-shadow: none; }
+      main, main * { visibility: visible; }
+      main { position: absolute; left: 0; top: 0; width: 100%; }
       .no-print { display: none !important; }
     }
   </style>
@@ -77,21 +80,21 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
-      <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
+      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 マスタ更新</button>
     </div>
     <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v14.12</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
+      <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
       <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
     </div>
   </header>
   
-  <div id="master-sync-info" style="text-align:right; font-size:10px; color:var(--sub); padding:4px 16px 0 0; background:var(--bg);"></div>
+  <div id="master-sync-info" style="text-align:right; font-size:10px; color:var(--sub); padding:4px 16px 0 0; background:var(--bg);">マスタ同期確認中...</div>
 
   <main>
     <div class="card no-print">
-      <h3 style="margin-top:0;">🔍 事案の検索</h3>
+      <h3 style="margin-top:0;">🔍 事案の絞り込み</h3>
       <div style="margin-bottom:16px;">
         <button type="button" class="filter-btn" onclick="quickFilter('未完了')">⚠️ 未完了のみ</button>
         <button type="button" class="filter-btn" onclick="quickFilter('本日')">🚁 今日の出動</button>
@@ -139,17 +142,17 @@
           </div>
         </div>
         <div class="cross-item">
-          <button type="button" onclick="fetchData()" style="padding:12px; height:100%;">検索実行 🔍</button>
+          <button type="button" onclick="fetchData()" style="padding:12px; height:100%; box-shadow: 0 4px 12px rgba(0,122,255,0.3);">検索実行 🔍</button>
         </div>
       </div>
     </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
       <div id="result-count" style="font-weight:bold; color:var(--ink);">検索結果: 0 件</div>
-      <button type="button" onclick="exportCSV()" style="background:#34a853; padding:8px 12px; font-size:13px;">📊 CSV出力</button>
+      <button type="button" onclick="exportCSV()" style="background:#34a853; padding:8px 12px; font-size:13px; box-shadow: 0 2px 6px rgba(52,168,83,0.3);">📊 CSV出力</button>
     </div>
     
-    <div id="results" class="no-print">
+    <div id="results">
       <p style="text-align:center; color:var(--sub); padding:40px; background:#fff; border-radius:12px;">条件を指定して「検索実行」を押してください。</p>
     </div>
   </main>
@@ -163,7 +166,7 @@
         <input type="text" id="qa-name" placeholder="お名前 (任意)" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;">
         <input type="email" id="qa-email" placeholder="返信先メールアドレス (任意)" style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;">
         <textarea id="qa-input" rows="3" placeholder="項目の追加依頼や不具合報告など..." style="width:100%; border:1px solid #ccc; border-radius:6px; padding:8px; margin-bottom:8px;"></textarea>
-        <button type="button" onclick="submitQA(event)" style="width:100%; padding:10px; border-radius:6px;">送信する ✉️</button>
+        <button type="button" onclick="submitQA(this)" style="width:100%; padding:10px; border-radius:6px;">送信する ✉️</button>
       </div>
       <button type="button" class="modal-close" onclick="closeModal('modal-qa')">閉じる</button>
     </div>
@@ -196,6 +199,7 @@
   let activePin = ""; 
   let allData = []; 
   let filteredData = [];
+  
   let lockTime = 600; 
   let timerInterval;
   
@@ -240,17 +244,9 @@
     ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); 
   }
 
-  function toHalfWidth(ele) { 
-    let val = ele.value; 
-    val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) { 
-      return String.fromCharCode(s.charCodeAt(0) - 0xfee0); 
-    }); 
-    ele.value = val; 
-  }
-
   function checkLogin() {
     const input = document.getElementById("login-pin").value;
-    if(input === "5740") {
+    if(input === PIN_CODE) {
       activePin = input; 
       document.getElementById("login-overlay").style.display = "none"; 
       startTimer(); 
@@ -297,14 +293,28 @@
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
 
   async function initSearchApp() {
-    const cachedStr = localStorage.getItem(CACHE_KEY);
+    const cachedStr = sessionStorage.getItem("aw109_search_state");
     if(cachedStr) {
       try {
-        const cacheObj = JSON.parse(cachedStr);
+        const state = JSON.parse(cachedStr);
+        document.getElementById("q-id").value = state.qId || "";
+        document.getElementById("q-status").value = state.stVal || "";
+        document.getElementById("q-date-start").value = state.dStart || "";
+        document.getElementById("q-date-end").value = state.dEnd || "";
+        document.getElementById("q-month").value = state.dMonth || "";
+      } catch(e) {}
+    }
+
+    const masterCached = localStorage.getItem(CACHE_KEY);
+    if(masterCached) {
+      try {
+        const cacheObj = JSON.parse(masterCached);
         if (Date.now() - cacheObj.timestampMs < CACHE_EXPIRE_MS) { 
           applySearchMasters(cacheObj.data); 
           const d = new Date(cacheObj.timestampMs);
           document.getElementById("master-sync-info").innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+          
+          if(sessionStorage.getItem("aw109_search_state")) fetchData();
           return; 
         }
       } catch(e) {}
@@ -326,10 +336,18 @@
           }); 
         } 
       };
+      
+      const cachedState = JSON.parse(sessionStorage.getItem("aw109_search_state") || "{}");
+
       const destOpts = '<option value="">全出場先</option>' + jsonRes.masters.dest.map(v => `<option value="${v}">${v}</option>`).join("");
       document.getElementById("q-dest").innerHTML = destOpts; 
+      if(cachedState.destVal) document.getElementById("q-dest").value = cachedState.destVal;
+
       document.getElementById("q-dr").innerHTML = '<option value="">全Dr</option>' + jsonRes.masters.dr.map(v => `<option value="${v}">${v}</option>`).join("");
+      if(cachedState.drVal) document.getElementById("q-dr").value = cachedState.drVal;
+
       document.getElementById("q-ns").innerHTML = '<option value="">全Ns</option>' + jsonRes.masters.ns.map(v => `<option value="${v}">${v}</option>`).join("");
+      if(cachedState.nsVal) document.getElementById("q-ns").value = cachedState.nsVal;
     }
     
     if (jsonRes.qa) { 
@@ -358,6 +376,10 @@
         applySearchMasters(jsonRes);
         const d = new Date(now); 
         document.getElementById("master-sync-info").innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        
+        if(sessionStorage.getItem("aw109_search_state") || isManualUpdate) {
+          fetchData();
+        }
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       } else { 
         throw new Error(jsonRes.message); 
@@ -382,6 +404,10 @@
     const destVal = document.getElementById("q-dest").value; 
     const drVal = document.getElementById("q-dr").value; 
     const nsVal = document.getElementById("q-ns").value;
+
+    sessionStorage.setItem("aw109_search_state", JSON.stringify({
+      qId, dStart, dEnd, dMonth, stVal, destVal, drVal, nsVal
+    }));
 
     try {
       const res = await fetch(GAS_API_URL, { 
@@ -453,8 +479,11 @@
           const idColor = isKari ? "color:var(--brand);" : "color:var(--ink);";
           const safeTime = (t) => { if(!t) return "--:--"; let s = String(t); if(s.includes("T")) return s.split("T")[1].substring(0,5); return s.substring(0,5); };
 
+          // 🌟 ルーティングの呼び出し（引数にIDを直接渡す）
+          const targetId = item.id || item.displayId;
+
           return `
-          <div class="res-item" onclick='openDetail(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+          <div class="res-item" onclick="goToEdit('${targetId}')">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
               <b style="font-size:15px; ${idColor}">No.${r["要請番号"]} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${r["日付"]||"日付不明"})</span></b>
               <span class="badge" style="background:${isDone?'#d1fae5':'#ffebeb'}; color:${isDone?'#065f46':'#d32f2f'}">${r["ステータス"]||"未完了"}</span>
@@ -467,6 +496,14 @@
             <div style="font-size:12px; color:var(--sub);"><b>接触［${safeTime(r["接触"])}］</b> ｜ <b>病着:</b> ${safeTime(r["病着"])} ｜ <b>終了:</b> ${safeTime(r["終了"])}</div>
           </div>`;
         }).join("");
+        
+        // 保存されていたスクロール位置に戻す
+        const savedScroll = sessionStorage.getItem("aw109_search_scroll");
+        if (savedScroll) {
+          setTimeout(() => { window.scrollTo(0, parseInt(savedScroll)); }, 100);
+          sessionStorage.removeItem("aw109_search_scroll");
+        }
+
       } else { 
         throw new Error(json.message); 
       }
@@ -478,10 +515,10 @@
     }
   }
 
-  // 🌟 アーキテクチャ改修: 事案をタップした際、編集画面(index.html)へ遷移させる
-  function openDetail(item) {
+  // 🌟 編集画面へのシームレスなルーティングとスクロール位置保存
+  function goToEdit(targetId) {
+    sessionStorage.setItem("aw109_search_scroll", window.scrollY);
     showLoader("画面遷移中...", "編集画面へ移動しています");
-    const targetId = item.id || item.displayId; 
     location.href = 'index.html?editId=' + encodeURIComponent(targetId);
   }
 
@@ -500,7 +537,7 @@
     a.click();
   }
 
-  async function submitQA(event) {
+  async function submitQA(btn) {
     const qName = document.getElementById("qa-name").value.trim(); 
     const qEmail = document.getElementById("qa-email").value.trim(); 
     const qText = document.getElementById("qa-input").value.trim(); 
