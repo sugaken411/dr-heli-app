@@ -238,37 +238,55 @@
       const jsonInit = await resInit.json();
       
       const resJian = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), redirect: "follow" });
-      const jianData = (await resJian.json()).data;
+      // 🌟 fetch_allは {id, displayId, ..., rawData} の入れ子構造で返る
+      const jianList = (await resJian.json()).data || [];
 
       const resDeb = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), redirect: "follow" });
       const debData = (await resDeb.json()).data;
 
       let newData = [];
       debData.forEach(d => {
-        const jian = jianData.find(j => String(j["要請番号"]) === String(d["要請番号"]));
-        if(jian) {
-          let flags = [];
-          if (jian["小児フラグ"] === "TRUE" || jian["小児フラグ"] === true || jian["小児フラグ"] === "✓") flags.push("小児");
-          if (jian["母性フラグ"] === "TRUE" || jian["母性フラグ"] === true || jian["母性フラグ"] === "✓") flags.push("母性");
-          if (jian["多数傷病フラグ"] === "TRUE" || jian["多数傷病フラグ"] === true || jian["多数傷病フラグ"] === "✓") flags.push("多数傷病");
+        // 🌟 DB_デブリーフィングの「要請番号」列にはsysId(UUID)が入っているため、id/displayIdの両方で探す
+        const jianWrap = jianList.find(j => String(j.id) === String(d["要請番号"]) || String(j.displayId) === String(d["要請番号"]));
+        if(jianWrap) {
+          const jian = jianWrap.rawData || jianWrap;
 
-          let tags = [d["キーワード(要請)"], d["活動場面"], d["実務項目"], d["疾患"], d["現場診断"], jian["要請区分"]]
-                        .map(t => t ? String(t).split(",") : []).flat().map(t => t.trim()).filter(Boolean);
-          
-          let diagStr = jian["現場診断"] || ""; let diagArr = diagStr.split(",").map(x => x.trim()).filter(Boolean);
-          diagArr.forEach(t => tags.push(t));
-          
+          let flags = [];
+          if (jian["小児フラグ"] === "TRUE" || jian["小児フラグ"] === true || jian["小児フラグ"] === "◯" || jian["小児フラグ"] === "✓") flags.push("小児");
+          if (jian["母性フラグ"] === "TRUE" || jian["母性フラグ"] === true || jian["母性フラグ"] === "◯" || jian["母性フラグ"] === "✓") flags.push("母性");
+          if (jian["多数傷病フラグ"] === "TRUE" || jian["多数傷病フラグ"] === true || jian["多数傷病フラグ"] === "◯" || jian["多数傷病フラグ"] === "✓") flags.push("多数傷病");
+
+          // 🌟 現行スキーマの「システムデータ」JSONから疾患・場面・処置・特殊ケース等のタグを抽出
+          let sysObj = {}; try { sysObj = JSON.parse(d["システムデータ"] || "{}"); } catch(e) {}
+          let tags = [];
+          if (sysObj.reqType) tags.push(sysObj.reqType);
+          if (sysObj.disease) { if (sysObj.disease.main) tags.push(sysObj.disease.main); if (sysObj.disease.sub) tags.push(sysObj.disease.sub); }
+          if (sysObj.tags) { ['diagnosis','special','keyword','globalTreatment'].forEach(cat => { if (sysObj.tags[cat]) sysObj.tags[cat].forEach(t => tags.push(t)); }); }
+          if (Array.isArray(sysObj.evals)) sysObj.evals.forEach(e => { const sc = e.scene === '⑨ その他' ? e.sceneOther : e.scene; if (sc) tags.push(sc); if (Array.isArray(e.tags)) e.tags.forEach(t => tags.push(t)); });
+          if (Array.isArray(sysObj.feedbacks)) sysObj.feedbacks.forEach(f => { if (Array.isArray(f.tags)) f.tags.forEach(t => tags.push(t)); });
+
+          let diagStr = jian["現場診断"] || ""; diagStr.split(",").map(x => x.trim()).filter(Boolean).forEach(t => tags.push(t));
+
           tags.push(...flags);
-          const uniqueTags = [...new Set(tags)];
-          
-          // GASから返却される id を使用（sysId または 要請番号）
+          const uniqueTags = [...new Set(tags.filter(Boolean))];
+
+          // 🌟 症例評価・Good/Badは、現行スキーマのJSON列（タイムライン評価・多職種フィードバック）から組み立てる
+          let evalsArr = []; try { evalsArr = JSON.parse(d["タイムライン評価JSON"] || "[]"); } catch(e) {}
+          let fbArr = []; try { fbArr = JSON.parse(d["多職種フィードバックJSON"] || "[]"); } catch(e) {}
+          let evalTextCombined = evalsArr.map(e => e.desc || e.freeABC || "").filter(Boolean).join("\n");
+          let goodCombined = [...evalsArr.map(e => e.good), ...fbArr.map(f => f.good)].filter(Boolean).join("\n");
+          let badCombined = [...evalsArr.map(e => e.bad), ...fbArr.map(f => [f.bad, f.next].filter(Boolean).join(" / "))].filter(Boolean).join("\n");
+
+          let summaryVal = sysObj.summary || jian["事案概要"] || jian["備考"] || "";
+          if (d["総括・次回アクション"]) summaryVal += (summaryVal ? "\n\n【総括・次回アクション】\n" : "") + d["総括・次回アクション"];
+
           newData.push({
-            id: jian.id || d["要請番号"], displayId: jian["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
+            id: jianWrap.id || d["要請番号"], displayId: jianWrap.displayId || jian["要請番号"], date: jian["日付"], dest: jian["出場先"], scheme: jian["スキーム選択"],
             reqTime: jian["要請時刻・施設間搬送依頼時刻"] || jian["初期離陸時間"] || "--:--",
             contactTime: jian["接触"] || "--:--", dr: jian["フライトドクター"], ns: jian["フライトナース"], 
-            participants: d["参加者一覧"] || "", summary: d["概要"] || jian["事案概要"] || jian["備考"], evalText: d["症例評価"], 
-            good: d["Good (良かった点)"], bad: d["Bad/Next (課題・次へ)"],
-            tags: uniqueTags, loc: d["振り返り場所"], method: d["振り返り方法"],
+            participants: d["参加者一覧"] || "", summary: summaryVal, evalText: evalTextCombined, 
+            good: goodCombined, bad: badCombined,
+            tags: uniqueTags, loc: d["実施場所"] || "", method: d["実施方法"] || "",
             reqType: jian["要請区分"] || "", specialFlags: flags
           });
         }
@@ -378,10 +396,10 @@
         <div class="rc-header"><div class="rc-id">No.${r.displayId || r.id} <span class="rc-date">(${r.date})</span></div><div class="badge">${r.scheme || '未選択'}</div></div>
         <div class="rc-meta"><span><b>Dr:</b> ${r.dr || '-'} ｜ <b>Ns:</b> ${r.ns || '-'}</span><span>[要請 ${String(r.reqTime).substring(0,5)}] 出場先: ${r.dest || '-'}</span></div>
         <div class="rc-contact"><b style="color:var(--ink);">要請区分: ${r.reqType || '-'}</b> ｜ <b style="color:var(--ink);">接触［${String(r.contactTime).substring(0,5)}］</b> ｜ <b>👤参加:</b> ${r.participants || '未記入'}</div>
-        <div class="rc-context"><b>📖 事案概要</b><br>${r.summary ? r.summary.replace(/\\n/g, '<br>') : '事案概要の記載なし'}</div>
+        <div class="rc-context"><b>📖 事案概要</b><br>${r.summary ? r.summary.replace(/\n/g, '<br>') : '事案概要の記載なし'}</div>
         <div class="rc-feedback">
-          ${r.good ? `<div class="fb-box"><div class="fb-title">🟢 Good (良かった点)</div>${r.good.replace(/\\n/g, '<br>')}</div>` : ''}
-          ${r.bad ? `<div class="fb-box"><div class="fb-title">⚠️ Bad / Next (課題・アクション)</div>${r.bad.replace(/\\n/g, '<br>')}</div>` : ''}
+          ${r.good ? `<div class="fb-box"><div class="fb-title">🟢 Good (良かった点)</div>${r.good.replace(/\n/g, '<br>')}</div>` : ''}
+          ${r.bad ? `<div class="fb-box"><div class="fb-title">⚠️ Bad / Next (課題・アクション)</div>${r.bad.replace(/\n/g, '<br>')}</div>` : ''}          
           ${(!r.good && !r.bad) ? `<div class="fb-box" style="color:var(--sub); text-align:center;">振り返りの記載がありません</div>` : ''}
         </div>
         <div class="rc-tags">${specialHtml}${r.tags.map(t => `<div class="t-chip">${t}</div>`).join('')}</div>
