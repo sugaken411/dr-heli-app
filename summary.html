@@ -379,7 +379,8 @@
       const json2 = await res2.json();
       
       if (json1.status === "success") {
-        allData = json1.data || [];
+        // 🌟 fetch_allは {id, displayId, ..., rawData} の入れ子構造なので、中身(rawData)だけを展開する
+        allData = (json1.data || []).map(item => item.rawData);
         allDebriefData = json2.status === "success" ? (json2.data || []) : [];
         populateStaffFilter();
         setDateFilter('thisMonth');
