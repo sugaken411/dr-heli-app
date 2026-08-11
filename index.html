@@ -1000,7 +1000,6 @@
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="心膜開窓術">心膜開窓術</label>
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="開胸心マッサージ">開胸心マッサージ</label>
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="胸腔開放">胸腔開放</label>
-            <label class="proc-lbl"><input type="checkbox" class="chk-other" value="1%カルボカイン10ml使用">1%カルボカイン10ml使用</label>
             <div style="margin-top:4px; padding-top:8px; border-top:1px dashed #ccc;">
               <label class="proc-lbl"><input type="checkbox" id="chk-other-surg" onchange="toggleBox('box-other-surg', this.checked)">その他外科処置</label>
               <div id="box-other-surg" style="display:none; margin-top:8px; padding-left:28px;">
@@ -1074,12 +1073,14 @@
         </div>
 
         <div style="background: #e8f5e9; padding:16px; margin-top:16px; border-radius:8px;">
-          <label style="font-weight:bold; color: #2e7d32; font-size: 14px; display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-            <input type="checkbox" id="chk-med" style="width:20px; height:20px;" onchange="toggleBox('box-med-detail', this.checked)"> 💊 使用薬剤メモ
+          <label style="font-weight:bold; color: #2e7d32; font-size: 14px; display:flex; align-items:center; gap:8px; margin-bottom:8px;">💊 使用薬剤</label>
+          <div id="drug-checkbox-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;"></div>
+          <label style="font-weight:bold; color: #2e7d32; font-size: 13px; display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <input type="checkbox" id="chk-med" style="width:20px; height:20px;" onchange="toggleBox('box-med-detail', this.checked)"> その他・補足メモ
           </label>
           <div id="box-med-detail" style="display:none;">
             <div style="font-size:11px; color:#2e7d32; margin-bottom:4px; font-weight:bold;">※ここに書いた内容はメールの最上部に強調して記載されます。</div>
-            <textarea id="v-med-detail" rows="2" placeholder="例：フェンタニル50μg、アドレナリン1mg×2 など" style="border-color:#a5d6a7; background:#fff;"></textarea>
+            <textarea id="v-med-detail" rows="2" placeholder="上のリストにない薬剤や、投与量・回数の補足があれば入力..." style="border-color:#a5d6a7; background:#fff;"></textarea>
           </div>
         </div>
       </div>
@@ -1300,10 +1301,17 @@
     if(!m) return;
     masters = m;
     
-    popSelect("v-dr", m.dr, "選択..."); 
+    popSelect("v-dr", m.dr, "選択...");
     popSelect("v-ns", m.ns, "選択...");
     popSelect("v-dest", m.dest, "選択...");
     popList("diagnosis-list", m.diagnosis);
+
+    const drugBox = document.getElementById("drug-checkbox-list");
+    if (drugBox) {
+      const checkedDrugs = new Set(Array.from(drugBox.querySelectorAll('input.chk-drug:checked')).map(el => el.value));
+      drugBox.innerHTML = (m.drugs || []).map(name => `<label class="proc-lbl"><input type="checkbox" class="chk-drug" value="${name}">${name}</label>`).join('');
+      drugBox.querySelectorAll('input.chk-drug').forEach(el => { if (checkedDrugs.has(el.value)) el.checked = true; });
+    }
 
     const cancelGroup = document.getElementById("cancel-reason-group");
     if (cancelGroup) {
@@ -1606,11 +1614,20 @@
     
     const surg = String(row["その他外科処置"] || "");
     if(surg) {
-        document.getElementById("chk-other-surg").checked = true; 
+        document.getElementById("chk-other-surg").checked = true;
         toggleBox('box-other-surg', true);
         document.getElementById("v-other-surg").value = surg.replace(/^◯\s*/, '');
     }
-    
+
+    const drugList = String(row["使用薬剤リスト"] || "").split(",").map(s => s.trim()).filter(Boolean);
+    if(drugList.length > 0) {
+      drugList.forEach(name => {
+        const el = document.querySelector(`input.chk-drug[value="${CSS.escape(name)}"]`);
+        if(el) el.checked = true;
+      });
+    }
+
+
     document.getElementById("chk-ls-vent").checked = String(row["管理料_人工呼吸器"]).includes("あり");
     document.getElementById("chk-ls-defib").checked = String(row["管理料_除細動装置"]).includes("あり");
     document.getElementById("chk-ls-hoiku").checked = String(row["管理料_閉鎖式保育器"]).includes("あり");
@@ -2104,6 +2121,8 @@
 
     payload["その他外科処置"] = document.getElementById("chk-other-surg")?.checked ? "◯ " + document.getElementById("v-other-surg").value.trim() : "";
 
+    payload["使用薬剤リスト"] = Array.from(document.querySelectorAll('input.chk-drug:checked')).map(el => el.value).join(", ");
+
     let dynText = "";
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       let idx = 1;
@@ -2141,8 +2160,11 @@
     let biko = document.getElementById("v-biko").value || "";
     if(document.getElementById("chk-er").checked) biko = `【緊急外来搬送先: ${document.getElementById("v-er-hosp").value}】\n` + biko;
     
-    if(document.getElementById("chk-med").checked && document.getElementById("v-med-detail").value.trim()) {
-      biko = `💊【使用薬剤メモ】\n${document.getElementById("v-med-detail").value.trim()}\n------------------\n` + biko;
+    const checkedDrugNames = Array.from(document.querySelectorAll('input.chk-drug:checked')).map(el => el.value);
+    if(checkedDrugNames.length > 0 || (document.getElementById("chk-med").checked && document.getElementById("v-med-detail").value.trim())) {
+      const drugLines = checkedDrugNames.length > 0 ? checkedDrugNames.join("\n") + "\n" : "";
+      const memoLine = (document.getElementById("chk-med").checked && document.getElementById("v-med-detail").value.trim()) ? document.getElementById("v-med-detail").value.trim() + "\n" : "";
+      biko = `💊【使用薬剤】\n${drugLines}${memoLine}------------------\n` + biko;
     }
     if(document.getElementById("chk-stock").checked && document.getElementById("v-stock-detail").value.trim()) {
       biko = `⚠️【使用物品・補充予定メモ】\n${document.getElementById("v-stock-detail").value.trim()}\n------------------\n` + biko;

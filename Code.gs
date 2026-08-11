@@ -347,8 +347,17 @@ function doPost(e) {
      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: result })).setMimeType(ContentService.MimeType.JSON);
    }
    if (action === "fetch_init") {
-     let mastersData = { dest: [], dr: [], ns: [], mailOptions: [], phrases: [], diagnosis: [], keyword: [], extAffil: [], extStaff: [], pilot: [], mechanic: [], cs: [] };
-    
+     let mastersData = { dest: [], dr: [], ns: [], mailOptions: [], phrases: [], diagnosis: [], keyword: [], extAffil: [], extStaff: [], pilot: [], mechanic: [], cs: [], drugs: [] };
+
+     const drugSheet = getSheetFlexible(ss, ["マスタ_処置項目"]);
+     if (drugSheet) {
+       const dd = drugSheet.getDataRange().getDisplayValues();
+       for (let i = 1; i < dd.length; i++) {
+         const name = String(dd[i][0]).trim();
+         if (name) mastersData.drugs.push(name);
+       }
+     }
+
      const msSheet = getSheetFlexible(ss, ["マスタ_基本設定", "マスタデータ"]);
      if (msSheet) {
        const d = msSheet.getDataRange().getDisplayValues();
