@@ -118,7 +118,7 @@
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
     </div>
-    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.8</span></div>
+    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.10</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
     </div>
@@ -369,7 +369,7 @@
           <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-bottom:8px;">
             <div style="font-size:12px; font-weight:900; color:#e65100; margin-bottom:8px; border-bottom:1px solid #ffe082; padding-bottom:4px;">🏥 医療機器安全管理料 (生体維持・呼吸管理等)</div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
-              <label class="proc-lbl"><input type="checkbox" id="chk-ls-vent" class="chk-life-support" value="管理料_人工呼吸器">人工呼吸器</label>
+              <label class="proc-lbl"><input type="checkbox" id="chk-ls-vent" class="chk-life-support" value="管理料_人工呼吸器" onchange="document.getElementById('chk-resp').checked = this.checked;">人工呼吸器</label>
               <label class="proc-lbl"><input type="checkbox" id="chk-ls-shock" class="chk-life-support" value="管理料_除細動装置" onchange="document.getElementById('chk-shock').checked=this.checked; toggleBox('box-shock-det', this.checked);">除細動装置</label>
               <label class="proc-lbl"><input type="checkbox" id="chk-ls-hoiku" class="chk-life-support" value="管理料_閉鎖式保育器">閉鎖式保育器</label>
               <label class="proc-lbl"><input type="checkbox" id="chk-ls-ecmo" class="chk-life-support" value="管理料_補助循環装置">PCPS等(補助循環)</label>
@@ -380,12 +380,14 @@
           <div style="border: 2px solid var(--blue); border-radius: 8px; padding: 12px; background: #e3f2fd; margin-bottom:8px;">
             <div style="font-size:12px; font-weight:900; color:var(--blue); margin-bottom:8px; border-bottom:1px solid #bbdefb; padding-bottom:4px;">📈 生体モニタ算定</div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <!-- 修正: toggleCalc呼び出しを削除 -->
               <label class="proc-lbl"><input type="checkbox" id="chk-etco2" class="chk-other" value="EtCO2算定">EtCO2</label>
               <label class="proc-lbl" style="font-size:11px; color:var(--sub);">(SpO2およびモニター算定時間はタイムラインから自動算出されます)</label>
             </div>
           </div>
 
           <div style="background:#fff; border:1px solid #ccc; padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:8px;">
+            <label class="proc-lbl"><input type="checkbox" id="chk-resp" class="chk-other" value="人工呼吸器管理料" style="display:none;"></label>
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="12誘導心電図">12誘導心電図</label>
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="吸引">吸引</label>
             <label class="proc-lbl"><input type="checkbox" class="chk-other" value="血糖測定">血糖測定</label>
@@ -421,7 +423,7 @@
       <div class="card">
         <div class="edit-section-title" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
           <span>💓 胸骨圧迫 <span style="color:var(--ink); margin-left:8px;">計: <span id="lbl-cpr-total">0</span> 分</span></span>
-          <div style="display:flex; gap:8px;"><button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-cpr'); calcCPR();">クリア</button><button type="button" class="btn-add-action" onclick="addDyn('cpr')">＋ 追加</button></div>
+          <div style="display:flex; gap:8px;"><button type="button" class="btn-clear" style="padding:4px 12px;" onclick="clearDyn('dyn-cpr'); calcCPR()">クリア</button><button type="button" class="btn-add-action" onclick="addDyn('cpr')">＋ 追加</button></div>
         </div>
         <div id="dyn-cpr"></div>
       </div>
@@ -429,6 +431,27 @@
       <div class="card">
         <div class="edit-section-title" style="margin-top:0;">📝 備考</div>
         <textarea id="v-biko" rows="4" placeholder="現場の状況、引き継ぎ事項など自由に記入してください。"></textarea>
+        
+        <!-- 修正: 使用物品と新規追加の使用薬剤メモの配置 -->
+        <div style="background: #fffde7; padding:16px; margin-top:16px; border-radius:8px;">
+          <label style="font-weight:bold; color: #f57f17; font-size: 14px; display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <input type="checkbox" id="chk-stock" style="width:20px; height:20px;" onchange="toggleBox('box-stock-detail', this.checked)"> 📝 使用物品・補充予定メモ
+          </label>
+          <div id="box-stock-detail" style="display:none;">
+            <div style="font-size:11px; color:#f57f17; margin-bottom:4px; font-weight:bold;">※ここに書いた内容はメールの最上部に強調して記載されます。</div>
+            <textarea id="v-stock-detail" rows="2" placeholder="例：挿管セット、吸引カテ、NPPVマスク(M) など" style="border-color:#fff59d; background:#fff;"></textarea>
+          </div>
+        </div>
+
+        <div style="background: #e8f5e9; padding:16px; margin-top:16px; border-radius:8px;">
+          <label style="font-weight:bold; color: #2e7d32; font-size: 14px; display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <input type="checkbox" id="chk-med" style="width:20px; height:20px;" onchange="toggleBox('box-med-detail', this.checked)"> 💊 使用薬剤メモ
+          </label>
+          <div id="box-med-detail" style="display:none;">
+            <div style="font-size:11px; color:#2e7d32; margin-bottom:4px; font-weight:bold;">※ここに書いた内容はメールの最上部に強調して記載されます。</div>
+            <textarea id="v-med-detail" rows="2" placeholder="例：フェンタニル50μg、アドレナリン1mg×2 など" style="border-color:#a5d6a7; background:#fff;"></textarea>
+          </div>
+        </div>
       </div>
 
       <div style="padding-bottom:20px;">
@@ -501,21 +524,19 @@
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   const PIN_CODE = "5740";
 
-  // 🛠️ 未定義関数の補完: エラーログ送信
+  // 🛠️ エラーログ送信機能
   function sendErrorLog(detail) {
     console.error("[System Error Log]", detail);
     fetch(GAS_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "log_error", password: PIN_CODE, error: detail, source: "AW109_CaseRegister" }),
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "error_log", password: PIN_CODE, errorMsg: detail, source: "AW109_CaseRegister(v14.10)" }),
       redirect: "follow"
     }).catch(err => console.error("Error log dispatch failed:", err));
   }
 
   window.onerror = function(message, source, lineno, colno, error) {
     const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); 
-    return false;
+    sendErrorLog(errDetail); return false;
   };
 
   window.addEventListener('unhandledrejection', function(event) {
@@ -523,39 +544,28 @@
     if(!String(reason).includes("Load failed")) sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
-  // 🛠️ 未定義関数の補完: UIローダー制御
+  // 🛠️ UIローダー制御
+  let loaderTimer1, loaderTimer2;
   function showLoader(mainText, subText) {
     const loader = document.getElementById("global-loader");
     if(loader) {
       document.getElementById("loader-main-text").innerText = mainText || "通信中...";
       document.getElementById("loader-sub-text").innerText = subText || "データベースに接続しています";
       loader.style.display = "flex";
+      loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
+      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
     }
   }
 
   function hideLoader() {
+    clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
     const loader = document.getElementById("global-loader");
     if(loader) loader.style.display = "none";
   }
 
-  // 🛠️ 未定義関数の補完: モーダル制御
-  function openModal(id) {
-    const el = document.getElementById(id);
-    if(el) el.classList.add("show");
-  }
-
-  function closeModal(id) {
-    const el = document.getElementById(id);
-    if(el) el.classList.remove("show");
-  }
-
-  // 🛠️ 未定義関数の補完: 全角→半角自動変換
-  function toHalfWidth(el) {
-    if(!el) return;
-    el.value = el.value.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
-      return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
-    }).replace(/—/g, "-").replace(/ー/g, "-");
-  }
+  function openModal(id) { const el = document.getElementById(id); if(el) el.classList.add("show"); }
+  function closeModal(id) { const el = document.getElementById(id); if(el) el.classList.remove("show"); }
+  function toHalfWidth(el) { if(!el) return; el.value = el.value.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xfee0); }).replace(/—/g, "-").replace(/ー/g, "-"); }
 
   let state = {
     reqType: "",
@@ -574,7 +584,7 @@
   let diseaseCauseVal = "";
   let diseaseSubVal = "";
 
-  const CACHE_KEY = "aw109_master_cache_v14_8";
+  const CACHE_KEY = "aw109_master_cache_v14_10";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   
   let currentKeywords = [];
@@ -631,11 +641,9 @@
 
     const cancelGroup = document.getElementById("cancel-reason-group");
     if (cancelGroup) {
-      // マスタの中身だけでリストを作る（決め打ちの文字列は使わない）
       let masterReasons = (m.phrases || []).map(p => p.replace("キャンセル", "").trim()).filter(Boolean);
-      // 万が一マスタが空っぽの場合だけ、最低限の初期候補を表示する保険
       let allReasons = masterReasons.length > 0 ? [...new Set(masterReasons)] : ["上空キャンセル", "現場キャンセル", "天候不良キャンセル", "その他"];
-      if (!allReasons.includes("その他")) allReasons.push("その他"); // 「その他」は常に選べるようにしておく
+      if (!allReasons.includes("その他")) allReasons.push("その他"); 
       cancelGroup.innerHTML = allReasons.map(r => `
         <label><input type="radio" name="cancel-reason" value="${r}"> <span class="radio-lbl">${r}</span></label>
       `).join("");
@@ -663,7 +671,7 @@
       const d = new Date(timestampMs);
       const ageMin = Math.floor((Date.now() - timestampMs) / 60000);
       const ageLabel = ageMin < 60 ? `${ageMin}分前` : `${Math.floor(ageMin/60)}時間${ageMin%60}分前`;
-      const isStale = ageMin >= 5 * 60; // 5時間経過で黄色警告(キャッシュ有効期限6時間の手前)
+      const isStale = ageMin >= 5 * 60;
       const el = document.getElementById("master-sync-info");
       el.innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} (${ageLabel})`;
       el.style.color = isStale ? "#e65100" : "var(--sub)";
@@ -963,9 +971,9 @@
     }
   }
 
-function setDiseaseMain(val) {
+  function setDiseaseMain(val) {
     document.querySelectorAll('[id^="d-main-"]').forEach(el => el.classList.remove('on'));
-    if (diseaseMainVal === val) { // 同じボタンをもう一度押したら解除
+    if (diseaseMainVal === val) { 
       diseaseMainVal = ""; diseaseCauseVal = ""; diseaseSubVal = "";
       document.getElementById("disease-sub-area").style.display = "none";
       document.getElementById("disease-cpa-alert").style.display = "none";
@@ -991,8 +999,8 @@ function setDiseaseMain(val) {
     }
   }
 
- function setDiseaseCause(causeVal, btnEl) {
-    if (diseaseCauseVal === causeVal) { // 解除
+  function setDiseaseCause(causeVal, btnEl) {
+    if (diseaseCauseVal === causeVal) { 
       diseaseCauseVal = ""; diseaseSubVal = "";
       btnEl.classList.remove('sub-on');
       const exist = document.getElementById("d-sub-pills-2"); if(exist) exist.remove();
@@ -1007,8 +1015,8 @@ function setDiseaseMain(val) {
     }
   }
 
-function setDiseaseSubReal(subVal, btnEl) {
-    if (diseaseSubVal === subVal) { // 解除
+  function setDiseaseSubReal(subVal, btnEl) {
+    if (diseaseSubVal === subVal) { 
       diseaseSubVal = "";
       btnEl.classList.remove('sub-on');
       return;
@@ -1049,16 +1057,16 @@ function setDiseaseSubReal(subVal, btnEl) {
     const shockCb = document.getElementById("chk-ls-shock");
     if (shockCb) shockCb.checked = isShock;
 
+    // 修正: 意図しない呼び出し（toggleCalc）を削除
     const etco2Cb = document.getElementById("chk-etco2");
     if (etco2Cb) {
       etco2Cb.checked = isIntub;
-      
     }
   }
 
   function setReqType(val) {
     document.querySelectorAll('[id^="req-"]').forEach(el => el.classList.remove('active'));
-    if (state.reqType === val) { // 同じボタンをもう一度押したら解除
+    if (state.reqType === val) { 
       state.reqType = "";
       document.getElementById("keyword-group").style.display = currentKeywords.length > 0 ? 'block' : 'none';
       return;
@@ -1077,7 +1085,7 @@ function setDiseaseSubReal(subVal, btnEl) {
 
   function setScheme(val) {
     document.querySelectorAll('[id^="sch-"]').forEach(el => el.classList.remove('active'));
-    if (state.scheme === val) { // 同じボタンをもう一度押したら解除
+    if (state.scheme === val) { 
       state.scheme = "";
       document.getElementById('box-cancel-detail').style.display = "none";
       document.getElementById('lbl-end-time').innerText = "終了";
@@ -1157,77 +1165,76 @@ function setDiseaseSubReal(subVal, btnEl) {
                  </div>`;
              
     if(type === 'o2') {
-      html += `<div class="dyn-grid-2col"><div><span class="dyn-label">流量(L/min)</span><input type="number" inputmode="decimal" class="v-val"></div><div><span class="dyn-label">O2(%)</span><input type="number" inputmode="numeric" class="v-val2" value="100"></div></div>
-               <div><span class="dyn-label">デバイス</span><select class="v-type"><option value="経鼻">経鼻</option><option value="マスク">マスク</option><option value="リザーバー">リザーバー</option><option value="BVM">BVM</option><option value="その他">その他</option></select></div>`;
+      html += `<div class="dyn-grid-2col">
+                 <div><span class="dyn-label">流量(L/min)</span><input type="number" inputmode="decimal" class="v-val"></div>
+                 <div><span class="dyn-label">O2(%)</span><input type="number" inputmode="numeric" class="v-val2" value="100"></div>
+               </div>
+               <div>
+                 <span class="dyn-label">デバイス</span>
+                 <select class="v-type">
+                   <option value="経鼻">経鼻</option>
+                   <option value="マスク">マスク</option>
+                   <option value="リザーバー">リザーバー</option>
+                   <option value="BVM">BVM</option>
+                   <option value="その他">その他</option>
+                 </select>
+               </div>`;
     } else if(type === 'vent') {
-      html += `<div class="dyn-grid-2col"><div><span class="dyn-label">FiO2(%)</span><input type="number" inputmode="numeric" class="v-val" value="100"></div><div><span class="dyn-label">流量/設定</span><input type="number" inputmode="decimal" class="v-val2"></div></div>
-               <div class="dyn-grid-3col"><div><span class="dyn-label">モード</span><input type="text" class="v-type"></div><div><span class="dyn-label">設定RR</span><input type="number" inputmode="numeric" class="v-val3"></div><div><span class="dyn-label">設定Vt</span><input type="number" inputmode="numeric" class="v-val4"></div></div>
-               <div><span class="dyn-label">実測値メモ(Ppeak等)</span><input type="text" class="v-val5"></div>`;
+      html += `<div class="dyn-grid-2col">
+                 <div><span class="dyn-label">FiO2(%)</span><input type="number" inputmode="numeric" class="v-val" value="100"></div>
+                 <div><span class="dyn-label">流量/設定</span><input type="number" inputmode="decimal" class="v-val2"></div>
+               </div>
+               <div class="dyn-grid-3col">
+                 <div><span class="dyn-label">モード</span><input type="text" class="v-type"></div>
+                 <div><span class="dyn-label">設定RR</span><input type="number" inputmode="numeric" class="v-val3"></div>
+                 <div><span class="dyn-label">設定Vt</span><input type="number" inputmode="numeric" class="v-val4"></div>
+               </div>
+               <div>
+                 <span class="dyn-label">実測値メモ(Ppeak等)</span>
+                 <input type="text" class="v-val5">
+               </div>`;
     }
     html += `<div style="text-align:right; margin-top:8px;"><button type="button" class="btn-clear" style="color:var(--brand); border-color:var(--brand); font-size:12px; padding:4px 10px;" onclick="document.getElementById('dyn-${id}').remove(); if('${type}'==='cpr')calcCPR();">削除</button></div></div>`;
     box.insertAdjacentHTML('beforeend', html);
   }
-
   function clearDyn(id) { document.getElementById(id).innerHTML = ""; }
   
   function calcCPR() {
     let total = 0;
     document.querySelectorAll('#dyn-cpr .dyn-row-container').forEach(r => {
       const s = r.querySelector('.v-start').value; const e = r.querySelector('.v-end').value;
-      if(s && e) { let d1 = new Date(`1970-01-01T${s}`); let d2 = new Date(`1970-01-01T${e}`); if(d2 < d1) d2.setDate(d2.getDate()+1); total += Math.floor((d2 - d1)/60000); }
+      if(s && e) {
+        let d1 = new Date(`1970-01-01T${s}`); let d2 = new Date(`1970-01-01T${e}`);
+        if(d2 < d1) d2.setDate(d2.getDate()+1);
+        total += Math.floor((d2 - d1)/60000);
+      }
     });
     document.getElementById('lbl-cpr-total').innerText = total;
   }
 
   async function submitQA(event) {
-    const qName = document.getElementById("qa-name").value.trim(); const qEmail = document.getElementById("qa-email").value.trim(); const qText = document.getElementById("qa-input").value.trim(); 
+    const qName = document.getElementById("qa-name").value.trim();
+    const qEmail = document.getElementById("qa-email").value.trim();
+    const qText = document.getElementById("qa-input").value.trim(); 
     if(!qText) return alert("質問内容を入力してください。");
+    
     const finalQuestion = `【送信者】${qName || "未入力"}\n【連絡先】${qEmail || "未入力"}\n\n${qText}`;
-    showLoader("送信中...", "要望・報告データをサーバーに送信しています");
+
+    showLoader("送信中...", "");
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" }), redirect: "follow" });
       alert("要望・報告を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa');
     } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
-  async function deleteRecord() {
-    const p = prompt("この事案データを完全に削除しますか？\n実行するにはアクセスコードを入力してください。");
-    if (p !== PIN_CODE) { if (p !== null) alert("パスワードが一致しません。削除は中止されました。"); return; }
-    showLoader("削除処理中...", "データベースからレコードを削除しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_record", password: PIN_CODE, id: editTargetSysId }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") { alert("事案を削除しました。"); location.href = "search.html"; } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
-  }
-
-  async function markComplete() {
-    const type = document.querySelector('input[name="comp-who"]:checked').value; let who = type;
-    if (type === "代行") { const name = document.getElementById("comp-name").value.trim(); if(!name) return alert("代行入力者の名前を入力してください。"); who = "代行: " + name; } else { who = document.getElementById("edit-person").value || document.getElementById("v-ns").value || "本人"; }
-    if (!state.scheme) return alert("最終スキームを選択してください。");
-    if (!confirm(`カルテを完了にしますか？\n（記録: ${who}）`)) return;
-    showLoader("完了処理中...", "電子カルテの完了ステータスを更新しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: editTargetSysId, who: who }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") { alert("完了しました！"); location.href = "search.html"; } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
-  }
-
-  async function sendEmail() {
-    if(!confirm(`事案内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
-    showLoader("メール送信中...", "関係各所に送信しています");
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "send_email", password: PIN_CODE, id: editTargetSysId }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") { alert("メールを送信しました！"); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
-  }
-
   function getCollectData() {
     let rawId = document.getElementById("v-id").value.trim();
-    if (!rawId) { const d = new Date(); const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000); rawId = "仮" + String(jst.getMonth()+1).padStart(2,'0') + String(jst.getDate()).padStart(2,'0') + String(jst.getHours()).padStart(2,'0') + String(jst.getMinutes()).padStart(2,'0'); }
+    if (!rawId) {
+      const d = new Date(); const jst = new Date(d.getTime() + (d.getTimezoneOffset() + 540) * 60000);
+      rawId = "仮" + String(jst.getMonth()+1).padStart(2,'0') + String(jst.getDate()).padStart(2,'0') + String(jst.getHours()).padStart(2,'0') + String(jst.getMinutes()).padStart(2,'0');
+    }
     let finalId = rawId; if(document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value) finalId = `${rawId}-0${document.getElementById("v-edaban").value}`;
+    let erText = ""; if(document.getElementById("chk-er").checked) { const hosp = document.getElementById("v-er-hosp").value; if(hosp) erText = `\n【緊急外来搬送先: ${hosp}】`; }
     let finalScheme = state.scheme || ""; if(finalScheme === 'キャンセル') { const reason = document.querySelector('input[name="cancel-reason"]:checked')?.value || "未選択"; finalScheme = `キャンセル(${reason})`; }
 
     let payload = {
@@ -1272,19 +1279,46 @@ function setDiseaseSubReal(subVal, btnEl) {
       payload["その他外科処置"] = "◯ " + document.getElementById("v-other-surg").value;
     }
 
+    let dynText = "";
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       let idx = 1;
       document.querySelectorAll(`#dyn-${type} .dyn-row-container`).forEach(row => {
         if(idx <= 5) {
           payload[`${type}${idx}開始`] = row.querySelector('.v-start').value; payload[`${type}${idx}終了`] = row.querySelector('.v-end').value;
           if(type === '酸素' || type === '呼吸器') { payload[`${type}${idx}FiO2`] = row.querySelector('.v-val2').value; payload[`${type}${idx}流量`] = row.querySelector('.v-val').value; }
+          
+          const s = row.querySelector('.v-start').value || "--:--";
+          const e = row.querySelector('.v-end').value || "--:--";
+          if(type === '酸素') {
+            const vType = row.querySelector('.v-type').value;
+            const flow = row.querySelector('.v-val').value;
+            const fio2 = row.querySelector('.v-val2').value;
+            dynText += `[酸素] ${vType} ${flow}L/min ${fio2}% (${s}~${e})<br>`;
+          } else if(type === '呼吸器') {
+            const mode = row.querySelector('.v-type').value;
+            const fio2 = row.querySelector('.v-val').value;
+            const peep = row.querySelector('.v-val2').value;
+            dynText += `[呼吸器] ${mode} FiO2:${fio2} PEEP:${peep} (${s}~${e})<br>`;
+          } else if(type === '圧迫') {
+            dynText += `[CPR] ${s}~${e}<br>`;
+          }
           idx++;
         }
       });
     });
+    let cprTot = document.getElementById('lbl-cpr-total').innerText; if(cprTot !== "0") dynText += `(胸骨圧迫トータル: ${cprTot}分)<br>`;
     
+    // 修正: 備考の構成 (使用物品・使用薬剤を結合して保存)
     let biko = document.getElementById("v-biko").value || "";
     if(document.getElementById("chk-er").checked) biko = `【緊急外来搬送先: ${document.getElementById("v-er-hosp").value}】\n` + biko;
+    
+    if(document.getElementById("chk-med").checked && document.getElementById("v-med-detail").value.trim()) {
+      biko = `💊【使用薬剤メモ】\n${document.getElementById("v-med-detail").value.trim()}\n------------------\n` + biko;
+    }
+    if(document.getElementById("chk-stock").checked && document.getElementById("v-stock-detail").value.trim()) {
+      biko = `⚠️【使用物品・補充予定メモ】\n${document.getElementById("v-stock-detail").value.trim()}\n------------------\n` + biko;
+    }
+
     payload["備考"] = biko.trim();
     
     let selMails = [];
@@ -1292,6 +1326,8 @@ function setDiseaseSubReal(subVal, btnEl) {
     const manualMail = document.getElementById("custom-email").value.trim();
     if (manualMail) selMails.push(manualMail);
     payload["追加送信先"] = selMails.join(",");
+
+    payload["_dynTextForPreview"] = dynText;
     
     return payload;
   }
@@ -1355,15 +1391,21 @@ function setDiseaseSubReal(subVal, btnEl) {
       html += `<b>エコー:</b> ${echos.length > 0 ? echos.join(", ") : "なし"}<br>`;
       html += `<b>その他処置:</b> ${others.length > 0 ? others.join(", ") : "なし"}</div>`;
 
+      if (d["_dynTextForPreview"]) {
+        html += `<div style="background:#e3f2fd; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #bbdefb;">`;
+        html += `<div style="font-weight:bold; color:#0d47a1; margin-bottom:4px;">⏱️ 持続・積算情報</div>`;
+        html += `${d["_dynTextForPreview"]}</div>`;
+      }
+
       let diseaseComboStr = `[${d["疾患大分類"] || '未選択'}]`;
       if(d["疾患原因"]) diseaseComboStr += ` 原因:${d["疾患原因"]}`;
       if(d["詳細分類"]) diseaseComboStr += ` -> ${d["詳細分類"]}`;
       
-      html += `<div style="background:#e3f2fd; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #bbdefb;">`;
-      html += `<div style="font-weight:bold; color:#1565c0; margin-bottom:4px;">🩺 疾患・診断・概要</div>`;
+      html += `<div style="background:#f3e5f5; padding:10px; border-radius:6px; margin-bottom:8px; border:1px solid #c8e6c9;">`;
+      html += `<div style="font-weight:bold; color:#1b5e20; margin-bottom:4px;">🩺 疾患・診断・概要</div>`;
       html += `<b>疾患分類:</b> ${diseaseComboStr}<br><b>現場診断:</b> ${d["現場診断"]||"なし"}<br><b>キーワード:</b> ${d["キーワード要請"]||"なし"}<br><b>概要:</b> ${d["事案概要"]||"なし"}</div>`;
       
-      if(d["備考"]) html += `<b>📝 備考:</b><br>${d["備考"].replace(/\n/g, '<br>')}<br>`;
+      if(d["備考"]) html += `<b>📝 備考 (物品メモ等含む):</b><br>${d["備考"].replace(/\n/g, '<br>')}<br>`;
 
       document.getElementById("preview-box").innerHTML = html;
     } catch(e) { document.getElementById("preview-error").style.display = "block"; document.getElementById("preview-error").innerText = "プレビュー生成失敗。必須項目を確認してください。"; sendErrorLog("buildPreview error: " + e.message); }
@@ -1383,6 +1425,11 @@ function setDiseaseSubReal(subVal, btnEl) {
     }
 
     const payload = getCollectData();
+    delete payload["_dynTextForPreview"]; 
+    
+    const btn = document.getElementById(mode === 'submit' ? "btn-submit-main" : "btn-submit-main");
+    btn.disabled = true;
+    btn.innerText = "送信中... 🚁";
     
     showLoader("症例データ送信中...", "事案データベースへレコードを登録しています");
     try {
@@ -1396,11 +1443,11 @@ function setDiseaseSubReal(subVal, btnEl) {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(reqBody), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success") { 
-        alert(mode === 'update' ? "上書き保存しました。" : "事案の新規登録が完了しました。"); 
+        alert(mode === 'update' ? "上書き保存しました。" : "事案の新規登録が正常に完了しました。"); 
         if(mode === 'update') location.href = "search.html"; 
         else location.reload(); 
       } else { throw new Error(json.message || "サーバー側で登録が拒否されました"); }
-    } catch(e) { sendErrorLog(`Submit Data Error: ${e.message}`); alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(`Submit Data Error: ${e.message}`); alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); } finally { btn.disabled = false; btn.innerText = "🚀 この内容で送信する"; hideLoader(); }
   }
 </script>
 </body>
