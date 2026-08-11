@@ -315,9 +315,14 @@
             document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false);
             document.getElementById('info-remarks').value = "";
             
-            if (data.hamamachiReason) { 
+            if (data.hamamachiReason) {
               let others = [];
-              data.hamamachiReason.split(',').forEach(r => { const cb = document.querySelector(`input[name="reason"][value="${r.trim()}"]`); if(cb) cb.checked = true; else others.push(r.trim()); }); 
+              const reasonCbs = Array.from(document.querySelectorAll('input[name="reason"]'));
+              data.hamamachiReason.split(',').forEach(r => {
+                const val = r.trim();
+                const cb = reasonCbs.find(el => el.value === val);
+                if(cb) cb.checked = true; else others.push(val);
+              });
               if(others.length > 0) document.getElementById('info-remarks').value = others.join(", ");
             }
             events = data.events || [];
