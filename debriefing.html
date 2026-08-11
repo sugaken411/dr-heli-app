@@ -147,6 +147,14 @@
       <div class="card">
         <div class="section-label">📝 紐付けデータ</div>
         <div id="v-fetched-data"></div>
+        <div id="review-status-box" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed #ccc; align-items:center; gap:8px;">
+          <label style="font-size:13px; font-weight:700; margin:0;">レビューステータス:</label>
+          <select id="v-review-status" onchange="updateReviewStatus()" style="flex:1; padding:6px; border:1px solid var(--line); border-radius:6px;">
+            <option value="未確認">⚠️ 未確認</option>
+            <option value="確認済み">✅ 確認済み</option>
+            <option value="要フォローアップ">🔴 要フォローアップ</option>
+          </select>
+        </div>
       </div>
 
       <div class="card">
@@ -366,7 +374,7 @@
     "5その他": ["5-1: 外因性", "5-2: 内因性"]
   };
 
-  let allCasesData = []; let existingDebriefs = []; let currentCase = null; 
+  let allCasesData = []; let existingDebriefs = []; let currentCase = null; let currentDebriefCaseId = null;
   let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[], keyword:[] };
   
   let sysData = {
@@ -768,8 +776,33 @@
         sendErrorLog(`restoreSystemData parse error: ${e.stack || e.toString()}`);
       }
     }
-    
+
+    if(past) {
+      currentDebriefCaseId = past["要請番号"];
+      document.getElementById("review-status-box").style.display = "flex";
+      document.getElementById("v-review-status").value = past["レビューステータス"] || "未確認";
+    } else {
+      currentDebriefCaseId = null;
+      document.getElementById("review-status-box").style.display = "none";
+    }
+
+
     document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
+  }
+
+  async function updateReviewStatus() {
+    if (!currentDebriefCaseId) return;
+    const newStatus = document.getElementById("v-review-status").value;
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_review_status", password: PIN_CODE, caseId: currentDebriefCaseId, reviewStatus: newStatus }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status !== "success") throw new Error(json.message);
+      const target = existingDebriefs.find(d => String(d["要請番号"]) === String(currentDebriefCaseId));
+      if (target) target["レビューステータス"] = newStatus;
+    } catch(e) {
+      sendErrorLog(e.stack || e.toString());
+      alert("レビューステータスの更新に失敗しました。");
+    }
   }
 
   function restoreSystemData(sys) {

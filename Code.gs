@@ -182,7 +182,7 @@ function doPost(e) {
    const allowed = [
      "submit", "error_log", "fetch_init", "fetch_daily_report", "save_daily_report",
      "fetch_all_reports", "fetch_library", "update_library_record", "fetch_all",
-     "fetch_recent_cases", "fetch_debriefings", "submit_debriefing", "update_status",
+     "fetch_recent_cases", "fetch_debriefings", "submit_debriefing", "update_review_status", "update_status",
      "update_record", "delete_record", "send_email", "add_master", "submit_question",
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
      "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full"
@@ -1008,6 +1008,26 @@ function doPost(e) {
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
   
+   if (action === "update_review_status") {
+     const dSheet = getSheetFlexible(ss, ["DB_デブリーフィング", "デブリーフィングデータベース"]);
+     if (!dSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "シートが存在しません" })).setMimeType(ContentService.MimeType.JSON);
+     const d = dSheet.getDataRange().getDisplayValues();
+     const head = d[0].map(h => h.trim());
+     const idIdx = head.indexOf("要請番号");
+     const statusIdx = head.indexOf("レビューステータス");
+     if (statusIdx === -1) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "レビューステータス列が見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+
+     let rowIndex = -1;
+     for (let i = 1; i < d.length; i++) {
+       if (idIdx !== -1 && String(d[i][idIdx]).trim() === String(requestData.caseId).trim()) { rowIndex = i + 1; break; }
+     }
+     if (rowIndex === -1) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "対象のデブリーフィングが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+
+     dSheet.getRange(rowIndex, statusIdx + 1).setValue(sanitizeInput(requestData.reviewStatus || "未確認"));
+     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+   }
+
+
    if (action === "submit_debriefing") {
      const dSheet = getSheetFlexible(ss, ["DB_デブリーフィング", "デブリーフィングデータベース"]);
      if (!dSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "シートが存在しません" })).setMimeType(ContentService.MimeType.JSON);
