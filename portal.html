@@ -284,7 +284,7 @@
       if(!localStorage.getItem(CACHE_KEY)) { 
         document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。電波の良い場所で再読込してください。"; 
       }
-      if(!String(e).includes("Load failed")) sendErrorLog(e.toString());
+      if(!String(e).includes("Load failed")) sendErrorLog(e.stack || e.toString());
     } finally { 
       hideLoader(); 
     }
@@ -359,7 +359,7 @@
       } else { throw new Error(json.message); }
     } catch (e) { 
       alert("通信エラーが発生しました。"); 
-      if(!String(e).includes("Load failed")) sendErrorLog(e.toString()); 
+      if(!String(e).includes("Load failed")) sendErrorLog(e.stack || e.toString()); 
     } finally { 
       btn.textContent = "送信"; 
       btn.disabled = false; 

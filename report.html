@@ -268,7 +268,7 @@
           await syncFromDb(false); 
         } else { throw new Error(json.message); }
       } catch(e) { 
-        sendErrorLog(e.toString()); 
+        sendErrorLog(e.stack || e.toString()); 
         alert("初期通信エラーが発生しました。"); 
       } finally { showLoader(false); }
     }
@@ -324,7 +324,7 @@
           render();
         } else { throw new Error(json.message); }
       } catch(e) { 
-        sendErrorLog(e.toString()); 
+        sendErrorLog(e.stack || e.toString()); 
         alert("事案の同期に失敗しました。オフライン保存データを確認してください。"); 
       } finally { showLoader(false); }
     }
@@ -355,7 +355,7 @@
           updateSyncTimestamp();
         } else { throw new Error(json.message); }
       } catch(e) { 
-        sendErrorLog(e.toString()); 
+        sendErrorLog(e.stack || e.toString()); 
         alert("保存エラーが発生しました。"); 
       } finally { showLoader(false); }
     }

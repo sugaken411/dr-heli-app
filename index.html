@@ -956,10 +956,10 @@
           <div style="border: 2px solid #ff9800; border-radius: 8px; padding: 12px; background: #fffde7; margin-bottom:8px;">
             <div style="font-size:12px; font-weight:900; color:#e65100; margin-bottom:8px; border-bottom:1px solid #ffe082; padding-bottom:4px;">🏥 医療機器安全管理料</div>
             <div style="display:flex; flex-direction:column; gap:8px;">
-              <label class="proc-lbl"><input type="checkbox" class="chk-life-support" value="管理料_人工心肺装置">人工心肺装置及び補助循環装置 (PCPS等)</label>
+              <label class="proc-lbl"><input type="checkbox" id="chk-ls-cpb" class="chk-life-support" value="管理料_人工心肺装置">人工心肺装置及び補助循環装置 (PCPS等)</label>
               <label class="proc-lbl"><input type="checkbox" id="chk-ls-vent" class="chk-life-support" value="管理料_人工呼吸器" onchange="document.getElementById('chk-resp').checked = this.checked;">人工呼吸器</label>
               <label class="proc-lbl"><input type="checkbox" id="chk-ls-defib" class="chk-life-support" value="管理料_除細動装置">除細動装置</label>
-              <label class="proc-lbl"><input type="checkbox" class="chk-life-support" value="管理料_閉鎖式保育器">閉鎖式保育器</label>
+              <label class="proc-lbl"><input type="checkbox" id="chk-ls-hoiku" class="chk-life-support" value="管理料_閉鎖式保育器">閉鎖式保育器</label>
             </div>
           </div>
 
@@ -1345,7 +1345,7 @@
           isEditMode = false; 
         }
       } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("データ復元に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("データ復元に失敗しました。"); } finally { hideLoader(); }
   }
 
   function restoreData(row) {
@@ -1581,10 +1581,9 @@
     }
     
     document.getElementById("chk-ls-vent").checked = String(row["管理料_人工呼吸器"]).includes("あり");
-    document.getElementById("chk-ls-shock").checked = String(row["管理料_除細動装置"]).includes("あり");
+    document.getElementById("chk-ls-defib").checked = String(row["管理料_除細動装置"]).includes("あり");
     document.getElementById("chk-ls-hoiku").checked = String(row["管理料_閉鎖式保育器"]).includes("あり");
-    document.getElementById("chk-ls-ecmo").checked = String(row["管理料_補助循環装置"]).includes("あり");
-    document.getElementById("chk-ls-cpb").checked = String(row["管理料_人工心肺装置"]).includes("あり");
+    document.getElementById("chk-ls-cpb").checked = String(row["管理料_人工心肺装置"]).includes("あり") || String(row["管理料_補助循環装置"]).includes("あり");
 
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       clearDyn(type === '酸素' ? 'dyn-o2' : type === '呼吸器' ? 'dyn-vent' : 'dyn-cpr');
@@ -1792,7 +1791,7 @@
         if(!isEditMode) checkRouting();
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       }
-    } catch(e) { sendErrorLog(e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
   }
 
   function toggleComp() { const el = document.querySelector('input[name="comp-who"]:checked'); if(el) document.getElementById("comp-name").style.display = el.value === "代行" ? "block" : "none"; }
@@ -1809,7 +1808,7 @@
     const ventCb = document.getElementById("chk-ls-vent");
     if (ventCb) ventCb.checked = (isIntub || isNppv);
     
-    const shockCb = document.getElementById("chk-ls-shock");
+    const shockCb = document.getElementById("chk-ls-defib");
     if (shockCb) shockCb.checked = isShock;
   }
 
@@ -1976,7 +1975,7 @@
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" }), redirect: "follow" });
       alert("要望・報告を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa');
-    } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
   function getCollectData() {
@@ -2019,9 +2018,9 @@
       "経皮的酸素飽和度": state.calcVals.spo2[state.calc.spo2] || "",
       "EtCO2算定": document.getElementById("chk-etco2").checked ? "あり" : "", 
       "管理料_人工呼吸器": document.getElementById("chk-ls-vent").checked ? "あり" : "",
-      "管理料_除細動装置": document.getElementById("chk-ls-shock").checked ? "あり" : "",
+      "管理料_除細動装置": document.getElementById("chk-ls-defib").checked ? "あり" : "",
       "管理料_閉鎖式保育器": document.getElementById("chk-ls-hoiku").checked ? "あり" : "",
-      "管理料_補助循環装置": document.getElementById("chk-ls-ecmo").checked ? "あり" : "",
+      "管理料_補助循環装置": document.getElementById("chk-ls-cpb").checked ? "あり" : "",
       "管理料_人工心肺装置": document.getElementById("chk-ls-cpb").checked ? "あり" : "",
       "事案概要": document.getElementById("v-summary-req").value.trim()
     };
@@ -2242,7 +2241,7 @@
     } catch(e) { 
       document.getElementById("preview-error").style.display = "block"; 
       document.getElementById("preview-error").innerText = "プレビュー生成失敗。必須項目を確認してください。"; 
-      sendErrorLog("buildPreview error: " + e.message); 
+      sendErrorLog("buildPreview error: " + (e.stack || e.message));
     }
   }
 
@@ -2263,7 +2262,7 @@
         throw new Error(json.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.toString()); 
+      sendErrorLog(e.stack || e.toString()); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       hideLoader(); 
@@ -2291,7 +2290,7 @@
         throw new Error(json.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.toString()); 
+      sendErrorLog(e.stack || e.toString()); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       hideLoader(); 
@@ -2329,7 +2328,7 @@
         throw new Error(json.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.toString()); 
+      sendErrorLog(e.stack || e.toString()); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       hideLoader(); 
@@ -2382,7 +2381,7 @@
         throw new Error(json.message || "サーバー側で登録が拒否されました"); 
       }
     } catch(e) { 
-      sendErrorLog(`Submit Data Error: ${e.message}`); 
+      sendErrorLog(`Submit Data Error: ${e.stack || e.message}`);
       alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); 
     } finally { 
       btn.disabled = false; 

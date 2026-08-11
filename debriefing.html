@@ -434,7 +434,7 @@
     } catch(e) { 
       if(!isBackground) alert("データベースの同期に失敗しました。");
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
-      sendErrorLog(e.toString());
+      sendErrorLog(e.stack || e.toString());
     } finally { if(!isBackground) hideLoader(); }
   }
 
@@ -507,7 +507,7 @@
     try {
       await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}), redirect: "follow" });
       alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-    } catch (e) { alert("通信エラー"); sendErrorLog(e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
+    } catch (e) { alert("通信エラー"); sendErrorLog(e.stack || e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
   }
 
   function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }

@@ -223,8 +223,8 @@
   const PIN_ADMIN = "9999"; 
   let currentData = { qa: [], news: [], manuals: [] };
   
-  window.onerror = function(msg, src, line, col, err) { sendErrorLog(`GlobalError: ${msg}`); return false; };
-  window.addEventListener('unhandledrejection', function(e) { if(!String(e.reason).includes("Load failed")) sendErrorLog(`PromiseRejection: ${e.reason}`); });
+  window.onerror = function(msg, src, line, col, err) { sendErrorLog(`GlobalError: ${msg}\nLine: ${line}:${col}\nStack: ${err ? err.stack : 'N/A'}`); return false; };
+  window.addEventListener('unhandledrejection', function(e) { const reason = e.reason ? (e.reason.stack || e.reason) : 'N/A'; if(!String(reason).includes("Load failed")) sendErrorLog(`PromiseRejection: ${reason}`); });
 
   let lockTime = 600; 
   let timerInterval;
@@ -278,7 +278,7 @@
         renderLists();
         if(isManualUpdate) alert("最新情報を取得しました。");
       } else { throw new Error(jsonRes.message); }
-    } catch(e) { sendErrorLog(e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
   }
 
   function renderLists() {
@@ -349,7 +349,7 @@
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "manage_qa_full", password: PIN_ADMIN, sub_action: actionType, rowIdx: rowIdx, data: data }), redirect: "follow" });
       const json = await res.json();
       if(json.status === "success") { closeModal('modal-edit-qa'); fetchLatestData(true, false); alert("処理が完了しました。"); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   // --- お知らせ管理 ---
@@ -384,7 +384,7 @@
         if(actionType === 'add') { ["news-date", "news-category", "news-title", "news-content"].forEach(id => document.getElementById(id).value = ""); }
         closeModal('modal-edit-news'); fetchLatestData(true, false); alert("処理が完了しました。"); 
       } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   // --- マニュアル管理 ---
@@ -416,7 +416,7 @@
         if(actionType === 'add') { ["man-title", "man-text", "man-target"].forEach(id => document.getElementById(id).value = ""); }
         closeModal('modal-edit-manual'); fetchLatestData(true, false); alert("処理が完了しました。"); 
       } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   document.getElementById("add-type").addEventListener('change', (e) => { document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; });
@@ -431,7 +431,7 @@
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2 }), redirect: "follow" });
       const json = await res.json();
       if (json.status === "success") { alert("マスタデータベースに正常に追加しました。"); document.getElementById("add-val1").value = ""; document.getElementById("add-val2").value = ""; } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 </script>
 </body>

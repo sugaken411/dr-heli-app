@@ -251,7 +251,7 @@
         } else { throw new Error(json.message); }
       } catch (e) {
         alert("データ同期に失敗しました。接続を確認してください。");
-        sendErrorLog(e.toString());
+        sendErrorLog(e.stack || e.toString());
       } finally {
         hideLoader();
       }

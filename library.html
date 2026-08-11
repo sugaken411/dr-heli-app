@@ -370,7 +370,7 @@
       } else { throw new Error(json.message || "データ同期に失敗しました"); }
     } catch (e) {
       document.getElementById("cards-container").innerHTML = `<p style='color:var(--brand-danger); font-weight:bold; text-align:center; padding:20px;'>通信エラーが発生しました。</p>`;
-      sendErrorLog(e.toString());
+      sendErrorLog(e.stack || e.toString());
     } finally { hideLoader(); }
   }
 
@@ -468,7 +468,7 @@
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(個別)" }), redirect: "follow" });
       const json = await res.json();
       if(json.status === "success") { alert("質問を送信しました。管理者に通知されました。"); closeModal("modal-qa"); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
   async function submitGlobalQA() {
@@ -479,7 +479,7 @@
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(共通)" }), redirect: "follow" });
       const json = await res.json();
       if(json.status === "success") { alert("ご要望を送信しました。管理者に通知されました。"); document.getElementById("global-qa-input").value = ""; closeModal("modal-global-qa"); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
   function openEditModal(rowIdx) {
@@ -512,7 +512,7 @@
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_library_record", password: ADMIN_CODE, rowIdx: rowIdx, editData: editData }), redirect: "follow" });
       const json = await res.json();
       if(json.status === "success") { alert("資料データを保存しました。"); closeModal("modal-edit"); fetchLibraryData(false); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
   function openModal(id) { document.getElementById(id).classList.add('show'); }

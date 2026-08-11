@@ -306,7 +306,7 @@
       if(isManualUpdate) alert("最新のデータを取得しました。");
 
     } catch (e) { 
-      sendErrorLog(e.toString());
+      sendErrorLog(e.stack || e.toString());
       if(!isBackground) alert("データベース同期エラーが発生しました。"); 
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
     } finally { 
@@ -421,7 +421,7 @@
         closeModal('qa'); 
       } else { throw new Error(jsonRes.message); }
     } catch(e) { 
-      sendErrorLog(e.toString()); 
+      sendErrorLog(e.stack || e.toString()); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       btn.textContent = "送信する ✉️"; 
