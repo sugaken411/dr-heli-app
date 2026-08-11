@@ -23,6 +23,9 @@
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
     
     main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
+    .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .cross-item { display: flex; flex-direction: column; gap: 4px; }
+    .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--blue); margin-bottom: 12px; border-bottom: 1px solid #efeff4; padding-bottom: 6px; text-transform: uppercase; }
     
@@ -221,6 +224,8 @@
             <label><input type="radio" name="env-loc" value="各自"> <span class="radio-lbl">各自(リモート)</span></label>
           </div>
           <div class="radio-group">
+            <label><input type="radio" name="env-method" value="対面" checked> <span class="radio-lbl">対面</span></label>
+            <label><input type="radio" name="env-method" value="Zoom"> <span class="radio-lbl">Zoom</span></label>
             <label><input type="radio" name="env-method" value="対面＋Zoom"> <span class="radio-lbl">対面＋Zoom</span></label>
           </div>
         </div>
