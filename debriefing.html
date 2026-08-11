@@ -221,12 +221,35 @@
             <label><input type="radio" name="env-loc" value="各自"> <span class="radio-lbl">各自(リモート)</span></label>
           </div>
           <div class="radio-group">
-            <label><input type="radio" name="env-method" value="対面" checked> <span class="radio-lbl">対面</span></label>
-            <label><input type="radio" name="env-method" value="Zoom"> <span class="radio-lbl">Zoom</span></label>
             <label><input type="radio" name="env-method" value="対面＋Zoom"> <span class="radio-lbl">対面＋Zoom</span></label>
           </div>
         </div>
 
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">実施日時</div>
+          <div class="cross-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="cross-item"><label>実施日</label><input type="date" id="d-date"></div>
+            <div class="cross-item"><label>開始時間</label><input type="time" id="d-time"></div>
+            <div class="cross-item"><label>終了時間</label><input type="time" id="d-time-end"></div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">事前準備ギャップ</div>
+          <textarea id="v-gap" rows="2" placeholder="事前情報と実際の差異など..."></textarea>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">チーム連携評価</div>
+          <textarea id="v-team" rows="2" placeholder="多職種連携・情報共有の評価..."></textarea>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">マスタ・システム改善要望</div>
+          <textarea id="v-master-gap" rows="2" placeholder="マスタ登録やシステムへの要望..."></textarea>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">総括・次回アクション</div>
+          <textarea id="v-action" rows="2" placeholder="今回の総括、次回に活かすアクション..."></textarea>
+        </div>
         <div style="margin-bottom:16px;">
           <div style="font-size:12px; font-weight:bold; color:var(--brand); margin-bottom:8px;">※ このシートの記載者(Ns)</div>
           <div class="pill-group" id="recorder-container"></div>
@@ -991,7 +1014,7 @@
       reqType: sysData.reqType            
     };
 
-    const envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
+   const envLoc = document.querySelector('input[name="env-loc"]:checked')?.value || "";
     const envMethod = document.querySelector('input[name="env-method"]:checked')?.value || "";
 
     // 🌟 一意ID（sysId）が存在すれば優先送信、なければ要請番号
@@ -1000,8 +1023,35 @@
       try { const sData = JSON.parse(currentCase["システムデータ"]); if(sData.sysId) submitId = sData.sysId; } catch(e) {}
     }
 
-    const payload = { caseId: submitId, recorder: rec, tags: tagsObj, summary: sysData.summary, evalText: evalTxt, good: cg.trim(), bad: cb.trim(), location: envLoc, method: envMethod, participants: ptList.join(", "), systemData: sysData };
+    // 固定参加者（内部スタッフのみ）と、外部・OJTは列を分けて送る
+    let fixedParticipants = [];
+    ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n => fixedParticipants.push(n)); });
+    const extPtStr = sysData.ext.filter(e => e.affil || e.name).map(e => `${e.affil} ${e.name}`.trim()).join(", ");
+    const ojtPtStr = sysData.ojt.filter(o => o.job || o.name).map(o => `[OJT]${o.job} ${o.name}`.trim()).join(", ");
 
+    // systemDataには検索タグ用の情報を確実に含める（診断・場面・特殊フラグ等）
+    sysData.searchTags = uniqueTags;
+
+    const payload = { 
+      caseId: submitId, 
+      dDate: document.getElementById("d-date").value,
+      dTime: document.getElementById("d-time").value,
+      dDuration: document.getElementById("d-time-end").value,
+      dPlace: envLoc, 
+      method: envMethod, 
+      recorder: rec, 
+      participants: fixedParticipants.join(", "), 
+      extPt: extPtStr, 
+      ojtPt: ojtPtStr, 
+      gap: document.getElementById("v-gap").value.trim(),
+      team: document.getElementById("v-team").value.trim(),
+      masterGap: document.getElementById("v-master-gap").value.trim(),
+      action: document.getElementById("v-action").value.trim(),
+      evals: sysData.evals, 
+      feedbacks: sysData.feedbacks, 
+      allParticipants: ptList.join(", "), 
+      systemData: sysData 
+    };
     const btn = document.getElementById("btn-submit"); btn.disabled = true; btn.innerText = "送信中... 🚁";
     showLoader("保存処理中...", "デブリーフィングデータベースへ保存しています");
     
