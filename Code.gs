@@ -912,7 +912,7 @@ function doPost(e) {
     
      let bikoSection = appData["備考"] ? `\n■ 備考\n${appData["備考"]}\n` : "";
     
-     let emailBody = `【AW109 EMS 新規事案登録】\n現場アプリから事案が登録されました。\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n`;
+     let emailBody = `【AW109 EMS 新規事案登録】\n現場アプリから事案が登録されました。\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n ・ キーワード : ${appData["キーワード"] || "なし"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n■ カルテ完了報告 (本人 or 代行入力の完了報告はこちら)\n${GAS_API_URL}?id=${encodeURIComponent(yoseiId)}\n\n`;
     
      let mailTo = getMailToList(); let allEmails = [];
      if (mailTo) allEmails = mailTo.split(",").map(e => e.trim());
@@ -973,7 +973,7 @@ function doPost(e) {
      const yoseiId = appData["要請番号"];
      let bikoSection = appData["備考"] ? `\n■ 備考\n${appData["備考"]}\n` : "";
     
-     let emailBody = `【AW109 EMS 事案記録 再送】\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n`;
+     let emailBody = `【AW109 EMS 事案記録 再送】\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n ・ キーワード : ${appData["キーワード"] || "なし"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n■ カルテ完了報告 (本人 or 代行入力の完了報告はこちら)\n${GAS_API_URL}?id=${encodeURIComponent(yoseiId)}\n\n`;
 
 
      let mailTo = getMailToList(); let allEmails = [];

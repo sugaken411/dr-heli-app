@@ -291,6 +291,8 @@
 
   const CACHE_KEY = "aw109_search_master_v14_12";
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
+  const DATA_CACHE_KEY = "aw109_search_data_cache";
+  const DATA_CACHE_EXPIRE_MS = 90 * 1000;
 
   async function initSearchApp() {
     const cachedStr = sessionStorage.getItem("aw109_search_state");
@@ -394,15 +396,14 @@
 
   async function fetchData() {
     document.getElementById("results").innerHTML = '<p style="text-align:center; padding:40px;">検索中...🔍</p>';
-    showLoader("データ検索中...", "事案データベースに接続しています");
-    
-    const qId = document.getElementById("q-id").value.trim(); 
-    const dStart = document.getElementById("q-date-start").value; 
-    const dEnd = document.getElementById("q-date-end").value; 
+
+    const qId = document.getElementById("q-id").value.trim();
+    const dStart = document.getElementById("q-date-start").value;
+    const dEnd = document.getElementById("q-date-end").value;
     const dMonth = document.getElementById("q-month").value;
-    const stVal = document.getElementById("q-status").value; 
-    const destVal = document.getElementById("q-dest").value; 
-    const drVal = document.getElementById("q-dr").value; 
+    const stVal = document.getElementById("q-status").value;
+    const destVal = document.getElementById("q-dest").value;
+    const drVal = document.getElementById("q-dr").value;
     const nsVal = document.getElementById("q-ns").value;
 
     sessionStorage.setItem("aw109_search_state", JSON.stringify({
@@ -410,13 +411,30 @@
     }));
 
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "fetch_all", password: activePin }), 
-        redirect: "follow" 
-      });
-      const json = await res.json();
-      
+      // 🌟 直前(90秒以内)に取得済みのデータがあれば、通信を省略して再利用する
+      // (「戻る」での再読み込みのたびに毎回全件通信が走り、電波状況が悪い現場でタイムアウトが頻発していたための対策)
+      let json = null;
+      const dataCachedStr = sessionStorage.getItem(DATA_CACHE_KEY);
+      if (dataCachedStr) {
+        try {
+          const cacheObj = JSON.parse(dataCachedStr);
+          if (Date.now() - cacheObj.timestampMs < DATA_CACHE_EXPIRE_MS) json = { status: "success", data: cacheObj.data };
+        } catch(e) {}
+      }
+
+      if (!json) {
+        showLoader("データ検索中...", "事案データベースに接続しています");
+        const res = await fetch(GAS_API_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "fetch_all", password: activePin }),
+          redirect: "follow"
+        });
+        json = await res.json();
+        if (json.status === "success") {
+          sessionStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: json.data }));
+        }
+      }
+
       if(json.status === "success") {
         allData = json.data; 
         const idListArea = document.getElementById("q-id-list"); 

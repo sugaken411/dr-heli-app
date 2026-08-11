@@ -628,7 +628,9 @@
         <div class="cross-grid">
           <div class="cross-item">
             <label>出場先</label>
-            <input type="text" id="v-dest" list="dl-dest" placeholder="選択/入力...">
+            <select id="v-dest">
+              <option value="">選択...</option>
+            </select>
           </div>
           <div class="cross-item">
             <label>フライトDr</label>
@@ -1275,7 +1277,7 @@
     
     popSelect("v-dr", m.dr, "選択..."); 
     popSelect("v-ns", m.ns, "選択...");
-    popList("dl-dest", m.dest); 
+    popSelect("v-dest", m.dest, "選択...");
     popList("diagnosis-list", m.diagnosis);
 
     const cancelGroup = document.getElementById("cancel-reason-group");
@@ -1349,8 +1351,7 @@
   }
 
   function restoreData(row) {
-    document.getElementById("v-id").value = row["要請番号"] || ""; 
-    document.getElementById("v-id").readOnly = true; 
+    document.getElementById("v-id").value = row["要請番号"] || "";
     
     let rawDateStr = String(row["日付"] || "").split(" ")[0]; 
     let dateParts = rawDateStr.split(/[\/\-]/);
@@ -1407,15 +1408,20 @@
     if(dMain) {
       setDiseaseMain(dMain);
       setTimeout(() => {
-        if(dCause) {
+        if(dMain === "4心肺停止") {
+          if(dCause) {
+            const p1 = document.getElementById("d-sub-pills");
+            if(p1) { const btn = Array.from(p1.children).find(e=>e.innerText===dCause); if(btn) setDiseaseCause(dCause, btn); }
+            setTimeout(() => {
+              if(dSub) {
+                const p2 = document.getElementById("d-sub-pills-2");
+                if(p2) { const btn = Array.from(p2.children).find(e=>e.innerText===dSub); if(btn) setDiseaseSubReal(dSub, btn); }
+              }
+            }, 50);
+          }
+        } else if(dSub) {
           const p1 = document.getElementById("d-sub-pills");
-          if(p1) { const btn = Array.from(p1.children).find(e=>e.innerText===dCause); if(btn) setDiseaseCause(dCause, btn); }
-          setTimeout(() => {
-            if(dSub) {
-              const p2 = document.getElementById("d-sub-pills-2");
-              if(p2) { const btn = Array.from(p2.children).find(e=>e.innerText===dSub); if(btn) setDiseaseSubReal(dSub, btn); }
-            }
-          }, 50);
+          if(p1) { const btn = Array.from(p1.children).find(e=>e.innerText===dSub); if(btn) setDiseaseSubReal(dSub, btn); }
         }
       }, 50);
     }
@@ -1987,15 +1993,17 @@
     let finalId = rawId; if(document.getElementById("chk-edaban").checked && document.getElementById("v-edaban").value) finalId = `${rawId}-0${document.getElementById("v-edaban").value}`;
     let erText = ""; if(document.getElementById("chk-er").checked) { const hosp = document.getElementById("v-er-hosp").value; if(hosp) erText = `\n【緊急外来搬送先: ${hosp}】`; }
     let finalScheme = state.scheme || ""; if(finalScheme === 'キャンセル') { const reason = document.querySelector('input[name="cancel-reason"]:checked')?.value || "未選択"; finalScheme = `キャンセル(${reason})`; }
+    const isCancelScheme = finalScheme.startsWith('キャンセル');
 
     let payload = {
-      "要請番号": finalId, 
-      "日付": document.getElementById("v-date").value, 
+      "要請番号": finalId,
+      "日付": document.getElementById("v-date").value,
       "出場先": document.getElementById("v-dest").value,
-      "フライトドクター": document.getElementById("v-dr").value, 
-      "フライトナース": document.getElementById("v-ns").value, 
+      "フライトドクター": document.getElementById("v-dr").value,
+      "フライトナース": document.getElementById("v-ns").value,
       "スキーム選択": finalScheme,
-      "要請区分": state.reqType, 
+      ...((!isEditMode && isCancelScheme) ? { "ステータス": "◯ カルテ完了 (自動/キャンセル)" } : {}),
+      "要請区分": state.reqType,
       "キーワード": currentKeywords.join(", "),
       "疾患大分類": diseaseMainVal, 
       "疾患原因": diseaseCauseVal, 
@@ -2172,8 +2180,8 @@
       html += `<b>🏥 医療:</b> 接触[${d["接触"]||"-"}] 病着[${isNoHosp ? '対象外' : (d["病着"]||"-")}] 終了[${d["終了"]||"-"}]<br><br>`;
       
       let costItems = [];
-      if(d["往診料"]) costItems.push(`往診料(${d["往診料"]})`);
-      if(d["搬送料"]) costItems.push(`搬送料(${d["搬送料"]})`);
+      if(d["往診料"]) costItems.push(d["往診料"]);
+      if(d["搬送料"]) costItems.push(d["搬送料"]);
       if(d["長時間加算"]) costItems.push(`長時間加算`);
       if(d["モニター算定時間"]) costItems.push(`モニター(${d["モニター算定時間"]})`);
       if(d["経皮的酸素飽和度"]) costItems.push(`SpO2`);
@@ -2370,14 +2378,32 @@
         redirect: "follow" 
       });
       const json = await res.json();
-      if (json.status === "success") { 
-        alert(mode === 'update' ? "上書き保存しました。" : "事案の新規登録が正常に完了しました。"); 
+      if (json.status === "success") {
         if(mode === 'update') {
+          sessionStorage.removeItem("aw109_search_data_cache");
+          if(confirm("上書き保存が完了しました。\n関係各所に確認・再送メールを送信しますか？")) {
+            try {
+              showLoader("メール送信中...", "関係各所に送信しています");
+              const mailRes = await fetch(GAS_API_URL, {
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "send_email", password: PIN_CODE, id: editTargetSysId }),
+                redirect: "follow"
+              });
+              const mailJson = await mailRes.json();
+              alert(mailJson.status === "success" ? "上書き保存し、メールを送信しました。" : `上書き保存は完了しましたが、メール送信に失敗しました。\n${mailJson.message || ""}`);
+            } catch(mailErr) {
+              sendErrorLog(mailErr.stack || mailErr.toString());
+              alert("上書き保存は完了しましたが、メール送信中に通信エラーが発生しました。");
+            }
+          } else {
+            alert("上書き保存しました。(メールは送信していません)");
+          }
           goBackOrHome();
         } else {
-          location.reload(); 
+          alert("事案の新規登録が正常に完了しました。");
+          location.reload();
         }
-      } else { 
+      } else {
         throw new Error(json.message || "サーバー側で登録が拒否されました"); 
       }
     } catch(e) { 
