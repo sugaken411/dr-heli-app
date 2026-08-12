@@ -326,7 +326,13 @@ function doPost(e) {
      if (hashPassword(password, found[cSalt]) !== found[cHash]) {
        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "メールアドレスまたはパスワードが違います" })).setMimeType(ContentService.MimeType.JSON);
      }
-     const isAdmin = cAdmin !== -1 && String(found[cAdmin]).split(",").map(s => s.trim().toLowerCase()).includes(email);
+     // 🌟「システム管理者」欄はメールアドレスと同じ行とは限らず、シート内のどこか1行にまとめて入力されていることがあるため、全行から探す
+     let isAdmin = false;
+     if (cAdmin !== -1) {
+       for (let i = 1; i < data.length; i++) {
+         if (String(data[i][cAdmin]).split(",").map(s => s.trim().toLowerCase()).includes(email)) { isAdmin = true; break; }
+       }
+     }
      const name = cName !== -1 && found[cName] ? found[cName] : email;
      const token = signToken({ email: email, name: name, isAdmin: isAdmin, iat: Date.now(), exp: Date.now() + 90 * 24 * 60 * 60 * 1000 });
      return ContentService.createTextOutput(JSON.stringify({ status: "success", token: token, name: name, isAdmin: isAdmin })).setMimeType(ContentService.MimeType.JSON);
