@@ -188,10 +188,10 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-account" onclick="if(event.target===this)closeModal('modal-account')">
+<div class="modal-overlay" id="modal-account" onclick="if(event.target===this && !this.hasAttribute('data-required'))closeModal('modal-account')">
   <div class="modal-box">
     <h3 style="margin-top:0;">🔐 アカウント</h3>
-    <div style="font-size:12px; color:var(--sub); margin-bottom:12px;">従来のPINでも引き続き利用できます。ログインは任意です（設定するとエラー報告に氏名が記録され、PINより安全です）。</div>
+    <div id="account-intro-text" style="font-size:12px; color:var(--sub); margin-bottom:12px;">利用にはログインが必要です。初めての方は「初めての方」タブからパスワードを設定してください。</div>
 
     <div id="account-logged-out">
       <div id="account-tabs" style="display:flex; gap:8px; margin-bottom:12px;">
@@ -221,10 +221,10 @@
         <div style="font-size:16px; font-weight:800;" id="account-name-display"></div>
         <div id="account-admin-badge" style="display:none; font-size:11px; color:#fff; background:var(--blue); padding:2px 8px; border-radius:4px; display:inline-block; margin-top:4px;">管理者</div>
       </div>
-      <button type="button" onclick="doLogout()" style="width:100%; padding:12px; background:#eee; color:var(--ink); border:none; border-radius:8px; font-weight:700;">ログアウト（PINに戻す）</button>
+      <button type="button" onclick="doLogout()" style="width:100%; padding:12px; background:#eee; color:var(--ink); border:none; border-radius:8px; font-weight:700;">ログアウト</button>
     </div>
 
-    <button type="button" class="modal-close" onclick="closeModal('modal-account')">閉じる</button>
+    <button type="button" class="modal-close" id="account-close-btn" onclick="closeModal('modal-account')">閉じる</button>
   </div>
 </div>
 
@@ -287,7 +287,10 @@
         localStorage.setItem('aw109_auth_isAdmin', json.isAdmin ? 'true' : 'false');
         msgEl.style.color = '#2e7d32'; msgEl.innerText = 'ログインしました。';
         updateAccountUI();
-        setTimeout(() => closeModal('modal-account'), 800);
+        const wasRequired = document.getElementById('modal-account').hasAttribute('data-required');
+        document.getElementById('modal-account').removeAttribute('data-required');
+        document.getElementById('account-close-btn').style.display = '';
+        setTimeout(() => { closeModal('modal-account'); if (wasRequired) loadPortalContent(); }, 800);
       } else {
         msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = json.message || 'ログインに失敗しました。';
       }
@@ -375,6 +378,21 @@
 
   window.onload = () => {
     updateAccountUI();
+    if (!localStorage.getItem('aw109_auth_token')) {
+      // 🌟 未ログインの場合はログイン画面を強制表示し、それ以外の読み込みは行わない
+      requireLogin();
+      return;
+    }
+    loadPortalContent();
+  };
+
+  function requireLogin() {
+    document.getElementById('account-close-btn').style.display = 'none';
+    document.getElementById('modal-account').setAttribute('data-required', '1');
+    openModal('modal-account');
+  }
+
+  function loadPortalContent() {
     // 🌟 キャッシュが存在する場合は即時展開し、サイレント同期フラグを立てる
     const cachedStr = localStorage.getItem(CACHE_KEY);
     let hasCache = false;
@@ -387,7 +405,7 @@
       } catch(e) { localStorage.removeItem(CACHE_KEY); }
     }
     fetchInit(hasCache);
-  };
+  }
 
   // 🌟 電波不良でレスポンスが途中で切れJSON解析に失敗した場合、1回だけ自動リトライする
   async function fetchGasJson(bodyObj, retries) {

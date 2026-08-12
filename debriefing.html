@@ -329,7 +329,9 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "5740"; // 🌟 ログイン済みならトークンを使う（移行期間中はPIN併用）
+  // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
+  if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
+  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "";
   const CACHE_KEY = "aw109_debriefing_cache_v118";
 
   window.onerror = function(message, source, lineno, colno, error) {

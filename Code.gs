@@ -1,6 +1,5 @@
-const GAS_VERSION = "v3.0"; // メール+パスワード認証(移行期間中はPIN併用) ＋ 一項目一セル標準化
-const PIN_MEMBER = "5740";
-const PIN_ADMIN = "9999";
+const GAS_VERSION = "v3.1"; // メール+パスワード認証必須化（スタッフ用PIN廃止、管理者PINは非公開の緊急回復用のみ）
+const PIN_ADMIN = "9999"; // 🌟 非公開の緊急回復用。画面上には一切表示・案内しない
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 const LIBRARY_DB_ID = "17ejBS_Uq6cWxkagnFQknfycbMGnoaV2q7234U5Pwqnc";
 
@@ -213,7 +212,7 @@ function doGet(e) {
        fetch("${GAS_API_URL}", {
          method:"POST",
          headers:{"Content-Type":"text/plain;charset=utf-8"},
-         body:JSON.stringify({action:"update_status", password:"${PIN_MEMBER}", id:"${id}", who:who}),
+         body:JSON.stringify({action:"update_status", password:"${PIN_ADMIN}", id:"${id}", who:who}),
          redirect:"follow"
        }).then(r=>r.text()).then(()=>{
          document.getElementById("btn").style.display="none";
@@ -333,11 +332,11 @@ function doPost(e) {
      return ContentService.createTextOutput(JSON.stringify({ status: "success", token: token, name: name, isAdmin: isAdmin })).setMimeType(ContentService.MimeType.JSON);
    }
 
-   // 🌟 認証: 従来のPIN、または新しいログイントークンのどちらかを受け付ける（移行期間中の併用）
+   // 🌟 認証: スタッフ用PINは廃止。管理者用PIN(非公開の緊急回復用)か、ログイントークンのみ受け付ける
    let isAdminUser = false;
    let authName = "";
-   if (pass === PIN_MEMBER || pass === PIN_ADMIN) {
-     isAdminUser = (pass === PIN_ADMIN);
+   if (pass === PIN_ADMIN) {
+     isAdminUser = true;
    } else {
      const tokenPayload = verifyToken(pass);
      if (!tokenPayload) {
