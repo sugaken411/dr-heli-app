@@ -534,7 +534,7 @@
     try {
       await fetch(GAS_API_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}), redirect: "follow" });
       alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-    } catch (e) { alert("通信エラー"); sendErrorLog(e.stack || e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
+    } catch (e) { alert("通信エラーが発生しました。"); sendErrorLog(e.stack || e.toString()); } finally { btn.textContent = "送信"; btn.disabled = false; }
   }
 
   function toggleAcc(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
@@ -630,7 +630,7 @@
       if(!sysData.tags[cat]) sysData.tags[cat] = []; if(!sysData.tags[cat].includes(val)) sysData.tags[cat].push(val);
       renderChips(containerId, masters[cat], cat); 
       document.getElementById(inputId).value = "";
-    } catch(e) { alert("エラー"); document.getElementById(inputId).value = ""; }
+    } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.stack || e.toString()); document.getElementById(inputId).value = ""; }
   }
 
   let extPtCount = 0;

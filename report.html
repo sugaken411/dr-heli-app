@@ -96,7 +96,7 @@
               <input type="text" id="info-nurse-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-500 mb-1">担当医師</label>
+              <label class="block text-xs font-bold text-slate-500 mb-1">フライトドクター</label>
               <select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-doctor', 'info-doctor-other'); updatePrintHeader();"></select>
               <input type="text" id="info-doctor-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
             </div>
@@ -348,7 +348,7 @@
       const dateVal = normalizeDate(document.getElementById('info-date').value);
       const nsVal = document.getElementById('info-nurse').value === 'その他' ? document.getElementById('info-nurse-other').value : document.getElementById('info-nurse').value;
       const drVal = document.getElementById('info-doctor').value === 'その他' ? document.getElementById('info-doctor-other').value : document.getElementById('info-doctor').value;
-      if (!nsVal || !drVal) return alert("記載者と担当医師を選択・入力してください。");
+      if (!nsVal || !drVal) return alert("記載者とフライトドクターを選択・入力してください。");
       const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
       const otherReason = document.getElementById('info-remarks').value.trim(); if(otherReason) reasons.push(otherReason);
       
@@ -483,7 +483,7 @@
       document.getElementById('entry-form-container').classList.replace('bg-amber-50', 'bg-blue-50'); document.getElementById('form-title').innerText = "➕ 追加"; document.getElementById('btn-cancel-edit').classList.add('hidden'); document.getElementById('btn-save').innerText = "追加する"; document.getElementById('btn-save').style.backgroundColor = "var(--blue)"; render();
     }
 
-    function deleteEvent(id) { if(confirm("削除しますか？")) { events = events.filter(e => e.id !== id); if (editingId === id) cancelEdit(); render(); } }
+    function deleteEvent(id) { if(confirm("本当にこの記録を削除しますか？\n（この操作は取り消せません）")) { events = events.filter(e => e.id !== id); if (editingId === id) cancelEdit(); render(); } }
     function resetAll() { if(confirm("画面上の入力内容をすべてリセットしますか？")) { events = []; document.getElementById('info-nurse').value = ''; document.getElementById('info-doctor').value = ''; document.getElementById('info-remarks').value = ''; document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false); cancelEdit(); updatePrintHeader(); render(); } }
   </script>
 </body>
