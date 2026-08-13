@@ -21,7 +21,11 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+      .then(cache => Promise.all(
+        // 🌟 addAllは1件でも失敗すると全体が失敗する（外部CDNが一時的に落ちているだけで
+        // オフライン機能が全滅しかねない）ため、1件ずつ個別に試し、失敗しても続行する
+        urlsToCache.map(url => cache.add(url).catch(err => console.warn('[SW] キャッシュ失敗（続行）:', url, err)))
+      ))
       .then(() => self.skipWaiting())
   );
 });
