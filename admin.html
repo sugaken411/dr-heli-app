@@ -223,11 +223,22 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 勤務シフト想定：管理者ログインから８時間経過していればトークンを破棄（緊急用PIN 9999にフォールバック）
+  (function() {
+    const SHIFT_MS = 8 * 60 * 60 * 1000;
+    const loginTime = parseInt(localStorage.getItem('aw109_auth_loginTime') || '0', 10);
+    if (loginTime && (Date.now() - loginTime > SHIFT_MS)) {
+      localStorage.removeItem('aw109_auth_token');
+      localStorage.removeItem('aw109_auth_name');
+      localStorage.removeItem('aw109_auth_isAdmin');
+      localStorage.removeItem('aw109_auth_loginTime');
+    }
+  })();
   // 🌟 管理者権限でログイン済みならトークンを使う（移行期間中はPIN併用）
   const PIN_ADMIN = (localStorage.getItem('aw109_auth_token') && localStorage.getItem('aw109_auth_isAdmin') === 'true') ? localStorage.getItem('aw109_auth_token') : "9999";
   let currentData = { qa: [], news: [], manuals: [] };
   
-  window.onerror = function(msg, src, line, col, err) { sendErrorLog(`GlobalError: ${msg}\nLine: ${line}:${col}\nStack: ${err ? err.stack : 'N/A'}`); return false; };
+  window.onerror = function(msg, src, line, col, err) { sendErrorLog(`GlobalError: ${msg}\nSource: ${src || 'N/A'}\nLine: ${line}:${col}\nStack: ${err ? err.stack : 'N/A'}`); return false; };
   window.addEventListener('unhandledrejection', function(e) { const reason = e.reason ? (e.reason.stack || e.reason) : 'N/A'; if(!String(reason).includes("Load failed")) sendErrorLog(`PromiseRejection: ${reason}`); });
 
   let lockTime = 600; 

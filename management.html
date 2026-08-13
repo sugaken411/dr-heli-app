@@ -122,11 +122,24 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
     // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
     if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
+    // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
+    (function() {
+      const SHIFT_MS = 8 * 60 * 60 * 1000;
+      const loginTime = parseInt(localStorage.getItem('aw109_auth_loginTime') || '0', 10);
+      if (loginTime && (Date.now() - loginTime > SHIFT_MS)) {
+        localStorage.removeItem('aw109_auth_token');
+        localStorage.removeItem('aw109_auth_name');
+        localStorage.removeItem('aw109_auth_isAdmin');
+        localStorage.removeItem('aw109_auth_loginTime');
+        alert('ログインから８時間が経過したため、自動的にログアウトしました。お手数ですが再度ログインしてください。');
+        location.href = 'portal.html';
+      }
+    })();
     const PIN_CODE = localStorage.getItem('aw109_auth_token') || "";
 
     // 🌟 超高感度エラー監視機能 (Failed to fetch 等のネットワーク切断エラーの抑止完全対応)
     window.onerror = function(message, source, lineno, colno, error) {
-      const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+      const errDetail = `Type: GlobalError\nMsg: ${message}\nSource: ${source || 'N/A'}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
       sendErrorLog(errDetail); 
       return false;
     };

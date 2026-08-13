@@ -285,6 +285,7 @@
         localStorage.setItem('aw109_auth_token', json.token);
         localStorage.setItem('aw109_auth_name', json.name);
         localStorage.setItem('aw109_auth_isAdmin', json.isAdmin ? 'true' : 'false');
+        localStorage.setItem('aw109_auth_loginTime', Date.now().toString());
         msgEl.style.color = '#2e7d32'; msgEl.innerText = 'ログインしました。';
         updateAccountUI();
         const wasRequired = document.getElementById('modal-account').hasAttribute('data-required');
@@ -325,17 +326,21 @@
     localStorage.removeItem('aw109_auth_token');
     localStorage.removeItem('aw109_auth_name');
     localStorage.removeItem('aw109_auth_isAdmin');
+    localStorage.removeItem('aw109_auth_loginTime');
     updateAccountUI();
     alert('ログアウトしました。ページを再読み込みします。');
     location.reload();
   }
 
   window.onerror = function(message, source, lineno, colno, error) {
-    const errDetail = `Type: GlobalError\nMsg: ${message}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
-    sendErrorLog(errDetail); 
+    // 🌟 "Script error." かつLine 0:0の場合、CORS未許可の外部スクリプト由来か
+    // ネットワーク瞬断による読み込み中断が原因のことが多く、詳細情報が取得できない
+    // ブラウザの仕様上の制約。source(発生元URL)を記録して切り分けの手がかりにする
+    const errDetail = `Type: GlobalError\nMsg: ${message}\nSource: ${source || 'N/A'}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : 'N/A'}`;
+    sendErrorLog(errDetail);
     return false;
   };
-  
+
   window.addEventListener('unhandledrejection', function(event) {
     const reason = event.reason ? (event.reason.stack || event.reason) : 'N/A';
     if(String(reason).includes("Load failed")) return;
@@ -376,7 +381,27 @@
     document.getElementById("master-sync-info").innerText = `最終同期: ${timeStr}${verStr}`;
   }
 
+  // 🌟 sw.jsはこれまでどのページからも register() されておらず、オフラインキャッシュが
+  // 実際には一度も有効化されていなかった。ポータル（start_url）から一度登録すればスコープは
+  // サイト全体に及ぶため、ここで登録する
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.warn('[SW] 登録失敗:', err);
+      });
+    });
+  }
+
   window.onload = () => {
+    // 🌟 勤務シフト想定：ログインから８時間経過していれば自動ログアウト（現場端末の共有・放置対策）
+    const SHIFT_MS = 8 * 60 * 60 * 1000;
+    const loginTime = parseInt(localStorage.getItem('aw109_auth_loginTime') || '0', 10);
+    if (loginTime && (Date.now() - loginTime > SHIFT_MS)) {
+      localStorage.removeItem('aw109_auth_token');
+      localStorage.removeItem('aw109_auth_name');
+      localStorage.removeItem('aw109_auth_isAdmin');
+      localStorage.removeItem('aw109_auth_loginTime');
+    }
     updateAccountUI();
     if (!localStorage.getItem('aw109_auth_token')) {
       // 🌟 未ログインの場合はログイン画面を強制表示し、それ以外の読み込みは行わない
