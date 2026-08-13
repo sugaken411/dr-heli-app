@@ -968,7 +968,7 @@
           <div class="vital-item">呼吸 <input type="number" inputmode="numeric" value="${ev.vitals.rr}" onchange="sysData.evals[${idx}].vitals.rr=this.value"> 回/分</div>
           <div class="vital-item">体温 <input type="number" inputmode="decimal" value="${ev.vitals.bt}" onchange="sysData.evals[${idx}].vitals.bt=this.value"> ℃</div>
           <div class="vital-item" style="grid-column:1/3;">SpO2 <input type="number" inputmode="numeric" value="${ev.vitals.spo2}" onchange="sysData.evals[${idx}].vitals.spo2=this.value"> % ( O2 <input type="number" inputmode="decimal" value="${ev.vitals.o2}" onchange="sysData.evals[${idx}].vitals.o2=this.value"> L )</div>
-          <div class="vital-item" style="grid-column:1/3;">意識 JCS <input type="text" value="${ev.vitals.jcs}" onchange="sysData.evals[${idx}].vitals.jcs=this.value"> / GCS <input type="text" value="${ev.vitals.gcs}" onchange="sysData.evals[${idx}].vitals.gcs=this.value"></div>
+          <div class="vital-item" style="grid-column:1/3;">意識 JCS <input type="text" value="${ev.vitals.jcs}" onchange="toHalfWidth(this); sysData.evals[${idx}].vitals.jcs=this.value"> / GCS <input type="text" value="${ev.vitals.gcs}" onchange="toHalfWidth(this); sysData.evals[${idx}].vitals.gcs=this.value"></div>
         </div>
         <textarea rows="3" placeholder="ABCDEF 所見・アセスメント (フリーテキスト)" onchange="sysData.evals[${idx}].freeABC=this.value">${ev.freeABC}</textarea>`;
       }

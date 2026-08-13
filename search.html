@@ -18,7 +18,7 @@
     .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; padding: 4px 8px; }
     .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
     
-    main { padding: 16px; flex: 1; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; }
+    main { padding: 16px; flex: 1; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; box-sizing: border-box; }
     .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     
     input, select, button, textarea { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
@@ -33,7 +33,7 @@
     .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
-    .cross-item { display: flex; flex-direction: column; gap: 4px; }
+    .cross-item { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .cross-item label { font-size: 12px; font-weight: bold; color: var(--sub); }
     .cross-item input, .cross-item select { width: 100%; }
 
@@ -94,7 +94,7 @@
       <div class="cross-grid">
         <div class="cross-item">
           <label>要請番号</label>
-          <input type="text" id="q-id" list="q-id-list" placeholder="IDを入力・選択">
+          <input type="tel" inputmode="numeric" id="q-id" list="q-id-list" placeholder="IDを入力・選択" oninput="toHalfWidth(this)">
         </div>
         <div class="cross-item">
           <label>ステータス</label>
@@ -126,10 +126,10 @@
         </div>
         <div class="cross-item" style="grid-column: span 2;">
           <label>期間で探す</label>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input type="date" id="q-date-start" style="flex:1;" onchange="clearMonth()"> 
-            <span style="color:var(--sub);">〜</span> 
-            <input type="date" id="q-date-end" style="flex:1;" onchange="clearMonth()">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <input type="date" id="q-date-start" style="flex:1; min-width:130px;" onchange="clearMonth()">
+            <span style="color:var(--sub);">〜</span>
+            <input type="date" id="q-date-end" style="flex:1; min-width:130px;" onchange="clearMonth()">
           </div>
         </div>
         <div class="cross-item">
@@ -168,6 +168,8 @@
   // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
   if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
   const PIN_CODE = localStorage.getItem('aw109_auth_token') || "";
+
+  function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
 
   function sendErrorLog(detail) {
     console.error("[System Error Log]", detail);
