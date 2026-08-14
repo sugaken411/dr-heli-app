@@ -745,21 +745,58 @@
     }
 
     let importedProcs = [];
-    
+
     const skipKeys = [
       "要請番号","日付","出場先","フライトドクター","フライトナース","スキーム選択","要請形態","要請区分","特殊ケース",
       "要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間","接触","病着","終了","往診料","搬送料","長時間加算",
       "モニター算定時間","経皮的酸素飽和度","EtCO2算定","人工呼吸器管理料","事案概要","備考","ステータス","更新履歴",
       "システムデータ","現場診断","酸素デバイス詳細","ヘリ在庫フラグ", "小児フラグ", "母性フラグ", "多数傷病フラグ",
       "procsState", "処置JSON", "簡易処置リスト", "処置リスト", "実施処置", "処置", "外傷処置", "外傷・固定", "外傷",
-      "使用薬剤リスト"
+      "使用薬剤リスト",
+      // 🌟 症例登録側(index.html)の「管理料_◯◯」「◯◯タイプ/サイズ/回数」等の列は
+      // 算定用フラグや、単一の処置に紐づく詳細サブ項目であって、それ自体は独立した処置ではない。
+      // 以前はここに含まれておらず、生の列名がそのまま「処置タグ」として紛れ込んでいた
+      // （例:「気管挿管サイズ」「管理料_人工呼吸器」が処置名のようにピル表示される不具合）。
+      // 実際に処置が行われたかどうかは下のPROC_ALIASESで正しい処置名に変換して判定する
+      "管理料_人工呼吸器", "管理料_除細動装置", "管理料_閉鎖式保育器", "管理料_補助循環装置", "管理料_人工心肺装置",
+      "気管挿管サイズ", "気管挿管位置", "カフ上吸引", "NPPVマスクサイズ",
+      "除細動回数", "除細動パッド", "経皮ペーシングパッド",
+      "胸腔ドレナージ_20Fr", "胸腔ドレナージ_28Fr", "心嚢穿刺タイプ", "胃管挿入サイズ",
+      "血液ガスタイプ", "その他エコー",
+      "末梢静脈路_20G", "末梢静脈路_22G", "末梢静脈路_24G", "末梢静脈路_18G",
+      "骨髄路_EZ-IO", "骨髄路_BIG", "ベニューラタイプ",
+      "_dynTextForPreview", "追加送信先"
     ];
+    // 🌟 酸素/呼吸器/胸骨圧迫の時間入力(酸素1開始, 呼吸器2FiO2 等、最大5回分)は
+    // 動的に列名が増えるため正規表現で一括除外する
+    const DYN_TIME_KEY = /^(酸素|呼吸器|圧迫)\d+(開始|終了|FiO2|流量)$/;
+
+    // 🌟 症例登録側のスプレッドシート列名と、デブリーフィング側の表示タグ名が食い違っている項目
+    // （画面上の表示は同じでも内部列名が別）。統一しないと同じ処置が別名の重複タグとして分裂する
+    const COL_TO_TAG = { "バックボード": "バックボード固定", "止血帯": "ターニケット" };
 
     Object.keys(currentCase).forEach(k => {
-      if (!skipKeys.includes(k) && !k.startsWith("【") && currentCase[k] !== "" && currentCase[k] !== "FALSE" && currentCase[k] !== "0") {
-        importedProcs.push(k);
+      if (!skipKeys.includes(k) && !DYN_TIME_KEY.test(k) && !k.startsWith("【") && currentCase[k] !== "" && currentCase[k] !== "FALSE" && currentCase[k] !== "0") {
+        importedProcs.push(COL_TO_TAG[k] || k);
       }
     });
+
+    // 🌟 独立した「実施済みフラグ」列を持たず、サイズ・回数等のサブ項目だけで記録される処置は、
+    // その項目が何か入力されていれば実施されたとみなし、症例登録側の処置名で統一してタグ化する
+    const PROC_ALIASES = [
+      { cond: () => currentCase["気管挿管サイズ"] || currentCase["気管挿管位置"] || currentCase["カフ上吸引"] === "◯", tag: "気管挿管" },
+      { cond: () => !!currentCase["NPPVマスクサイズ"], tag: "NPPV" },
+      { cond: () => currentCase["除細動回数"] || currentCase["除細動パッド"] === "◯", tag: "除細動" },
+      { cond: () => currentCase["胸腔ドレナージ_20Fr"] || currentCase["胸腔ドレナージ_28Fr"], tag: "胸腔ドレナージ" },
+      { cond: () => !!currentCase["心嚢穿刺タイプ"], tag: "心嚢穿刺" },
+      { cond: () => !!currentCase["胃管挿入サイズ"], tag: "胃管挿入" },
+      { cond: () => currentCase["末梢静脈路_20G"] || currentCase["末梢静脈路_22G"] || currentCase["末梢静脈路_24G"] || currentCase["末梢静脈路_18G"], tag: "末梢静脈路確保" },
+      { cond: () => currentCase["骨髄路_EZ-IO"] || currentCase["骨髄路_BIG"], tag: "骨髄路確保" },
+      { cond: () => Object.keys(currentCase).some(k => /^酸素\d+開始$/.test(k) && currentCase[k]), tag: "酸素投与" },
+      { cond: () => Object.keys(currentCase).some(k => /^呼吸器\d+開始$/.test(k) && currentCase[k]), tag: "人工呼吸器管理" },
+      { cond: () => Object.keys(currentCase).some(k => /^圧迫\d+開始$/.test(k) && currentCase[k]), tag: "胸骨圧迫(CPR)" }
+    ];
+    PROC_ALIASES.forEach(a => { if (a.cond()) importedProcs.push(a.tag); });
 
     // 🌟 使用薬剤リストは列名ではなく中身(カンマ区切りの薬剤名)を個別のタグとしてインポートする
     if (currentCase["使用薬剤リスト"]) {
