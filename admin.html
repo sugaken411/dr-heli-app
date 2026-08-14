@@ -263,10 +263,21 @@
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
   function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
   
-  function startTimer() { 
-    updateTimerDisplay(); 
-    timerInterval = setInterval(() => { lockTime--; updateTimerDisplay(); if(lockTime <= 0) location.reload(); }, 1000); 
-    ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer)); 
+  function startTimer() {
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      lockTime--; updateTimerDisplay();
+      if(lockTime <= 0) {
+        // 🌟 以前はlocation.reload()のみだったが、管理者トークンでログイン中はリロード後も
+        // 自動再ログインしてしまい実質ロックされていなかった。本当にログアウトさせる
+        localStorage.removeItem('aw109_auth_token');
+        localStorage.removeItem('aw109_auth_name');
+        localStorage.removeItem('aw109_auth_isAdmin');
+        localStorage.removeItem('aw109_auth_loginTime');
+        location.href = 'portal.html';
+      }
+    }, 1000);
+    ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer));
   }
   
   // 🌟 管理者としてログイン済みの場合、PIN入力を省略して自動解錠する
