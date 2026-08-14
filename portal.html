@@ -303,7 +303,7 @@
         msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = json.message || 'ログインに失敗しました。';
       }
     } catch (e) {
-      sendErrorLog(e.stack || e.toString());
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
       msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = '通信エラーが発生しました。';
     }
   }
@@ -324,7 +324,7 @@
         msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = json.message || '登録に失敗しました。';
       }
     } catch (e) {
-      sendErrorLog(e.stack || e.toString());
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
       msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = '通信エラーが発生しました。';
     }
   }
@@ -470,7 +470,7 @@
       if(!localStorage.getItem(CACHE_KEY)) { 
         document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。電波の良い場所で再読込してください。"; 
       }
-      if(!String(e).includes("Load failed")) sendErrorLog(e.stack || e.toString());
+      if(!String(e).includes("Load failed")) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
     } finally { 
       hideLoader(); 
     }
@@ -545,7 +545,7 @@
       } else { throw new Error(json.message); }
     } catch (e) { 
       alert("通信エラーが発生しました。"); 
-      if(!String(e).includes("Load failed")) sendErrorLog(e.stack || e.toString()); 
+      if(!String(e).includes("Load failed")) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
     } finally { 
       btn.textContent = "送信"; 
       btn.disabled = false; 

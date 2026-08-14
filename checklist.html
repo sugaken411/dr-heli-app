@@ -366,7 +366,7 @@
       try {
         await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" }), redirect: "follow" });
         alert("要望・報告を送信しました。管理者が確認します。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-      } catch(e) { alert("送信に失敗しました。"); sendErrorLog(e.stack || e.toString()); } finally { hideLoader(); }
+      } catch(e) { alert("送信に失敗しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { hideLoader(); }
     }
 
     async function fetchChecklistStatus() {
@@ -433,7 +433,7 @@
           }
           filterAndRender(itemsWithIndex);
         } else { alert(`マスタ読込エラー: ${json.message}`); sendErrorLog(json.message); }
-      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.stack || e.toString()); } finally { hideLoader(); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { hideLoader(); }
     }
 
     function filterAndRender(allItems) {
@@ -530,7 +530,7 @@
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload }), redirect: "follow" });
         const json = await res.json();
         if (json.status === "success") { alert("点検を完了しました！"); fetchChecklistStatus(); fetchHistory(true); switchMainTab('history'); } else { throw new Error(json.message); }
-      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.stack || e.toString()); } finally { btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader(); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader(); }
     }
 
     function changeHistoryType() { const selectedType = document.getElementById("hist-target-type").value; currentType = selectedType; document.getElementById("print-title").innerText = `【${selectedType}】 点検履歴`; fetchHistory(true); }
@@ -560,7 +560,7 @@
           allHistoryData = filteredHistory;
           if(document.getElementById("hist-preset").value === "all") { applyHistoryFilter(); } else { document.getElementById("hist-preset").value = "today"; applyPresetFilter(); }
         } else { alert(`履歴の取得に失敗しました: ${json.message}`); }
-      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.stack || e.toString()); } finally { hideLoader(); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { hideLoader(); }
     }
 
     function applyHistoryFilter() {
@@ -608,7 +608,7 @@
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_checklist_record", password: PIN_CODE, id: recordId, type: reqType }), redirect: "follow" });
         const json = await res.json();
         if (json.status === "success") { alert("履歴を削除しました。"); fetchChecklistStatus(); fetchHistory(true); } else { alert("削除に失敗しました: " + json.message); }
-      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(e.stack || e.toString()); } finally { hideLoader(); }
+      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { hideLoader(); }
     }
   </script>
 </body>

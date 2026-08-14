@@ -1395,7 +1395,7 @@
           isEditMode = false; 
         }
       } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("データ復元に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("データ復元に失敗しました。"); } finally { hideLoader(); }
   }
 
   function restoreData(row) {
@@ -1866,7 +1866,7 @@
         if(!isEditMode) checkRouting();
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       }
-    } catch(e) { sendErrorLog(e.stack || e.toString()); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
+    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
   }
 
   function toggleComp() { const el = document.querySelector('input[name="comp-who"]:checked'); if(el) document.getElementById("comp-name").style.display = el.value === "代行" ? "block" : "none"; }
@@ -2050,7 +2050,7 @@
     try {
       await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" }), redirect: "follow" });
       alert("要望・報告を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa');
-    } catch(e) { sendErrorLog(e.stack || e.toString()); alert("送信に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("送信に失敗しました。"); } finally { hideLoader(); }
   }
 
   function getCollectData() {
@@ -2346,7 +2346,7 @@
         throw new Error(json.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.stack || e.toString()); 
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       hideLoader(); 
@@ -2374,7 +2374,7 @@
         throw new Error(json.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.stack || e.toString()); 
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       hideLoader(); 
@@ -2412,7 +2412,7 @@
         throw new Error(json.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.stack || e.toString()); 
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       hideLoader(); 
@@ -2468,7 +2468,7 @@
               const mailJson = await mailRes.json();
               alert(mailJson.status === "success" ? "上書き保存し、メールを送信しました。" : `上書き保存は完了しましたが、メール送信に失敗しました。\n${mailJson.message || ""}`);
             } catch(mailErr) {
-              sendErrorLog(mailErr.stack || mailErr.toString());
+              sendErrorLog(`Msg: ${mailErr.message || mailErr}\nStack: ${mailErr.stack || mailErr.toString()}`);
               alert("上書き保存は完了しましたが、メール送信中に通信エラーが発生しました。");
             }
           } else {

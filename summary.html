@@ -409,7 +409,7 @@
     } catch (e) {
       document.getElementById("loader-sub-text").innerText = "通信エラーが発生しました";
       alert("通信エラーが発生しました。電波状況の良い場所で再接続してください。");
-      sendErrorLog(e.stack || e.toString());
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
     } finally {
       hideLoader();
     }
@@ -506,7 +506,7 @@
       renderDashboard();
     } catch(e) {
       console.error(e);
-      sendErrorLog("Dashboard Render Error: " + (e.stack || e.toString()));
+      sendErrorLog(`Dashboard Render Error\nMsg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
       alert("ダッシュボードの描画中にエラーが発生しました。");
     }
   }

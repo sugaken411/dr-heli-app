@@ -303,8 +303,10 @@
           const uniqueTags = [...new Set(tags.filter(Boolean))];
 
           // 🌟 症例評価・Good/Badは、現行スキーマのJSON列（タイムライン評価・多職種フィードバック）から組み立てる
-          let evalsArr = []; try { evalsArr = JSON.parse(d["タイムライン評価JSON"] || "[]"); } catch(e) {}
-          let fbArr = []; try { fbArr = JSON.parse(d["多職種フィードバックJSON"] || "[]"); } catch(e) {}
+          // 🌟 データ不整合（配列であるべき列に "{}" 等が入っている等）で1件でもmapが失敗すると
+          // forEach全体が例外で止まり検索結果が丸ごと表示されなくなるため、配列以外は空配列に丸める
+          let evalsArr = []; try { const p = JSON.parse(d["タイムライン評価JSON"] || "[]"); evalsArr = Array.isArray(p) ? p : []; } catch(e) {}
+          let fbArr = []; try { const p = JSON.parse(d["多職種フィードバックJSON"] || "[]"); fbArr = Array.isArray(p) ? p : []; } catch(e) {}
           let evalTextCombined = evalsArr.map(e => e.desc || e.freeABC || "").filter(Boolean).join("\n");
           let goodCombined = [...evalsArr.map(e => e.good), ...fbArr.map(f => f.good)].filter(Boolean).join("\n");
           let badCombined = [...evalsArr.map(e => e.bad), ...fbArr.map(f => [f.bad, f.next].filter(Boolean).join(" / "))].filter(Boolean).join("\n");
@@ -338,7 +340,7 @@
       if(isManualUpdate) alert("最新のデータを取得しました。");
 
     } catch (e) { 
-      sendErrorLog(e.stack || e.toString());
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
       if(!isBackground) alert("データベース同期エラーが発生しました。"); 
       document.getElementById("sync-status").innerText = `データ状態: 通信エラー (オフラインキャッシュ使用中)`;
     } finally { 
@@ -453,7 +455,7 @@
         closeModal('qa'); 
       } else { throw new Error(jsonRes.message); }
     } catch(e) { 
-      sendErrorLog(e.stack || e.toString()); 
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       btn.textContent = "送信する ✉️"; 

@@ -269,7 +269,7 @@
         } else { throw new Error(json.message); }
       } catch (e) {
         alert("データ同期に失敗しました。接続を確認してください。");
-        sendErrorLog(e.stack || e.toString());
+        sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
       } finally {
         hideLoader();
       }

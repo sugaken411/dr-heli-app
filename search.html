@@ -396,7 +396,7 @@
         throw new Error(jsonRes.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.stack || e.toString()); 
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
       if(!isBackground) alert("通信エラーが発生しました。"); 
     } finally { 
       if(!isBackground) hideLoader(); 
@@ -535,7 +535,7 @@
         throw new Error(json.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.stack || e.toString()); 
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
       document.getElementById("results").innerHTML = `<p style="text-align:center; color:red;">通信エラーが発生しました。</p>`; 
     } finally { 
       hideLoader(); 
@@ -588,7 +588,7 @@
         throw new Error(jsonRes.message); 
       }
     } catch(e) { 
-      sendErrorLog(e.stack || e.toString()); 
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
       alert("通信エラーが発生しました。"); 
     } finally { 
       hideLoader(); 
