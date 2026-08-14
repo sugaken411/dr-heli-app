@@ -356,8 +356,7 @@
 
   async function manageQA(actionType) {
     const rowIdx = document.getElementById("edit-qa-idx").value;
-    if(actionType === 'delete' && !confirm("本当に削除しますか？
-（この操作は取り消せません）")) return;
+    if(actionType === 'delete' && !confirm("本当に削除しますか？\n（この操作は取り消せません）")) return;
     
     const data = {
       date: document.getElementById("edit-qa-date").value,
@@ -390,8 +389,7 @@
   }
 
   async function manageNews(actionType, rowIdx=0) {
-    if(actionType === 'delete' && !confirm("本当に削除しますか？
-（この操作は取り消せません）")) return;
+    if(actionType === 'delete' && !confirm("本当に削除しますか？\n（この操作は取り消せません）")) return;
     let rIdx = rowIdx; let d = {};
     if(actionType === 'add') {
       d = { date: document.getElementById("news-date").value.replace(/-/g, "/"), category: document.getElementById("news-category").value, title: document.getElementById("news-title").value, content: document.getElementById("news-content").value, status: document.getElementById("news-status").value };
@@ -423,8 +421,7 @@
   }
 
   async function manageManual(actionType, rowIdx=0) {
-    if(actionType === 'delete' && !confirm("本当に削除しますか？
-（この操作は取り消せません）")) return;
+    if(actionType === 'delete' && !confirm("本当に削除しますか？\n（この操作は取り消せません）")) return;
     let rIdx = rowIdx; let d = {};
     if(actionType === 'add') {
       d = { title: document.getElementById("man-title").value, text: document.getElementById("man-text").value, target: document.getElementById("man-target").value || "全て" };
