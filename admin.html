@@ -76,12 +76,12 @@
   </div>
 
   <header>
-    <div style="display:flex; gap:12px; align-items:center;">
-      <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-      <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 同期</button>
+    <div style="display:flex; gap:12px; align-items:center; flex-shrink:0;">
+      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
+      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="fetchLatestData(false, true)">🔄 同期</button>
     </div>
-    <div style="font-weight:900;">マスター管理コンソール <span style="font-size:10px; background:var(--brand); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v14.0</span></div>
-    <div style="display:flex; gap:12px; align-items:center;">
+    <div style="font-weight:900; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:center;">マスター管理コンソール <span style="font-size:10px; background:var(--brand); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v14.0</span></div>
+    <div style="display:flex; gap:12px; align-items:center; flex-shrink:0;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
     </div>
   </header>

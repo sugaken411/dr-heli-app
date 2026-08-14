@@ -14,7 +14,7 @@
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(60px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 10px; padding-right: 10px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 60px; text-align: center; }
-    .hdr-title { font-weight: 900; font-size: 16px; text-align: center; flex: 1; display:flex; justify-content:center; align-items:center; }
+    .hdr-title { font-weight: 900; font-size: 16px; text-align: center; flex: 1; min-width: 0; display:flex; justify-content:center; align-items:center; overflow: hidden; white-space: nowrap; }
     .version-tag { font-size: 11px; background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; margin-left: 8px; cursor: pointer; user-select: none; }
     
     .tab-container { position: fixed; top: calc(60px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
@@ -107,15 +107,15 @@
   </div>
 
   <header class="no-print">
-    <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
+    <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="hdr-title">
-      統合チェックリスト
-      <span class="version-tag" onclick="secretCommand()">v13.0</span>
+      <span style="overflow:hidden; text-overflow:ellipsis;">統合チェックリスト</span>
+      <span class="version-tag" style="flex-shrink:0;" onclick="secretCommand()">v13.0</span>
     </div>
-    <div style="display:flex; gap:8px;">
-      <button type="button" class="hdr-btn" onclick="clearAllCache(true)">🔄 更新</button>
-      <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
-      <button type="button" class="hdr-btn" onclick="window.print()" id="btn-print" style="display:none;">🖨️ 印刷</button>
+    <div style="display:flex; gap:8px; flex-shrink:0;">
+      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="clearAllCache(true)">🔄 更新</button>
+      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="openModal('qa')">❓ Q&A</button>
+      <button type="button" class="hdr-btn" style="display:none; white-space:nowrap;" onclick="window.print()" id="btn-print">🖨️ 印刷</button>
     </div>
   </header>
 

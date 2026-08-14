@@ -84,11 +84,11 @@
 </div>
 
 <header>
-  <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px;">🧠 教育・事案検索 <span class="version-tag">v12.8</span></div>
-  <div style="display:flex; gap:12px;">
-    <button type="button" class="hdr-btn" onclick="fetchLatestData(false, true)">🔄 更新</button>
-    <button type="button" class="hdr-btn" onclick="openModal('qa')">❓ Q&A</button>
+  <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
+  <div style="font-weight:900; font-size:16px; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:center;">🧠 教育・事案検索 <span class="version-tag">v12.8</span></div>
+  <div style="display:flex; gap:12px; flex-shrink:0;">
+    <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="fetchLatestData(false, true)">🔄 更新</button>
+    <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="openModal('qa')">❓ Q&A</button>
   </div>
 </header>
 

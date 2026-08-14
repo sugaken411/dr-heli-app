@@ -51,12 +51,12 @@
   </div>
 
   <header class="no-print">
-    <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-    <div class="font-black text-base flex items-center gap-2">
-      統括・業務管理 <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded">v1.4</span>
-      <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden"></span>
+    <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
+    <div class="font-black text-base flex items-center gap-2" style="flex:1; min-width:0; overflow:hidden; white-space:nowrap;">
+      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.4</span>
+      <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden" style="flex-shrink:0;"></span>
     </div>
-    <button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button>
+    <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="window.print()">🖨️ 印刷</button>
   </header>
 
   <main class="max-w-5xl mx-auto p-4">
