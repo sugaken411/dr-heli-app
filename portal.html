@@ -25,10 +25,16 @@
       display: flex; align-items: center; justify-content: space-between; z-index: 100;
     }
     
-    .hdr-group { display: flex; gap: 12px; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+    .hdr-group { display: flex; gap: 12px; flex-shrink: 0; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    #btn-account { max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
+    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    @media (max-width: 400px) {
+      /* 🌟 狭い画面ではアカウント名・ヘッダーボタンを優先し、タイトルが省略されやすいのでバージョンタグを隠して幅を確保する（GASバージョンはポータル下部の最終同期欄で確認可能） */
+      .version-tag { display: none; }
+      .title-box { font-size: 14px; }
+    }
     
     main { padding: 16px; max-width: 900px; margin: 0 auto; }
     

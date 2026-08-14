@@ -18,9 +18,9 @@
     body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
-    .hdr-group { display: flex; gap: 12px; }
-    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+    .hdr-group { display: flex; gap: 12px; flex-shrink: 0; }
+    .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     main { margin-top: calc(56px + var(--safe-top)); padding: 16px; max-width: 1200px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
