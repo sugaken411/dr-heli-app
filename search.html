@@ -325,8 +325,10 @@
           const d = new Date(cacheObj.timestampMs);
           document.getElementById("master-sync-info").innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
           
-          if(sessionStorage.getItem("aw109_search_state")) fetchData();
-          return; 
+          // 🌟 auto_filter指定時はapplySearchMasters内で既にfetchData()が呼ばれているため、
+          // ここでも呼ぶと同時に2回検索が走ってしまう（通信の無駄・タイムアウト率悪化の一因）
+          if(sessionStorage.getItem("aw109_search_state") && new URLSearchParams(location.search).get('auto_filter') !== 'uncompleted') fetchData();
+          return;
         }
       } catch(e) {}
     }
@@ -388,7 +390,8 @@
         const d = new Date(now); 
         document.getElementById("master-sync-info").innerText = `マスタ最終同期: ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
         
-        if(sessionStorage.getItem("aw109_search_state") || isManualUpdate) {
+        // 🌟 auto_filter指定時はapplySearchMasters内で既にfetchData()が呼ばれているため二重発火を避ける
+        if((sessionStorage.getItem("aw109_search_state") || isManualUpdate) && new URLSearchParams(location.search).get('auto_filter') !== 'uncompleted') {
           fetchData();
         }
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
