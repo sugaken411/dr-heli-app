@@ -31,5 +31,9 @@
 * **フロントエンド:** HTML5 / CSS3 / Vanilla JavaScript。外部ライブラリは画面ごとに必要なものだけ選択導入（Tailwind CSSは`management.html`・`report.html`のみ、Chart.jsは`management.html`・`summary.html`のみ、SunCalcは`report.html`の日の出没計算のみ）
 * **PWA対応:** `manifest.json` と `sw.js` により、iPad/スマートフォンでのスタンドアロン起動に対応。`sw.js`はネットワーク優先方式（オンライン時は常に最新を取得し、通信失敗時のみキャッシュへフォールバック）。
 
+## 📋 引き継ぎ資料
+
+開発を引き継ぐ場合は [HANDOFF.md](HANDOFF.md) を必読。認証設計の意図、GAS/スプレッドシート自動化について合意した方針、スプレッドシートのスキーマに関する教訓、未解決課題などをまとめている。
+
 ## ⚠️ 既知のメンテナンス課題
 * `manifest.json` の `name` が `v13.0` のまま固定されており、実際の各画面バージョン（最大 v14.12）と乖離している。更新時は合わせて見直すことを推奨。
