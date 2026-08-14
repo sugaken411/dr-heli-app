@@ -219,7 +219,7 @@
       <div style="padding:16px; background:var(--bg); border-radius:8px; text-align:center; margin-bottom:12px;">
         <div style="font-size:13px; color:var(--sub);">ログイン中</div>
         <div style="font-size:16px; font-weight:800;" id="account-name-display"></div>
-        <div id="account-admin-badge" style="display:none; font-size:11px; color:#fff; background:var(--blue); padding:2px 8px; border-radius:4px; display:inline-block; margin-top:4px;">管理者</div>
+        <div id="account-admin-badge" style="display:none; font-size:11px; color:#fff; background:var(--blue); padding:2px 8px; border-radius:4px; margin-top:4px;">管理者</div>
       </div>
       <button type="button" onclick="doLogout()" style="width:100%; padding:12px; background:#eee; color:var(--ink); border:none; border-radius:8px; font-weight:700;">ログアウト</button>
     </div>
@@ -241,8 +241,9 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  // 🌟 ログイン済みならトークンを、そうでなければ従来のPINを使う（移行期間中の併用）
-  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "5740";
+  // 🌟 スタッフ用PINは廃止済み。未ログイン時はwindow.onloadのrequireLogin()で
+  // ログイン画面に誘導されるため、ここに到達する時点で必ずトークンがある想定
+  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "";
   const CACHE_KEY = "aw109_portal_cache_v13";
 
   function switchAccountTab(tab) {
