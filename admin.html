@@ -60,10 +60,12 @@
   <div id="login-overlay">
     <div class="card" style="width:100%; max-width:320px; text-align:center;">
       <h2 style="margin-top:0; color:var(--ink);">システム管理</h2>
-      <p style="color:var(--sub); font-size:14px; margin-bottom:20px;">管理者用アクセスコードを入力</p>
+      <p style="color:var(--sub); font-size:14px; margin-bottom:4px;">管理者用アクセスコードを入力</p>
+      <p style="color:var(--sub); font-size:11px; margin-bottom:20px; line-height:1.5;">通常はポータルで管理者アカウントとしてログインしていれば、この画面は自動的にスキップされます。表示されている場合はポータルへ戻り、ログイン状態をご確認ください。</p>
       <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; background:#fff;" placeholder="****" oninput="toHalfWidth(this)">
       <button type="button" class="btn-primary" onclick="checkLogin()" style="width:100%; padding:16px; font-size:16px;">ログイン 🔓</button>
       <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none; font-weight:bold;">パスワードが違います</p>
+      <button type="button" onclick="location.href='portal.html'" style="width:100%; margin-top:12px; padding:10px; background:none; border:none; color:var(--blue); font-size:12px; font-weight:600; cursor:pointer;">◀ ポータルでログインし直す</button>
     </div>
   </div>
 
