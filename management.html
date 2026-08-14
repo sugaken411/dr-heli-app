@@ -38,7 +38,12 @@
       .cal-cell { border: 1px solid #ccc; break-inside: avoid; min-height: 80px; }
       .bg-white { border: none !important; box-shadow: none !important; }
       .break-after { page-break-after: always; }
-      #view-list { display: block !important; } 
+      #view-list { display: block !important; }
+    }
+    @media (max-width: 400px) {
+      /* 🌟 狭い画面ではタイトルを優先し、右側ボタンの文字ラベルと補足バッジを隠す */
+      .btn-label { display: none; }
+      #sync-timestamp { display: none !important; }
     }
   </style>
 </head>
@@ -56,7 +61,7 @@
       <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.4</span>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden" style="flex-shrink:0;"></span>
     </div>
-    <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="window.print()">🖨️ 印刷</button>
+    <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="window.print()">🖨️ <span class="btn-label">印刷</span></button>
   </header>
 
   <main class="max-w-5xl mx-auto p-4">

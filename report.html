@@ -39,6 +39,13 @@
     @keyframes indeterminate { 0% { left: -40%; } 100% { left: 100%; } }
     .loader-text { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
     .loader-subtext { font-size: 13px; font-weight: 600; color: var(--sub); text-align: center; max-width: 80%; }
+    @media (max-width: 400px) {
+      /* 🌟 狭い画面ではタイトルを優先し、右側ボタンの文字ラベル・バージョンタグ・補足バッジを隠す */
+      .btn-label { display: none; }
+      .title-box .version-tag { display: none; }
+      .title-box { font-size: 14px; }
+      #sync-timestamp { display: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -55,7 +62,7 @@
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hidden"></span>
     </div>
     <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.6</span></div>
-    <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ 印刷</button></div>
+    <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ <span class="btn-label">印刷</span></button></div>
   </header>
 
   <main>

@@ -15,6 +15,12 @@
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(60px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 10px; padding-right: 10px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 60px; text-align: center; }
     .hdr-title { font-weight: 900; font-size: 16px; text-align: center; flex: 1; min-width: 0; display:flex; justify-content:center; align-items:center; overflow: hidden; white-space: nowrap; }
+    @media (max-width: 400px) {
+      /* 🌟 狭い画面ではタイトルを優先し、優先度の低い右側ボタンの文字ラベルとバージョンタグを隠してアイコンのみにする */
+      .version-tag { padding: 2px 6px; }
+      .hdr-title .version-tag { display: none; }
+      .btn-label { display: none; }
+    }
     .version-tag { font-size: 11px; background: var(--blue); color: #fff; padding: 4px 10px; border-radius: 6px; margin-left: 8px; cursor: pointer; user-select: none; }
     
     .tab-container { position: fixed; top: calc(60px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
@@ -113,9 +119,9 @@
       <span class="version-tag" style="flex-shrink:0;" onclick="secretCommand()">v13.0</span>
     </div>
     <div style="display:flex; gap:8px; flex-shrink:0;">
-      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="clearAllCache(true)">🔄 更新</button>
-      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="openModal('qa')">❓ Q&A</button>
-      <button type="button" class="hdr-btn" style="display:none; white-space:nowrap;" onclick="window.print()" id="btn-print">🖨️ 印刷</button>
+      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="clearAllCache(true)">🔄 <span class="btn-label">更新</span></button>
+      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="openModal('qa')">❓ <span class="btn-label">Q&A</span></button>
+      <button type="button" class="hdr-btn" style="display:none; white-space:nowrap;" onclick="window.print()" id="btn-print">🖨️ <span class="btn-label">印刷</span></button>
     </div>
   </header>
 

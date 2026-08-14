@@ -73,6 +73,11 @@
     @keyframes indeterminate { 0% { left: -40%; } 100% { left: 100%; } }
     
     .sync-status { font-size: 10px; color: var(--sub); text-align: right; margin-bottom: 8px; font-weight: bold; }
+    @media (max-width: 400px) {
+      /* 🌟 狭い画面ではタイトルを優先し、右側ボタンの文字ラベルとバージョンタグを隠す */
+      .btn-label { display: none; }
+      .hdr-title-text .version-tag { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -85,10 +90,10 @@
 
 <header>
   <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight:900; font-size:16px; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:center;">🧠 教育・事案検索 <span class="version-tag">v12.8</span></div>
+  <div class="hdr-title-text" style="font-weight:900; font-size:16px; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:center;">🧠 教育・事案検索 <span class="version-tag">v12.8</span></div>
   <div style="display:flex; gap:12px; flex-shrink:0;">
-    <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="fetchLatestData(false, true)">🔄 更新</button>
-    <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="openModal('qa')">❓ Q&A</button>
+    <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="fetchLatestData(false, true)">🔄 <span class="btn-label">更新</span></button>
+    <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="openModal('qa')">❓ <span class="btn-label">Q&A</span></button>
   </div>
 </header>
 

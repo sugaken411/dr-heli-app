@@ -53,6 +53,12 @@
     .modal-close { width: 100%; padding: 12px; margin-top: 16px; background: #e5e5ea; color: var(--ink); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px; color: var(--sub); }
+    @media (max-width: 400px) {
+      /* 🌟 狭い画面ではタイトルを優先し、右側ボタンの文字ラベルとバージョンバッジを隠す */
+      .btn-label { display: none; }
+      .hdr-title-text .hdr-version-badge { display: none; }
+      .hdr-title-text { font-size: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -78,9 +84,9 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center; flex-shrink:0;">
       <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
-      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="fetchLatestData(false, true)">🔄 同期</button>
+      <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="fetchLatestData(false, true)">🔄 <span class="btn-label">同期</span></button>
     </div>
-    <div style="font-weight:900; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:center;">マスター管理コンソール <span style="font-size:10px; background:var(--brand); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v14.0</span></div>
+    <div class="hdr-title-text" style="font-weight:900; flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:center;">マスター管理コンソール <span class="hdr-version-badge" style="font-size:10px; background:var(--brand); color:#fff; padding:2px 6px; border-radius:4px; margin-left:4px;">v14.0</span></div>
     <div style="display:flex; gap:12px; align-items:center; flex-shrink:0;">
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
     </div>
