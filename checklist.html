@@ -173,7 +173,7 @@
           <span style="font-weight:900; color:#0d47a1; font-size:15px;" id="current-check-title">始業点検 の入力</span>
           <div style="width:110px;">
             <label style="font-size:10px; font-weight:bold; color:var(--sub); display:block; text-align:right; margin-bottom:4px;">実施時間</label>
-            <input type="time" id="c-time" class="text-input" style="padding:6px; font-size:14px; margin-bottom:0;">
+            <input type="tel" inputmode="numeric" maxlength="5" placeholder="HH:MM" id="c-time" oninput="formatTimeInput(this)" onblur="clampTimeInput(this)" class="text-input" style="padding:6px; font-size:14px; margin-bottom:0;">
           </div>
         </div>
       </div>
@@ -343,6 +343,23 @@
       const now = new Date();
       document.getElementById("c-date").value = getTodayString();
       document.getElementById("c-time").value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
+    // 🌟 ネイティブのtime picker(スクロールで選ぶUI)は現場では入力しづらいため、
+    // テンキーで "1430" のように打つと自動で "14:30" に整形するテキスト入力に置き換える
+    function formatTimeInput(el) {
+      toHalfWidth(el);
+      let digits = el.value.replace(/[^0-9]/g, "").slice(0, 4);
+      if (digits.length >= 3) { el.value = digits.slice(0, 2) + ":" + digits.slice(2); }
+      else { el.value = digits; }
+    }
+    function clampTimeInput(el) {
+      const digits = el.value.replace(/[^0-9]/g, "").slice(0, 4);
+      if (digits.length === 0) { el.value = ""; return; }
+      let hh = Math.min(23, Math.max(0, parseInt(digits.slice(0, 2) || "0", 10)));
+      let mm = Math.min(59, Math.max(0, parseInt(digits.slice(2) || "0", 10)));
+      el.value = String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
     }
 
     function showLoader(m1, m2) {

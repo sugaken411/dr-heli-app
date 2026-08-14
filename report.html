@@ -131,8 +131,8 @@
         <div class="md:col-span-3"><label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label><select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700"><option value="mission">🚁 ヘリ活動(実施)</option><option value="cancel">⚠️ キャンセル</option><option value="inspection">⚙️ 始業点検</option><option value="inspection_end">🛠️ 終業点検</option><option value="assistant">🏃 補助者</option><option value="management">📁 管理</option><option value="group">👥 グループ</option><option value="other">💼 その他</option></select></div>
         <!-- 🌟 「事案No」から、手動入力を想定した統一名称「要請番号 / タイトル」へ改善 -->
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">要請番号 / タイトル</label><input type="text" id="event-no" placeholder="12345 等" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-bold" oninput="toHalfWidth(this)"></div>
-        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label><input type="time" id="event-start" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
-        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">終了時間</label><input type="time" id="event-end" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
+        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label><input type="tel" inputmode="numeric" maxlength="5" placeholder="HH:MM" id="event-start" oninput="formatTimeInput(this)" onblur="clampTimeInput(this)" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
+        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">終了時間</label><input type="tel" inputmode="numeric" maxlength="5" placeholder="HH:MM" id="event-end" oninput="formatTimeInput(this)" onblur="clampTimeInput(this)" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
         <div class="md:col-span-2 flex items-center h-10 px-2 bg-white rounded-lg border border-slate-300 mb-[1px]"><label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer w-full justify-center"><input type="checkbox" id="event-continuous" class="w-4 h-4 text-blue-600"> 連続出動</label></div>
         <div class="md:col-span-12 mt-2"><label class="block text-xs font-bold text-slate-500 mb-1">内容</label><div class="flex gap-3"><input type="text" id="event-desc" placeholder="活動内容..." class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-medium" oninput="toHalfWidth(this)" onkeydown="if(event.key==='Enter') saveEvent()"><button type="button" id="btn-save" onclick="saveEvent()" class="text-white font-bold px-8 py-2.5 rounded-lg whitespace-nowrap hover:opacity-90 shadow-sm" style="background-color: var(--blue);">追加する</button></div></div>
       </div>
@@ -244,6 +244,21 @@
     }
 
     function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
+    // 🌟 ネイティブのtime picker(スクロールで選ぶUI)は現場では入力しづらいため、
+    // テンキーで "1430" のように打つと自動で "14:30" に整形するテキスト入力に置き換える
+    function formatTimeInput(el) {
+      toHalfWidth(el);
+      let digits = el.value.replace(/[^0-9]/g, "").slice(0, 4);
+      if (digits.length >= 3) { el.value = digits.slice(0, 2) + ":" + digits.slice(2); }
+      else { el.value = digits; }
+    }
+    function clampTimeInput(el) {
+      const digits = el.value.replace(/[^0-9]/g, "").slice(0, 4);
+      if (digits.length === 0) { el.value = ""; return; }
+      let hh = Math.min(23, Math.max(0, parseInt(digits.slice(0, 2) || "0", 10)));
+      let mm = Math.min(59, Math.max(0, parseInt(digits.slice(2) || "0", 10)));
+      el.value = String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
+    }
 
     function normalizeDate(rawDate) {
       if (!rawDate) return "";
