@@ -575,7 +575,7 @@ function doPost(e) {
        }
      }
     
-     const mSheet = getSheetFlexible(ss, ["マスタ_取扱説明書", "取扱説明書_現場", "取扱説明書_検索"]);
+     const mSheet = getSheetFlexible(ss, ["システム_取扱説明書", "マスタ_取扱説明書", "取扱説明書_現場", "取扱説明書_検索"]);
      if (mSheet) {
        const d = mSheet.getDataRange().getDisplayValues();
        for(let i=1; i<d.length; i++) {
