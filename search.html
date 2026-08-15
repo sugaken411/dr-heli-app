@@ -204,9 +204,10 @@
     if(!String(reason).includes("Load failed")) sendErrorLog(`Type: PromiseRejection\nReason: ${reason}`);
   });
 
-  let activePin = ""; 
-  let allData = []; 
+  let activePin = "";
+  let allData = [];
   let filteredData = [];
+  let debriefIds = new Set();
   
   let lockTime = 600; 
   let timerInterval;
@@ -302,6 +303,7 @@
   const CACHE_EXPIRE_MS = 6 * 60 * 60 * 1000;
   const DATA_CACHE_KEY = "aw109_search_data_cache";
   const DATA_CACHE_EXPIRE_MS = 90 * 1000;
+  const DEBRIEF_CACHE_KEY = "aw109_search_debrief_cache";
 
   async function initSearchApp() {
     const cachedStr = sessionStorage.getItem("aw109_search_state");
@@ -434,16 +436,39 @@
         } catch(e) {}
       }
 
+      // 🌟 「この事案は既にデブリーフィング済みか」の表示用に要請番号の集合も取得する
+      // (取得に失敗しても検索自体は継続できるよう、失敗時はdebriefIdsを空のまま扱う)
+      const debriefCachedStr = sessionStorage.getItem(DEBRIEF_CACHE_KEY);
+      if (debriefCachedStr) {
+        try {
+          const ids = JSON.parse(debriefCachedStr);
+          debriefIds = new Set(ids);
+        } catch(e) {}
+      }
+
       if (!json) {
         showLoader("データ検索中...", "事案データベースに接続しています");
-        const res = await fetch(GAS_API_URL, {
+        const fetchAllPromise = fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "fetch_all", password: activePin }),
           redirect: "follow"
-        });
-        json = await res.json();
+        }).then(r => r.json());
+
+        const fetchDebriefPromise = debriefCachedStr ? Promise.resolve(null) : fetch(GAS_API_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "fetch_debriefings", password: activePin }),
+          redirect: "follow"
+        }).then(r => r.json()).catch(() => null);
+
+        const [allJson, debriefJson] = await Promise.all([fetchAllPromise, fetchDebriefPromise]);
+        json = allJson;
         if (json.status === "success") {
           sessionStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: json.data }));
+        }
+        if (debriefJson && debriefJson.status === "success") {
+          const ids = (debriefJson.data || []).map(d => String(d["要請番号"] || "").trim()).filter(Boolean);
+          debriefIds = new Set(ids);
+          sessionStorage.setItem(DEBRIEF_CACHE_KEY, JSON.stringify(ids));
         }
       }
 
@@ -511,11 +536,14 @@
 
           // 🌟 ルーティングの呼び出し（引数にIDを直接渡す）
           const targetId = item.id || item.displayId;
+          // 🌟 デブリーフィング側の「要請番号」列にはsysId(item.id)またはdisplayId(要請番号)のどちらが
+          // 保存されているかケースによって異なるため、両方をチェックして紐付け済みかを判定する
+          const hasDebrief = debriefIds.has(String(item.id || "")) || debriefIds.has(String(item.displayId || r["要請番号"] || ""));
 
           return `
           <div class="res-item" onclick="goToEdit('${targetId}')">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-              <b style="font-size:15px; ${idColor}">No.${r["要請番号"]} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${r["日付"]||"日付不明"})</span></b>
+              <b style="font-size:15px; ${idColor}">No.${r["要請番号"]} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${r["日付"]||"日付不明"})</span>${hasDebrief ? ' <span class="badge" style="background:#e3f2fd; color:#1565c0; font-weight:normal;">📝 デブリーフィング済み</span>' : ''}</b>
               <span class="badge" style="background:${isDone?'#d1fae5':'#ffebeb'}; color:${isDone?'#065f46':'#d32f2f'}">${r["ステータス"]||"未完了"}</span>
             </div>
             <div style="font-size:12px; color:var(--ink); margin-bottom:4px; display:flex; justify-content:space-between;">

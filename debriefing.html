@@ -147,6 +147,7 @@
     <div id="case-data-area" style="display:none;">
       <div class="card">
         <div class="section-label">📝 紐付けデータ</div>
+        <div id="stale-data-warning" style="display:none; background:#fff3e0; color:#e65100; border:1px solid #ffcc80; border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:13px; font-weight:bold;">⚠️ このデブリーフィングを保存した後に、症例登録側の内容が更新されています。「事案概要」等の内容が古い可能性があるため、必要に応じて症例登録の内容を確認してください。</div>
         <div id="v-fetched-data"></div>
         <div id="review-status-box" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed #ccc; align-items:center; gap:8px;">
           <label style="font-size:13px; font-weight:700; margin:0;">レビューステータス:</label>
@@ -732,6 +733,22 @@
     location.href = 'index.html?editId=' + encodeURIComponent(linkedCaseId);
   }
 
+  // 🌟 "yyyy/MM/dd HH:mm : 修正保存 (editor)\n..." 形式の更新履歴の先頭行から最終更新日時を取り出す
+  function parseHistoryTimestamp(historyStr) {
+    if (!historyStr) return null;
+    const firstLine = String(historyStr).split("\n")[0];
+    const m = firstLine.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+    if (!m) return null;
+    return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5]);
+  }
+  // 🌟 "yyyy/MM/dd HH:mm" 形式（デブリーフィングの「登録日時」列）をDateに変換する
+  function parseYmdHm(str) {
+    if (!str) return null;
+    const m = String(str).match(/(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+    if (!m) return null;
+    return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5]);
+  }
+
   function selectCase(rowWrapper) {
     currentCase = rowWrapper.rawData || rowWrapper;
     linkedCaseId = rowWrapper.id || currentCase["要請番号"] || "";
@@ -924,9 +941,22 @@
       currentDebriefCaseId = past["要請番号"];
       document.getElementById("review-status-box").style.display = "flex";
       document.getElementById("v-review-status").value = past["レビューステータス"] || "未確認";
+
+      // 🌟 症例登録側が、このデブリーフィングを最後に保存した後に更新されていないかチェックする。
+      // 「事案概要」等はデブリーフィング保存時点のスナップショットで固定され自動更新されないため
+      // (詳細はHANDOFF.md参照)、後から症例側が編集された可能性をここで知らせる。
+      const caseUpdatedAt = parseHistoryTimestamp(currentCase["更新履歴"]);
+      const debriefSavedAt = parseYmdHm(past["登録日時"]);
+      const warnEl = document.getElementById("stale-data-warning");
+      if (caseUpdatedAt && debriefSavedAt && caseUpdatedAt > debriefSavedAt) {
+        warnEl.style.display = "block";
+      } else {
+        warnEl.style.display = "none";
+      }
     } else {
       currentDebriefCaseId = null;
       document.getElementById("review-status-box").style.display = "none";
+      document.getElementById("stale-data-warning").style.display = "none";
     }
 
 
