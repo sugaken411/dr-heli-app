@@ -95,7 +95,7 @@
             <label class="block text-xs font-bold text-slate-500 mb-1">日付</label>
             <input type="date" id="info-date" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="calculateSun(); syncFromDb(false);">
           </div>
-          <div id="sun-display" class="flex gap-3 text-xs bg-amber-50 px-3 py-2.5 rounded-lg border border-amber-100 text-amber-800 font-medium"></div>
+          <div id="sun-display" class="flex flex-wrap gap-x-3 gap-y-1 text-xs bg-amber-50 px-3 py-2.5 rounded-lg border border-amber-100 text-amber-800 font-medium"></div>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-bold text-slate-500 mb-1">記載者 (Ns)</label>
@@ -422,7 +422,11 @@
       const dateStr = normalizeDate(document.getElementById('info-date').value); updatePrintHeader();
       if (!dateStr || typeof SunCalc === 'undefined') return;
       
-      const date = new Date(dateStr.replace(/-/g, '/')); 
+      // 🌟 SunCalcはDateのUTC日付を基準に計算するため、現地(JST)の午前0時をそのまま渡すと
+      // UTC変換で前日に繰り下がり、日没が丸1日ズレる不具合があった（2026-08-15発見）。
+      // 正午を渡すことでJST-UTC(+9h)のズレがあっても暦日を跨がないようにする
+      const [dy, dm, dd] = dateStr.split(/[-/]/).map(Number);
+      const date = new Date(dy, dm - 1, dd, 12, 0, 0);
       const times = SunCalc.getTimes(date, 31.5602, 130.558); // 鹿児島浜町
       const fmt = d => d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
       
@@ -434,7 +438,7 @@
       // 早い方を算出 (Math.minを使用)
       const standbyTime = new Date(Math.min(limit1730.getTime(), sunsetMinus1Hr.getTime()));
       
-      document.getElementById('sun-display').innerHTML = `<span>🌅 日出:${fmt(times.sunrise)}</span><span>🌇 日没:${fmt(times.sunset)}</span><span class="font-bold border-l border-amber-200 pl-3 ml-1 text-amber-900">⏱️ 待機終了:${fmt(standbyTime)}</span>`;
+      document.getElementById('sun-display').innerHTML = `<span style="white-space:nowrap;">🌅 日出:${fmt(times.sunrise)}</span><span style="white-space:nowrap;">🌇 日没:${fmt(times.sunset)}</span><span class="font-bold border-l border-amber-200 pl-3 ml-1 text-amber-900" style="white-space:nowrap;">⏱️ 待機終了:${fmt(standbyTime)}</span>`;
     }
 
     function drawGrid() {
