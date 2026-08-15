@@ -133,6 +133,21 @@
           <button type="button" class="btn-primary" onclick="addMaster()" style="background:#d48806; padding:14px; margin-top:8px;">＋ マスタデータベースに追加</button>
         </div>
       </div>
+
+      <div class="card" style="border:2px solid #90caf9; background:#f5faff;">
+        <h3 style="margin-top:0; color:#1565c0; display:flex; align-items:center; gap:6px;">🔑 管理者権限の設定</h3>
+        <p style="font-size:12px; color:var(--sub); margin-top:-8px; margin-bottom:12px;">※ 対象者は先に「メール送信先」マスタへの登録が必要です。権限の反映には対象者本人の再ログインが必要です（ログイン時点の権限がトークンに固定されるため）。</p>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:4px;">対象者のメールアドレス</label>
+            <input type="email" id="admin-flag-email" placeholder="example@gmail.com" style="background:#fff;">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn-primary" onclick="setAdminFlag(true)" style="background:#1565c0; padding:14px; flex:1;">＋ 管理者権限を付与</button>
+            <button type="button" class="btn-primary" onclick="setAdminFlag(false)" style="background:#78909c; padding:14px; flex:1;">－ 管理者権限を剥奪</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ❓ Q&A管理 タブ -->
@@ -474,6 +489,21 @@
       const json = await res.json();
       if (json.status === "success") { alert("マスタデータベースに正常に追加しました。"); document.getElementById("add-val1").value = ""; document.getElementById("add-val2").value = ""; } else { throw new Error(json.message); }
     } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
+  }
+
+  async function setAdminFlag(makeAdmin) {
+    const email = document.getElementById("admin-flag-email").value.trim().toLowerCase();
+    if (!email) return alert("対象者のメールアドレスを入力してください。");
+
+    showLoader(makeAdmin ? "管理者権限を付与中..." : "管理者権限を剥奪中...", "システムに反映しています");
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "set_admin_flag", password: PIN_ADMIN, email: email, isAdmin: makeAdmin }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") {
+        alert((makeAdmin ? "管理者権限を付与しました。" : "管理者権限を剥奪しました。") + "\n対象者が既にログイン中の場合、再ログインするまで画面上の表示には反映されません。");
+        document.getElementById("admin-flag-email").value = "";
+      } else { throw new Error(json.message); }
+    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("通信エラーが発生しました: " + (e.message || e)); } finally { hideLoader(); }
   }
 </script>
 </body>

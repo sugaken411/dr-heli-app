@@ -730,6 +730,35 @@ function doPost(e) {
    }
 
 
+   if (action === "set_admin_flag") {
+     // 🌟 管理者権限の付与・剥奪。誤操作の影響が大きいため管理者本人のみ実行可能にする
+     if (!isAdminUser) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
+     const msSheet = getSheetFlexible(ss, ["マスタ_基本設定", "マスタデータ"]);
+     if (!msSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタシートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+
+     const email = String(requestData.email || "").trim().toLowerCase();
+     const makeAdmin = !!requestData.isAdmin;
+     if (!email) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "メールアドレスを指定してください" })).setMimeType(ContentService.MimeType.JSON);
+
+     const d = msSheet.getDataRange().getDisplayValues();
+     const head = d[0].map(h => String(h).trim());
+     const cMail = head.indexOf("メールアドレス");
+     const cAdmin = head.indexOf("システム管理者");
+     if (cMail === -1 || cAdmin === -1) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタ_基本設定に必要な列（メールアドレス/システム管理者）がありません" })).setMimeType(ContentService.MimeType.JSON);
+
+     let rowIndex = -1;
+     for (let i = 1; i < d.length; i++) {
+       if (String(d[i][cMail]).trim().toLowerCase() === email) { rowIndex = i + 1; break; }
+     }
+     if (rowIndex === -1) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "登録されていないメールアドレスです。先に「メール送信先」マスタへの追加が必要です" })).setMimeType(ContentService.MimeType.JSON);
+
+     // 🌟 このメールアドレス自身の行の「システム管理者」列に自分のメールを書く/消すだけにする。
+     // auth_login側は全行のシステム管理者列をカンマ区切りで走査するため、この行の値だけ変えれば十分。
+     msSheet.getRange(rowIndex, cAdmin + 1).setValue(makeAdmin ? email : "");
+     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+   }
+
+
    if (action === "fetch_checklist_status") {
      const types = Object.keys(TYPE_TO_SHEET_MAP);
      let targetDateStr = requestData.date;
