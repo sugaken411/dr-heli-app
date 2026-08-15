@@ -8,11 +8,22 @@ const LIBRARY_DB_ID = "17ejBS_Uq6cWxkagnFQknfycbMGnoaV2q7234U5Pwqnc";
 function getAuthSecret() {
   const props = PropertiesService.getScriptProperties();
   let secret = props.getProperty('AUTH_SECRET');
-  if (!secret) {
-    secret = Utilities.getUuid() + Utilities.getUuid();
-    props.setProperty('AUTH_SECRET', secret);
+  if (secret) return secret;
+  // 🌟 初回生成時に複数リクエストが同時に走ると、それぞれ別のシークレットを生成して
+  // 上書きし合い、片方で署名されたトークンが以後ずっと検証不能になる（2026-08-15、実際に発生）。
+  // ロックで生成〜保存をアトミックにする。
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    secret = props.getProperty('AUTH_SECRET');
+    if (!secret) {
+      secret = Utilities.getUuid() + Utilities.getUuid();
+      props.setProperty('AUTH_SECRET', secret);
+    }
+    return secret;
+  } finally {
+    lock.releaseLock();
   }
-  return secret;
 }
 
 function bytesToHex(bytes) {
