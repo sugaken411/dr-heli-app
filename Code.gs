@@ -250,7 +250,7 @@ function doPost(e) {
      "update_record", "delete_record", "send_email", "add_master", "submit_question",
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
      "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full",
-     "update_library_record", "auth_register", "auth_login"
+     "update_library_record", "auth_register", "auth_login", "set_admin_flag"
    ];
 
    if (!allowed.includes(action)) {
