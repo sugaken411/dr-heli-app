@@ -651,7 +651,7 @@ function doPost(e) {
 
    if (action === "manage_manual") {
      if (!isAdminUser) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "管理者権限が必要です" })).setMimeType(ContentService.MimeType.JSON);
-     const sheet = getSheetFlexible(ss, ["マスタ_取扱説明書", "取扱説明書_現場", "取扱説明書_検索"]);
+     const sheet = getSheetFlexible(ss, ["システム_取扱説明書", "マスタ_取扱説明書", "取扱説明書_現場", "取扱説明書_検索"]);
      if (!sheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "シートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
     
      const { sub_action, rowIdx, data } = requestData;
