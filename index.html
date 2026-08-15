@@ -86,6 +86,12 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 400px) {
+      /* 狭い画面ではタイトルを省略せず全文表示するため、優先度の低い左右ボタンの文字ラベルを隠しアイコンのみにして横幅を確保する */
+      .btn-label { display: none; }
     }
     
     .card {
@@ -602,12 +608,12 @@
 
   <header>
     <div style="display:flex; gap:12px; align-items:center;">
-      <button type="button" class="hdr-btn no-print" onclick="goBackOrHome()">◀ 戻る</button>
-      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 更新</button>
+      <button type="button" class="hdr-btn no-print" onclick="goBackOrHome()">◀ <span class="btn-label">戻る</span></button>
+      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 <span class="btn-label">更新</span></button>
     </div>
     <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.12</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
-      <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
+      <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ <span class="btn-label">Q&A</span></button>
     </div>
   </header>
   
