@@ -108,7 +108,8 @@
   <div class="nav-tab active" onclick="switchTab('sec1')">1.環境・疾患</div>
   <div class="nav-tab" onclick="switchTab('sec2')">2.症例評価</div>
   <div class="nav-tab" onclick="switchTab('sec3')">3.多職種</div>
-  <div class="nav-tab" onclick="switchTab('sec4')">4.保存</div>
+  <div class="nav-tab" onclick="switchTab('secSummary')">4.総評</div>
+  <div class="nav-tab" onclick="switchTab('sec4')">5.保存</div>
 </div>
 
 <main>
@@ -159,8 +160,11 @@
 
       <div class="card">
         <div class="section-label">🚑 処置・使用薬剤 (症例登録連携)</div>
-        <div style="font-size:11px; color:var(--sub); margin-bottom:8px;">現場で実施された処置の一覧です。追加・削除が可能です。</div>
-        <div class="pill-group" id="v-fetched-procs"></div>
+        <div style="font-size:11px; color:var(--sub); margin-bottom:8px;">現場で実施された処置・使用した薬剤の一覧です。追加・削除が可能です。</div>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:6px;">🩺 処置</div>
+        <div class="pill-group" id="v-fetched-procs" style="margin-bottom:14px;"></div>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:6px;">💊 使用薬剤</div>
+        <div class="pill-group" id="v-fetched-drugs"></div>
       </div>
 
       <div class="card">
@@ -205,17 +209,6 @@
           <div class="pill-group" id="d-sub-pills"></div>
         </div>
 
-        <div style="display:flex; gap:16px; margin-top:12px; border-top:1px dashed var(--line); padding-top:12px; margin-bottom:16px;">
-          <label style="font-size:13px; font-weight:bold; display:flex; align-items:center; gap:8px;">
-            母子・周産期: 
-            <select id="v-maternal" style="width:auto; margin:0; padding:6px; font-size:13px;"><option value="なし">なし</option><option value="あり">あり</option></select>
-          </label>
-          <label style="font-size:13px; font-weight:bold; display:flex; align-items:center; gap:8px;">
-            労災: 
-            <select id="v-worker" style="width:auto; margin:0; padding:6px; font-size:13px;"><option value="なし">なし</option><option value="あり">あり</option></select>
-          </label>
-        </div>
-
         <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px; margin-top:12px;">🩺 現場診断 (フリーテキスト/マスタ)</div>
         <div class="pill-group" id="chip-container-diagnosis" style="margin-bottom:8px;"></div>
         <div style="display:flex; gap:8px;">
@@ -250,22 +243,6 @@
           </div>
         </div>
 
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">事前準備ギャップ</div>
-          <textarea id="v-gap" rows="2" placeholder="事前情報と実際の差異など..."></textarea>
-        </div>
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">チーム連携評価</div>
-          <textarea id="v-team" rows="2" placeholder="多職種連携・情報共有の評価..."></textarea>
-        </div>
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">マスタ・システム改善要望</div>
-          <textarea id="v-master-gap" rows="2" placeholder="マスタ登録やシステムへの要望..."></textarea>
-        </div>
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">総括・次回アクション</div>
-          <textarea id="v-action" rows="2" placeholder="今回の総括、次回に活かすアクション..."></textarea>
-        </div>
         <div style="margin-bottom:16px;">
           <div style="font-size:12px; font-weight:bold; color:var(--brand); margin-bottom:8px;">※ このシートの記載者(Ns)</div>
           <div class="pill-group" id="recorder-container"></div>
@@ -303,7 +280,31 @@
   <div id="tab-sec3" class="tab-content">
     <div id="feedback-container"></div>
     <button type="button" class="btn-blue" style="background:#10b981;" onclick="addFeedbackBlock()">＋ 振り返りの視点を追加</button>
-    <button type="button" class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('sec4')">次へ (プレビュー・保存) ➔</button>
+    <button type="button" class="btn-next no-print" style="margin-top:24px;" onclick="switchTab('secSummary')">次へ (総評) ➔</button>
+  </div>
+
+  <!-- ================= TAB Summary: 総評 ================= -->
+  <div id="tab-secSummary" class="tab-content">
+    <div class="card">
+      <div class="section-label">📝 総評</div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">事前準備ギャップ</div>
+        <textarea id="v-gap" rows="2" placeholder="事前情報と実際の差異など..."></textarea>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">チーム連携評価</div>
+        <textarea id="v-team" rows="2" placeholder="多職種連携・情報共有の評価..."></textarea>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">マスタ・システム改善要望</div>
+        <textarea id="v-master-gap" rows="2" placeholder="マスタ登録やシステムへの要望..."></textarea>
+      </div>
+      <div>
+        <div style="font-size:12px; font-weight:bold; color:var(--sub); margin-bottom:8px;">総括・次回アクション</div>
+        <textarea id="v-action" rows="2" placeholder="今回の総括、次回に活かすアクション..."></textarea>
+      </div>
+    </div>
+    <button type="button" class="btn-next no-print" onclick="switchTab('sec4')">次へ (プレビュー・保存) ➔</button>
   </div>
 
   <!-- ================= TAB 4: 保存 ================= -->
@@ -389,14 +390,14 @@
     "5その他": ["5-1: 外因性", "5-2: 内因性"]
   };
 
-  let allCasesData = []; let existingDebriefs = []; let currentCase = null; let currentDebriefCaseId = null;
+  let allCasesData = []; let existingDebriefs = []; let currentCase = null; let currentDebriefCaseId = null; let linkedCaseId = "";
   let masters = { dr:[], ns:[], pilot:[], mechanic:[], cs:[], extAffil:[], extStaff:[], diagnosis:[], keyword:[] };
   
   let sysData = {
     reqType: "",
-    disease: { main: "", cause: "", sub: "", maternal: "なし", worker: "なし" },
+    disease: { main: "", cause: "", sub: "" },
     summary: "",
-    tags: { diagnosis:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[], globalTreatment:[], special:[], keyword:[] },
+    tags: { diagnosis:[], dr:[], ns:[], pilot:[], mechanic:[], cs:[], recorder:[], globalTreatment:[], globalDrugs:[], special:[], keyword:[] },
     evals: [], feedbacks: []
   };
 
@@ -726,8 +727,14 @@
     resArea.style.display = "block";
   }
 
+  function goToEditCase() {
+    if (!linkedCaseId) return;
+    location.href = 'index.html?editId=' + encodeURIComponent(linkedCaseId);
+  }
+
   function selectCase(rowWrapper) {
     currentCase = rowWrapper.rawData || rowWrapper;
+    linkedCaseId = rowWrapper.id || currentCase["要請番号"] || "";
     document.getElementById("search-results-area").style.display = "none"; 
     document.getElementById("case-data-area").style.display = "block";
     
@@ -745,6 +752,7 @@
     }
 
     let importedProcs = [];
+    let importedDrugs = [];
 
     const skipKeys = [
       "要請番号","日付","出場先","フライトドクター","フライトナース","スキーム選択","要請形態","要請区分","特殊ケース",
@@ -799,9 +807,9 @@
     ];
     PROC_ALIASES.forEach(a => { if (a.cond()) importedProcs.push(a.tag); });
 
-    // 🌟 使用薬剤リストは列名ではなく中身(カンマ区切りの薬剤名)を個別のタグとしてインポートする
+    // 🌟 使用薬剤リストは処置と区別して別枠(使用薬剤)にインポートする
     if (currentCase["使用薬剤リスト"]) {
-      currentCase["使用薬剤リスト"].split(",").map(s => s.trim()).filter(Boolean).forEach(name => importedProcs.push(name));
+      currentCase["使用薬剤リスト"].split(",").map(s => s.trim()).filter(Boolean).forEach(name => importedDrugs.push(name));
     }
 
     let procStateStr = currentCase["procsState"] || currentCase["処置JSON"] || "";
@@ -824,13 +832,22 @@
       const originalTreatment = sysData.tags.globalTreatment || [];
       const uniqueProcs = [...new Set([...originalTreatment, ...importedProcs])];
       sysData.tags.globalTreatment = uniqueProcs;
-      
+
       uniqueProcs.forEach(p => {
         if(!TAG_MASTERS.treatment.items.includes(p)) TAG_MASTERS.treatment.items.unshift(p);
       });
-      
+
       const vProcs = document.getElementById("v-fetched-procs");
       vProcs.innerHTML = uniqueProcs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
+    }
+
+    if(importedDrugs.length > 0) {
+      const originalDrugs = sysData.tags.globalDrugs || [];
+      const uniqueDrugs = [...new Set([...originalDrugs, ...importedDrugs])];
+      sysData.tags.globalDrugs = uniqueDrugs;
+
+      const vDrugs = document.getElementById("v-fetched-drugs");
+      vDrugs.innerHTML = uniqueDrugs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
     }
 
     let flags = [];
@@ -913,7 +930,7 @@
     }
 
 
-    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div>`;
+    document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div><button type="button" class="btn-small" style="background:#fff3e0; color:#e65100; margin-top:8px;" onclick="goToEditCase()">✏️ 症例登録の内容を修正する</button>`;
   }
 
   async function updateReviewStatus() {
@@ -963,8 +980,6 @@
            if(btn) setDiseaseSubReal(sys.disease.sub, btn);
          }, 50);
        }
-       document.getElementById("v-maternal").value = sys.disease.maternal || "なし";
-       document.getElementById("v-worker").value = sys.disease.worker || "なし";
     }
 
     ['dr','ns','pilot','mechanic','cs','diagnosis','recorder', 'special', 'keyword'].forEach(cat => {
@@ -980,6 +995,10 @@
     if(sysData.tags.globalTreatment && sysData.tags.globalTreatment.length > 0) {
       const vProcs = document.getElementById("v-fetched-procs");
       vProcs.innerHTML = sysData.tags.globalTreatment.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
+    }
+    if(sysData.tags.globalDrugs && sysData.tags.globalDrugs.length > 0) {
+      const vDrugs = document.getElementById("v-fetched-drugs");
+      vDrugs.innerHTML = sysData.tags.globalDrugs.map(p => `<div class="pill on" onclick="this.classList.toggle('on')">${p}</div>`).join('');
     }
 
     document.getElementById("ext-pt-container").innerHTML = ""; if(sys.ext) sys.ext.forEach(e => addExtPt(e.affil, e.name));
@@ -1086,13 +1105,9 @@
     document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
     document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
 
-    sysData.disease.maternal = document.getElementById("v-maternal").value;
-    sysData.disease.worker = document.getElementById("v-worker").value;
-    
-    let diseaseStr = `[${sysData.disease.main}]`; 
+    let diseaseStr = `[${sysData.disease.main}]`;
     if(sysData.disease.cause) diseaseStr += ` 原因:${sysData.disease.cause}`;
     if(sysData.disease.sub) diseaseStr += ` -> ${sysData.disease.sub}`;
-    diseaseStr += ` (母子:${sysData.disease.maternal} 労災:${sysData.disease.worker})`;
 
     let evalHtml = sysData.evals.map((e,i) => {
       let sc = e.scene=='⑨ その他' ? e.sceneOther : e.scene;
@@ -1121,7 +1136,9 @@
 
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
-    
+    const activeDrugs = Array.from(document.querySelectorAll('#v-fetched-drugs .pill.on')).map(el => el.innerText);
+    sysData.tags.globalDrugs = activeDrugs;
+
     document.getElementById("print-area").innerHTML = `
       <div style="font-size:14px; line-height:1.6; padding:12px;">
         <h2 style="margin-top:0; color:var(--ink);">AW109 デブリーフィング</h2>
@@ -1129,7 +1146,8 @@
           <b>要請区分:</b> ${sysData.reqType || '-'}<br>
           <b>疾患分類:</b> ${diseaseStr}<br>
           <b>現場診断:</b> ${displayDiags.join(", ")||'-'}<br>
-          <b>処置・使用薬剤:</b> ${activeProcs.join(", ")||'-'}<br>
+          <b>処置:</b> ${activeProcs.join(", ")||'-'}<br>
+          <b>使用薬剤:</b> ${activeDrugs.join(", ")||'-'}<br>
           <b>環境/参加:</b> ${envLoc}・${envMethod} / ${ptList.join(", ")||'未記入'}
         </div>
         <h3 style="font-size:15px; color:var(--blue); border-bottom:1px solid var(--blue);">■ 事案概要</h3><div style="padding:4px; margin-bottom:12px;">${summaryVal.replace(/\n/g,'<br>')}</div>
@@ -1155,10 +1173,10 @@
 
     const activeProcs = Array.from(document.querySelectorAll('#v-fetched-procs .pill.on')).map(el => el.innerText);
     sysData.tags.globalTreatment = activeProcs;
+    const activeDrugs = Array.from(document.querySelectorAll('#v-fetched-drugs .pill.on')).map(el => el.innerText);
+    sysData.tags.globalDrugs = activeDrugs;
 
     sysData.summary = document.getElementById("v-summary").value;
-    sysData.disease.maternal = document.getElementById("v-maternal").value;
-    sysData.disease.worker = document.getElementById("v-worker").value;
 
     sysData.ext = []; document.querySelectorAll('.ext-row').forEach(r => sysData.ext.push({affil:r.querySelector('.e-affil').value, name:r.querySelector('.e-name').value}));
     sysData.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sysData.ojt.push({job:r.querySelector('.o-job').value, name:r.querySelector('.o-name').value}));
@@ -1166,7 +1184,7 @@
     let ptList = []; ['dr','ns','pilot','mechanic','cs'].forEach(c => { if(sysData.tags[c]) sysData.tags[c].forEach(n=>ptList.push(n)); });
     sysData.ext.forEach(e => { if(e.affil||e.name) ptList.push(`${e.affil} ${e.name}`); }); sysData.ojt.forEach(o => { if(o.job||o.name) ptList.push(`[OJT]${o.job} ${o.name}`); });
 
-    let allUsedTags = [...activeProcs];
+    let allUsedTags = [...activeProcs, ...activeDrugs];
     let evalTxt = sysData.evals.map((e,i) => {
       e.tags.forEach(t => allUsedTags.push(t));
       let sc = e.scene=='⑨ その他'?e.sceneOther:e.scene; let txt = `【#${i+1} ${e.type}(${sc||'未選択'})】\n`;
@@ -1191,10 +1209,8 @@
     if((sysData.tags['diagnosis']||[]).length > 0) diseaseComboStr += ` 診断:${(sysData.tags['diagnosis']||[]).join(", ")}`;
 
     const tagsObj = {
-      diseaseMain: sysData.disease.main, 
+      diseaseMain: sysData.disease.main,
       diseaseSub: sysData.disease.sub || sysData.disease.cause,
-      maternal: sysData.disease.maternal, 
-      worker: sysData.disease.worker,     
       disease: diseaseComboStr,
       scene: [...new Set(sysData.evals.map(e => e.scene=='⑨ その他'?e.sceneOther:e.scene).filter(Boolean))].join(", "),
       inlineTags: uniqueTags.join(", "),

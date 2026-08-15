@@ -33,6 +33,15 @@
     .tag-category-title { font-size: 11px; font-weight: bold; color: var(--ink); margin-bottom: 6px; margin-top: 12px; }
     .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; background: var(--bg); transition: 0.15s; user-select: none; }
+    .chip.hidden-by-filter { display: none; }
+    .tag-accordion { border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; overflow: hidden; }
+    .tag-accordion summary { list-style: none; cursor: pointer; padding: 10px 12px; font-size: 12px; font-weight: bold; color: var(--ink); display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
+    .tag-accordion summary::-webkit-details-marker { display: none; }
+    .tag-accordion summary::after { content: '▶'; font-size: 10px; color: var(--sub); transition: transform 0.15s; }
+    .tag-accordion[open] summary::after { transform: rotate(90deg); }
+    .tag-accordion .accordion-body { padding: 10px 12px; }
+    .tag-accordion .chip-filter-input { width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; margin-bottom: 8px; }
+    .tag-accordion .chip-count { font-weight: normal; color: var(--sub); font-size: 11px; }
     .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 2px 6px rgba(0,122,255,0.2); }
     
     .btn-search { width: 100%; padding: 14px; background: var(--ink); color: #fff; font-weight: bold; border-radius: 8px; border: none; font-size: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 16px; transition: 0.2s; }
@@ -119,21 +128,54 @@
       <button type="button" class="hdr-btn" style="font-size:11px;" onclick="clearTags()">クリア</button>
     </div>
     
-    <div class="tag-category-title">🚨 特殊ケース・要請区分</div>
-    <div class="chip-grid" id="ui-tags-special"></div>
+    <details class="tag-accordion">
+      <summary>🚨 特殊ケース・要請区分 <span class="chip-count" id="cnt-special"></span></summary>
+      <div class="accordion-body">
+        <input type="text" class="chip-filter-input" placeholder="🔍 絞り込み..." oninput="filterChipGrid('ui-tags-special', this.value)">
+        <div class="chip-grid" id="ui-tags-special"></div>
+      </div>
+    </details>
 
-    <div class="tag-category-title">🏥 疾患分類</div>
-    <div class="chip-grid" id="ui-tags-disease"></div>
-    
-    <div class="tag-category-title">🚁 活動場面</div>
-    <div class="chip-grid" id="ui-tags-scene"></div>
+    <details class="tag-accordion">
+      <summary>🏥 疾患分類 <span class="chip-count" id="cnt-disease"></span></summary>
+      <div class="accordion-body">
+        <input type="text" class="chip-filter-input" placeholder="🔍 絞り込み..." oninput="filterChipGrid('ui-tags-disease', this.value)">
+        <div class="chip-grid" id="ui-tags-disease"></div>
+      </div>
+    </details>
 
-    <div class="tag-category-title">🧠 チーム連携・状況判断</div>
-    <div class="chip-grid" id="ui-tags-nts"></div>
+    <details class="tag-accordion">
+      <summary>🚁 活動場面 <span class="chip-count" id="cnt-scene"></span></summary>
+      <div class="accordion-body">
+        <input type="text" class="chip-filter-input" placeholder="🔍 絞り込み..." oninput="filterChipGrid('ui-tags-scene', this.value)">
+        <div class="chip-grid" id="ui-tags-scene"></div>
+      </div>
+    </details>
 
-    <div class="tag-category-title">🛠️ 実務・処置</div>
-    <div class="chip-grid" id="ui-tags-practice"></div>
-    
+    <details class="tag-accordion">
+      <summary>🧠 チーム連携・状況判断 <span class="chip-count" id="cnt-nts"></span></summary>
+      <div class="accordion-body">
+        <input type="text" class="chip-filter-input" placeholder="🔍 絞り込み..." oninput="filterChipGrid('ui-tags-nts', this.value)">
+        <div class="chip-grid" id="ui-tags-nts"></div>
+      </div>
+    </details>
+
+    <details class="tag-accordion">
+      <summary>🛠️ 実務・処置 <span class="chip-count" id="cnt-practice"></span></summary>
+      <div class="accordion-body">
+        <input type="text" class="chip-filter-input" placeholder="🔍 絞り込み..." oninput="filterChipGrid('ui-tags-practice', this.value)">
+        <div class="chip-grid" id="ui-tags-practice"></div>
+      </div>
+    </details>
+
+    <details class="tag-accordion">
+      <summary>💊 使用薬剤 <span class="chip-count" id="cnt-drug"></span></summary>
+      <div class="accordion-body">
+        <input type="text" class="chip-filter-input" placeholder="🔍 絞り込み..." oninput="filterChipGrid('ui-tags-drug', this.value)">
+        <div class="chip-grid" id="ui-tags-drug"></div>
+      </div>
+    </details>
+
     <button type="button" class="btn-search" onclick="executeSearch()">この条件で検索する 🔍</button>
   </div>
 
@@ -298,7 +340,8 @@
           let tags = [];
           if (sysObj.reqType) tags.push(sysObj.reqType);
           if (sysObj.disease) { if (sysObj.disease.main) tags.push(sysObj.disease.main); if (sysObj.disease.sub) tags.push(sysObj.disease.sub); }
-          if (sysObj.tags) { ['diagnosis','special','keyword','globalTreatment'].forEach(cat => { if (sysObj.tags[cat]) sysObj.tags[cat].forEach(t => tags.push(t)); }); }
+          if (sysObj.tags) { ['diagnosis','special','keyword','globalTreatment','globalDrugs'].forEach(cat => { if (sysObj.tags[cat]) sysObj.tags[cat].forEach(t => tags.push(t)); }); }
+          const drugTags = (sysObj.tags && sysObj.tags.globalDrugs) ? sysObj.tags.globalDrugs.filter(Boolean) : [];
           if (Array.isArray(sysObj.evals)) sysObj.evals.forEach(e => { const sc = e.scene === '⑨ その他' ? e.sceneOther : e.scene; if (sc) tags.push(sc); if (Array.isArray(e.tags)) e.tags.forEach(t => tags.push(t)); });
           if (Array.isArray(sysObj.feedbacks)) sysObj.feedbacks.forEach(f => { if (Array.isArray(f.tags)) f.tags.forEach(t => tags.push(t)); });
 
@@ -325,7 +368,7 @@
             contactTime: jian["接触"] || "--:--", dr: jian["フライトドクター"], ns: jian["フライトナース"], 
             participants: d["参加者一覧"] || "", summary: summaryVal, evalText: evalTextCombined, 
             good: goodCombined, bad: badCombined,
-            tags: uniqueTags, loc: d["実施場所"] || "", method: d["実施方法"] || "",
+            tags: uniqueTags, drugTags, loc: d["実施場所"] || "", method: d["実施方法"] || "",
             reqType: jian["要請区分"] || "", specialFlags: flags
           });
         }
@@ -363,12 +406,14 @@
       document.getElementById("q-ext").innerHTML = `<option value="">全て</option>` + masters.extStaff.map(n => `<option value="${n}">${n}</option>`).join("");
     }
 
-    tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set(), special: new Set() };
+    tagsMaster = { disease: new Set(), scene: new Set(), nts: new Set(), practice: new Set(), drug: new Set(), special: new Set() };
     ["小児", "母性", "多数傷病", "KEY WORD", "救急隊現着後", "D-call Net", "施設間"].forEach(t => tagsMaster.special.add(t));
-    
+
     mergedData.forEach(m => {
+      const drugSet = new Set(m.drugTags || []);
       m.tags.forEach(t => {
-        if(DISEASE_MAIN.some(d => t.includes(d))) tagsMaster.disease.add(t.split(" ")[0].replace('[','').replace(']',''));
+        if(drugSet.has(t)) tagsMaster.drug.add(t);
+        else if(DISEASE_MAIN.some(d => t.includes(d))) tagsMaster.disease.add(t.split(" ")[0].replace('[','').replace(']',''));
         else if(SCENE_LIST.includes(t)) tagsMaster.scene.add(t);
         else if(NTS_LIST.includes(t)) tagsMaster.nts.add(t);
         else if(tagsMaster.special.has(t) || t.includes("キーワード")) tagsMaster.special.add(t);
@@ -377,13 +422,26 @@
     });
 
     const renderChipHtml = (setObj) => Array.from(setObj).sort().map(t => `<div class="chip" onclick="this.classList.toggle('active')">${t}</div>`).join("");
-    document.getElementById("ui-tags-special").innerHTML = renderChipHtml(tagsMaster.special) || '<span style="font-size:11px;color:#ccc;">なし</span>';
-    document.getElementById("ui-tags-disease").innerHTML = renderChipHtml(tagsMaster.disease) || '<span style="font-size:11px;color:#ccc;">なし</span>';
-    document.getElementById("ui-tags-scene").innerHTML = renderChipHtml(tagsMaster.scene) || '<span style="font-size:11px;color:#ccc;">なし</span>';
-    document.getElementById("ui-tags-nts").innerHTML = renderChipHtml(tagsMaster.nts) || '<span style="font-size:11px;color:#ccc;">なし</span>';
-    document.getElementById("ui-tags-practice").innerHTML = renderChipHtml(tagsMaster.practice) || '<span style="font-size:11px;color:#ccc;">なし</span>';
+    const renderCategory = (gridId, countId, setObj) => {
+      document.getElementById(gridId).innerHTML = renderChipHtml(setObj) || '<span style="font-size:11px;color:#ccc;">なし</span>';
+      document.getElementById(countId).textContent = setObj.size > 0 ? `(${setObj.size})` : '';
+    };
+    renderCategory('ui-tags-special', 'cnt-special', tagsMaster.special);
+    renderCategory('ui-tags-disease', 'cnt-disease', tagsMaster.disease);
+    renderCategory('ui-tags-scene', 'cnt-scene', tagsMaster.scene);
+    renderCategory('ui-tags-nts', 'cnt-nts', tagsMaster.nts);
+    renderCategory('ui-tags-practice', 'cnt-practice', tagsMaster.practice);
+    renderCategory('ui-tags-drug', 'cnt-drug', tagsMaster.drug);
 
     executeSearch();
+  }
+
+  function filterChipGrid(gridId, query) {
+    const q = query.trim().toLowerCase();
+    document.querySelectorAll(`#${gridId} .chip`).forEach(chip => {
+      const match = !q || chip.textContent.toLowerCase().includes(q);
+      chip.classList.toggle('hidden-by-filter', !match);
+    });
   }
 
   function executeSearch() {
