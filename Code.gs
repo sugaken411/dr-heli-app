@@ -180,6 +180,8 @@ function findRowIndexBySysId(data, headers, targetId) {
 
 function doGet(e) {
  const id = e.parameter.id;
+ const resetToken = e.parameter.resetToken;
+ if (resetToken) return renderResetPasswordPage_(resetToken);
  if (!id) return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Redirect OK" })).setMimeType(ContentService.MimeType.JSON);
   let html = `<!DOCTYPE html>
  <html lang="ja">
@@ -236,6 +238,69 @@ function doGet(e) {
  return HtmlService.createHtmlOutput(html);
 }
 
+// 🌟 パスワード再設定リンク（メール内URL）から開かれるフォーム。トークンの有効性判定はauth_reset_password側（doPost）で行うため、
+// ここではトークンをそのままJSに埋め込んで渡すだけ。confirm()を使わないため、どのブラウザでも動作する。
+function renderResetPasswordPage_(resetToken) {
+  const html = `<!DOCTYPE html>
+ <html lang="ja">
+ <head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width,initial-scale=1">
+   <title>パスワード再設定</title>
+   <style>
+     body{font-family:sans-serif;background:#f2f2f7;color:#1c1c1e;padding:20px;}
+     .card{background:#fff;border-radius:12px;padding:20px;max-width:400px;margin:0 auto;}
+     button{width:100%;padding:14px;background:#007aff;color:#fff;border:none;border-radius:8px;font-weight:bold;font-size:16px;margin-top:20px;cursor:pointer;}
+     button:disabled{opacity:0.5;}
+     input[type="password"]{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;margin-top:8px;box-sizing:border-box;}
+     label{display:block;margin-top:12px;font-weight:bold;}
+   </style>
+ </head>
+ <body>
+   <div class="card">
+     <h2 style="margin-top:0;">🔑 パスワード再設定</h2>
+     <label>新しいパスワード (4文字以上)<input type="password" id="pw1"></label>
+     <label>新しいパスワード (確認)<input type="password" id="pw2"></label>
+     <button type="button" id="btn" onclick="send()">パスワードを変更する</button>
+     <div id="msg" style="margin-top:16px; font-weight:bold; text-align:center;"></div>
+   </div>
+   <script>
+     function send() {
+       const pw1 = document.getElementById("pw1").value;
+       const pw2 = document.getElementById("pw2").value;
+       const msgEl = document.getElementById("msg");
+       msgEl.style.color = "#d32f2f";
+       if (pw1.length < 4) { msgEl.innerText = "4文字以上のパスワードを入力してください"; return; }
+       if (pw1 !== pw2) { msgEl.innerText = "パスワードが一致しません"; return; }
+       document.getElementById("btn").disabled = true;
+       document.getElementById("btn").innerText = "送信中...";
+       msgEl.innerText = "";
+       fetch("${GAS_API_URL}", {
+         method: "POST",
+         headers: {"Content-Type": "text/plain;charset=utf-8"},
+         body: JSON.stringify({ action: "auth_reset_password", token: ${JSON.stringify(resetToken)}, newPassword: pw1 }),
+         redirect: "follow"
+       }).then(r => r.json()).then(json => {
+         if (json.status === "success") {
+           document.getElementById("btn").style.display = "none";
+           msgEl.style.color = "#2e7d32";
+           msgEl.innerText = "パスワードを変更しました。このページを閉じて、新しいパスワードでログインしてください。";
+         } else {
+           document.getElementById("btn").disabled = false;
+           document.getElementById("btn").innerText = "パスワードを変更する";
+           msgEl.innerText = json.message || "変更に失敗しました。";
+         }
+       }).catch(e => {
+         document.getElementById("btn").disabled = false;
+         document.getElementById("btn").innerText = "パスワードを変更する";
+         msgEl.innerText = "通信エラーが発生しました。";
+       });
+     }
+   </script>
+ </body>
+ </html>`;
+  return HtmlService.createHtmlOutput(html);
+}
 
 function doPost(e) {
  try {
@@ -250,7 +315,8 @@ function doPost(e) {
      "update_record", "delete_record", "send_email", "add_master", "submit_question",
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
      "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full",
-     "update_library_record", "auth_register", "auth_login", "set_admin_flag"
+     "update_library_record", "auth_register", "auth_login", "set_admin_flag",
+     "auth_request_reset", "auth_reset_password"
    ];
 
    if (!allowed.includes(action)) {
@@ -347,6 +413,73 @@ function doPost(e) {
      const name = cName !== -1 && found[cName] ? found[cName] : email;
      const token = signToken({ email: email, name: name, isAdmin: isAdmin, iat: Date.now(), exp: Date.now() + 90 * 24 * 60 * 60 * 1000 });
      return ContentService.createTextOutput(JSON.stringify({ status: "success", token: token, name: name, isAdmin: isAdmin })).setMimeType(ContentService.MimeType.JSON);
+   }
+
+   if (action === "auth_request_reset") {
+     const email = String(requestData.email || "").trim().toLowerCase();
+     if (!email) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "メールアドレスを入力してください" })).setMimeType(ContentService.MimeType.JSON);
+     const msSheet = getSheetFlexible(SpreadsheetApp.getActiveSpreadsheet(), ["マスタ_基本設定", "マスタデータ"]);
+     if (!msSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタシートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+     const data = msSheet.getDataRange().getDisplayValues();
+     const headers = data[0].map(h => String(h).trim());
+     const cMail = headers.indexOf("メールアドレス");
+     const cHash = headers.indexOf("パスワードハッシュ");
+     const cName = headers.indexOf("宛先名");
+     if (cMail === -1 || cHash === -1) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタ_基本設定に必要な列がありません" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     let found = null;
+     for (let i = 1; i < data.length; i++) {
+       if (String(data[i][cMail]).trim().toLowerCase() === email) { found = data[i]; break; }
+     }
+     if (!found) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "登録されていないメールアドレスです。管理者にマスタ登録を依頼してください" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     if (!found[cHash]) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "このメールアドレスはまだパスワード未設定です。「初めての方」から設定してください" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     const name = cName !== -1 && found[cName] ? found[cName] : email;
+     // 🌟 再設定リンクは30分のみ有効。signToken/verifyTokenの既存インフラを再利用し、専用の秘密情報を新設しない
+     const resetToken = signToken({ email: email, purpose: "pwreset", exp: Date.now() + 30 * 60 * 1000 });
+     const resetUrl = `${GAS_API_URL}?resetToken=${encodeURIComponent(resetToken)}`;
+     MailApp.sendEmail({
+       to: email,
+       subject: "【AW109 EMS】パスワード再設定のご案内",
+       body: `${name} 様\n\nパスワード再設定のリクエストを受け付けました。\n以下のリンクから30分以内に新しいパスワードを設定してください。\n\n${resetUrl}\n\n※このメールに心当たりがない場合は、無視してください。パスワードは変更されません。`
+     });
+     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+   }
+
+   if (action === "auth_reset_password") {
+     const token = String(requestData.token || "");
+     const newPassword = String(requestData.newPassword || "");
+     const payload = verifyToken(token);
+     if (!payload || payload.purpose !== "pwreset") {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "リンクが無効か有効期限が切れています。もう一度パスワード再設定をリクエストしてください。" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     if (newPassword.length < 4) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "4文字以上のパスワードを入力してください" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     const email = payload.email;
+     const msSheet = getSheetFlexible(SpreadsheetApp.getActiveSpreadsheet(), ["マスタ_基本設定", "マスタデータ"]);
+     if (!msSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "マスタシートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+     const data = msSheet.getDataRange().getDisplayValues();
+     const headers = data[0].map(h => String(h).trim());
+     const cMail = headers.indexOf("メールアドレス");
+     const cHash = headers.indexOf("パスワードハッシュ");
+     const cSalt = headers.indexOf("パスワードソルト");
+     let rowIndex = -1;
+     for (let i = 1; i < data.length; i++) {
+       if (String(data[i][cMail]).trim().toLowerCase() === email) { rowIndex = i + 1; break; }
+     }
+     if (rowIndex === -1) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "対象のアカウントが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     const salt = Utilities.getUuid();
+     const hash = hashPassword(newPassword, salt);
+     msSheet.getRange(rowIndex, cSalt + 1).setValue(salt);
+     msSheet.getRange(rowIndex, cHash + 1).setValue(hash);
+     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
 
    // 🌟 認証: スタッフ用PINは廃止。管理者用PIN(非公開の緊急回復用)か、ログイントークンのみ受け付ける

@@ -211,6 +211,14 @@
         <input type="email" id="login-email" placeholder="メールアドレス" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; margin-bottom:8px; background:var(--bg);">
         <input type="password" id="login-password" placeholder="パスワード" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; margin-bottom:8px; background:var(--bg);">
         <button type="button" onclick="doLogin()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">ログイン</button>
+        <div style="text-align:right; margin-top:8px;"><a href="#" onclick="switchAccountTab('reset'); return false;" style="font-size:12px; color:var(--sub);">パスワードをお忘れですか？</a></div>
+      </div>
+
+      <div id="account-reset-box" style="display:none;">
+        <div style="font-size:12px; color:var(--sub); margin-bottom:8px;">登録済みのメールアドレスを入力すると、パスワード再設定用のリンクをメールで送信します（有効期限30分）。</div>
+        <input type="email" id="reset-email" placeholder="メールアドレス" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; margin-bottom:8px; background:var(--bg);">
+        <button type="button" onclick="doRequestReset()" style="width:100%; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:8px; font-weight:700;">再設定リンクを送信</button>
+        <div style="text-align:right; margin-top:8px;"><a href="#" onclick="switchAccountTab('login'); return false;" style="font-size:12px; color:var(--sub);">ログインに戻る</a></div>
       </div>
 
       <div id="account-register-box" style="display:none;">
@@ -257,6 +265,8 @@
   function switchAccountTab(tab) {
     document.getElementById('account-login-box').style.display = tab === 'login' ? 'block' : 'none';
     document.getElementById('account-register-box').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('account-reset-box').style.display = tab === 'reset' ? 'block' : 'none';
+    document.getElementById('account-tabs').style.display = tab === 'reset' ? 'none' : 'flex';
     document.getElementById('tab-login').style.backgroundColor = tab === 'login' ? 'var(--blue)' : '';
     document.getElementById('tab-login').style.color = tab === 'login' ? '#fff' : '';
     document.getElementById('tab-register').style.backgroundColor = tab === 'register' ? 'var(--blue)' : '';
@@ -324,6 +334,24 @@
         switchAccountTab('login');
       } else {
         msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = json.message || '登録に失敗しました。';
+      }
+    } catch (e) {
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = '通信エラーが発生しました。';
+    }
+  }
+
+  async function doRequestReset() {
+    const email = document.getElementById('reset-email').value.trim();
+    const msgEl = document.getElementById('account-msg');
+    if (!email) { msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = 'メールアドレスを入力してください。'; return; }
+    msgEl.style.color = 'var(--sub)'; msgEl.innerText = '送信中...';
+    try {
+      const json = await fetchGasJson({ action: 'auth_request_reset', email: email });
+      if (json.status === 'success') {
+        msgEl.style.color = '#2e7d32'; msgEl.innerText = '再設定用のリンクをメールに送信しました。届いたメールのリンクから新しいパスワードを設定してください。';
+      } else {
+        msgEl.style.color = 'var(--brand-danger,#d32f2f)'; msgEl.innerText = json.message || '送信に失敗しました。';
       }
     } catch (e) {
       sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
