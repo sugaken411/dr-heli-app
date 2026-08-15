@@ -753,8 +753,11 @@
         <div class="form-group" style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:12px;">
           <label style="margin-bottom:8px;">現場診断 (マスタ選択 / 複数指定可能)</label>
           <div class="pill-group" id="chip-container-diagnosis" style="margin-bottom:8px;"></div>
-          <div class="accordion-title-sm" onclick="toggleAccordion('chip-diagnosis-all')">▶ マスタ診断名一覧から選択</div>
-          <div class="pill-group accordion-content" id="chip-diagnosis-all" style="flex-direction:row;"></div>
+          <div class="accordion-title-sm" onclick="toggleAccordion('chip-diagnosis-all-wrap')">▶ マスタ診断名一覧から選択</div>
+          <div class="accordion-content" id="chip-diagnosis-all-wrap">
+            <input type="text" id="diag-filter" placeholder="🔍 絞り込み..." oninput="filterDiagnosisChips(this.value)" style="width:100%; margin:0 0 8px; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:13px;">
+            <div class="pill-group" id="chip-diagnosis-all" style="flex-direction:row;"></div>
+          </div>
           <div style="display:flex; gap:8px; margin-top:12px;">
             <input type="text" id="diag-name" list="diagnosis-list" placeholder="病名を入力・選択" style="margin:0; flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;">
             <button type="button" id="btn-diag-add" class="btn-small" style="background:var(--blue); color:#fff; padding:10px 16px;" onclick="generateDiagnosis()">＋追加</button>
@@ -1737,7 +1740,7 @@
     document.getElementById("edit-mode-panel").style.display = "block";
     
     if(currentKeywords.length > 0) document.getElementById('chip-keyword-all').classList.add('open');
-    if(currentDiagnosis.length > 0) document.getElementById('chip-diagnosis-all').classList.add('open');
+    if(currentDiagnosis.length > 0) document.getElementById('chip-diagnosis-all-wrap').classList.add('open');
 
     switchTab('input');
   }
@@ -1831,6 +1834,17 @@
         }
       });
     }
+    if(cat === 'diagnosis') {
+      const filterInput = document.getElementById('diag-filter');
+      if(filterInput) filterDiagnosisChips(filterInput.value);
+    }
+  }
+
+  function filterDiagnosisChips(query) {
+    const q = query.trim().toLowerCase();
+    document.querySelectorAll('#chip-diagnosis-all .pill').forEach(pill => {
+      pill.style.display = (!q || pill.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    });
   }
 
   function setDiseaseMain(val) {
