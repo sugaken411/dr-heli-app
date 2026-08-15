@@ -379,7 +379,7 @@
   const TAG_MASTERS = {
     practice: { label: "🛠 実務項目", items: ["情報理解", "出動前準備", "リスク予測", "情報共有", "多職種連携・コーディネート", "アセスメント", "初期対応", "処置介助", "資器材管理", "患者の安全管理", "家族対応", "申し送り"] },
     treatment: { label: "💉 処置", items: ["バックボード固定", "骨盤固定", "ターニケット", "除染", "分娩介助", "気管挿管", "胸腔ドレナージ", "心エコー"] },
-    special: { label: "🚨 特殊ケース", items: ["小児", "母性", "多数傷病", "緊急外来搬送", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] }
+    special: { label: "🚨 特殊ケース", items: ["小児", "母性", "多数傷病", "労災", "緊急外来搬送", "補完ヘリや防災ヘリとの協働", "救急隊・支援隊不在エリアでの活動"] }
   };
 
   const DISEASE_TREE = {
@@ -751,7 +751,7 @@
       "要請時刻・施設間搬送依頼時刻","初期離陸時間","最終着陸時間","接触","病着","終了","往診料","搬送料","長時間加算",
       "モニター算定時間","経皮的酸素飽和度","EtCO2算定","人工呼吸器管理料","事案概要","備考","ステータス","更新履歴",
       "システムデータ","現場診断","酸素デバイス詳細","ヘリ在庫フラグ", "小児フラグ", "母性フラグ", "多数傷病フラグ",
-      "疾患大分類", "疾患原因", "詳細分類", "労災フラグ",
+      "疾患大分類", "疾患原因", "詳細分類", "労災フラグ", "緊急外来搬送フラグ", "ヘリ協働フラグ", "支援隊不在フラグ",
       "procsState", "処置JSON", "簡易処置リスト", "処置リスト", "実施処置", "処置", "外傷処置", "外傷・固定", "外傷",
       "使用薬剤リスト",
       // 🌟 症例登録側(index.html)の「管理料_◯◯」「◯◯タイプ/サイズ/回数」等の列は
@@ -837,6 +837,10 @@
     if (currentCase["小児フラグ"] === "TRUE" || currentCase["小児フラグ"] === true || currentCase["小児フラグ"] === "◯" || currentCase["小児フラグ"] === "✓") flags.push("小児");
     if (currentCase["母性フラグ"] === "TRUE" || currentCase["母性フラグ"] === true || currentCase["母性フラグ"] === "◯" || currentCase["母性フラグ"] === "✓") flags.push("母性");
     if (currentCase["多数傷病フラグ"] === "TRUE" || currentCase["多数傷病フラグ"] === true || currentCase["多数傷病フラグ"] === "◯" || currentCase["多数傷病フラグ"] === "✓") flags.push("多数傷病");
+    if (currentCase["労災フラグ"] === "TRUE" || currentCase["労災フラグ"] === true || currentCase["労災フラグ"] === "◯" || currentCase["労災フラグ"] === "✓") flags.push("労災");
+    if (currentCase["緊急外来搬送フラグ"] === "TRUE" || currentCase["緊急外来搬送フラグ"] === true || currentCase["緊急外来搬送フラグ"] === "◯" || currentCase["緊急外来搬送フラグ"] === "✓") flags.push("緊急外来搬送");
+    if (currentCase["ヘリ協働フラグ"] === "TRUE" || currentCase["ヘリ協働フラグ"] === true || currentCase["ヘリ協働フラグ"] === "◯" || currentCase["ヘリ協働フラグ"] === "✓") flags.push("補完ヘリや防災ヘリとの協働");
+    if (currentCase["支援隊不在フラグ"] === "TRUE" || currentCase["支援隊不在フラグ"] === true || currentCase["支援隊不在フラグ"] === "◯" || currentCase["支援隊不在フラグ"] === "✓") flags.push("救急隊・支援隊不在エリアでの活動");
 
     const originalSpecial = sysData.tags.special || [];
     const uniqueSpecial = [...new Set([...originalSpecial, ...flags])];

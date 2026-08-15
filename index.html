@@ -708,6 +708,8 @@
             <label class="proc-lbl"><input type="checkbox" id="chk-maternal"> 母性</label>
             <label class="proc-lbl"><input type="checkbox" id="chk-mass"> 多数傷病</label>
             <label class="proc-lbl"><input type="checkbox" id="chk-worker"> 労災</label>
+            <label class="proc-lbl"><input type="checkbox" id="chk-collab"> 補完ヘリや防災ヘリとの協働</label>
+            <label class="proc-lbl"><input type="checkbox" id="chk-noresponder"> 救急隊・支援隊不在エリアでの活動</label>
           </div>
         </div>
         
@@ -1472,6 +1474,8 @@
     document.getElementById("chk-maternal").checked = (sys.flags && sys.flags.maternal) || String(row["母性フラグ"]).includes("◯");
     document.getElementById("chk-mass").checked = (sys.flags && sys.flags.mass) || String(row["多数傷病フラグ"]).includes("◯");
     document.getElementById("chk-worker").checked = (sys.flags && sys.flags.worker) || String(row["労災フラグ"]).includes("◯");
+    document.getElementById("chk-collab").checked = (sys.flags && sys.flags.collab) || String(row["ヘリ協働フラグ"]).includes("◯");
+    document.getElementById("chk-noresponder").checked = (sys.flags && sys.flags.noresponder) || String(row["支援隊不在フラグ"]).includes("◯");
 
     currentKeywords = (sys.tags && sys.tags.keyword) ? sys.tags.keyword : (row["キーワード要請"] || row["キーワード"] || "").split(",").map(s=>s.trim()).filter(Boolean);
     currentDiagnosis = (sys.tags && sys.tags.diagnosis) ? sys.tags.diagnosis : (row["現場診断"] || "").split(",").map(s=>s.trim()).filter(Boolean);
@@ -2111,6 +2115,9 @@
       "母性フラグ": document.getElementById("chk-maternal").checked ? "◯" : "", 
       "多数傷病フラグ": document.getElementById("chk-mass").checked ? "◯" : "", 
       "労災フラグ": document.getElementById("chk-worker").checked ? "◯" : "",
+      "ヘリ協働フラグ": document.getElementById("chk-collab").checked ? "◯" : "",
+      "支援隊不在フラグ": document.getElementById("chk-noresponder").checked ? "◯" : "",
+      "緊急外来搬送フラグ": document.getElementById("chk-er").checked ? "◯" : "",
       "要請時刻・施設間搬送依頼時刻": document.getElementById("t-req").value, 
       "初期離陸時間": document.getElementById("t-dep1").value, 
       "最終着陸時間": document.getElementById("t-arr1").value,
@@ -2243,7 +2250,9 @@
         pediatric: document.getElementById("chk-pediatric").checked,
         maternal: document.getElementById("chk-maternal").checked,
         mass: document.getElementById("chk-mass").checked,
-        worker: document.getElementById("chk-worker").checked
+        worker: document.getElementById("chk-worker").checked,
+        collab: document.getElementById("chk-collab").checked,
+        noresponder: document.getElementById("chk-noresponder").checked
       },
       disease: {
         main: diseaseMainVal,
@@ -2277,6 +2286,8 @@
       if(sys.flags && sys.flags.maternal) flags.push("母性");
       if(sys.flags && sys.flags.mass) flags.push("多数傷病");
       if(sys.flags && sys.flags.worker) flags.push("労災");
+      if(sys.flags && sys.flags.collab) flags.push("補完ヘリや防災ヘリとの協働");
+      if(sys.flags && sys.flags.noresponder) flags.push("救急隊・支援隊不在エリアでの活動");
 
       let html = `<b>要請No:</b> No.${d["要請番号"]||"未入力"}<br><b>日付:</b> ${d["日付"]}<br><b>出場先:</b> ${d["出場先"]||"未入力"}<br><b>Dr/Ns:</b> ${d["フライトドクター"]||"-"} / ${d["フライトナース"]||"-"}<br><b>区分:</b> ${sys.reqType||"未選択"} <b>スキーム:</b> ${d["スキーム選択"]||"未選択"}<br><b>特殊ケース:</b> ${flags.length > 0 ? flags.join(", ") : "なし"}<br><br>`;
       
