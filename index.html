@@ -1184,6 +1184,25 @@
   })();
   const PIN_CODE = localStorage.getItem('aw109_auth_token') || "";
 
+  // 🌟 通常のfetch()には打ち切りがなく、GASのコールドスタート等で無応答になった場合UIが永遠に固まって見える。
+  // AbortControllerで実際にタイムアウトさせ、原因の切り分けができるエラーメッセージを返す（2026-08-17）。
+  async function fetchWithTimeout(url, options, timeoutMs = 30000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (e) {
+      if (e.name === "AbortError") {
+        const err = new Error(`通信タイムアウト（${Math.round(timeoutMs/1000)}秒応答なし）。電波状況を確認し、再度お試しください。`);
+        err.isTimeout = true;
+        throw err;
+      }
+      throw e;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   function sendErrorLog(detail) {
     console.error("[System Error Log]", detail);
     fetch(GAS_API_URL, {
@@ -2388,22 +2407,22 @@
     if(!confirm(`事案内容をメール再送信しますか？\n※未保存の変更がある場合は、先に「上書き保存」を実行してください。`)) return;
     showLoader("メール送信中...", "関係各所に送信しています");
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "send_email", password: PIN_CODE, id: editTargetSysId }), 
-        redirect: "follow" 
+      const res = await fetchWithTimeout(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "send_email", password: PIN_CODE, id: editTargetSysId }),
+        redirect: "follow"
       });
       const json = await res.json();
-      if (json.status === "success") { 
-        alert("メールを送信しました！"); 
-      } else { 
-        throw new Error(json.message); 
+      if (json.status === "success") {
+        alert("メールを送信しました！");
+      } else {
+        throw new Error(json.message);
       }
-    } catch(e) { 
-      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
-      alert("通信エラーが発生しました。"); 
-    } finally { 
-      hideLoader(); 
+    } catch(e) {
+      if (!e.isTimeout) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      alert(e.isTimeout ? e.message : "通信エラーが発生しました。");
+    } finally {
+      hideLoader();
     }
   }
 
@@ -2476,14 +2495,18 @@
   async function submitData(mode = 'submit') {
     if (!state.scheme) return alert("最終スキーム選択は必須入力項目です。");
     if (diseaseMainVal === "4心肺停止" && !diseaseCauseVal) return alert("心肺停止(CPA)の場合は、必ず「原因疾患」を選択してください。");
-    
+
     let editor = "担当Ns";
+    let wantsEmail = false;
     if (mode === 'update') {
       const editType = document.querySelector('input[name="edit-who"]:checked').value;
       if (editType === "代行") editor = document.getElementById("edit-person").value.trim();
       else editor = document.getElementById("v-ns").value || "担当Ns";
       if (!editor) return alert("「修正担当者名」を入力するか、フライトNsを選択してください。");
       if(!confirm(`データを上書きしてよろしいですか？`)) return;
+      // 🌟 従来はここで保存後にもう一度confirm()し、成功後に別リクエストでメール送信していた（2回の直列GAS呼び出し）。
+      // 通信タイムアウトが頻発する一因だったため、保存前にまとめて確認し、保存と送信を1リクエストにまとめる。
+      wantsEmail = confirm("保存後、関係各所に確認・再送メールを送信しますか？");
     }
 
     const btn = document.getElementById(mode === 'submit' ? "btn-submit-main" : "btn-submit-main");
@@ -2498,33 +2521,22 @@
       let actionName = mode === 'update' ? 'update_record' : 'submit';
       let reqBody = { action: actionName, password: PIN_CODE, data: payload };
       if (mode === 'update') {
-        reqBody.old_id = editTargetSysId; 
+        reqBody.old_id = editTargetSysId;
         reqBody.editor = editor;
+        reqBody.sendEmail = wantsEmail;
       }
 
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify(reqBody), 
-        redirect: "follow" 
+      const res = await fetchWithTimeout(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(reqBody),
+        redirect: "follow"
       });
       const json = await res.json();
       if (json.status === "success") {
         if(mode === 'update') {
           sessionStorage.removeItem("aw109_search_data_cache");
-          if(confirm("上書き保存が完了しました。\n関係各所に確認・再送メールを送信しますか？")) {
-            try {
-              showLoader("メール送信中...", "関係各所に送信しています");
-              const mailRes = await fetch(GAS_API_URL, {
-                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "send_email", password: PIN_CODE, id: editTargetSysId }),
-                redirect: "follow"
-              });
-              const mailJson = await mailRes.json();
-              alert(mailJson.status === "success" ? "上書き保存し、メールを送信しました。" : `上書き保存は完了しましたが、メール送信に失敗しました。\n${mailJson.message || ""}`);
-            } catch(mailErr) {
-              sendErrorLog(`Msg: ${mailErr.message || mailErr}\nStack: ${mailErr.stack || mailErr.toString()}`);
-              alert("上書き保存は完了しましたが、メール送信中に通信エラーが発生しました。");
-            }
+          if (wantsEmail) {
+            alert(json.emailSent ? "上書き保存し、メールを送信しました。" : `上書き保存は完了しましたが、メール送信に失敗しました。\n${json.emailMessage || ""}`);
           } else {
             alert("上書き保存しました。(メールは送信していません)");
           }
@@ -2534,15 +2546,15 @@
           location.reload();
         }
       } else {
-        throw new Error(json.message || "サーバー側で登録が拒否されました"); 
+        throw new Error(json.message || "サーバー側で登録が拒否されました");
       }
-    } catch(e) { 
-      sendErrorLog(`Submit Data Error: ${e.stack || e.message}`);
-      alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`); 
-    } finally { 
-      btn.disabled = false; 
-      btn.innerText = "🚀 この内容で送信する"; 
-      hideLoader(); 
+    } catch(e) {
+      if (!e.isTimeout) sendErrorLog(`Submit Data Error: ${e.stack || e.message}`);
+      alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "🚀 この内容で送信する";
+      hideLoader();
     }
   }
 </script>

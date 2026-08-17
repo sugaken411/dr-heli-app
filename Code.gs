@@ -159,6 +159,78 @@ function sanitizeInput(val) {
  return str;
 }
 
+// 🌟 index.html の buildPreview() と同じ集計ロジックをメール本文用に移植したもの。
+// 処置内容がメールに一切表示されず、代行入力者がメールだけでは完結できないという報告への対応（2026-08-17）。
+function buildProcedureSummaryText_(appData) {
+ const costItems = [];
+ if (appData["往診料"]) costItems.push(appData["往診料"]);
+ if (appData["搬送料"]) costItems.push(appData["搬送料"]);
+ if (appData["長時間加算"]) costItems.push("長時間加算");
+ if (appData["モニター算定時間"]) costItems.push(`モニター(${appData["モニター算定時間"]})`);
+ if (appData["経皮的酸素飽和度"]) costItems.push("SpO2");
+ if (appData["EtCO2算定"]) costItems.push("EtCO2");
+ if (appData["管理料_人工呼吸器"]) costItems.push("人工呼吸器");
+ if (appData["管理料_除細動装置"]) costItems.push("除細動装置");
+ if (appData["管理料_閉鎖式保育器"]) costItems.push("閉鎖式保育器");
+ if (appData["管理料_補助循環装置"]) costItems.push("PCPS等(補助循環)");
+ if (appData["管理料_人工心肺装置"]) costItems.push("人工心肺");
+
+ const procs = [];
+ ["末梢静脈路_20G", "末梢静脈路_22G", "末梢静脈路_24G", "末梢静脈路_18G", "骨髄路_EZ-IO", "骨髄路_BIG"].forEach(k => {
+   if (appData[k]) procs.push(`${k.split('_')[1]}(${String(appData[k]).replace('◯ ', '')})`);
+ });
+ if (appData["ベニューラ"]) procs.push(`ベニューラ${appData["ベニューラタイプ"] ? "(" + appData["ベニューラタイプ"] + ")" : ""}(${String(appData["ベニューラ"]).replace('◯ ', '')})`);
+ if (appData["血液ガス分析"]) procs.push(`血ガス(${appData["血液ガスタイプ"]})`);
+ if (appData["気管挿管サイズ"]) procs.push(`気管挿管(ID${appData["気管挿管サイズ"]}mm, ${appData["気管挿管位置"]}cm${appData["カフ上吸引"] ? "カフ吸引あり" : ""})`);
+ if (appData["NPPVマスクサイズ"]) procs.push(`NPPV(${appData["NPPVマスクサイズ"]}サイズ)`);
+ if (appData["除細動回数"]) procs.push(`除細動(${appData["除細動回数"]}回${appData["除細動パッド"] ? " パッド使用" : ""})`);
+ if (appData["経皮ペーシング"]) procs.push(`経皮ペーシング${appData["経皮ペーシングパッド"] ? "(パッド使用)" : ""}`);
+ if (appData["胸腔ドレナージ_20Fr"]) procs.push(`胸腔ドレナージ(20Fr:${appData["胸腔ドレナージ_20Fr"]}本)`);
+ if (appData["胸腔ドレナージ_28Fr"]) procs.push(`胸腔ドレナージ(28Fr:${appData["胸腔ドレナージ_28Fr"]}本)`);
+ if (appData["心嚢穿刺タイプ"]) procs.push(`心嚢穿刺(${appData["心嚢穿刺タイプ"]})`);
+ if (appData["胃管挿入サイズ"]) procs.push(`胃管挿入(${appData["胃管挿入サイズ"]}Fr)`);
+
+ const echos = [];
+ ["FAST", "心エコー", "大血管エコー", "消化器系エコー", "婦人女性生殖器系エコー", "泌尿器系エコー", "下肢静脈エコー"].forEach(k => {
+   if (appData[k]) echos.push(k.replace('エコー', ''));
+ });
+ if (appData["頸動脈エコー"]) echos.push(`頸動脈(${appData["頸動脈エコー"]})`);
+ if (appData["その他エコー"]) echos.push(`その他(${appData["その他エコー"]})`);
+
+ const others = [];
+ ["12誘導心電図", "喀痰吸引", "血糖測定", "輪状甲状靭帯", "心膜開窓術", "開胸心マッサージ", "胸腔開放", "止血帯", "サムスリング", "シーネ固定", "バックボード", "頸椎カラー", "保温"].forEach(k => {
+   if (appData[k]) others.push(k + (String(appData[k]).startsWith("◯ ") ? String(appData[k]).replace("◯ ", "(") + ")" : ""));
+ });
+ if (appData["その他外科処置"]) others.push(String(appData["その他外科処置"]).replace(/^◯\s*/, ''));
+
+ let out = `■ 処置・医療機器\n ・ 確保ライン: ${procs.length > 0 ? procs.join(", ") : "なし"}\n ・ エコー: ${echos.length > 0 ? echos.join(", ") : "なし"}\n ・ その他処置: ${others.length > 0 ? others.join(", ") : "なし"}\n ・ 算定・コスト情報: ${costItems.length > 0 ? costItems.join(" / ") : "なし"}\n`;
+
+ const drugList = String(appData["使用薬剤リスト"] || "").split(",").map(s => s.trim()).filter(Boolean);
+ if (drugList.length > 0) out += `\n■ 使用薬剤\n ・ ${drugList.join(", ")}\n`;
+
+ return out;
+}
+
+// 🌟 submit(新規登録)・send_email(再送)・update_record(上書き保存時の任意送信)で共通のメール本文を組み立てて送信する。
+// 3箇所に同じテンプレート文字列を重複させないための共通化（2026-08-17）。
+function sendCaseNotificationEmail_(appData, yoseiId, headerLine, subjectSuffix) {
+ const bikoSection = appData["備考"] ? `\n■ 備考\n${appData["備考"]}\n` : "";
+ const emailBody = `${headerLine}\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n ・ キーワード : ${appData["キーワード"] || "なし"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n${buildProcedureSummaryText_(appData)}\n■ カルテ完了報告 (本人 or 代行入力の完了報告はこちら)\n${GAS_API_URL}?id=${encodeURIComponent(yoseiId)}\n\n`;
+
+ let mailTo = getMailToList(); let allEmails = [];
+ if (mailTo) allEmails = mailTo.split(",").map(e => e.trim());
+ if (appData["追加送信先"]) allEmails = allEmails.concat(String(appData["追加送信先"]).split(","));
+ const uniqueEmails = [...new Set(allEmails)].filter(e => e).join(",");
+ if (!uniqueEmails) return { sent: false, message: "送信先メールアドレスが設定されていません" };
+
+ try {
+   MailApp.sendEmail({ to: uniqueEmails, subject: `【要請 No.${yoseiId}】AW109 ${subjectSuffix}`, body: emailBody });
+   return { sent: true };
+ } catch (mailErr) {
+   return { sent: false, message: "メール送信に失敗しました: " + mailErr.message };
+ }
+}
+
 
 function findRowIndexBySysId(data, headers, targetId) {
  const idIdx = headers.indexOf("要請番号");
@@ -1194,9 +1266,20 @@ function doPost(e) {
        }
      });
      sheet.getRange(rowIndex, 1, 1, newRow.length).setValues([newRow]);
-     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+
+     // 🌟 上書き保存後の確認メール送信を同一リクエストにまとめる（2026-08-17）。
+     // 従来はクライアント側でupdate_record→confirm→send_emailと2回GAS呼び出しを直列に行っており、
+     // 通信タイムアウトが頻発する一因になっていた。newRowは既にメモリ上にあるため再読込不要で送信できる。
+     let emailResult = null;
+     if (requestData.sendEmail) {
+       let updatedAppData = {};
+       headers.forEach((h, idx) => { updatedAppData[h] = newRow[idx]; });
+       const yoseiId = updatedAppData["要請番号"];
+       emailResult = sendCaseNotificationEmail_(updatedAppData, yoseiId, "【AW109 EMS 事案記録 (修正後再送)】", "事案記録 (修正後再送)");
+     }
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", emailSent: emailResult ? emailResult.sent : undefined, emailMessage: emailResult ? emailResult.message : undefined })).setMimeType(ContentService.MimeType.JSON);
    }
-  
+
    if (action === "submit") {
      const sheet = getDbSheet();
      const appData = requestData.data;
@@ -1228,28 +1311,7 @@ function doPost(e) {
      sheet.appendRow(newRow);
     
      const yoseiId = appData["要請番号"];
-    
-     let bikoSection = appData["備考"] ? `\n■ 備考\n${appData["備考"]}\n` : "";
-    
-     let emailBody = `【AW109 EMS 新規事案登録】\n現場アプリから事案が登録されました。\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n ・ キーワード : ${appData["キーワード"] || "なし"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n■ カルテ完了報告 (本人 or 代行入力の完了報告はこちら)\n${GAS_API_URL}?id=${encodeURIComponent(yoseiId)}\n\n`;
-    
-     let mailTo = getMailToList(); let allEmails = [];
-     if (mailTo) allEmails = mailTo.split(",").map(e => e.trim());
-    
-     if (appData["追加送信先"]) {
-         const addMails = appData["追加送信先"].split(",");
-         allEmails = allEmails.concat(addMails);
-     }
-
-
-     const uniqueEmails = [...new Set(allEmails)].filter(e => e).join(",");
-     if (uniqueEmails) {
-       try {
-         MailApp.sendEmail({ to: uniqueEmails, subject: `【要請 No.${yoseiId}】AW109 新規事案記録`, body: emailBody });
-       } catch(mailErr) {
-         Logger.log("メール送信失敗: " + mailErr.message);
-       }
-     }
+     sendCaseNotificationEmail_(appData, yoseiId, "【AW109 EMS 新規事案登録】\n現場アプリから事案が登録されました。", "新規事案記録");
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
 
@@ -1290,31 +1352,8 @@ function doPost(e) {
 
 
      const yoseiId = appData["要請番号"];
-     let bikoSection = appData["備考"] ? `\n■ 備考\n${appData["備考"]}\n` : "";
-    
-     let emailBody = `【AW109 EMS 事案記録 再送】\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n ・ キーワード : ${appData["キーワード"] || "なし"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n■ カルテ完了報告 (本人 or 代行入力の完了報告はこちら)\n${GAS_API_URL}?id=${encodeURIComponent(yoseiId)}\n\n`;
-
-
-     let mailTo = getMailToList(); let allEmails = [];
-     if (mailTo) allEmails = mailTo.split(",").map(e => e.trim());
-    
-     if (appData["追加送信先"]) {
-         const addMails = appData["追加送信先"].split(",");
-         allEmails = allEmails.concat(addMails);
-     }
-
-
-     const uniqueEmails = [...new Set(allEmails)].filter(e => e).join(",");
-
-
-     if (!uniqueEmails) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "送信先メールアドレスが設定されていません" })).setMimeType(ContentService.MimeType.JSON);
-
-
-     try {
-       MailApp.sendEmail({ to: uniqueEmails, subject: `【要請 No.${yoseiId}】AW109 事案記録 (再送)`, body: emailBody });
-     } catch (mailErr) {
-       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "メール送信に失敗しました: " + mailErr.message })).setMimeType(ContentService.MimeType.JSON);
-     }
+     const result = sendCaseNotificationEmail_(appData, yoseiId, "【AW109 EMS 事案記録 再送】", "事案記録 (再送)");
+     if (!result.sent) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: result.message })).setMimeType(ContentService.MimeType.JSON);
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
   
