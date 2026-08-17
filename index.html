@@ -1473,14 +1473,42 @@
       toggleBox('box-edaban', true); 
     }
     
-    if(String(row["備考"]).includes("【緊急外来搬送先:")) {
-        document.getElementById("chk-er").checked = true; 
+    // 🌟 getCollectData()は保存の都度、チェック状態から「💊【使用薬剤】」「⚠️【使用物品・補充予定メモ】」ブロックを
+    // 生成し備考の先頭に埋め込む。編集時にこれを剥がさずv-biko.valueへそのまま復元すると、
+    // 次回保存時にまた新しいブロックが二重に埋め込まれ、編集を繰り返すたびに備考内でテキストが増殖してしまう
+    // （2026-08-17報告の不具合）。剥がした内容は極力元のUI状態（チェック・テキスト欄）へ復元する。
+    let bikoRaw = String(row["備考"] || "");
+
+    const stockMatch = bikoRaw.match(/^⚠️【使用物品・補充予定メモ】\n([\s\S]*?)\n------------------\n?/);
+    if (stockMatch) {
+      document.getElementById("chk-stock").checked = true;
+      toggleBox('box-stock-detail', true);
+      document.getElementById("v-stock-detail").value = stockMatch[1];
+      bikoRaw = bikoRaw.slice(stockMatch[0].length);
+    }
+
+    const drugMatch = bikoRaw.match(/^💊【使用薬剤】\n([\s\S]*?)\n------------------\n?/);
+    if (drugMatch) {
+      // ブロック内の行のうち、既知の薬剤マスタ名と一致しない行は「その他・補足メモ」欄の自由記述とみなして復元する
+      // （薬剤名そのものはrow["使用薬剤リスト"]から別途チェック復元されるためここでは無視する）
+      const knownDrugNames = new Set(Array.from(document.querySelectorAll('input.chk-drug')).map(el => el.value));
+      const leftoverLines = drugMatch[1].split("\n").filter(line => line && !knownDrugNames.has(line));
+      if (leftoverLines.length > 0) {
+        document.getElementById("chk-med").checked = true;
+        toggleBox('box-med-detail', true);
+        document.getElementById("v-med-detail").value = leftoverLines.join("\n");
+      }
+      bikoRaw = bikoRaw.slice(drugMatch[0].length);
+    }
+
+    if(bikoRaw.includes("【緊急外来搬送先:")) {
+        document.getElementById("chk-er").checked = true;
         toggleBox('box-er', true);
-        let match = String(row["備考"]).match(/【緊急外来搬送先:\s*(.*?)】/);
+        let match = bikoRaw.match(/【緊急外来搬送先:\s*(.*?)】/);
         if(match) document.getElementById("v-er-hosp").value = match[1];
-        document.getElementById("v-biko").value = String(row["備考"]).replace(/【緊急外来搬送先:.*?】\n?/g, "");
+        document.getElementById("v-biko").value = bikoRaw.replace(/【緊急外来搬送先:.*?】\n?/g, "");
     } else {
-        document.getElementById("v-biko").value = row["備考"] || "";
+        document.getElementById("v-biko").value = bikoRaw;
     }
 
     let sys = {};
