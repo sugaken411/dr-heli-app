@@ -1273,7 +1273,13 @@ function doPost(e) {
      let emailResult = null;
      if (requestData.sendEmail) {
        let updatedAppData = {};
-       headers.forEach((h, idx) => { updatedAppData[h] = newRow[idx]; });
+       // 🌟 日付列やsanitizeInput()（数式インジェクション対策）はスプレッドシートのテキスト強制用に
+       // 値の先頭へ「'」を付与することがある。send_email等はgetDisplayValues()経由で読むため
+       // この「'」は表示上自動的に剥がれるが、ここではnewRowを直接使うため明示的に剥がす。
+       headers.forEach((h, idx) => {
+         const v = newRow[idx];
+         updatedAppData[h] = (typeof v === "string" && v.startsWith("'")) ? v.slice(1) : v;
+       });
        const yoseiId = updatedAppData["要請番号"];
        emailResult = sendCaseNotificationEmail_(updatedAppData, yoseiId, "【AW109 EMS 事案記録 (修正後再送)】", "事案記録 (修正後再送)");
      }
