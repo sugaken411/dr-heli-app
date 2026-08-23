@@ -2165,7 +2165,10 @@
       "フライトドクター": document.getElementById("v-dr").value,
       "フライトナース": document.getElementById("v-ns").value,
       "スキーム選択": finalScheme,
-      ...((!isEditMode && isCancelScheme) ? { "ステータス": "◯ カルテ完了 (自動/キャンセル)" } : {}),
+      // 🌟 以前は!isEditMode限定だったため、既存事案を編集してスキームをキャンセルに変更した場合は
+      // ステータスが「未完了」のまま据え置かれていた（2026-08-17報告の不具合）。キャンセルであれば
+      // 新規・編集を問わず自動完了扱いにする（キャンセルした要請にカルテ入力は本来不要なため）。
+      ...(isCancelScheme ? { "ステータス": "◯ カルテ完了 (自動/キャンセル)" } : {}),
       "要請区分": state.reqType,
       "キーワード": currentKeywords.join(", "),
       "疾患大分類": diseaseMainVal, 
@@ -2248,9 +2251,13 @@
     payload["使用薬剤リスト"] = Array.from(document.querySelectorAll('input.chk-drug:checked')).map(el => el.value).join(", ");
 
     let dynText = "";
+    // 🌟 コンテナ要素のIDは "dyn-o2"/"dyn-vent"/"dyn-cpr"（英字）だが、送信データのキー接頭辞は
+    // "酸素"/"呼吸器"/"圧迫"（日本語）。以前はtypeをそのままDOM ID接尾辞に使っており
+    // `#dyn-酸素`等の存在しないセレクタになって常に0件ヒットしていた（2026-08-17報告の不具合）。
+    const dynDomId = { '酸素': 'o2', '呼吸器': 'vent', '圧迫': 'cpr' };
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       let idx = 1;
-      document.querySelectorAll(`#dyn-${type} .dyn-row-container`).forEach(row => {
+      document.querySelectorAll(`#dyn-${dynDomId[type]} .dyn-row-container`).forEach(row => {
         if(idx <= 5) {
           payload[`${type}${idx}開始`] = row.querySelector('.v-start').value; 
           payload[`${type}${idx}終了`] = row.querySelector('.v-end').value;

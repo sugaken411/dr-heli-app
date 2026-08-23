@@ -208,6 +208,31 @@ function buildProcedureSummaryText_(appData) {
  const drugList = String(appData["使用薬剤リスト"] || "").split(",").map(s => s.trim()).filter(Boolean);
  if (drugList.length > 0) out += `\n■ 使用薬剤\n ・ ${drugList.join(", ")}\n`;
 
+ // 🌟 酸素・呼吸器・胸骨圧迫の持続時間情報（index.htmlのgetCollectData()内dynText組み立てと同内容）。
+ // 以前はこの情報自体がDOM要素IDの取り違えで送信データに一切含まれておらず、メールにも反映されていなかった
+ // （2026-08-17報告の不具合）。
+ const dynLines = [];
+ for (let i = 1; i <= 5; i++) {
+   const s = appData[`酸素${i}開始`], e = appData[`酸素${i}終了`];
+   if (s || e) dynLines.push(`[酸素] ${appData[`酸素${i}流量`] || "-"}L/min ${appData[`酸素${i}FiO2`] || "-"}% (${s || "--:--"}~${e || "--:--"})`);
+ }
+ for (let i = 1; i <= 5; i++) {
+   const s = appData[`呼吸器${i}開始`], e = appData[`呼吸器${i}終了`];
+   if (s || e) dynLines.push(`[呼吸器] FiO2:${appData[`呼吸器${i}流量`] || "-"} PEEP:${appData[`呼吸器${i}FiO2`] || "-"} (${s || "--:--"}~${e || "--:--"})`);
+ }
+ let cprTotalMin = 0;
+ for (let i = 1; i <= 5; i++) {
+   const s = appData[`圧迫${i}開始`], e = appData[`圧迫${i}終了`];
+   if (s && e) {
+     const d1 = new Date(`1970-01-01T${s}`); let d2 = new Date(`1970-01-01T${e}`);
+     if (d2 < d1) d2.setDate(d2.getDate() + 1);
+     cprTotalMin += Math.floor((d2 - d1) / 60000);
+     dynLines.push(`[CPR] (${s}~${e})`);
+   }
+ }
+ if (cprTotalMin > 0) dynLines.push(`(胸骨圧迫トータル: ${cprTotalMin}分)`);
+ if (dynLines.length > 0) out += `\n■ 持続・積算情報\n ・ ${dynLines.join("\n ・ ")}\n`;
+
  return out;
 }
 
