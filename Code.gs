@@ -1118,6 +1118,10 @@ function doPost(e) {
        const nameIdx = head.indexOf("点検項目");
        const constIdx = head.indexOf("定数");
        const typeIdx = head.indexOf("入力タイプ");
+       const paramIdx = head.indexOf("選択肢・桁数"); // 🌟 種類とパラメータを分離（2026-09-01）。旧「入力タイプ」列に
+       // "数値:3"のように全部詰め込む方式は、コードを読まないと分からず誤字によるフォールバック事故も起きやすかった。
+       // マスタ上は「入力タイプ」＝種類（◯/✕・数値・自由記載・選択式、プルダウン制限）、「選択肢・桁数」＝パラメータの
+       // 2列に分け、ここで従来のchecklist.html向け文字列表現に組み立て直して互換性を保つ（クライアント側は無改修）。
        const reqIdx = head.indexOf("必須");
        const orderIdx = head.indexOf("表示順");
 
@@ -1129,12 +1133,18 @@ function doPost(e) {
 
        for(let i=1; i<d.length; i++) {
          if(d[i][nameIdx]) {
+           const rawType = typeIdx !== -1 ? String(d[i][typeIdx] || "◯/✕").trim() : "◯/✕";
+           const rawParam = paramIdx !== -1 ? String(d[i][paramIdx] || "").trim() : "";
+           let inputType = rawType;
+           if (rawType === "数値") inputType = rawParam ? `数値:${rawParam}` : "数値";
+           else if (rawType === "選択式") inputType = rawParam ? `選択式:${rawParam}` : "◯/✕"; // 選択肢未設定の選択式は事故防止で◯/✕にフォールバック
+           else if (rawType === "自由記載" || rawType === "自由記述") inputType = "自由記述";
            items.push({
              category: d[i][catIdx] || "",
              subCategory: subIdx !== -1 ? d[i][subIdx] : "",
              name: d[i][nameIdx] || "",
              constant: constIdx !== -1 ? d[i][constIdx] : "",
-             inputType: typeIdx !== -1 ? d[i][typeIdx] || "◯/✕" : "◯/✕",
+             inputType: inputType,
              required: reqIdx !== -1 ? String(d[i][reqIdx]).toUpperCase() === "TRUE" : false,
              order: orderIdx !== -1 ? (Number(d[i][orderIdx]) || 99) : 99
            });

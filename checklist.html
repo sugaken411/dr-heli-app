@@ -481,13 +481,21 @@
       renderChecklist();
     }
 
-    // 🌟 点検マスタの「入力タイプ」列の書式（2026-09-01拡張）:
+    // 🌟 このparseInputTypeSpec()が受け取る文字列は、Code.gs側（fetch_checklist）が
+    // マスタシートの2列（「入力タイプ」＝種類だけ、「選択肢・桁数」＝パラメータ）から組み立てた
+    // 「ワイヤー形式」の文字列（2026-09-01改訂）。マスタのスプレッドシートを直接編集する場合は
+    // 以下の文字列を打つのではなく、次の2列だけを編集すればよい：
+    //   ・「入力タイプ」列（プルダウンで以下の4つのみ選択可）: ◯/✕ / 数値 / 自由記載 / 選択式
+    //   ・「選択肢・桁数」列（数値・選択式の時だけ使用）:
+    //       数値 → 桁数を数字だけで入力（例: "3"）。空欄なら桁数制限なし。
+    //       選択式 → 選択肢をカンマ区切りで入力（例: "貸出,返却"）。空欄だと事故防止のため◯/✕扱いになる。
+    // 以前は1列に"数値:3"のような文字列をそのまま打つ方式で、書式を間違えると気づかれないまま
+    // ◯/✕にフォールバックする事故が起きやすかったため、種類とパラメータを列で分離した。
+    // 以下はCode.gsが組み立てた後のワイヤー形式（このJS内部だけの話、マスタ編集時には意識不要）:
     //   ・未入力 or "◯/✕"        → 既定。◯ 異常なし / ✕ 異常あり の2択トグル（異常時は詳細入力欄が開く）
     //   ・"自由記述"              → 自由記述のテキスト入力欄
     //   ・"数値" または "数値:N"  → 数字専用（テンキー）入力欄。Nを指定すると最大文字数を制限（例: "数値:3"で3桁まで）
     //   ・"選択式:選択肢1,選択肢2,..." → 指定した選択肢だけのボタン群（カンマ区切り、いくつでも可）
-    //     例: "選択式:貸出,返却" / "選択式:正常,点検中,修理中,対象外"
-    // 新しい選択肢を増やしたい場合はコードを触らずスプレッドシートの「入力タイプ」列を書き換えるだけでよい。
     function parseInputTypeSpec(inputType) {
       const s = String(inputType || "").trim();
       if (s.startsWith("選択式:")) {
@@ -604,10 +612,14 @@
       let missing = []; let firstMissingId = null;
       document.querySelectorAll('.chk-row').forEach(el => el.classList.remove('error-highlight'));
 
-      checklistItems.forEach(item => { 
+      checklistItems.forEach(item => {
         const val = currentData[item.originalIndex];
         if(item.required && (!val || val === "")) {
-          missing.push(`[${item.category}] ${item.name}`); document.getElementById(`row-${item.originalIndex}`).classList.add('error-highlight'); if(!firstMissingId) firstMissingId = `row-${item.originalIndex}`; 
+          missing.push(`[${item.category}] ${item.name}`); document.getElementById(`row-${item.originalIndex}`).classList.add('error-highlight'); if(!firstMissingId) firstMissingId = `row-${item.originalIndex}`;
+        } else if (val === "✕" && !(errorDetails[item.originalIndex] && errorDetails[item.originalIndex].trim())) {
+          // 🌟 「異常あり」を選んだのに理由が未記入のまま保存できてしまう不整合を修正（2026-09-01）。
+          // 項目自体の「必須」設定に関わらず、異常ありを選んだ以上は理由の記入を必須にする。
+          missing.push(`[${item.category}] ${item.name}（異常の詳細が未記入です）`); document.getElementById(`row-${item.originalIndex}`).classList.add('error-highlight'); if(!firstMissingId) firstMissingId = `row-${item.originalIndex}`;
         }
       });
 
