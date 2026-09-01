@@ -182,6 +182,11 @@
     </a>
   </div>
 
+  <div class="card-section" id="backboard-section" style="display:none;">
+    <div class="section-label">🦴 バックボード貸出状況</div>
+    <div id="backboard-box" style="font-size:13px; color:var(--sub); cursor:pointer;" onclick="location.href='checklist.html?type=バックボード貸出'"></div>
+  </div>
+
   <div class="card-section">
     <div class="section-label">📢 最新のお知らせ</div>
     <div id="news-box" style="font-size:13px; color:var(--sub);">お知らせはありません。</div>
@@ -507,7 +512,17 @@
   }
 
   function renderPortal(json) {
-    const alertBox = document.getElementById("alert-box"); alertBox.innerHTML = ""; 
+    const bbSection = document.getElementById("backboard-section");
+    if (json.backboard && json.backboard.outCount > 0) {
+      bbSection.style.display = "block";
+      const items = json.backboard.items;
+      const summary = items.map(it => `セット${it.setNo}（${it.dest || "貸出先不明"}、${it.since || "日付不明"}〜）`).join(" / ");
+      document.getElementById("backboard-box").innerText = `貸出中：${json.backboard.outCount}件 — ${summary}（クリックで履歴へ）`;
+    } else {
+      bbSection.style.display = "none";
+    }
+
+    const alertBox = document.getElementById("alert-box"); alertBox.innerHTML = "";
     if (json.alerts && json.alerts.length > 0) {
       alertBox.style.display = "flex";
       alertBox.innerHTML = json.alerts.map(a => { 

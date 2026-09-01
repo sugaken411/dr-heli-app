@@ -137,6 +137,48 @@ function resolveSheetName(type, isMaster) {
  return isMaster ? `点検マスタ_${base}` : `DB_点検_${base}`;
 }
 
+// 🌟 バックボード貸出簿（2026-09-01新設）: DB_点検_バックボードの各レコード（詳細データJSONに
+// "カテゴリ_項目名": 値 の形で保存されている）から、セット番号ごとに最新の状態（貸出中／在庫）を算出する。
+// キーを完全一致でなく部分一致（"番号"/"ステータス"/"先"）で拾うのは、点検マスタ側で項目名の文言を
+// 多少変えても（例:「バックボードNo.」→「セット番号」）動き続けるようにするため。
+function getBackboardLoanStatus_(ss) {
+ const sheet = getSheetFlexible(ss, ["DB_点検_バックボード"]);
+ if (!sheet) return { outCount: 0, items: [] };
+ const d = sheet.getDataRange().getDisplayValues();
+ if (d.length < 2) return { outCount: 0, items: [] };
+ const head = d[0].map(h => String(h).trim());
+ const cDate = head.indexOf("点検日");
+ const cTime = head.indexOf("実施時間");
+ const cJson = head.indexOf("詳細データJSON");
+ if (cJson === -1) return { outCount: 0, items: [] };
+
+ const latestBySet = {};
+ for (let i = 1; i < d.length; i++) {
+   if (!d[i][cJson]) continue;
+   let raw;
+   try { raw = JSON.parse(d[i][cJson]); } catch (e) { continue; }
+   let setNo = "", status = "", dest = "";
+   for (const key in raw) {
+     if (key.endsWith("_詳細") || key === "全体特記事項") continue;
+     if (key.includes("番号") || key.includes("No")) setNo = String(raw[key]).trim();
+     else if (key.includes("ステータス")) status = String(raw[key]).trim();
+     else if (key.includes("先") || key.includes("機関名")) dest = String(raw[key]).trim();
+   }
+   if (!setNo) continue;
+   const dateStr = cDate !== -1 ? d[i][cDate] : "";
+   const timeStr = cTime !== -1 ? d[i][cTime] : "";
+   const sortKey = `${dateStr} ${timeStr}`;
+   if (!latestBySet[setNo] || sortKey >= latestBySet[setNo].sortKey) {
+     latestBySet[setNo] = { setNo, status, dest, since: dateStr, sortKey };
+   }
+ }
+ const outItems = Object.values(latestBySet)
+   .filter(x => x.status.includes("貸出"))
+   .map(x => ({ setNo: x.setNo, dest: x.dest, since: x.since }))
+   .sort((a, b) => String(a.setNo).localeCompare(String(b.setNo), undefined, { numeric: true }));
+ return { outCount: outItems.length, items: outItems };
+}
+
 
 function gasNormalizeDate(dateStr) {
  if (!dateStr) return "";
@@ -415,7 +457,7 @@ function doPost(e) {
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
      "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full",
      "update_library_record", "auth_register", "auth_login", "set_admin_flag",
-     "auth_request_reset", "auth_reset_password"
+     "auth_request_reset", "auth_reset_password", "fetch_backboard_status"
    ];
 
    if (!allowed.includes(action)) {
@@ -831,7 +873,9 @@ function doPost(e) {
        }
      }
     
+     let backboardStatus = { outCount: 0, items: [] };
      if (appName === "ポータル") {
+       backboardStatus = getBackboardLoanStatus_(ss);
        const dbSheet = getDbSheet();
        if (dbSheet) {
          const d = dbSheet.getDataRange().getDisplayValues();
@@ -871,7 +915,7 @@ function doPost(e) {
        });
      }
     
-     return ContentService.createTextOutput(JSON.stringify({ status: "success", masters: mastersData, qa: qaData, manuals: manuals, alerts: alerts, news: newsData, gasVersion: GAS_VERSION })).setMimeType(ContentService.MimeType.JSON);
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", masters: mastersData, qa: qaData, manuals: manuals, alerts: alerts, news: newsData, backboard: backboardStatus, gasVersion: GAS_VERSION })).setMimeType(ContentService.MimeType.JSON);
    }
 
 
@@ -1049,6 +1093,12 @@ function doPost(e) {
     
      dbSheet.deleteRow(rowIndex);
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+   }
+
+
+   if (action === "fetch_backboard_status") {
+     const status = getBackboardLoanStatus_(ss);
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", outCount: status.outCount, items: status.items })).setMimeType(ContentService.MimeType.JSON);
    }
 
 

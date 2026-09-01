@@ -56,7 +56,9 @@
     .tgl-btn { flex: 1; padding: 12px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-weight: 800; background: var(--bg); color: var(--sub); cursor: pointer; text-align: center; transition: 0.2s; user-select: none; }
     .tgl-btn.ok.active { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
     .tgl-btn.ng.active { background: #ffebee; color: #c62828; border-color: #ef5350; }
-    
+    .tgl-btn.sel { flex: 1 1 auto; min-width: 70px; }
+    .tgl-btn.sel.active { background: #e3f2fd; color: #0d47a1; border-color: #42a5f5; }
+
     .text-input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--bg); outline: none; box-sizing: border-box; font-weight:600; color:var(--ink); }
     .text-input:focus { border-color: var(--blue); background: #fff; }
     .error-reason { display: none; margin-top: 4px; }
@@ -304,12 +306,21 @@
       return `${jst.getFullYear()}-${String(jst.getMonth()+1).padStart(2,'0')}-${String(jst.getDate()).padStart(2,'0')}`;
     }
 
-    window.onload = () => { 
+    window.onload = () => {
       resetTime();
       loadCache();
-      fetchChecklistStatus(); 
-      loadDataForCurrentView(); 
-      fetchQA(); 
+      // 🌟 portal.htmlの「バックボード貸出状況」バッジ等から ?type=<点検タイプ> でこの画面を開くと、
+      // 初期表示のタイプをその点検タイプに切り替える（未対応の値なら既定の始業点検のまま）。
+      // switchType()自体がloadDataForCurrentView()を呼ぶため、その場合は下の通常呼び出しをスキップする。
+      const qType = new URLSearchParams(location.search).get('type');
+      if (qType && qType !== currentType) {
+        document.getElementById('btn-type-daily-start').classList.remove('active');
+        switchType(qType);
+      } else {
+        loadDataForCurrentView();
+      }
+      fetchChecklistStatus();
+      fetchQA();
     };
 
     function loadCache() {
@@ -470,6 +481,25 @@
       renderChecklist();
     }
 
+    // 🌟 点検マスタの「入力タイプ」列の書式（2026-09-01拡張）:
+    //   ・未入力 or "◯/✕"        → 既定。◯ 異常なし / ✕ 異常あり の2択トグル（異常時は詳細入力欄が開く）
+    //   ・"自由記述"              → 自由記述のテキスト入力欄
+    //   ・"数値" または "数値:N"  → 数字専用（テンキー）入力欄。Nを指定すると最大文字数を制限（例: "数値:3"で3桁まで）
+    //   ・"選択式:選択肢1,選択肢2,..." → 指定した選択肢だけのボタン群（カンマ区切り、いくつでも可）
+    //     例: "選択式:貸出,返却" / "選択式:正常,点検中,修理中,対象外"
+    // 新しい選択肢を増やしたい場合はコードを触らずスプレッドシートの「入力タイプ」列を書き換えるだけでよい。
+    function parseInputTypeSpec(inputType) {
+      const s = String(inputType || "").trim();
+      if (s.startsWith("選択式:")) {
+        const opts = s.substring(4).split(",").map(o => o.trim()).filter(Boolean);
+        if (opts.length > 0) return { kind: "select", options: opts };
+      }
+      const numMatch = s.match(/^数値:?(\d+)?$/);
+      if (numMatch) return { kind: "number", maxLen: numMatch[1] ? parseInt(numMatch[1], 10) : null };
+      if (s.includes("自由")) return { kind: "text" };
+      return { kind: "toggle" }; // 既定：◯/✕
+    }
+
     function renderChecklist() {
       const container = document.getElementById("checklist-container"); container.innerHTML = ""; document.getElementById("c-remarks").value = "";
       if(checklistItems.length === 0) { container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--sub);">表示する点検項目がありません。</div>`; return; }
@@ -480,15 +510,24 @@
       for (const [key, items] of Object.entries(grouped)) {
         const [cat, subCat] = key.split('__|__'); const subCatBadge = subCat ? `<span class="sub-cat-badge">${subCat}</span>` : '';
         let html = `<div class="card"><div class="card-header">🏷️ ${cat} ${subCatBadge}</div>`;
-        
+
         items.forEach(it => {
           const idx = it.originalIndex; const displayConstant = it.constant ? `<span class="constant-val">定数: ${it.constant}</span>` : '';
           html += `<div class="chk-row" id="row-${idx}">
             <div class="chk-title-wrapper"><div class="chk-title">${it.name} ${displayConstant} ${it.required ? '<span style="color:var(--brand);font-size:12px;margin-left:4px;">*必須</span>' : ''}</div></div>`;
-            
-          const isTextField = String(it.inputType || "").trim().includes("自由") || String(it.inputType || "").trim().includes("数値");
-          if (isTextField) { html += `<input type="text" class="text-input" placeholder="テキストや数値を入力..." onchange="setVal(${idx}, this.value)" style="margin-top:8px;">`; } 
-          else {
+
+          const spec = parseInputTypeSpec(it.inputType);
+          if (spec.kind === "text") {
+            html += `<input type="text" class="text-input" placeholder="テキストを入力..." onchange="setVal(${idx}, this.value)" style="margin-top:8px;">`;
+          } else if (spec.kind === "number") {
+            const maxAttr = spec.maxLen ? ` maxlength="${spec.maxLen}"` : "";
+            html += `<input type="tel" inputmode="numeric"${maxAttr} class="text-input" placeholder="数字を入力..." onchange="setVal(${idx}, this.value.replace(/[^0-9]/g,''))" style="margin-top:8px;">`;
+            if (currentType === "バックボード貸出" && it.name.includes("番号")) html += `<div class="loan-hint" id="loan-hint-${idx}" style="margin-top:6px; font-size:12px; display:none;"></div>`;
+          } else if (spec.kind === "select") {
+            html += `<div class="toggle-group" style="margin-top:8px; flex-wrap:wrap;">` +
+              spec.options.map((opt, oi) => `<div class="tgl-btn sel" id="btn-sel-${idx}-${oi}" onclick="setVal(${idx}, ${JSON.stringify(opt)})">${opt}</div>`).join("") +
+              `</div>`;
+          } else {
             html += `
               <div class="toggle-group" style="margin-top:8px;">
                 <div class="tgl-btn ok" id="btn-ok-${idx}" onclick="setVal(${idx}, '◯')">◯ 異常なし</div><div class="tgl-btn ng" id="btn-ng-${idx}" onclick="setVal(${idx}, '✕')">✕ 異常あり</div>
@@ -499,23 +538,58 @@
         });
         html += `</div>`; container.innerHTML += html;
       }
+
+      if (currentType === "バックボード貸出") loadBackboardLoanHints();
     }
 
     function setVal(idx, val) {
       currentData[idx] = val; const targetItem = checklistItems.find(it => it.originalIndex === idx); if(!targetItem) return;
-      const isTextField = String(targetItem.inputType || "").trim().includes("自由") || String(targetItem.inputType || "").trim().includes("数値");
+      const spec = parseInputTypeSpec(targetItem.inputType);
 
-      if (!isTextField) {
+      if (spec.kind === "toggle") {
         document.getElementById(`btn-ok-${idx}`).classList.toggle('active', val === '◯');
         document.getElementById(`btn-ng-${idx}`).classList.toggle('active', val === '✕');
         const errBox = document.getElementById(`err-box-${idx}`);
-        if (val === '✕') { errBox.style.display = 'block'; } 
+        if (val === '✕') { errBox.style.display = 'block'; }
         else { errBox.style.display = 'none'; document.getElementById(`err-txt-${idx}`).value = ""; delete errorDetails[idx]; }
         document.getElementById(`row-${idx}`).classList.remove('error-highlight');
+      } else if (spec.kind === "select") {
+        spec.options.forEach((opt, oi) => {
+          const btn = document.getElementById(`btn-sel-${idx}-${oi}`);
+          if (btn) btn.classList.toggle('active', opt === val);
+        });
+        document.getElementById(`row-${idx}`).classList.remove('error-highlight');
+      } else {
+        document.getElementById(`row-${idx}`).classList.remove('error-highlight');
+        if (currentType === "バックボード貸出" && targetItem.name.includes("番号")) showBackboardLoanHint(idx, val);
       }
     }
 
-    function setAllOk() { checklistItems.forEach(item => { const isTextField = String(item.inputType || "").trim().includes("自由") || String(item.inputType || "").trim().includes("数値"); if(!isTextField) setVal(item.originalIndex, '◯'); }); }
+    function setAllOk() { checklistItems.forEach(item => { const spec = parseInputTypeSpec(item.inputType); if (spec.kind === "toggle") setVal(item.originalIndex, '◯'); }); }
+
+    // 🌟 バックボード貸出簿専用の補助機能（2026-09-01）: セット番号を入力すると、そのセットが
+    // 現在貸出中かどうかをその場で表示する。二重貸出・存在しないセットの返却入力を防ぐための確認用。
+    let backboardLoanStatusCache = null;
+    async function loadBackboardLoanHints() {
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_backboard_status", password: PIN_CODE }), redirect: "follow" });
+        const json = await res.json();
+        if (json.status === "success") backboardLoanStatusCache = json.items || [];
+      } catch(e) { /* ヒント表示はできなくても本体機能に影響しないため、失敗は静かに無視する */ }
+    }
+    function showBackboardLoanHint(idx, setNo) {
+      const hintEl = document.getElementById(`loan-hint-${idx}`);
+      if (!hintEl) return;
+      if (!setNo || !backboardLoanStatusCache) { hintEl.style.display = "none"; return; }
+      const found = backboardLoanStatusCache.find(it => String(it.setNo) === String(setNo));
+      if (found) {
+        hintEl.style.display = "block"; hintEl.style.color = "#e65100";
+        hintEl.innerText = `⚠️ セット${setNo}は現在貸出中です（${found.dest || "貸出先不明"}、${found.since || ""}〜）`;
+      } else {
+        hintEl.style.display = "block"; hintEl.style.color = "#2e7d32";
+        hintEl.innerText = `✓ セット${setNo}は現在貸出記録なし（在庫扱い）`;
+      }
+    }
 
     async function submitChecklist() {
       const staff = document.getElementById("c-staff").value;
