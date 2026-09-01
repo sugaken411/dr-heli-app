@@ -77,7 +77,9 @@ const TYPE_TO_SHEET_MAP = {
  "ヘリ内": "ヘリ内",
  "ヘリバック": "ヘリバック",
  "待機物品": "待機物品",
- "定期点検": "定期"
+ "定期点検": "定期",
+ "バックボード貸出": "バックボード" // 🌟 紙の貸出簿をDX化（2026-08-23）。点検マスタ_バックボード/DB_点検_バックボードは既存の空きシート。
+ // 「点検マスタ_期限切れ」（薬剤等の使用期限管理）はまだどの運用にも紐付けていない。今後方針が決まればここに追加する。
 };
 
 
@@ -1061,7 +1063,8 @@ function doPost(e) {
      if(d.length > 1) {
        const head = d[0].map(h => String(h).trim());
        const catIdx = head.indexOf("大分類");
-       const subIdx = head.indexOf("中分類");
+       const subIdx = head.indexOf("小分類"); // 🌟 実際のマスタシートの列名は「小分類」。以前は「中分類」を探しており、
+       // 小分類列が存在するシート（点検マスタ_ME等）でも常にヒットせず、小分類グルーピングが機能していなかった（2026-08-23修正）。
        const nameIdx = head.indexOf("点検項目");
        const constIdx = head.indexOf("定数");
        const typeIdx = head.indexOf("入力タイプ");

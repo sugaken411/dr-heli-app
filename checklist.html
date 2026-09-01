@@ -166,6 +166,7 @@
       <div class="type-picker no-print" style="margin-bottom: 24px;">
         <div class="type-btn" id="btn-type-taiki" onclick="switchType('待機物品')">🏠 待機所物品</div>
         <div class="type-btn" id="btn-type-periodic" onclick="switchType('定期点検')">📅 定期点検</div>
+        <div class="type-btn" id="btn-type-backboard" onclick="switchType('バックボード貸出')">🦴 バックボード貸出</div>
       </div>
 
       <div class="card" style="background:#f0f8ff; border:1px solid #90caf9; margin-bottom:12px;">
@@ -210,6 +211,7 @@
               <option value="ヘリバック">ヘリバック</option>
               <option value="待機物品">待機所物品</option>
               <option value="定期点検">定期点検</option>
+              <option value="バックボード貸出">バックボード貸出</option>
             </select>
           </div>
           
@@ -398,7 +400,7 @@
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: selectedDate }), redirect: "follow" });
         const json = await res.json();
         if (json.status === "success") {
-          const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki' };
+          const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki', 'バックボード貸出': 'btn-type-backboard' };
           document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('completed'));
           for (const [type, isCompleted] of Object.entries(json.data)) {
             if (isCompleted && btnMap[type]) document.getElementById(btnMap[type]).classList.add("completed");
@@ -424,7 +426,7 @@
       currentType = type;
       document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
       
-      const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki' };
+      const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki', 'バックボード貸出': 'btn-type-backboard' };
       if(btnMap[type]) document.getElementById(btnMap[type]).classList.add("active");
       
       document.getElementById("current-check-title").innerText = `${type} の入力`;
