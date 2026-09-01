@@ -524,8 +524,14 @@
             html += `<input type="tel" inputmode="numeric"${maxAttr} class="text-input" placeholder="数字を入力..." onchange="setVal(${idx}, this.value.replace(/[^0-9]/g,''))" style="margin-top:8px;">`;
             if (currentType === "バックボード貸出" && it.name.includes("番号")) html += `<div class="loan-hint" id="loan-hint-${idx}" style="margin-top:6px; font-size:12px; display:none;"></div>`;
           } else if (spec.kind === "select") {
+            // 🌟 onclick="..."（二重引用符）の中にJSON.stringify()の結果（同じく二重引用符）をそのまま
+            // 埋め込むと属性値がそこで途切れてしまい、ボタンのクリックが一切効かなくなる不具合があった
+            // （実機検証で発覚、2026-09-01）。他の箇所（◯/✕ボタン等）と同じく単一引用符のJS文字列にする。
             html += `<div class="toggle-group" style="margin-top:8px; flex-wrap:wrap;">` +
-              spec.options.map((opt, oi) => `<div class="tgl-btn sel" id="btn-sel-${idx}-${oi}" onclick="setVal(${idx}, ${JSON.stringify(opt)})">${opt}</div>`).join("") +
+              spec.options.map((opt, oi) => {
+                const escOpt = String(opt).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `<div class="tgl-btn sel" id="btn-sel-${idx}-${oi}" onclick="setVal(${idx}, '${escOpt}')">${opt}</div>`;
+              }).join("") +
               `</div>`;
           } else {
             html += `
