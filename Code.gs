@@ -1,5 +1,6 @@
-const GAS_VERSION = "v3.1"; // メール+パスワード認証必須化（スタッフ用PIN廃止、管理者PINは非公開の緊急回復用のみ）
-const PIN_ADMIN = "9999"; // 🌟 非公開の緊急回復用。画面上には一切表示・案内しない
+const GAS_VERSION = "v3.2"; // 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
+// 緊急管理者アクセスはスクリプトプロパティ(EMERGENCY_ADMIN_PIN、コードには一切書かない非公開領域)でのみ検証し、
+// 通過したら通常ログインと同じ署名付きトークンを発行する(getEmergencyPin_ / action:"emergency_admin_login" 参照)。
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 const LIBRARY_DB_ID = "17ejBS_Uq6cWxkagnFQknfycbMGnoaV2q7234U5Pwqnc";
 
@@ -21,6 +22,27 @@ function getAuthSecret() {
       props.setProperty('AUTH_SECRET', secret);
     }
     return secret;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// 🌟 緊急管理者アクセス用PIN。AUTH_SECRETと同じパターンでスクリプトプロパティにのみ保存し、コード(=公開リポジトリ)には一切書かない。
+// 初回のみ、これまでの運用と同じ"9999"で自動初期化するが、以後はApps Scriptエディタの「プロジェクトの設定」>
+// 「スクリプト プロパティ」から EMERGENCY_ADMIN_PIN の値を直接書き換えるだけで、コードを再デプロイせずに変更できる。
+function getEmergencyPin_() {
+  const props = PropertiesService.getScriptProperties();
+  let pin = props.getProperty('EMERGENCY_ADMIN_PIN');
+  if (pin) return pin;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    pin = props.getProperty('EMERGENCY_ADMIN_PIN');
+    if (!pin) {
+      pin = "9999";
+      props.setProperty('EMERGENCY_ADMIN_PIN', pin);
+    }
+    return pin;
   } finally {
     lock.releaseLock();
   }
@@ -284,7 +306,10 @@ function buildProcedureSummaryText_(appData) {
 // 3箇所に同じテンプレート文字列を重複させないための共通化（2026-08-17）。
 function sendCaseNotificationEmail_(appData, yoseiId, headerLine, subjectSuffix) {
  const bikoSection = appData["備考"] ? `\n■ 備考\n${appData["備考"]}\n` : "";
- const emailBody = `${headerLine}\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n ・ キーワード : ${appData["キーワード"] || "なし"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n${buildProcedureSummaryText_(appData)}\n■ カルテ完了報告 (本人 or 代行入力の完了報告はこちら)\n${GAS_API_URL}?id=${encodeURIComponent(yoseiId)}\n\n`;
+ // 🌟 セキュリティ強化: 全アクション共通の固定パスワードではなく、「この事案のupdate_statusだけ」に権限を絞った
+ // 使い捨てトークンをリンクに埋め込む。漏れてもこの1件のステータス更新以外は一切できない。
+ const karteToken = signToken({ purpose: "karte_complete", yoseiId: String(yoseiId), exp: Date.now() + 180 * 24 * 60 * 60 * 1000 });
+ const emailBody = `${headerLine}\n-----------------------------------------\n\n■ 基本情報\n ・ 要請番号 : No.${yoseiId}\n ・ 日付 : ${appData["日付"] || ""}\n ・ 出場先 : ${appData["出場先"] || ""}\n ・ 要請区分 : ${appData["要請区分"] || "未選択"}\n ・ Ｄｒ : ${appData["フライトドクター"] || ""} / Ｎｓ : ${appData["フライトナース"] || ""}\n ・ スキーム : ${appData["スキーム選択"] || "未選択"}\n ・ キーワード : ${appData["キーワード"] || "なし"}\n${bikoSection}\n■ 事案概要\n${appData["事案概要"] || "記述なし"}\n\n■ タイムライン\n ・ 要請/依頼: ${appData["要請時刻・施設間搬送依頼時刻"]||"--:--"}  離陸: ${appData["初期離陸時間"]||"--:--"}  着陸: ${appData["最終着陸時間"]||"--:--"}\n ・ 接触: ${appData["接触"]||"--:--"}  病着: ${appData["病着"]||"--:--"}  終了: ${appData["終了"]||"--:--"}\n\n${buildProcedureSummaryText_(appData)}\n■ カルテ完了報告 (本人 or 代行入力の完了報告はこちら)\n${GAS_API_URL}?id=${encodeURIComponent(yoseiId)}&t=${encodeURIComponent(karteToken)}\n\n`;
 
  let mailTo = getMailToList(); let allEmails = [];
  if (mailTo) allEmails = mailTo.split(",").map(e => e.trim());
@@ -321,9 +346,16 @@ function findRowIndexBySysId(data, headers, targetId) {
 
 function doGet(e) {
  const id = e.parameter.id;
+ const authToken = e.parameter.t || "";
  const resetToken = e.parameter.resetToken;
  if (resetToken) return renderResetPasswordPage_(resetToken);
  if (!id) return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Redirect OK" })).setMimeType(ContentService.MimeType.JSON);
+ // 🌟 HTML/JS文字列へ埋め込む値は必ずエスケープする（不正なidやtでコードが注入されないように）
+ const escJs = (s) => String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/</g, "\\x3c");
+ const escHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+ const idSafeHtml = escHtml(id);
+ const idSafeJs = escJs(id);
+ const tokenSafeJs = escJs(authToken);
   let html = `<!DOCTYPE html>
  <html lang="ja">
  <head>
@@ -340,7 +372,7 @@ function doGet(e) {
  </head>
  <body>
    <div class="card">
-     <h2 style="margin-top:0;">No.${id}<br>カルテ完了報告</h2>
+     <h2 style="margin-top:0;">No.${idSafeHtml}<br>カルテ完了報告</h2>
      <label><input type="radio" name="who" value="本人" checked onchange="toggle()"> 本人入力</label>
      <label><input type="radio" name="who" value="代行" onchange="toggle()"> 代行入力</label>
      <div id="kana-box" style="display:none;">
@@ -366,11 +398,18 @@ function doGet(e) {
        fetch("${GAS_API_URL}", {
          method:"POST",
          headers:{"Content-Type":"text/plain;charset=utf-8"},
-         body:JSON.stringify({action:"update_status", password:"${PIN_ADMIN}", id:"${id}", who:who}),
+         body:JSON.stringify({action:"update_status", password:"${tokenSafeJs}", id:"${idSafeJs}", who:who}),
          redirect:"follow"
-       }).then(r=>r.text()).then(()=>{
-         document.getElementById("btn").style.display="none";
-         document.getElementById("msg").innerText="更新完了。閉じてください。";
+       }).then(r=>r.json()).then((j)=>{
+         if (j && j.status === "success") {
+           document.getElementById("btn").style.display="none";
+           document.getElementById("msg").innerText="更新完了。閉じてください。";
+         } else {
+           document.getElementById("msg").style.color = "#b91c1c";
+           document.getElementById("msg").innerText = (j && j.message) ? j.message : "更新に失敗しました。リンクが古い可能性があります。事案検索コンソールから手動で更新してください。";
+           document.getElementById("btn").disabled = false;
+           document.getElementById("btn").innerText = "ステータス更新";
+         }
        }).catch(e=>alert("通信エラー"));
      }
    </script>
@@ -457,7 +496,7 @@ function doPost(e) {
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
      "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full",
      "update_library_record", "auth_register", "auth_login", "set_admin_flag",
-     "auth_request_reset", "auth_reset_password", "fetch_backboard_status"
+     "auth_request_reset", "auth_reset_password", "fetch_backboard_status", "emergency_admin_login"
    ];
 
    if (!allowed.includes(action)) {
@@ -623,18 +662,44 @@ function doPost(e) {
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
 
-   // 🌟 認証: スタッフ用PINは廃止。管理者用PIN(非公開の緊急回復用)か、ログイントークンのみ受け付ける
+   // 🌟 緊急管理者アクセス: コードに一切書かれていないスクリプトプロパティのPINのみで検証し、
+   // 通過したら通常ログインと同じ署名付きトークンを発行する(4時間有効)。総当たり対策として簡易レート制限をかける。
+   if (action === "emergency_admin_login") {
+     const cache = CacheService.getScriptCache();
+     const failKey = "emergpin_fail_count";
+     const failCount = parseInt(cache.get(failKey) || "0", 10);
+     if (failCount >= 5) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "試行回数が多すぎます。15分後に再試行してください。" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     const pinInput = String(requestData.pin || "");
+     if (!pinInput || pinInput !== getEmergencyPin_()) {
+       cache.put(failKey, String(failCount + 1), 15 * 60);
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "コードが違います" })).setMimeType(ContentService.MimeType.JSON);
+     }
+     cache.remove(failKey);
+     const emgToken = signToken({ email: "emergency-admin", name: "緊急管理者", isAdmin: true, iat: Date.now(), exp: Date.now() + 4 * 60 * 60 * 1000 });
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", token: emgToken, name: "緊急管理者", isAdmin: true })).setMimeType(ContentService.MimeType.JSON);
+   }
+
+   // 🌟 認証: 全アクション共通の固定パスワードは廃止。署名付きトークンのみ受け付ける。
+   // カルテ完了報告リンク用のトークンは「その事案1件のupdate_statusだけ」に権限を絞る。
    let isAdminUser = false;
    let authName = "";
-   if (pass === PIN_ADMIN) {
-     isAdminUser = true;
+   let karteCompleteCaseId = null;
+   const tokenPayload = verifyToken(pass);
+   if (!tokenPayload) {
+     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "認証エラー" })).setMimeType(ContentService.MimeType.JSON);
+   }
+   if (tokenPayload.purpose === "karte_complete") {
+     karteCompleteCaseId = String(tokenPayload.yoseiId || "");
    } else {
-     const tokenPayload = verifyToken(pass);
-     if (!tokenPayload) {
-       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "認証エラー" })).setMimeType(ContentService.MimeType.JSON);
-     }
      isAdminUser = !!tokenPayload.isAdmin;
      authName = tokenPayload.name || tokenPayload.email || "";
+   }
+   if (karteCompleteCaseId !== null) {
+     if (action !== "update_status" || String(requestData.id || "").trim() !== karteCompleteCaseId) {
+       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "このリンクではこの操作はできません" })).setMimeType(ContentService.MimeType.JSON);
+     }
    }
    if (authName) requestData.authName = authName;
 

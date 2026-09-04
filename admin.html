@@ -246,7 +246,7 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  // 🌟 勤務シフト想定：管理者ログインから８時間経過していればトークンを破棄（緊急用PIN 9999にフォールバック）
+  // 🌟 勤務シフト想定：管理者ログインから８時間経過していればトークンを破棄（この画面自体の緊急アクセスコード入力へフォールバック）
   (function() {
     const SHIFT_MS = 8 * 60 * 60 * 1000;
     const loginTime = parseInt(localStorage.getItem('aw109_auth_loginTime') || '0', 10);
@@ -257,8 +257,9 @@
       localStorage.removeItem('aw109_auth_loginTime');
     }
   })();
-  // 🌟 管理者権限でログイン済みならトークンを使う（移行期間中はPIN併用）
-  const PIN_ADMIN = (localStorage.getItem('aw109_auth_token') && localStorage.getItem('aw109_auth_isAdmin') === 'true') ? localStorage.getItem('aw109_auth_token') : "9999";
+  // 🌟 全API呼び出しは、必ずログイン済みトークン(またはこの画面の緊急アクセスコードで発行された一時トークン)を使う。
+  // コードに固定パスワードは一切書かない。
+  const PIN_ADMIN = localStorage.getItem('aw109_auth_token') || "";
   let currentData = { qa: [], news: [], manuals: [] };
   
   window.onerror = function(msg, src, line, col, err) { sendErrorLog(`GlobalError: ${msg}\nSource: ${src || 'N/A'}\nLine: ${line}:${col}\nStack: ${err ? err.stack : 'N/A'}`); return false; };
@@ -303,12 +304,29 @@
     });
   }
 
-  function checkLogin() {
-    if(document.getElementById("login-pin").value === PIN_ADMIN || document.getElementById("login-pin").value === "9999") {
-      document.getElementById("login-overlay").style.display = "none"; 
-      startTimer(); fetchLatestData(false, false); 
-    } else { 
-      document.getElementById("login-err").style.display = "block"; document.getElementById("login-pin").value = ""; 
+  async function checkLogin() {
+    const pinVal = document.getElementById("login-pin").value;
+    const btn = document.querySelector('#login-overlay .btn-primary');
+    if (btn) { btn.disabled = true; btn.innerText = "確認中..."; }
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "emergency_admin_login", pin: pinVal }), redirect: "follow" });
+      const json = await res.json();
+      if (json.status === "success") {
+        localStorage.setItem('aw109_auth_token', json.token);
+        localStorage.setItem('aw109_auth_name', json.name);
+        localStorage.setItem('aw109_auth_isAdmin', 'true');
+        localStorage.setItem('aw109_auth_loginTime', Date.now().toString());
+        document.getElementById("login-overlay").style.display = "none";
+        startTimer(); fetchLatestData(false, false);
+      } else {
+        document.getElementById("login-err").innerText = json.message || "コードが違います";
+        document.getElementById("login-err").style.display = "block"; document.getElementById("login-pin").value = "";
+      }
+    } catch (e) {
+      document.getElementById("login-err").innerText = "通信エラーが発生しました。";
+      document.getElementById("login-err").style.display = "block";
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerText = "ログイン 🔓"; }
     }
   }
 
