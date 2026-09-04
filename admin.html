@@ -32,7 +32,6 @@
     button.btn-primary:hover { opacity: 0.8; }
     button.btn-danger { background: var(--brand); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
     
-    #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
     #global-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; }
     .spinner { width: 50px; height: 50px; border: 4px solid rgba(0,122,255,0.2); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -63,17 +62,6 @@
 </head>
 <body>
 
-  <div id="login-overlay">
-    <div class="card" style="width:100%; max-width:320px; text-align:center;">
-      <h2 style="margin-top:0; color:var(--ink);">システム管理</h2>
-      <p style="color:var(--sub); font-size:14px; margin-bottom:4px;">管理者用アクセスコードを入力</p>
-      <p style="color:var(--sub); font-size:11px; margin-bottom:20px; line-height:1.5;">通常はポータルで管理者アカウントとしてログインしていれば、この画面は自動的にスキップされます。表示されている場合はポータルへ戻り、ログイン状態をご確認ください。</p>
-      <input type="password" inputmode="numeric" pattern="[0-9]*" id="login-pin" style="width:100%; margin-bottom:20px; text-align:center; font-size:24px; letter-spacing:8px; background:#fff;" placeholder="****" oninput="toHalfWidth(this)">
-      <button type="button" class="btn-primary" onclick="checkLogin()" style="width:100%; padding:16px; font-size:16px;">ログイン 🔓</button>
-      <p id="login-err" style="color:var(--brand); font-size:12px; margin-top:12px; display:none; font-weight:bold;">パスワードが違います</p>
-      <button type="button" onclick="location.href='portal.html'" style="width:100%; margin-top:12px; padding:10px; background:none; border:none; color:var(--blue); font-size:12px; font-weight:600; cursor:pointer;">◀ ポータルでログインし直す</button>
-    </div>
-  </div>
 
   <div id="global-loader">
     <div class="progress-bar-track"><div class="progress-bar-fill"></div></div>
@@ -246,7 +234,7 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  // 🌟 勤務シフト想定：管理者ログインから８時間経過していればトークンを破棄（この画面自体の緊急アクセスコード入力へフォールバック）
+  // 🌟 勤務シフト想定：管理者ログインから８時間経過していればトークンを破棄（下の判定でポータルへ戻される）
   (function() {
     const SHIFT_MS = 8 * 60 * 60 * 1000;
     const loginTime = parseInt(localStorage.getItem('aw109_auth_loginTime') || '0', 10);
@@ -257,8 +245,11 @@
       localStorage.removeItem('aw109_auth_loginTime');
     }
   })();
-  // 🌟 全API呼び出しは、必ずログイン済みトークン(またはこの画面の緊急アクセスコードで発行された一時トークン)を使う。
-  // コードに固定パスワードは一切書かない。
+  // 🌟 他の全画面と同じく、管理者権限でログイン済みでなければポータルへ戻す。この画面専用の緊急アクセス経路は廃止
+  // （復旧が必要な場合はスプレッドシートを直接編集する運用に統一）。
+  if (!localStorage.getItem('aw109_auth_token') || localStorage.getItem('aw109_auth_isAdmin') !== 'true') {
+    location.href = 'portal.html';
+  }
   const PIN_ADMIN = localStorage.getItem('aw109_auth_token') || "";
   let currentData = { qa: [], news: [], manuals: [] };
   
@@ -275,7 +266,6 @@
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
   function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v14.0)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {} }
 
-  function toHalfWidth(ele) { ele.value = ele.value.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)); }
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
   function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
   
@@ -296,39 +286,9 @@
     ['mousemove','keydown','touchstart','scroll'].forEach(evt => window.addEventListener(evt, resetTimer));
   }
   
-  // 🌟 管理者としてログイン済みの場合、PIN入力を省略して自動解錠する
-  if (localStorage.getItem('aw109_auth_token') && localStorage.getItem('aw109_auth_isAdmin') === 'true') {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById("login-overlay").style.display = "none";
-      startTimer(); fetchLatestData(false, false);
-    });
-  }
-
-  async function checkLogin() {
-    const pinVal = document.getElementById("login-pin").value;
-    const btn = document.querySelector('#login-overlay .btn-primary');
-    if (btn) { btn.disabled = true; btn.innerText = "確認中..."; }
-    try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "emergency_admin_login", pin: pinVal }), redirect: "follow" });
-      const json = await res.json();
-      if (json.status === "success") {
-        localStorage.setItem('aw109_auth_token', json.token);
-        localStorage.setItem('aw109_auth_name', json.name);
-        localStorage.setItem('aw109_auth_isAdmin', 'true');
-        localStorage.setItem('aw109_auth_loginTime', Date.now().toString());
-        document.getElementById("login-overlay").style.display = "none";
-        startTimer(); fetchLatestData(false, false);
-      } else {
-        document.getElementById("login-err").innerText = json.message || "コードが違います";
-        document.getElementById("login-err").style.display = "block"; document.getElementById("login-pin").value = "";
-      }
-    } catch (e) {
-      document.getElementById("login-err").innerText = "通信エラーが発生しました。";
-      document.getElementById("login-err").style.display = "block";
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerText = "ログイン 🔓"; }
-    }
-  }
+  document.addEventListener('DOMContentLoaded', () => {
+    startTimer(); fetchLatestData(false, false);
+  });
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));

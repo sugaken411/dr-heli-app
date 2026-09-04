@@ -1,6 +1,5 @@
-const GAS_VERSION = "v3.2"; // 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
-// 緊急管理者アクセスはスクリプトプロパティ(EMERGENCY_ADMIN_PIN、コードには一切書かない非公開領域)でのみ検証し、
-// 通過したら通常ログインと同じ署名付きトークンを発行する(getEmergencyPin_ / action:"emergency_admin_login" 参照)。
+const GAS_VERSION = "v3.3"; // 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
+// 緊急管理者アクセス(emergency_admin_login)も廃止。復旧が必要な場合はスプレッドシートを直接編集する運用に統一。
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 const LIBRARY_DB_ID = "17ejBS_Uq6cWxkagnFQknfycbMGnoaV2q7234U5Pwqnc";
 
@@ -22,27 +21,6 @@ function getAuthSecret() {
       props.setProperty('AUTH_SECRET', secret);
     }
     return secret;
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-// 🌟 緊急管理者アクセス用PIN。AUTH_SECRETと同じパターンでスクリプトプロパティにのみ保存し、コード(=公開リポジトリ)には一切書かない。
-// 初回のみ、これまでの運用と同じ"9999"で自動初期化するが、以後はApps Scriptエディタの「プロジェクトの設定」>
-// 「スクリプト プロパティ」から EMERGENCY_ADMIN_PIN の値を直接書き換えるだけで、コードを再デプロイせずに変更できる。
-function getEmergencyPin_() {
-  const props = PropertiesService.getScriptProperties();
-  let pin = props.getProperty('EMERGENCY_ADMIN_PIN');
-  if (pin) return pin;
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    pin = props.getProperty('EMERGENCY_ADMIN_PIN');
-    if (!pin) {
-      pin = "9999";
-      props.setProperty('EMERGENCY_ADMIN_PIN', pin);
-    }
-    return pin;
   } finally {
     lock.releaseLock();
   }
@@ -496,7 +474,7 @@ function doPost(e) {
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
      "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full",
      "update_library_record", "auth_register", "auth_login", "set_admin_flag",
-     "auth_request_reset", "auth_reset_password", "fetch_backboard_status", "emergency_admin_login"
+     "auth_request_reset", "auth_reset_password", "fetch_backboard_status"
    ];
 
    if (!allowed.includes(action)) {
@@ -660,25 +638,6 @@ function doPost(e) {
      msSheet.getRange(rowIndex, cSalt + 1).setValue(salt);
      msSheet.getRange(rowIndex, cHash + 1).setValue(hash);
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
-   }
-
-   // 🌟 緊急管理者アクセス: コードに一切書かれていないスクリプトプロパティのPINのみで検証し、
-   // 通過したら通常ログインと同じ署名付きトークンを発行する(4時間有効)。総当たり対策として簡易レート制限をかける。
-   if (action === "emergency_admin_login") {
-     const cache = CacheService.getScriptCache();
-     const failKey = "emergpin_fail_count";
-     const failCount = parseInt(cache.get(failKey) || "0", 10);
-     if (failCount >= 5) {
-       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "試行回数が多すぎます。15分後に再試行してください。" })).setMimeType(ContentService.MimeType.JSON);
-     }
-     const pinInput = String(requestData.pin || "");
-     if (!pinInput || pinInput !== getEmergencyPin_()) {
-       cache.put(failKey, String(failCount + 1), 15 * 60);
-       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "コードが違います" })).setMimeType(ContentService.MimeType.JSON);
-     }
-     cache.remove(failKey);
-     const emgToken = signToken({ email: "emergency-admin", name: "緊急管理者", isAdmin: true, iat: Date.now(), exp: Date.now() + 4 * 60 * 60 * 1000 });
-     return ContentService.createTextOutput(JSON.stringify({ status: "success", token: emgToken, name: "緊急管理者", isAdmin: true })).setMimeType(ContentService.MimeType.JSON);
    }
 
    // 🌟 認証: 全アクション共通の固定パスワードは廃止。署名付きトークンのみ受け付ける。
