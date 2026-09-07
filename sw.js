@@ -49,10 +49,19 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || event.request.url.includes('script.google.com')) {
     return;
   }
-  
+
+  // 🌟 事案検索コンソール→症例登録（編集）への画面遷移で、この fetch が電波不良により
+  // レスポンスもエラーも返らないまま「ハング」し、location.href による画面遷移そのものが
+  // 止まって「通信タイムアウト」表示のまま固まる不具合が報告された（2026-09-08）。
+  // 明示的なタイムアウトで打ち切り、キャッシュへフォールバックすることで画面遷移自体は必ず進むようにする。
+  const NAV_TIMEOUT_MS = 6000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), NAV_TIMEOUT_MS);
+
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { signal: controller.signal })
       .then(response => {
+        clearTimeout(timeoutId);
         // ネットワークから正常取得できたらキャッシュを動的更新
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
@@ -60,6 +69,9 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request)) // 電波瞬断・オフライン時はローカルキャッシュを返却
+      .catch(() => {
+        clearTimeout(timeoutId);
+        return caches.match(event.request); // 電波瞬断・オフライン・タイムアウト時はローカルキャッシュを返却
+      })
   );
 });
