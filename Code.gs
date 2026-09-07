@@ -1438,22 +1438,19 @@ function doPost(e) {
      const sheet = getDbSheet();
      const data = sheet.getDataRange().getDisplayValues();
      const headers = data[0].map(h => h.trim());
-    
-     const targetId = String(requestData.id).trim();
-     const idIdx = headers.indexOf("要請番号");
+
+     // 🌟 以前は「要請番号」列との完全一致でしか検索しておらず、症例登録画面（事案検索コンソール経由の編集）から
+     // カルテ完了操作をするとsysId(UUID)がidとして送られるため常に「IDが見つかりません」になっていた
+     // （メールリンク経由は要請番号がidなのでこの不具合に気づかれていなかった）。update_record/delete_recordと
+     // 同じfindRowIndexBySysId（sysId優先、要請番号にもフォールバック）に統一する。
+     const rowIndex = findRowIndexBySysId(data, headers, requestData.id);
      const statusIdx = headers.indexOf("ステータス");
      const histIdx = headers.indexOf("更新履歴");
-     let found = false;
-    
-     for (let i = 1; i < data.length; i++) {
-       if (idIdx !== -1 && String(data[i][idIdx]).trim() === targetId) {
-         sheet.getRange(i + 1, statusIdx + 1).setValue(`◯ カルテ完了 (${requestData.who})`);
-         if (histIdx !== -1) sheet.getRange(i + 1, histIdx + 1).setValue(`${Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm")} : カルテ完了処理 (${requestData.who})\n` + String(data[i][histIdx] || ""));
-         found = true; break;
-       }
-     }
-     if (found) return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
-     else return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "IDが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+
+     if (rowIndex === -1) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "IDが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
+     sheet.getRange(rowIndex, statusIdx + 1).setValue(`◯ カルテ完了 (${requestData.who})`);
+     if (histIdx !== -1) sheet.getRange(rowIndex, histIdx + 1).setValue(`${Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm")} : カルテ完了処理 (${requestData.who})\n` + String(data[rowIndex - 1][histIdx] || ""));
+     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
   
    // 🌟 メール再送アクション

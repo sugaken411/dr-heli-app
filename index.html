@@ -1732,26 +1732,48 @@
     document.getElementById("chk-ls-hoiku").checked = String(row["管理料_閉鎖式保育器"]).includes("あり");
     document.getElementById("chk-ls-cpb").checked = String(row["管理料_人工心肺装置"]).includes("あり") || String(row["管理料_補助循環装置"]).includes("あり");
 
+    // 🌟 酸素/呼吸器/圧迫のタイムラインは、スプレッドシートに列が存在せずsubmit/update_record側で保存されない
+    // 不具合があったため、システムデータJSON内のtimeline配列に保存するよう変更した（2026-09-07報告の不具合）。
+    // 古い（修正前に登録された）レコードには timeline が無く、代わりに row["酸素1開始"]等の値が残っている場合が
+    // あるため、timelineが空ならそちらにもフォールバックする。
+    const timelineByType = { '酸素': [], '呼吸器': [], '圧迫': [] };
+    (sys.timeline || []).forEach(entry => { if (timelineByType[entry.type]) timelineByType[entry.type].push(entry); });
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       clearDyn(type === '酸素' ? 'dyn-o2' : type === '呼吸器' ? 'dyn-vent' : 'dyn-cpr');
-      for(let i=1; i<=5; i++) {
-        let s = row[`${type}${i}開始`]; let e = row[`${type}${i}終了`];
-        if(s || e) {
-          const dynId = type === '酸素' ? 'o2' : type === '呼吸器' ? 'vent' : 'cpr'; 
+      const dynId = type === '酸素' ? 'o2' : type === '呼吸器' ? 'vent' : 'cpr';
+      if (timelineByType[type].length) {
+        timelineByType[type].forEach(entry => {
           addDyn(dynId);
-          const rows = document.getElementById(`dyn-${dynId}`).querySelectorAll('.dyn-row-container'); 
+          const rows = document.getElementById(`dyn-${dynId}`).querySelectorAll('.dyn-row-container');
           const lastRow = rows[rows.length - 1];
-          lastRow.querySelector('.v-start').value = s || ""; 
-          lastRow.querySelector('.v-end').value = e || "";
-          if(type === '酸素' || type === '呼吸器') { 
-            if(row[`${type}${i}流量`]) lastRow.querySelector('.v-val').value = row[`${type}${i}流量`]; 
-            if(row[`${type}${i}FiO2`]) lastRow.querySelector('.v-val2').value = row[`${type}${i}FiO2`]; 
+          lastRow.querySelector('.v-start').value = entry.start || "";
+          lastRow.querySelector('.v-end').value = entry.end || "";
+          if (type === '酸素' || type === '呼吸器') {
+            if (entry.vType) lastRow.querySelector('.v-type').value = entry.vType;
+            if (entry.val) lastRow.querySelector('.v-val').value = entry.val;
+            if (entry.fio2) lastRow.querySelector('.v-val2').value = entry.fio2;
+          }
+        });
+      } else {
+        // 旧レコード用フォールバック（保存されていれば、だが列自体が無いため通常はヒットしない）
+        for(let i=1; i<=5; i++) {
+          let s = row[`${type}${i}開始`]; let e = row[`${type}${i}終了`];
+          if(s || e) {
+            addDyn(dynId);
+            const rows = document.getElementById(`dyn-${dynId}`).querySelectorAll('.dyn-row-container');
+            const lastRow = rows[rows.length - 1];
+            lastRow.querySelector('.v-start').value = s || "";
+            lastRow.querySelector('.v-end').value = e || "";
+            if(type === '酸素' || type === '呼吸器') {
+              if(row[`${type}${i}流量`]) lastRow.querySelector('.v-val').value = row[`${type}${i}流量`];
+              if(row[`${type}${i}FiO2`]) lastRow.querySelector('.v-val2').value = row[`${type}${i}FiO2`];
+            }
           }
         }
       }
     });
-    
-    if(row["圧迫1開始"]) calcCPR();
+
+    if(timelineByType['圧迫'].length || row["圧迫1開始"]) calcCPR();
     calcMonitor(); handleLifeSupport();
 
     const addlMails = String(row["追加送信先"] || "").split(",").map(s => s.trim()).filter(Boolean);
@@ -2255,19 +2277,32 @@
     // "酸素"/"呼吸器"/"圧迫"（日本語）。以前はtypeをそのままDOM ID接尾辞に使っており
     // `#dyn-酸素`等の存在しないセレクタになって常に0件ヒットしていた（2026-08-17報告の不具合）。
     const dynDomId = { '酸素': 'o2', '呼吸器': 'vent', '圧迫': 'cpr' };
+    // 🌟 payload["酸素1開始"]等はスプレッドシートに同名の列が存在しないため、送信はされてもsubmit/update_record側で
+    // 静かに破棄され保存されない不具合があった（メール本文はappDataを直接使うため一見反映されて見えていた）。
+    // 列を増やさずに確実に保存するため、システムデータJSON（既に保存対象）へtimelineとしても格納する。
+    const timelineArr = [];
     ["酸素", "呼吸器", "圧迫"].forEach(type => {
       let idx = 1;
       document.querySelectorAll(`#dyn-${dynDomId[type]} .dyn-row-container`).forEach(row => {
         if(idx <= 5) {
-          payload[`${type}${idx}開始`] = row.querySelector('.v-start').value; 
-          payload[`${type}${idx}終了`] = row.querySelector('.v-end').value;
-          if(type === '酸素' || type === '呼吸器') { 
-            payload[`${type}${idx}FiO2`] = row.querySelector('.v-val2').value; 
-            payload[`${type}${idx}流量`] = row.querySelector('.v-val').value; 
+          const start = row.querySelector('.v-start').value;
+          const end = row.querySelector('.v-end').value;
+          payload[`${type}${idx}開始`] = start;
+          payload[`${type}${idx}終了`] = end;
+          const entry = { type, start, end };
+          if(type === '酸素' || type === '呼吸器') {
+            const fio2 = row.querySelector('.v-val2').value;
+            const val = row.querySelector('.v-val').value;
+            payload[`${type}${idx}FiO2`] = fio2;
+            payload[`${type}${idx}流量`] = val;
+            entry.vType = row.querySelector('.v-type').value;
+            entry.val = val;
+            entry.fio2 = fio2;
           }
-          
-          const s = row.querySelector('.v-start').value || "--:--";
-          const e = row.querySelector('.v-end').value || "--:--";
+          timelineArr.push(entry);
+
+          const s = start || "--:--";
+          const e = end || "--:--";
           if(type === '酸素') {
             const vType = row.querySelector('.v-type').value;
             const flow = row.querySelector('.v-val').value;
@@ -2332,7 +2367,8 @@
         keyword: currentKeywords,
         diagnosis: currentDiagnosis
       },
-      traumas: Array.from(document.querySelectorAll('.chk-trauma:checked')).map(cb=>cb.value)
+      traumas: Array.from(document.querySelectorAll('.chk-trauma:checked')).map(cb=>cb.value),
+      timeline: timelineArr
     };
     payload["システムデータ"] = JSON.stringify(sysData);
     
