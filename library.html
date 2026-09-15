@@ -325,14 +325,29 @@
     await fetchLibraryData(false);
   };
 
+  // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
+  // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+  async function fetchGasJson(bodyObj) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
+      return await res.json();
+    } catch (e) {
+      if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）');
+      throw e;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   async function fetchInitData() {
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "資料" }), redirect: "follow" });
-      const json = await res.json();
+      const json = await fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "資料" });
       if (json.status === "success" && json.qa) {
         document.getElementById("global-qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><span style="border:none;border-top:1px solid var(--line); margin:8px 0; display:block;"></span>`).join("") || '<p>公開Q&Aはありません。</p>';
       }
-    } catch(e) {}
+    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); }
   }
 
   function toggleAdmin() {
@@ -485,10 +500,12 @@
     
     showLoader("質問送信中...", "");
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(個別)" }), redirect: "follow" });
-      const json = await res.json();
+      const json = await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(個別)" });
       if(json.status === "success") { alert("質問を送信しました。管理者に通知されました。"); closeModal("modal-qa"); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("送信に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) {
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      alert(String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再度送信してください。" : "送信に失敗しました。");
+    } finally { hideLoader(); }
   }
 
   async function submitGlobalQA() {
@@ -496,10 +513,12 @@
     if(!qText) return alert("要望内容を入力してください。");
     showLoader("要望送信中...", "");
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(共通)" }), redirect: "follow" });
-      const json = await res.json();
+      const json = await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: qText, source: "資料集(共通)" });
       if(json.status === "success") { alert("ご要望を送信しました。管理者に通知されました。"); document.getElementById("global-qa-input").value = ""; closeModal("modal-global-qa"); } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("送信に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) {
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      alert(String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再度送信してください。" : "送信に失敗しました。");
+    } finally { hideLoader(); }
   }
 
   function openEditModal(rowIdx) {

@@ -475,15 +475,21 @@
   }
 
   // 🌟 電波不良でレスポンスが途中で切れJSON解析に失敗した場合、1回だけ自動リトライする
+  // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
+  // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
   async function fetchGasJson(bodyObj, retries) {
     if (retries === undefined) retries = 1;
     for (let attempt = 0; ; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow" });
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
         return await res.json();
       } catch (e) {
-        if (attempt >= retries) throw e;
+        if (attempt >= retries) { if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）'); throw e; }
         await new Promise(r => setTimeout(r, 1000));
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
   }
@@ -502,12 +508,15 @@
         updateSyncTimestamp(nowMs, json.gasVersion);
       } else { throw new Error(json.message); }
     } catch (e) {
-      if(!localStorage.getItem(CACHE_KEY)) { 
-        document.getElementById("news-box").innerHTML = "通信同期エラーが発生しました。電波の良い場所で再読込してください。"; 
+      if(!localStorage.getItem(CACHE_KEY)) {
+        const msg = String(e.message || e).includes("タイムアウト")
+          ? "サーバーからの応答がありません。しばらく時間をおいてから再読込してください（起動直後は時間がかかる場合があります）。"
+          : "通信同期エラーが発生しました。電波の良い場所で再読込してください。";
+        document.getElementById("news-box").innerHTML = msg;
       }
       if(!String(e).includes("Load failed")) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
-    } finally { 
-      hideLoader(); 
+    } finally {
+      hideLoader();
     }
   }
 
@@ -576,24 +585,21 @@
     if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "ポータル" }), 
-        redirect: "follow" 
-      });
-      const json = await res.json(); 
-      if (json.status === "success") { 
-        alert("要望を送信しました。"); 
-        document.getElementById("qa-input").value = ""; 
-        closeModal('modal-qa'); 
+      const json = await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: q, source: "ポータル" }, 0);
+      if (json.status === "success") {
+        alert("要望を送信しました。");
+        document.getElementById("qa-input").value = "";
+        closeModal('modal-qa');
       } else { throw new Error(json.message); }
-    } catch (e) { 
-      alert("通信エラーが発生しました。"); 
-      if(!String(e).includes("Load failed")) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
-    } finally { 
-      btn.textContent = "送信"; 
-      btn.disabled = false; 
+    } catch (e) {
+      const msg = String(e.message || e).includes("タイムアウト")
+        ? "サーバーからの応答がありません。時間をおいて再度送信してください。"
+        : "通信エラーが発生しました。";
+      alert(msg);
+      if(!String(e).includes("Load failed")) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+    } finally {
+      btn.textContent = "送信";
+      btn.disabled = false;
     }
   }
 </script>

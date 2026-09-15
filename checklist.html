@@ -388,21 +388,39 @@
       try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v13.0)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {}
     }
 
+    // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
+    // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+    async function fetchGasJson(bodyObj) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
+        return await res.json();
+      } catch (e) {
+        if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）');
+        throw e;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
     async function fetchQA() {
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
-        const json = await res.json();
+        const json = await fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "現場" });
         if (json.status === "success" && json.qa) { document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p><b>Q. ${item.q}</b><br>A. ${item.a}</p><hr style="border:none;border-top:1px solid var(--line);">`).join(""); }
-      } catch(e) {}
+      } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); }
     }
 
     async function submitQA() {
       const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
       document.getElementById("global-loader").style.display = "flex";
       try {
-        await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" }), redirect: "follow" });
+        await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: q, source: "統合チェックリスト" });
         alert("要望・報告を送信しました。管理者が確認します。"); document.getElementById("qa-input").value = ""; closeModal('qa');
-      } catch(e) { alert("送信に失敗しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { hideLoader(); }
+      } catch(e) {
+        const msg = String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再度送信してください。" : "送信に失敗しました。";
+        alert(msg); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      } finally { hideLoader(); }
     }
 
     async function fetchChecklistStatus() {

@@ -1970,11 +1970,26 @@
     btnEl.parentElement.querySelectorAll('.pill').forEach(el => el.classList.remove('sub-on')); btnEl.classList.add('sub-on');
   }
 
+  // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
+  // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+  async function fetchGasJson(bodyObj) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
+      return await res.json();
+    } catch (e) {
+      if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）');
+      throw e;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   async function fetchLatestData(isBackground, isManualUpdate) {
     if(!isBackground) showLoader("マスタデータ同期中...", "システムを初期化しています");
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "現場" }), redirect: "follow" });
-      const json = await res.json();
+      const json = await fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "現場" });
       if (json.status === "success") {
         const m = json.masters; const now = Date.now();
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: now, masters: m, qa: json.qa }));
@@ -1982,7 +1997,13 @@
         if(!isEditMode) checkRouting();
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       }
-    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); if(!isBackground) alert("通信エラーが発生しました。"); } finally { if(!isBackground) hideLoader(); }
+    } catch(e) {
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      if(!isBackground) {
+        const msg = String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再読込してください（起動直後は時間がかかる場合があります）。" : "通信エラーが発生しました。";
+        alert(msg);
+      }
+    } finally { if(!isBackground) hideLoader(); }
   }
 
   function toggleComp() { const el = document.querySelector('input[name="comp-who"]:checked'); if(el) document.getElementById("comp-name").style.display = el.value === "代行" ? "block" : "none"; }
@@ -2164,9 +2185,13 @@
 
     showLoader("送信中...", "要望・報告データをサーバーに送信しています");
     try {
-      await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" }), redirect: "follow" });
+      await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" });
       alert("要望・報告を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa');
-    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("送信に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) {
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      const msg = String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再度送信してください。" : "送信に失敗しました。";
+      alert(msg);
+    } finally { hideLoader(); }
   }
 
   function getCollectData() {

@@ -292,24 +292,35 @@
       drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); fetchInit(); 
     };
 
+    // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
+    // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+    async function fetchGasJson(bodyObj) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
+        return await res.json();
+      } catch (e) {
+        if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）');
+        throw e;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
     async function fetchInit() {
       showLoader(true, "システム起動中...", "マスタデータを取得しています");
       try {
-        const res = await fetch(GAS_API_URL, { 
-          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          body: JSON.stringify({ action: "fetch_init", password: PIN_CODE, app_name: "日報" }), 
-          redirect: "follow" 
-        });
-        const json = await res.json();
-        if (json.status === "success") { 
-          populateSelect('info-nurse', json.masters.ns || []); 
-          populateSelect('info-doctor', json.masters.dr || []); 
+        const json = await fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "日報" });
+        if (json.status === "success") {
+          populateSelect('info-nurse', json.masters.ns || []);
+          populateSelect('info-doctor', json.masters.dr || []);
           updateSyncTimestamp();
-          await syncFromDb(false); 
+          await syncFromDb(false);
         } else { throw new Error(json.message); }
-      } catch(e) { 
-        sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
-        alert("初期通信エラーが発生しました。"); 
+      } catch(e) {
+        sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+        alert(String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再読込してください（起動直後は時間がかかる場合があります）。" : "初期通信エラーが発生しました。");
       } finally { showLoader(false); }
     }
 
