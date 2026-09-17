@@ -1165,6 +1165,17 @@
     </div>
   </div>
 
+  <!-- 🌟 上書き保存／カルテ完了の成功後、自動でのページ遷移に頼らず、ユーザーが明示的に選択する -->
+  <div class="modal" id="modal-nav-choice">
+    <div class="modal-box" style="text-align:center;">
+      <div style="font-size:40px; margin-bottom:8px;">✅</div>
+      <h3 id="nav-choice-title" style="margin-top:0;">完了しました</h3>
+      <p id="nav-choice-msg" style="color:var(--sub); font-size:14px; white-space:pre-line;"></p>
+      <button type="button" id="nav-choice-portal-btn" style="width:100%; padding:12px; border-radius:8px; background:var(--blue); color:#fff; font-weight:bold; margin-top:12px; border:none;">ポータルへ戻る</button>
+      <button type="button" onclick="closeModal('modal-nav-choice')" style="width:100%; padding:12px; border-radius:8px; background:#e5e5ea; color:var(--ink); font-weight:bold; margin-top:8px; border:none;">この画面にとどまる</button>
+    </div>
+  </div>
+
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
@@ -1246,9 +1257,18 @@
     if(loader) loader.style.display = "none";
   }
 
-  function openModal(id) { 
-    const el = document.getElementById(id); 
-    if(el) el.classList.add("show"); 
+  function openModal(id) {
+    const el = document.getElementById(id);
+    if(el) el.classList.add("show");
+  }
+
+  // 🌟 保存成功後、location.href等の自動遷移に頼らず、ユーザー自身に「ポータルへ戻る/このまま」を選ばせる。
+  // 自動遷移はService Worker経由のfetchがハングすると固まって見えるため、明示的な操作に置き換える。
+  function showNavChoice(title, msg) {
+    document.getElementById("nav-choice-title").innerText = title;
+    document.getElementById("nav-choice-msg").innerText = msg;
+    document.getElementById("nav-choice-portal-btn").onclick = () => { location.href = "portal.html"; };
+    openModal("modal-nav-choice");
   }
   
   function closeModal(id) { 
@@ -2530,23 +2550,22 @@
     }
     showLoader("削除処理中...", "データベースからレコードを削除しています");
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "delete_record", password: PIN_CODE, id: editTargetSysId }), 
-        redirect: "follow" 
+      const res = await fetchWithTimeout(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "delete_record", password: PIN_CODE, id: editTargetSysId }),
+        redirect: "follow"
       });
       const json = await res.json();
-      if (json.status === "success") { 
-        alert("事案を削除しました。"); 
-        goBackOrHome();
-      } else { 
-        throw new Error(json.message); 
+      if (json.status === "success") {
+        showNavChoice("削除しました", "事案データを削除しました。");
+      } else {
+        throw new Error(json.message);
       }
-    } catch(e) { 
-      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
-      alert("通信エラーが発生しました。"); 
-    } finally { 
-      hideLoader(); 
+    } catch(e) {
+      if (!e.isTimeout) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      alert(e.isTimeout ? e.message : "通信エラーが発生しました。");
+    } finally {
+      hideLoader();
     }
   }
 
@@ -2568,23 +2587,22 @@
     showLoader("完了処理中...", "電子カルテの完了ステータスを更新しています");
     
     try {
-      const res = await fetch(GAS_API_URL, { 
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: editTargetSysId, who: who }), 
-        redirect: "follow" 
+      const res = await fetchWithTimeout(GAS_API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "update_status", password: PIN_CODE, id: editTargetSysId, who: who }),
+        redirect: "follow"
       });
       const json = await res.json();
-      if (json.status === "success") { 
-        alert("完了しました！"); 
-        goBackOrHome();
-      } else { 
-        throw new Error(json.message); 
+      if (json.status === "success") {
+        showNavChoice("完了しました！", `カルテ完了ステータスを更新しました。\n（記録: ${who}）`);
+      } else {
+        throw new Error(json.message);
       }
-    } catch(e) { 
-      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
-      alert("通信エラーが発生しました。"); 
-    } finally { 
-      hideLoader(); 
+    } catch(e) {
+      if (!e.isTimeout) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      alert(e.isTimeout ? e.message : "通信エラーが発生しました。");
+    } finally {
+      hideLoader();
     }
   }
 
@@ -2631,12 +2649,10 @@
       if (json.status === "success") {
         if(mode === 'update') {
           sessionStorage.removeItem("aw109_search_data_cache");
-          if (wantsEmail) {
-            alert(json.emailSent ? "上書き保存し、メールを送信しました。" : `上書き保存は完了しましたが、メール送信に失敗しました。\n${json.emailMessage || ""}`);
-          } else {
-            alert("上書き保存しました。(メールは送信していません)");
-          }
-          goBackOrHome();
+          const emailMsg = wantsEmail
+            ? (json.emailSent ? "メールを送信しました。" : `メール送信に失敗しました。\n${json.emailMessage || ""}`)
+            : "(メールは送信していません)";
+          showNavChoice("上書き保存しました", emailMsg);
         } else {
           alert("事案の新規登録が正常に完了しました。");
           location.reload();
