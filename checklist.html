@@ -151,11 +151,11 @@
       <div class="normal-info no-print" style="margin-bottom: 8px; padding: 12px 16px;">
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
           <div style="flex:1; min-width:120px;">
-            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検日</label>
+            <label style="font-size:13px; font-weight:bold; color:var(--sub);">共通 点検日</label>
             <input type="date" id="c-date" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="fetchChecklistStatus()">
           </div>
           <div style="flex:1.5; min-width:150px;">
-            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検者 (Ns)</label>
+            <label style="font-size:13px; font-weight:bold; color:var(--sub);">共通 点検者 (Ns)</label>
             <select id="c-staff" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="localStorage.setItem('aw109_last_ns', this.value)">
               <option value="">選択してください...</option>
             </select>
@@ -188,7 +188,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="font-weight:900; color:#0d47a1; font-size:15px;" id="current-check-title">始業点検 の入力</span>
           <div style="width:110px;">
-            <label style="font-size:10px; font-weight:bold; color:var(--sub); display:block; text-align:right; margin-bottom:4px;">実施時間</label>
+            <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; text-align:right; margin-bottom:4px;">実施時間</label>
             <input type="tel" inputmode="numeric" maxlength="5" placeholder="HH:MM" id="c-time" oninput="formatTimeInput(this)" onblur="clampTimeInput(this)" class="text-input" style="padding:6px; font-size:14px; margin-bottom:0;">
           </div>
         </div>
