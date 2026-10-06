@@ -603,7 +603,9 @@
     
     let hamachoCount = 0;
     filteredDebriefData.forEach(r => {
-      const place = String(r["振り返り場所"] || "");
+      // 🌟 デブリーフィングの保存先の列名は「実施場所」（Code.gs submit_debriefing・debrief_search.htmlと同じ）。
+      // 以前は存在しない「振り返り場所」列を読んでいたため、浜町での振り返り件数や場所別グラフが常に0・未分類になっていた
+      const place = String(r["実施場所"] || r["振り返り場所"] || "");
       if(place.includes("浜町") || place.includes("浜町待機所")) {
         hamachoCount++;
       }
@@ -738,7 +740,7 @@
       let yVal = "不明";
       if (yKey === "振り返り場所") {
         let matchingDebrief = filteredDebriefData.find(d => d["要請番号"] == row["要請番号"]);
-        yVal = matchingDebrief ? (matchingDebrief["振り返り場所"] || "未実施") : "未実施";
+        yVal = matchingDebrief ? (matchingDebrief["実施場所"] || matchingDebrief["振り返り場所"] || "未実施") : "未実施";
       } else {
         yVal = row[yKey] || "不明";
       }
@@ -762,7 +764,7 @@
       let yVal = row[yKey] || "不明";
       if (yKey === "振り返り場所") {
         let matchingDebrief = filteredDebriefData.find(d => d["要請番号"] == row["要請番号"]);
-        yVal = matchingDebrief ? (matchingDebrief["振り返り場所"] || "未実施") : "未実施";
+        yVal = matchingDebrief ? (matchingDebrief["実施場所"] || matchingDebrief["振り返り場所"] || "未実施") : "未実施";
       }
       
       let xVal = "不明";
@@ -947,7 +949,7 @@
 
     let placeCounts = {};
     filteredDebriefData.forEach(r => {
-      const place = String(r["振り返り場所"] || "未分類").trim();
+      const place = String(r["実施場所"] || r["振り返り場所"] || "未分類").trim();
       if (!placeCounts[place]) placeCounts[place] = 0;
       placeCounts[place]++;
     });
