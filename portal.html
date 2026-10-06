@@ -312,6 +312,7 @@
     localStorage.removeItem('aw109_auth_name');
     localStorage.removeItem('aw109_auth_isAdmin');
     localStorage.removeItem('aw109_auth_loginTime');
+    localStorage.removeItem('aw109_summary_cache_v1'); // 🌟 統計ダッシュボードが端末に保存した集計用データもログアウトと同時に消す
     updateAccountUI();
     requireLogin();
     const msgEl = document.getElementById('account-msg');
@@ -422,6 +423,7 @@
     localStorage.removeItem('aw109_auth_name');
     localStorage.removeItem('aw109_auth_isAdmin');
     localStorage.removeItem('aw109_auth_loginTime');
+    localStorage.removeItem('aw109_summary_cache_v1');
     updateAccountUI();
     alert('ログアウトしました。ページを再読み込みします。');
     location.reload();
@@ -496,6 +498,7 @@
       localStorage.removeItem('aw109_auth_name');
       localStorage.removeItem('aw109_auth_isAdmin');
       localStorage.removeItem('aw109_auth_loginTime');
+      localStorage.removeItem('aw109_summary_cache_v1');
     }
     updateAccountUI();
     if (!localStorage.getItem('aw109_auth_token')) {
