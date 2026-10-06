@@ -105,7 +105,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.16</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.17</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -372,7 +372,7 @@
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.16)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.17)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -559,13 +559,18 @@
       document.getElementById("s-date").value = ""; 
       // 🌟 UUID（sysId）または要請番号（displayId）で合致判定
       let targetRow = allCasesData.find(r => String(r.id) === String(editId) || String(r.displayId) === String(editId));
-      if (targetRow) {
+      // 🌟 キャッシュで表示した直後に裏で最新データを取り直すと、ここで同じ事案をもう一度選び直してしまい、
+      // その数秒の間に入力した内容がサーバーの値で上書きされていた。既に同じ事案を開いている場合は選び直さない
+      if (targetRow && currentCase && String(linkedCaseId) === String(targetRow.id || targetRow.displayId)) {
+        // 何もしない（入力中の内容を保持）
+      } else if (targetRow) {
         selectCase(targetRow);
       } else {
         searchCases();
       }
     } else {
       searchCases();
+      setTimeout(offerPendingDebriefDrafts, 0); // 🌟 下書きのある事案の案内
     }
   }
 
@@ -934,6 +939,12 @@
         document.getElementById("d-date").value = past["実施日"] || "";
         document.getElementById("d-time").value = past["開始時間"] || "";
         document.getElementById("d-time-end").value = past["終了時間"] || "";
+        // 🌟 振り返り場所・方法は従来復元されず、過去データを開くと既定値（浜町待機所・対面）に戻り、
+        // そのまま上書き保存すると記録が書き換わっていた。保存済みの値が選択肢にある場合だけ選び直す
+        [["env-loc", past["実施場所"]], ["env-method", past["実施方法"]]].forEach(([name, val]) => {
+          if (!val) return;
+          document.querySelectorAll(`input[name="${name}"]`).forEach(r => { if (r.value === val) r.checked = true; });
+        });
         document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存";
         document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       } catch(e) {
@@ -991,6 +1002,8 @@
 
 
     document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div><button type="button" class="btn-small" style="background:#fff3e0; color:#e65100; margin-top:8px;" onclick="goToEditCase()">✏️ 症例登録の内容を修正する</button>`;
+
+    afterCaseSelected(); // 🌟 この事案の入力途中の下書きを確認する
   }
 
   async function updateReviewStatus() {
@@ -1223,6 +1236,149 @@
       </div>`;
   }
 
+  // ===== 🌟 入力途中の下書き自動保存（原則A3-C） =====
+  // デブリーフィングは入力量が多く、iPhoneで他のアプリに切り替えて戻ると画面が破棄され入力が消えることがあった。
+  // 事案ごと（aw109_draft_debrief_<事案ID>）に、入力中の状態を端末内(localStorage)へ自動保存し、次にその事案を開いたときに復元を確認する。
+  // 中身は保存処理と同じsysData（タグ・評価・フィードバック）＋個別の入力欄で、復元は既存データの読込と同じrestoreSystemData()を使う。
+  const DEBRIEF_DRAFT_PREFIX = "aw109_draft_debrief_";
+  const DEBRIEF_DRAFT_MAX_AGE_MS = 72 * 60 * 60 * 1000;
+  const DEBRIEF_DRAFT_FIELDS = ["d-date", "d-time", "d-time-end", "v-gap", "v-team", "v-master-gap", "v-action", "diag-name"];
+  let debriefDraftReady = false; let debriefDraftBaseline = ""; let debriefDraftTimer = null;
+  let debriefDraftCaseId = ""; // 下書きの保存先になっている事案ID
+  let debriefDraftAutoAccept = ""; // ページを開いた時の案内で「開く」を選んだ事案は、重ねて確認しない
+
+  function getDebriefDraftKey(caseId) { return DEBRIEF_DRAFT_PREFIX + caseId; }
+
+  function getDebriefSnapshot() {
+    const sys = JSON.parse(JSON.stringify(sysData));
+    sys.summary = document.getElementById("v-summary").value;
+    sys.ext = []; document.querySelectorAll('.ext-row').forEach(r => sys.ext.push({ affil: r.querySelector('.e-affil').value, name: r.querySelector('.e-name').value }));
+    sys.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sys.ojt.push({ job: r.querySelector('.o-job').value, name: r.querySelector('.o-name').value }));
+    const pills = sel => Array.from(document.querySelectorAll(sel)).map(el => ({ t: el.innerText, on: el.classList.contains('on') }));
+    const fields = {}; DEBRIEF_DRAFT_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) fields[id] = el.value; });
+    return {
+      caseId: debriefDraftCaseId,
+      caseNo: currentCase ? (currentCase["要請番号"] || "") : "",
+      sys: sys,
+      procPills: pills('#v-fetched-procs .pill'),
+      drugPills: pills('#v-fetched-drugs .pill'),
+      fields: fields,
+      envLoc: document.querySelector('input[name="env-loc"]:checked')?.value || "",
+      envMethod: document.querySelector('input[name="env-method"]:checked')?.value || ""
+    };
+  }
+
+  function debriefCompareString(snap) { return JSON.stringify([snap.sys, snap.procPills, snap.drugPills, snap.fields, snap.envLoc, snap.envMethod]); }
+
+  function saveDebriefDraftNow() {
+    if (!debriefDraftReady || !debriefDraftCaseId || !currentCase) return;
+    clearTimeout(debriefDraftTimer);
+    try {
+      const snap = getDebriefSnapshot();
+      if (debriefCompareString(snap) === debriefDraftBaseline) return;
+      snap.savedAt = Date.now();
+      localStorage.setItem(getDebriefDraftKey(debriefDraftCaseId), JSON.stringify(snap));
+    } catch (e) { console.warn("下書き保存に失敗しました:", e); }
+  }
+
+  function scheduleDebriefDraftSave() {
+    if (!debriefDraftReady) return;
+    clearTimeout(debriefDraftTimer);
+    debriefDraftTimer = setTimeout(saveDebriefDraftNow, 800);
+  }
+
+  function readDebriefDraft(caseId) {
+    try {
+      const d = JSON.parse(localStorage.getItem(getDebriefDraftKey(caseId)) || "null");
+      if (d && d.savedAt && Date.now() - d.savedAt <= DEBRIEF_DRAFT_MAX_AGE_MS) return d;
+      if (d) localStorage.removeItem(getDebriefDraftKey(caseId)); // 古い下書きは破棄
+    } catch (e) {}
+    return null;
+  }
+
+  function applyDebriefDraft(d) {
+    restoreSystemData(JSON.parse(JSON.stringify(d.sys)));
+    const renderPills = (id, list) => {
+      if (!list || list.length === 0) return;
+      const wrap = document.getElementById(id);
+      wrap.innerHTML = "";
+      list.forEach(p => {
+        const el = document.createElement("div");
+        el.className = "pill" + (p.on ? " on" : "");
+        el.innerText = p.t;
+        el.onclick = function() { this.classList.toggle('on'); };
+        wrap.appendChild(el);
+      });
+    };
+    renderPills("v-fetched-procs", d.procPills);
+    renderPills("v-fetched-drugs", d.drugPills);
+    Object.keys(d.fields || {}).forEach(id => { const el = document.getElementById(id); if (el) el.value = d.fields[id]; });
+    [["env-loc", d.envLoc], ["env-method", d.envMethod]].forEach(([name, val]) => {
+      document.querySelectorAll(`input[name="${name}"]`).forEach(r => { if (r.value === val) r.checked = true; });
+    });
+  }
+
+  // 事案を選んだ直後に呼ぶ。restoreSystemData()内の疾患分類の時間差復元が終わってから下書きを確認し、比較の基準を取る
+  function afterCaseSelected() {
+    debriefDraftReady = false;
+    clearTimeout(debriefDraftTimer);
+    const caseId = String(linkedCaseId || "");
+    debriefDraftCaseId = caseId;
+    setTimeout(() => {
+      if (debriefDraftCaseId !== caseId) return; // その間に別の事案が選ばれた
+      const d = readDebriefDraft(caseId);
+      let restored = false;
+      if (d) {
+        const t = new Date(d.savedAt);
+        const when = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+        const ok = debriefDraftAutoAccept === caseId || confirm(`この事案（No.${d.caseNo || caseId}）の入力途中の下書きがあります（${when} 保存）。\n\n［OK］下書きを復元する\n［キャンセル］下書きを破棄する`);
+        if (ok) { applyDebriefDraft(d); restored = true; }
+        else { try { localStorage.removeItem(getDebriefDraftKey(caseId)); } catch (e) {} }
+      }
+      debriefDraftAutoAccept = "";
+      setTimeout(() => {
+        if (debriefDraftCaseId !== caseId) return;
+        // 復元した場合は、すぐ閉じられても下書きが残るよう基準を空にして保存しておく
+        debriefDraftBaseline = restored ? "" : debriefCompareString(getDebriefSnapshot());
+        debriefDraftReady = true;
+        if (restored) saveDebriefDraftNow();
+      }, 300);
+    }, 300);
+  }
+
+  // ページを開いた時、まだ事案を選んでいなければ、入力途中の下書きがある事案を案内する
+  function offerPendingDebriefDrafts() {
+    if (currentCase) return;
+    const pending = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(DEBRIEF_DRAFT_PREFIX)) { const d = readDebriefDraft(k.slice(DEBRIEF_DRAFT_PREFIX.length)); if (d) pending.push(d); }
+      }
+    } catch (e) { return; }
+    if (pending.length === 0) return;
+    pending.sort((a, b) => b.savedAt - a.savedAt);
+    const d = pending[0];
+    const row = allCasesData.find(r => String(r.id) === String(d.caseId) || String(r.displayId) === String(d.caseId));
+    if (!row) return;
+    const more = pending.length > 1 ? `\n（ほかに${pending.length - 1}件の下書きがあります。事案を選ぶと確認できます）` : "";
+    if (confirm(`入力途中のデブリーフィングがあります（No.${d.caseNo || d.caseId}）。\n続きを開きますか？${more}`)) {
+      debriefDraftAutoAccept = String(row.id || row.displayId || "");
+      selectCase(row);
+    }
+  }
+
+  ["input", "change", "click"].forEach(evt => document.addEventListener(evt, scheduleDebriefDraftSave, true));
+  // 評価・フィードバック欄は入力確定(change)の時にsysDataへ反映される作りのため、入力途中で裏に回った場合は
+  // 先に確定させてから保存する（iOSはアプリ切替時に入力欄のフォーカスを外さないことがある）
+  function flushAndSaveDebriefDraft() {
+    const ae = document.activeElement;
+    if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA") && ae.type !== "radio" && ae.type !== "checkbox") ae.dispatchEvent(new Event("change", { bubbles: true }));
+    saveDebriefDraftNow();
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushAndSaveDebriefDraft(); });
+  window.addEventListener("pagehide", flushAndSaveDebriefDraft);
+
   async function submitDebriefing() {
     if (!currentCase) return alert("事案がありません。");
     const rec = (sysData.tags.recorder && sysData.tags.recorder.length>0) ? sysData.tags.recorder[0] : "";
@@ -1323,10 +1479,22 @@
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
       const json = await parseGasResponse(res); 
-      if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else { throw new Error(json.message); }
-    } catch(e) { 
-      sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);
-      alert("通信エラーが発生しました。入力データは保持されています。電波の良い場所で再度お試しください。"); 
+      if (json.status === "success") {
+        // 🌟 保存できたので下書きは不要（移動中に保存し直さないよう止めてから消す）
+        debriefDraftReady = false; clearTimeout(debriefDraftTimer);
+        try { localStorage.removeItem(getDebriefDraftKey(debriefDraftCaseId)); } catch (e) {}
+        alert("保存しました！"); location.href = "portal.html";
+      } else { throw new Error(json.message); }
+    } catch(e) {
+      saveDebriefDraftNow();
+      const m = String(e.message || e);
+      if (m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
+        // 🌟 電波切れはアプリの不具合ではないため、エラー報告は送らず案内だけ出す（原則A4）
+        alert("電波が弱いため保存できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n電波の良い場所で、もう一度保存してください。");
+      } else {
+        sendErrorLog(`Submit Error\nMsg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+        alert(`保存エラーが発生しました。入力内容は画面と端末内の下書きに残っています。\n[エラー詳細]: ${e.message || e}`);
+      }
     } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
   }
 </script>

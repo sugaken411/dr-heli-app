@@ -123,7 +123,7 @@
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="hdr-title">
       <span style="overflow:hidden; text-overflow:ellipsis;">統合チェックリスト</span>
-      <span class="version-tag" style="flex-shrink:0;" onclick="secretCommand()">v13.0</span>
+      <span class="version-tag" style="flex-shrink:0;" onclick="secretCommand()">v13.1</span>
     </div>
     <div style="display:flex; gap:8px; flex-shrink:0;">
       <button type="button" class="hdr-btn" style="white-space:nowrap;" onclick="clearAllCache(true)">🔄 <span class="btn-label">更新</span></button>
@@ -186,6 +186,7 @@
         </div>
       </div>
 
+      <div id="cl-draft-notice" style="display:none; background:#fff8e1; border:1px solid #ffb300; color:#7a4f00; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:14px; font-weight:bold;"></div>
       <div id="checklist-container"></div>
 
       <div class="card" style="margin-top: 24px; border:2px solid var(--blue);">
@@ -390,7 +391,7 @@
 
     function sendErrorLog(errMsg) {
       if(String(errMsg).includes("Load failed")) return;
-      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v13.0)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {}
+      try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "統合チェックリスト(v13.1)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {}
     }
 
     // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
@@ -510,12 +511,14 @@
     }
 
     function filterAndRender(allItems) {
+      saveClDraftNow(); clDraftReady = false; // 🌟 表示を切り替える前に、表示中の点検の入力を下書きへ保存しておく
       if (currentType === '始業点検') checklistItems = allItems.filter(it => it.category.includes('始業'));
       else if (currentType === '終業点検') checklistItems = allItems.filter(it => it.category.includes('終業'));
       else checklistItems = allItems;
       
       currentData = {}; errorDetails = {};
       renderChecklist();
+      initClDraft(); // 🌟 同じ日・同じ点検の入力途中の下書きがあれば戻す
     }
 
     // 🌟 このparseInputTypeSpec()が受け取る文字列は、Code.gs側（fetch_checklist）が
@@ -642,6 +645,93 @@
       }
     }
 
+    // ===== 🌟 入力途中の下書き自動保存（原則A3-C） =====
+    // 点検の途中で「履歴・検索」タブを見たり、点検の種類を切り替えたり、iPhoneが裏で画面を破棄したりすると、入力済みの項目が全部消えていた。
+    // 点検日・点検の種類ごと（aw109_draft_cl_<種類>_<点検日>）に端末内(localStorage)へ自動保存し、同じ点検を開き直した時に自動で戻す。
+    // 項目は並び順ではなく「大分類_点検項目名」で保存する（マスタの並びが変わっても、別の項目に値が入らないようにするため）。
+    // 前日以前の下書きは、別の日の点検結果が紛れ込まないよう復元しない。
+    const CL_DRAFT_PREFIX = "aw109_draft_cl_";
+    let clDraftReady = false; let clDraftBaseline = ""; let clDraftTimer = null; let clDraftKey = "";
+
+    function clItemKey(item) { return `${item.category}_${item.name}`; }
+
+    function getClSnapshot() {
+      const values = {}, details = {}, texts = {};
+      checklistItems.forEach(item => {
+        const k = clItemKey(item), idx = item.originalIndex;
+        if (currentData[idx] !== undefined && currentData[idx] !== "") values[k] = currentData[idx];
+        if (errorDetails[idx]) details[k] = errorDetails[idx];
+        // 自由記述・数値の欄は入力確定(change)前の文字も残すため、画面の値を直接読む
+        const inp = document.querySelector(`#row-${idx} > input.text-input`);
+        if (inp && inp.value !== "") texts[k] = inp.value;
+      });
+      return { values: values, details: details, texts: texts, remarks: document.getElementById("c-remarks").value };
+    }
+    function clCompareString(snap) { return JSON.stringify([snap.values, snap.details, snap.texts, snap.remarks]); }
+
+    function saveClDraftNow() {
+      if (!clDraftReady || !clDraftKey) return;
+      clearTimeout(clDraftTimer);
+      try {
+        const snap = getClSnapshot();
+        if (clCompareString(snap) === clDraftBaseline) return;
+        snap.savedAt = Date.now();
+        localStorage.setItem(clDraftKey, JSON.stringify(snap));
+      } catch (e) { console.warn("下書き保存に失敗しました:", e); }
+    }
+    function scheduleClDraftSave() {
+      if (!clDraftReady) return;
+      clearTimeout(clDraftTimer);
+      clDraftTimer = setTimeout(saveClDraftNow, 800);
+    }
+
+    function applyClDraft(d) {
+      checklistItems.forEach(item => {
+        const k = clItemKey(item), idx = item.originalIndex;
+        if (d.values && d.values[k] !== undefined) setVal(idx, d.values[k]);
+        const inp = document.querySelector(`#row-${idx} > input.text-input`);
+        if (inp && d.texts && d.texts[k] !== undefined) { inp.value = d.texts[k]; currentData[idx] = d.values && d.values[k] !== undefined ? d.values[k] : d.texts[k]; }
+        if (d.details && d.details[k]) { errorDetails[idx] = d.details[k]; const t = document.getElementById(`err-txt-${idx}`); if (t) t.value = d.details[k]; }
+      });
+      document.getElementById("c-remarks").value = d.remarks || "";
+    }
+
+    function discardClDraft() {
+      if (!confirm("途中までの入力を消して、最初から入力し直しますか？")) return;
+      clDraftReady = false;
+      try { localStorage.removeItem(clDraftKey); } catch (e) {}
+      document.getElementById("cl-draft-notice").style.display = "none";
+      currentData = {}; errorDetails = {};
+      renderChecklist();
+      clDraftBaseline = clCompareString(getClSnapshot()); clDraftReady = true;
+    }
+
+    function initClDraft() {
+      clDraftKey = `${CL_DRAFT_PREFIX}${currentType}_${document.getElementById("c-date").value}`;
+      const notice = document.getElementById("cl-draft-notice");
+      notice.style.display = "none";
+      // 前日以前の点検の下書きは使わないので片付ける
+      try {
+        const today = getTodayString();
+        Object.keys(localStorage).forEach(k => { if (k.startsWith(CL_DRAFT_PREFIX) && !k.endsWith("_" + today)) localStorage.removeItem(k); });
+      } catch (e) {}
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(clDraftKey) || "null"); } catch (e) { d = null; }
+      if (d && checklistItems.length > 0) {
+        applyClDraft(d);
+        const t = new Date(d.savedAt || Date.now());
+        notice.innerHTML = `📝 ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')} までの入力途中の内容を戻しました。<button type="button" onclick="discardClDraft()" style="margin-left:8px; min-height:44px; padding:0 12px; border-radius:8px; border:1px solid #ffb300; background:#fff; color:#7a4f00; font-weight:bold;">消して最初から</button>`;
+        notice.style.display = "block";
+      }
+      clDraftBaseline = d ? "" : clCompareString(getClSnapshot());
+      clDraftReady = true;
+      if (d) saveClDraftNow();
+    }
+
+    ["input", "change", "click"].forEach(evt => document.addEventListener(evt, scheduleClDraftSave, true));
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveClDraftNow(); });
+    window.addEventListener("pagehide", saveClDraftNow);
+
     async function submitChecklist() {
       const staff = document.getElementById("c-staff").value;
       if(!staff) { alert("画面上部の「共通 点検者 (Ns)」を選択してください。"); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
@@ -683,8 +773,24 @@
         const reqType = currentType;
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload }), redirect: "follow" });
         const json = await parseGasResponse(res);
-        if (json.status === "success") { alert("点検を完了しました！"); fetchChecklistStatus(); fetchHistory(true); switchMainTab('history'); } else { throw new Error(json.message); }
-      } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader(); }
+        if (json.status === "success") {
+          // 🌟 保存できたので下書きは不要（この後の画面切替で保存し直さないよう、先に止めてから消す）
+          clDraftReady = false; clearTimeout(clDraftTimer);
+          try { localStorage.removeItem(clDraftKey); } catch (e) {}
+          document.getElementById("cl-draft-notice").style.display = "none";
+          alert("点検を完了しました！"); fetchChecklistStatus(); fetchHistory(true); switchMainTab('history');
+        } else { throw new Error(json.message); }
+      } catch(e) {
+        saveClDraftNow();
+        const m = String(e.message || e);
+        if (m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
+          // 🌟 電波切れはアプリの不具合ではないため、エラー報告は送らず案内だけ出す（原則A4）
+          alert("電波が弱いため保存できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n電波の良い場所で、もう一度保存してください。");
+        } else {
+          alert("保存エラーが発生しました。入力内容は画面と端末内の下書きに残っています。");
+          sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+        }
+      } finally {btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader(); }
     }
 
     function changeHistoryType() { const selectedType = document.getElementById("hist-target-type").value; currentType = selectedType; document.getElementById("print-title").innerText = `【${selectedType}】 点検履歴`; fetchHistory(true); }
