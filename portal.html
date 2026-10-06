@@ -82,6 +82,13 @@
     /* 🌟 同期タイムスタンプ表示 */
     .sync-status { text-align: right; font-size: 10px; color: var(--sub); padding: 4px 16px 0 0; background: var(--bg); font-weight: bold; margin-bottom: 8px; } /* 🌟 以前はmargin-top:-12pxで固定ヘッダーの下に潜り込み「最終同期」の表示が読めなかった */
   </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
+  </style>
 </head>
 <body>
 
@@ -267,6 +274,26 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
+  // 🌟 Q&Aの質問文は現場の誰でも送れるため、記号(<>等)をそのまま画面に埋め込まず無害化して表示する
+  function escapeQaText(str) { return String(str === undefined || str === null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
   // 🌟 スタッフ用PINは廃止済み。トークンは「送信のたびに」localStorageから読む。
   // 以前はページ読み込み時に定数へ1回だけ読み込んでいたため、未ログイン状態で
   // ポータルを開き→ログインした直後のfetchInitが「空のトークン」で送信され、
@@ -421,7 +448,7 @@
     document.getElementById("loader-sub-text").innerHTML = msg2;
     document.getElementById("global-loader").style.display = "flex";
     loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はアプリを開き直してください</span>"; }, 15000);
+    loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; }, 15000);
   }
   
   function hideLoader() { 
@@ -431,7 +458,7 @@
   }
   
   function sendErrorLog(errMsg) { 
-    if(String(errMsg).includes("Load failed")) return;
+    if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", 
@@ -591,9 +618,7 @@
 
     if (json.qa) {
       document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `
-        <p style="margin-bottom:8px;">
-          <b>Q. ${item.q}</b><br>
-          <span style="color:var(--ink);">A. ${item.a}</span>
+        <p style="margin-bottom:8px; white-space:pre-line;"><b>Q. ${escapeQaText(item.q)}</b><br><span style="color:var(--ink);">A. ${escapeQaText(item.a)}</span>
         </p>
         <hr style="border:none;border-top:1px solid var(--line); margin:8px 0;">
       `).join("") || '<p>公開Q&Aはありません。</p>';

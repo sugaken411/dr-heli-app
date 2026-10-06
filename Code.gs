@@ -1,4 +1,5 @@
-const GAS_VERSION = "v3.3"; // 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
+const GAS_VERSION = "v3.4"; // 🌟 v3.4(2026-10-07): 通信タイムアウト後の送り直しによる二重登録の防止（submit/submit_checklist/submit_question）、メール送信失敗で保存がエラー扱いになる問題の修正、編集画面用に1件だけ返すfetch_caseを追加。
+// v3.3:// 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
 // 緊急管理者アクセス(emergency_admin_login)も廃止。復旧が必要な場合はスプレッドシートを直接編集する運用に統一。
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
 const LIBRARY_DB_ID = "17ejBS_Uq6cWxkagnFQknfycbMGnoaV2q7234U5Pwqnc";
@@ -304,6 +305,30 @@ function sendCaseNotificationEmail_(appData, yoseiId, headerLine, subjectSuffix)
 }
 
 
+// 🌟 送り直し（二重送信）の判定用。画面側が送信ごとに作る識別番号(clientSubmitId)を6時間覚えておき、
+// 同じ番号がもう一度届いたら「処理済み」として追加・メール送信をしない。
+// 通信タイムアウトは「サーバーは保存済みで、返事だけ届かなかった」場合があり、送り直すと同じ記録が2件できていたため。
+// 識別番号のない古い画面からの送信は従来どおり毎回処理する。
+function getDuplicateSubmit_(action, clientSubmitId) {
+ if (!clientSubmitId) return null;
+ return CacheService.getScriptCache().get("submit_" + action + "_" + String(clientSubmitId).slice(0, 80));
+}
+function rememberSubmit_(action, clientSubmitId, value) {
+ if (!clientSubmitId) return;
+ CacheService.getScriptCache().put("submit_" + action + "_" + String(clientSubmitId).slice(0, 80), String(value || "1"), 21600);
+}
+
+// 🌟 システムデータ内のsysIdだけで行を探す（要請番号では探さない）。新規登録の二重送信判定に使う
+function findRowIndexByExactSysId_(data, headers, targetId) {
+ const sysIdx = headers.indexOf("システムデータ");
+ if (sysIdx === -1 || !targetId) return -1;
+ for (let i = 1; i < data.length; i++) {
+   if (!data[i][sysIdx]) continue;
+   try { if (JSON.parse(data[i][sysIdx]).sysId === targetId) return i + 1; } catch(e) {}
+ }
+ return -1;
+}
+
 function findRowIndexBySysId(data, headers, targetId) {
  const idIdx = headers.indexOf("要請番号");
  const sysIdx = headers.indexOf("システムデータ");
@@ -474,7 +499,7 @@ function doPost(e) {
      "answer_question", "fetch_checklist", "submit_checklist", "fetch_checklist_history",
      "fetch_checklist_status", "delete_checklist_record", "manage_news", "manage_manual", "manage_qa_full",
      "update_library_record", "auth_register", "auth_login", "set_admin_flag",
-     "auth_request_reset", "auth_reset_password", "fetch_backboard_status"
+     "auth_request_reset", "auth_reset_password", "fetch_backboard_status", "fetch_case"
    ];
 
    if (!allowed.includes(action)) {
@@ -1196,6 +1221,8 @@ function doPost(e) {
      if (!dbSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: `データ保存シート(${sheetName})が見つかりません。` })).setMimeType(ContentService.MimeType.JSON);
     
      const p = requestData.data;
+     // 🌟 送り直し（二重送信）なら追加もメールもせず、前回の結果を返す
+     if (getDuplicateSubmit_("checklist", requestData.clientSubmitId)) return ContentService.createTextOutput(JSON.stringify({ status: "success", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
      const newId = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyyMMdd-HHmm");
     
      const head = dbSheet.getRange(1, 1, 1, dbSheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
@@ -1213,18 +1240,25 @@ function doPost(e) {
 
 
      dbSheet.appendRow(newRow);
+     rememberSubmit_("checklist", requestData.clientSubmitId, newId);
     
+     // 🌟 メール送信の失敗（1日の送信上限超えなど）で、保存できているのに画面がエラーになり、送り直して二重登録になっていた。
+     // 保存は成功として返し、メールの結果だけを別に返す
+     let emailSent;
      if(p.judgment === "異常あり" || p.errorItems !== "なし") {
        const emails = getAdminMailList();
        if (emails) {
-         MailApp.sendEmail({
-           to: emails,
-           subject: `【AW109 EMS】⚠️ ${typeName}点検で異常が報告されました`,
-           body: `【点検報告アラート】\n\n・日付: ${p.date} ${p.time}\n・点検者: ${p.staff}\n・異常項目: ${p.errorItems}\n\nシステムで詳細を確認し、対応をお願いします。`
-         });
+         try {
+           MailApp.sendEmail({
+             to: emails,
+             subject: `【AW109 EMS】⚠️ ${typeName}点検で異常が報告されました`,
+             body: `【点検報告アラート】\n\n・日付: ${p.date} ${p.time}\n・点検者: ${p.staff}\n・異常項目: ${p.errorItems}\n\nシステムで詳細を確認し、対応をお願いします。`
+           });
+           emailSent = true;
+         } catch (mailErr) { emailSent = false; }
        }
      }
-     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", emailSent: emailSent })).setMimeType(ContentService.MimeType.JSON);
    }
 
 
@@ -1273,19 +1307,38 @@ function doPost(e) {
 
 
    if (action === "submit_question") {
+     if (getDuplicateSubmit_("question", requestData.clientSubmitId)) return ContentService.createTextOutput(JSON.stringify({ status: "success", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
      const qSheet = getSheetFlexible(ss, ["DB_QA", "Q&Aデータベース"]);
      if(qSheet) qSheet.appendRow([Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm"), requestData.question, "", "未", requestData.source, ""].map(sanitizeInput));
+     rememberSubmit_("question", requestData.clientSubmitId);
      const emails = getAdminMailList();
      if (emails) {
-       MailApp.sendEmail({
-         to: emails,
-         subject: `【AW109 EMS】新しいQ&A・要望が届きました`,
-         body: `現場から新しい要望・質問が送信されました。\n\n・送信元画面: ${requestData.source || "不明"}\n・内容:\n${requestData.question}\n\nシステム管理コンソール(admin.html)から回答を行ってください。`
-       });
+       // 🌟 メール送信の失敗で、受付済みの要望がエラー表示になり送り直されないよう、失敗しても受付は成功として返す
+       try {
+         MailApp.sendEmail({
+           to: emails,
+           subject: `【AW109 EMS】新しいQ&A・要望が届きました`,
+           body: `現場から新しい要望・質問が送信されました。\n\n・送信元画面: ${requestData.source || "不明"}\n・内容:\n${requestData.question}\n\nシステム管理コンソール(admin.html)から回答を行ってください。`
+         });
+       } catch (mailErr) {}
      }
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
   
+   // 🌟 編集画面用：指定した1件だけを返す。以前は編集画面を開くたびに全事案を読み込んで送っており、件数が増えるほど遅くなっていた
+   if (action === "fetch_case") {
+     const sheet = getDbSheet();
+     const data = sheet.getDataRange().getDisplayValues();
+     const headers = data[0].map(h => String(h).trim());
+     const rowIndex = findRowIndexBySysId(data, headers, String(requestData.id || ""));
+     if (rowIndex === -1) return ContentService.createTextOutput(JSON.stringify({ status: "success", data: null })).setMimeType(ContentService.MimeType.JSON);
+     let obj = {};
+     headers.forEach((h, idx) => { obj[h] = String(data[rowIndex - 1][idx]); });
+     let sysId = obj["要請番号"];
+     try { const sData = JSON.parse(obj["システムデータ"] || "{}"); if (sData.sysId) sysId = sData.sysId; } catch(e) {}
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", data: { id: sysId, displayId: obj["要請番号"], date: obj["日付"], dest: obj["出場先"], scheme: obj["スキーム選択"], rawData: obj } })).setMimeType(ContentService.MimeType.JSON);
+   }
+
    // 🌟 物理ヘッダーに完全対応した事案データフェッチ
    if (action === "fetch_recent_cases" || action === "fetch_all") {
      const sheet = getDbSheet();
@@ -1401,10 +1454,23 @@ function doPost(e) {
    if (action === "submit") {
      const sheet = getDbSheet();
      const appData = requestData.data;
+     // 🌟 二重登録の防止：画面側が送信ごとに作る識別番号(clientSubmitId、UUID形式)をそのまま事案のsysIdとして使う。
+     // 通信タイムアウト後に送り直されても、同じsysIdの行が既にあれば追加もメール送信もしない。
+     // 同時に届いた送り直しが両方とも「まだ無い」と判定しないよう、確認から追加までをロックで1件ずつ処理する。
+     const clientSubmitId = /^[0-9a-fA-F-]{36}$/.test(String(requestData.clientSubmitId || "")) ? String(requestData.clientSubmitId) : "";
+     const submitLock = LockService.getScriptLock();
+     submitLock.waitLock(20000);
+     try {
+     if (clientSubmitId) {
+       const existing = sheet.getDataRange().getDisplayValues();
+       if (findRowIndexByExactSysId_(existing, existing[0].map(h => String(h).trim()), clientSubmitId) !== -1) {
+         return ContentService.createTextOutput(JSON.stringify({ status: "success", duplicate: true })).setMimeType(ContentService.MimeType.JSON);
+       }
+     }
      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => h.trim());
      const newRow = [];
     
-     const generatedSysId = Utilities.getUuid();
+     const generatedSysId = clientSubmitId || Utilities.getUuid();
     
      headers.forEach(header => {
        if (header === "ステータス") {
@@ -1427,10 +1493,13 @@ function doPost(e) {
        }
      });
      sheet.appendRow(newRow);
+     SpreadsheetApp.flush(); // ロックを外す前に書き込みを確定させ、直後の送り直しの確認で必ず見つかるようにする
+     } finally { submitLock.releaseLock(); }
     
      const yoseiId = appData["要請番号"];
-     sendCaseNotificationEmail_(appData, yoseiId, "【AW109 EMS 新規事案登録】\n現場アプリから事案が登録されました。", "新規事案記録");
-     return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+     // 🌟 メール送信の結果を画面に返す（以前は失敗しても画面には何も出なかった）
+     const mailResult = sendCaseNotificationEmail_(appData, yoseiId, "【AW109 EMS 新規事案登録】\n現場アプリから事案が登録されました。", "新規事案記録");
+     return ContentService.createTextOutput(JSON.stringify({ status: "success", emailSent: mailResult.sent, emailMessage: mailResult.message })).setMimeType(ContentService.MimeType.JSON);
    }
 
 

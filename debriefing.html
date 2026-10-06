@@ -32,7 +32,7 @@
     main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
-    .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
+    .cross-item label { font-size: 13px; font-weight: bold; color: var(--sub); }
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--blue); margin-bottom: 12px; border-bottom: 1px solid #efeff4; padding-bottom: 6px; text-transform: uppercase; }
     
@@ -88,7 +88,14 @@
     .progress-bar-fill { position: absolute; top: 0; left: -40%; height: 100%; width: 40%; background: var(--blue); border-radius: 3px; animation: indeterminate 1.1s ease-in-out infinite; }
     @keyframes indeterminate { 0% { left: -40%; } 100% { left: 100%; } }
     
-    @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
+    @media print { body { background: #fff; padding: 0; } main { margin-top: 0 !important; padding-top: 0 !important; } header,.tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
+  </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
 </head>
 <body>
@@ -130,18 +137,18 @@
       
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
         <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">日付指定で探す</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">日付指定で探す</label>
           <input type="date" id="s-date" onchange="clearSearchMonth(); searchCases();" style="margin-bottom:0;">
         </div>
         <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">月指定で探す</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">月指定で探す</label>
           <input type="month" id="s-month" onchange="clearSearchDate(); searchCases();" style="margin-bottom:0;">
         </div>
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
         <div style="flex:1;">
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">要請番号</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">要請番号</label>
           <input type="tel" inputmode="numeric" id="s-id" placeholder="番号入力（空欄でも可）" style="margin-bottom:0;" oninput="toHalfWidth(this); searchCases();">
         </div>
         <button type="button" class="btn-blue" onclick="searchCases()" style="padding:11px 16px; margin-top:16px; font-size:13px; width:auto; white-space:nowrap;">検索 🔍</button>
@@ -321,6 +328,8 @@
     <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; padding:16px;"></div>
     <div class="no-print">
       <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
+      <!-- 🌟 振り返りの内容を紙で配布・掲示できるよう印刷ボタンを置く（以前はブラウザのメニューから探す必要があった） -->
+      <button type="button" onclick="window.print()" style="width:100%; min-height:48px; margin-top:10px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:bold; font-size:15px;">🖨️ この内容を印刷</button>
     </div>
   </div>
 </main>
@@ -338,6 +347,26 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
+  // 🌟 Q&Aの質問文は現場の誰でも送れるため、記号(<>等)をそのまま画面に埋め込まず無害化して表示する
+  function escapeQaText(str) { return String(str === undefined || str === null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
   // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
   if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
   // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
@@ -368,7 +397,7 @@
   });
 
   function sendErrorLog(errMsg) { 
-    if(String(errMsg).includes("Load failed")) return;
+    if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -417,7 +446,7 @@
       document.getElementById("loader-sub-text").innerHTML = msg2;
       loader.style.display = "flex";
       loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; }, 15000);
     }
   }
   function hideLoader() { 
@@ -443,6 +472,12 @@
     el.value = String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
   }
   function clearSearchMonth() { document.getElementById("s-month").value = ""; }
+  function shiftSearchDate(days) {
+    const el = document.getElementById("s-date"); const d = el.value ? new Date(el.value + "T00:00:00") : new Date();
+    d.setDate(d.getDate() + days);
+    el.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    searchCases();
+  }
   function clearSearchDate() { document.getElementById("s-date").value = ""; }
   function clearSearchFilters() { document.getElementById("s-date").value = ""; document.getElementById("s-month").value = ""; document.getElementById("s-id").value = ""; }
 
@@ -507,7 +542,7 @@
       const jianData = jianRes.data;
       const debData = debRes.data;
 
-      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="white-space:pre-line; margin-bottom:8px;"><b>Q. ${escapeQaText(item.q)}</b><br><span style="color:var(--ink);">A. ${escapeQaText(item.a)}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
 
       const cacheObj = { timestamp: Utilities_formatDate(new Date()), allCases: jianData, existing: debData, masters: jsonInit.masters };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
@@ -594,7 +629,8 @@
     const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      await fetchGasJson({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}, 0);
+      const json = await fetchGasJson({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}, 0);
+      if (json.status !== "success") throw new Error(json.message || "サーバー側で受付できませんでした"); // 🌟 失敗の応答でも「送信しました」と出ていた
       alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa');
     } catch (e) {
       const msg = String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再度送信してください。" : "通信エラーが発生しました。";
@@ -750,7 +786,9 @@
 
     const resArea = document.getElementById("search-results-area");
     if(results.length === 0) {
-      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>";
+      // 🌟 日付は「今日」が初期値のため、夜間の出動を日付が変わってから振り返ると「該当なし」になっていた。前日・全件へすぐ切り替えられるようにする
+      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>" +
+        (sDate ? "<div style='display:flex; gap:8px;'><button type='button' onclick='shiftSearchDate(-1)' style='flex:1; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:bold;'>📅 前日の事案</button><button type='button' onclick='clearSearchFilters(); searchCases();' style='flex:1; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:bold;'>🔄 すべて表示</button></div>" : "");
     } else {
       resArea.innerHTML = results.map(r => {
         const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";
@@ -1178,7 +1216,7 @@
     document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
     document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
 
-    let diseaseStr = `[${sysData.disease.main}]`;
+    let diseaseStr = sysData.disease.main && String(sysData.disease.main) !== "" ? `[${sysData.disease.main}]` : "-"; // 🌟 未選択時に「[]」と表示されていた
     if(sysData.disease.cause) diseaseStr += ` 原因:${sysData.disease.cause}`;
     if(sysData.disease.sub) diseaseStr += ` -> ${sysData.disease.sub}`;
 
@@ -1488,7 +1526,7 @@
     } catch(e) {
       saveDebriefDraftNow();
       const m = String(e.message || e);
-      if (m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
+      if ((e && e.isTimeout) || m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
         // 🌟 電波切れはアプリの不具合ではないため、エラー報告は送らず案内だけ出す（原則A4）
         alert("電波が弱いため保存できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n電波の良い場所で、もう一度保存してください。");
       } else {

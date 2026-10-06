@@ -10,7 +10,7 @@
     :root { --bg: #f2f2f7; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --brand: #d32f2f; --line: rgba(60,60,67,0.12); }
     body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--ink); margin: 0; padding: 0; padding-top: env(safe-area-inset-top); }
     
-    header { position: sticky; top: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; z-index: 100; }
+    header { position: sticky; top: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; z-index: 100; } /* 🌟 gap: 「◀ ポータル」と題名がくっついて「ポータル統括・業務管理」と読めていた */
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
        高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
@@ -50,6 +50,13 @@
       .btn-label { display: none; }
       #sync-timestamp { display: none !important; }
     }
+  </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
 </head>
 <body class="pb-20">
@@ -131,6 +138,24 @@
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
 
     // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
     // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
@@ -192,7 +217,7 @@
     function showLoader() {
       document.getElementById("global-loader").style.display = "flex";
       loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "データ量が多いため少し時間がかかっています..."; }, 5000);
-      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; }, 15000);
     }
     
     function hideLoader() { 
@@ -202,7 +227,7 @@
     }
     
     function sendErrorLog(errMsg) { 
-      if(String(errMsg).includes("Load failed") || String(errMsg).includes("Failed to fetch")) return;
+      if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
       try { 
         fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
