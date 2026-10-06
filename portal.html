@@ -77,6 +77,11 @@
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: var(--bg); width: 100%; max-width: 500px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+    /* 🚁 ログインが必要な時（ログイン画面を閉じられない時）だけ、背景を桜島とヘリポートの写真にする。
+       写真の上に濃紺の半透明を重ね、白いログイン枠の文字が直射日光下でも読める明暗差を保つ。
+       写真は位置情報などの撮影データを削除済み・横1400pxに縮小済み（約130KB）。読めない時は従来の暗い背景のまま */
+    #modal-account[data-required] { background: linear-gradient(180deg, rgba(10,22,40,0.25) 0%, rgba(10,22,40,0.65) 100%), url('img/login-bg.jpg') 72% center / cover no-repeat, #0a1628; }
+    #modal-account[data-required] .modal-box { box-shadow: 0 16px 40px rgba(0,0,0,0.35); }
     .modal-close { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #e5e5ea; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
     
     /* 🌟 同期タイムスタンプ表示 */

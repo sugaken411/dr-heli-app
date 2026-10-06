@@ -135,8 +135,15 @@
     .hero-status.offline .hero-status-dot { background: #ff8a80; }
     @keyframes heroBlink { 50% { opacity: 0.25; } }
     .hero-heli { position: relative; z-index: 1; flex: 1 1 240px; max-width: 420px; padding: 8px 16px 26px; }
-    .hero-heli svg { display: block; width: 100%; height: auto; overflow: visible; animation: heroBob 3.2s ease-in-out infinite; }
-    @keyframes heroBob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-5px) rotate(-0.5deg); } }
+    /* 🚁 疑似3D：ライブラリを使わず、CSSの遠近法（perspective）で機体をゆっくり左右に傾けて立体的に見せる。
+       PCではマウスの位置に合わせて少し向きが変わる（.heli-3d の --tx / --ty をJSで更新） */
+    .hero-heli { perspective: 700px; }
+    .heli-3d { transform: rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)); transition: transform 0.4s ease-out; }
+    .hero-heli svg { display: block; width: 100%; height: auto; overflow: visible; animation: heroBob 6.4s ease-in-out infinite; }
+    @keyframes heroBob {
+      0%, 100% { transform: translateY(0) rotateY(-14deg) rotateZ(-1.5deg); }
+      50% { transform: translateY(-6px) rotateY(10deg) rotateZ(-0.5deg); }
+    }
     /* 横から見たメインローター：羽根の見かけの長さを伸縮させて回転を表現（2枚を位相をずらして重ねる） */
     .rotor-blade { transform-box: fill-box; transform-origin: center; animation: heroRotor 0.28s linear infinite; }
     .rotor-blade.b2 { animation-delay: -0.14s; }
@@ -206,6 +213,7 @@
       </div>
       <div class="hero-heli" aria-hidden="true">
         <!-- AW109（側面）：実機JA03KGの塗装に合わせ、白い機体・紺の「Doctor-Heli」・赤の斜めライン・赤縁の尾翼で描く。機首は右向き -->
+        <div class="heli-3d" id="heli-3d">
         <svg viewBox="0 0 330 120">
           <defs>
             <clipPath id="heli-body-clip"><path d="M314 86C312 76 300 66 282 60L262 50Q254 44 244 44L206 44Q196 34 178 34L148 34Q134 36 126 48L58 60L54 67L122 76Q128 94 152 97L280 97Q306 97 314 86Z"/></clipPath>
@@ -259,6 +267,7 @@
           </g>
           <circle cx="46" cy="44" r="2.5" fill="#5f6875"/>
         </svg>
+        </div>
       </div>
     </section>
     <div class="filter-section no-print">
@@ -720,6 +729,21 @@
       star.style.top = (Math.random() * 70) + "%";
       star.style.opacity = (0.3 + Math.random() * 0.6).toFixed(2);
       sky.appendChild(star);
+    }
+    // PC（マウスがある端末）だけ：マウスの位置に合わせて機体の向きを少し変える。スマホは傾きセンサーの許可ダイアログが出るため使わない
+    const heli3d = document.getElementById("heli-3d");
+    if (heli3d && window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      hero.addEventListener("pointermove", e => {
+        const rect = hero.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width - 0.5;
+        const py = (e.clientY - rect.top) / rect.height - 0.5;
+        heli3d.style.setProperty("--ty", (px * 24).toFixed(1) + "deg");
+        heli3d.style.setProperty("--tx", (-py * 14).toFixed(1) + "deg");
+      });
+      hero.addEventListener("pointerleave", () => {
+        heli3d.style.setProperty("--ty", "0deg");
+        heli3d.style.setProperty("--tx", "0deg");
+      });
     }
     // 画面外にスクロールしたらアニメーションを一時停止（電池と処理の節約）
     if ('IntersectionObserver' in window) {
