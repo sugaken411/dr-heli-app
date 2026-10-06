@@ -332,7 +332,12 @@
     const timeoutId = setTimeout(() => controller.abort(), 20000);
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
-      return await res.json();
+      // 🌟 GASが停止・内部エラーの時はJSONではなくGoogleのエラー画面(HTML)が返り、res.json()のままでは
+      // 「Unexpected token '<'」「The string did not match the expected pattern」という原因不明のエラーになる。
+      // 中身を確認し、エラー報告メールでGAS側の原因が読めるよう応答の冒頭を添えて明確なエラーにする
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
     } catch (e) {
       if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）');
       throw e;
