@@ -71,7 +71,10 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         clearTimeout(timeoutId);
-        return caches.match(event.request); // 電波瞬断・オフライン・タイムアウト時はローカルキャッシュを返却
+        // 電波瞬断・オフライン・タイムアウト時はローカルキャッシュを返却。
+        // 🌟 「index.html?editId=…」「debriefing.html?editId=…」のように末尾に?付きで開く画面は、以前はキャッシュと一致せず
+        // 電波がない時に真っ白なエラー画面になっていた。?以降を無視して同じ画面のキャッシュを返す
+        return caches.match(event.request).then(hit => hit || caches.match(event.request, { ignoreSearch: true }));
       })
   );
 });

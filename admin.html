@@ -64,6 +64,13 @@
       .hdr-title-text { font-size: 14px; }
     }
   </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
+  </style>
 </head>
 <body>
 
@@ -193,7 +200,7 @@
       <div class="form-group"><label>日時</label><input type="text" id="edit-qa-date" readonly style="background:#e5e5ea;"></div>
       <div class="form-group"><label>質問内容</label><textarea id="edit-qa-q" rows="4"></textarea></div>
       <div class="form-group"><label>回答</label><textarea id="edit-qa-a" rows="4"></textarea></div>
-      <div class="form-group"><label>公開ステータス (◯で公開)</label><input type="text" id="edit-qa-status"></div>
+      <div class="form-group"><label>公開ステータス</label><select id="edit-qa-status" style="min-height:44px;"><option value="◯">◯ 公開する（各アプリのQ&Aに表示）</option><option value="未">未 公開しない</option></select></div>
       <div class="form-group"><label>表示先アプリ</label><input type="text" id="edit-qa-target"></div>
       <div style="display:flex; gap:8px; margin-top:20px;">
         <button type="button" class="btn-danger" onclick="manageQA('delete')">🗑️ 削除</button>
@@ -239,6 +246,26 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
+  // 🌟 Q&Aの質問文は現場の誰でも送れるため、管理画面でも記号(<>等)をそのまま埋め込まず無害化して表示する（管理者権限での不正なスクリプト実行を防ぐ）
+  function escapeQaText(str) { return String(str === undefined || str === null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
   // 🌟 勤務シフト想定：管理者ログインから８時間経過していればトークンを破棄（下の判定でポータルへ戻される）
   (function() {
     const SHIFT_MS = 8 * 60 * 60 * 1000;
@@ -269,7 +296,7 @@
     document.getElementById("global-loader").style.display = "flex";
   }
   function hideLoader() { document.getElementById("global-loader").style.display = "none"; }
-  function sendErrorLog(errMsg) { try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v14.0)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {} }
+  function sendErrorLog(errMsg) { if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; /* 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約） */ try { fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "error_log", source: "システム管理(v14.0)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }), redirect: "follow" }); } catch(e) {} }
 
   function resetTimer() { lockTime = 600; updateTimerDisplay(); }
   function updateTimerDisplay() { const m = String(Math.floor(lockTime/60)).padStart(2,'0'); const s = String(lockTime%60).padStart(2,'0'); document.getElementById("lock-timer").textContent = `${m}:${s}`; }
@@ -355,13 +382,14 @@
     const qaBox = document.getElementById("list-qa");
     qaBox.innerHTML = currentData.qa.map(item => {
       const isAns = item.status === "◯";
+      const isLookalike = !isAns && ["○", "〇", "◎"].includes(String(item.status).trim()); // 似た記号のため公開されていない
       return `<div class="list-item">
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <span style="font-size:11px; color:var(--sub);">🕒 ${item.date} ｜ ${item.source}</span>
-          <span class="badge ${isAns ? 'badge-ok' : 'badge-ng'}">${isAns ? '✅ 公開中' : '⚠️ 未回答'}</span>
+          <span style="font-size:11px; color:var(--sub);">🕒 ${escapeQaText(item.date)} ｜ ${escapeQaText(item.source)}</span>
+          <span class="badge ${isAns ? 'badge-ok' : 'badge-ng'}">${isAns ? '✅ 公開中' : (isLookalike ? '⚠️ 非公開（記号違い・開いて保存し直してください）' : (item.a ? '🔒 非公開' : '⚠️ 未回答'))}</span>
         </div>
-        <div style="font-weight:bold; margin-bottom:8px; line-height:1.4;">Q. ${item.q.replace(/\n/g, '<br>')}</div>
-        <div style="font-size:13px; color:var(--sub); margin-bottom:12px;">A. ${item.a ? item.a.replace(/\n/g, '<br>') : '(未回答)'}</div>
+        <div style="font-weight:bold; margin-bottom:8px; line-height:1.4; white-space:pre-line;">Q. ${escapeQaText(item.q)}</div>
+        <div style="font-size:13px; color:var(--sub); margin-bottom:12px; white-space:pre-line;">A. ${item.a ? escapeQaText(item.a) : '(未回答)'}</div>
         <button type="button" class="btn-primary" style="padding:6px 12px; font-size:12px;" onclick="openEditQA(${item.rowIdx})">✏️ 編集 / 回答</button>
       </div>`;
     }).join("") || "<p>データがありません。</p>";
@@ -395,7 +423,9 @@
     document.getElementById("edit-qa-date").value = item.date;
     document.getElementById("edit-qa-q").value = item.q;
     document.getElementById("edit-qa-a").value = item.a;
-    document.getElementById("edit-qa-status").value = item.status;
+    // 🌟 以前は公開ステータスを手入力しており、「○」「〇」（よく似た別の文字）を入れると公開されないまま気づけなかった。
+    // 選択式にし、似た丸記号で保存されていたものは「◯ 公開する」として開く（保存し直すと正しい記号に直る）
+    document.getElementById("edit-qa-status").value = ["◯", "○", "〇", "◎"].includes(String(item.status).trim()) ? "◯" : "未";
     document.getElementById("edit-qa-target").value = item.target;
     openModal('modal-edit-qa');
   }

@@ -88,13 +88,22 @@
       #printable-area { position: absolute; left: 0; top: 0; width: 100%; }
       header, .no-print { display: none !important; }
       .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      #print-period { display: block !important; }
     }
+    #print-period { display: none; font-size: 16px; font-weight: bold; margin: 0 0 12px; }
     @media (max-width: 400px) {
       /* 🌟 タイトルが長いため、狭い画面では右側ボタンの文字ラベルとバージョンタグを隠し、フォントも縮小して全文を収める */
       .btn-label { display: none; }
       .title-box .version-tag { display: none; }
       .title-box { font-size: 12px; letter-spacing: 0; }
     }
+  </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
 </head>
 <body>
@@ -118,6 +127,8 @@
   </header>
 
   <main id="printable-area">
+    <!-- 🌟 印刷時は絞り込み欄が隠れるため、何の期間の集計かが紙に残らなかった。印刷時だけ期間と対象者を出す -->
+    <h2 id="print-period"></h2>
     <div class="filter-section no-print">
       <div class="filter-group" style="flex: 1 1 100%;">
         <label>📅 集計期間の指定</label>
@@ -313,6 +324,24 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
 
   // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
   // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
@@ -376,7 +405,7 @@
       }, 5000);
       
       loaderTimer2 = setTimeout(() => { 
-        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; 
+        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; 
       }, 15000);
     }
   }
@@ -389,7 +418,7 @@
   }
 
   function sendErrorLog(errMsg) {
-    if(String(errMsg).includes("Load failed")) return;
+    if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
     try {
       fetch(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -494,6 +523,8 @@
   function applyFilters() {
     const startStr = document.getElementById("filter-start").value; 
     const endStr = document.getElementById("filter-end").value; 
+    const staffForPrint = document.getElementById("filter-staff").value;
+    document.getElementById("print-period").textContent = `AW109 統計・分析　集計期間: ${startStr ? startStr.replace(/-/g, "/") : "最初"} 〜 ${endStr ? endStr.replace(/-/g, "/") : "最新"}　対象: ${staffForPrint || "全員"}`;
     const staffFilter = document.getElementById("filter-staff").value;
     const keywordFilter = document.getElementById("filter-keyword").value.toLowerCase().trim();
     

@@ -28,7 +28,11 @@
     .print-only-container { display: none; }
     @media print { 
       @page { size: portrait; margin: 5mm; } 
-      body { background: white; transform: scale(0.65); transform-origin: top left; width: 153%; height: 100%; -webkit-print-color-adjust: exact; margin-top: 0; } 
+      /* 🌟 以前はtransform:scale(0.65)で縮小しており、文字が約6ptと小さすぎるうえ、ページの区切りは縮小前の高さで計算されるため
+         1枚目の下1/3が空白のまま2枚目に続いていた。zoomなら区切り位置も縮小後で計算される */
+      body { background: white; zoom: 0.8; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-top: 0; }
+      tr { break-inside: avoid; }
+      td.truncate { white-space: normal !important; max-width: none !important; overflow: visible !important; text-overflow: clip !important; } /* 内容欄を「…」で切らずに全文印刷する */
       header { display: none !important; } 
       main { margin-top: 0; padding: 0; } 
       .no-print { display: none !important; } 
@@ -51,6 +55,13 @@
       .title-box { font-size: 14px; }
       #sync-timestamp { display: none !important; }
     }
+  </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
 </head>
 <body>
@@ -173,6 +184,24 @@
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
     // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
     if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
     // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
@@ -229,7 +258,7 @@
         loader.classList.remove('hidden'); 
         loader.style.display = "flex";
         loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-        loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+        loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; }, 15000);
       } else { 
         clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
         loader.classList.add('hidden'); 
@@ -238,7 +267,7 @@
     }
     
     function sendErrorLog(errMsg) { 
-      if(String(errMsg).includes("Load failed") || String(errMsg).includes("Failed to fetch")) return;
+      if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
       try { 
         fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -520,7 +549,7 @@
       } catch(e) {
         saveReportDraftNow();
         const m = String(e.message || e);
-        if (m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
+        if ((e && e.isTimeout) || m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
           // 🌟 電波切れはアプリの不具合ではないため、エラー報告は送らず案内だけ出す（原則A4）
           alert("電波が弱いため保存できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n電波の良い場所で、もう一度「日報を確定・保存」を押してください。");
         } else {
