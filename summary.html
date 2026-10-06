@@ -105,6 +105,61 @@
     main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
     @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
+  <style>
+    /* 🚁 ヒーロー帯（AW109ドクターヘリ）：夜間飛行をイメージした濃紺に、ドクターヘリ機体の白と赤ラインを配色。
+       動きはすべてCSSのtransform（GPUで処理される）だけで作り、データ集計やグラフ描画の処理を邪魔しない */
+    .hero { position: relative; overflow: hidden; border-radius: 20px; margin-bottom: 20px; color: #fff;
+      background: linear-gradient(160deg, #0a1628 0%, #10284a 55%, #173a66 100%);
+      box-shadow: 0 10px 28px rgba(10,22,40,0.28); display: flex; flex-wrap: wrap; align-items: center; min-height: 200px; }
+    .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6px;
+      background: linear-gradient(90deg, #e53935 0%, #e53935 70%, #ffffff 70%, #ffffff 74%, #e53935 74%); }
+    .hero-sky { position: absolute; inset: 0; pointer-events: none; }
+    .hero-star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: rgba(255,255,255,0.55); }
+    /* 地上の灯り（街並み）を左へ流して「飛んでいる」感覚を出す。2枚並べてつなぎ目なくループさせる */
+    .hero-ground { position: absolute; left: 0; bottom: 6px; width: 200%; height: 34px; display: flex; animation: heroGround 14s linear infinite; opacity: 0.55; }
+    .hero-ground svg { width: 50%; height: 100%; flex-shrink: 0; }
+    @keyframes heroGround { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .hero-text { position: relative; z-index: 2; flex: 1 1 260px; padding: 22px 22px 30px; min-width: 0; }
+    .hero-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 0.18em; color: #ff8a80; }
+    .hero-period { font-size: 22px; font-weight: 900; margin: 4px 0 14px; letter-spacing: 0.02em; }
+    .hero-stats { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: flex-end; }
+    .hero-stat-label { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.78); }
+    .hero-stat-value { font-size: 30px; font-weight: 900; line-height: 1.05; font-variant-numeric: tabular-nums; }
+    .hero-stat-value.main { font-size: 52px; }
+    .hero-stat-unit { font-size: 13px; font-weight: 800; margin-left: 2px; color: rgba(255,255,255,0.85); }
+    .hero-status { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 4px 10px; border-radius: 999px;
+      background: rgba(255,255,255,0.12); font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.92); }
+    .hero-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #9e9e9e; flex-shrink: 0; }
+    .hero-status.fresh .hero-status-dot { background: #4caf50; }
+    .hero-status.loading .hero-status-dot { background: #ffca28; animation: heroBlink 1s ease-in-out infinite; }
+    .hero-status.offline .hero-status-dot { background: #ff8a80; }
+    @keyframes heroBlink { 50% { opacity: 0.25; } }
+    .hero-heli { position: relative; z-index: 1; flex: 1 1 240px; max-width: 420px; padding: 8px 16px 26px; }
+    /* 🚁 疑似3D：ライブラリを使わず、CSSの遠近法（perspective）で機体をゆっくり左右に傾けて立体的に見せる。
+       PCではマウスの位置に合わせて少し向きが変わる（.heli-3d の --tx / --ty をJSで更新） */
+    .hero-heli { perspective: 700px; }
+    .heli-3d { transform: rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)); transition: transform 0.4s ease-out; }
+    .hero-heli svg { display: block; width: 100%; height: auto; overflow: visible; animation: heroBob 6.4s ease-in-out infinite; }
+    @keyframes heroBob {
+      0%, 100% { transform: translateY(0) rotateY(-14deg) rotateZ(-1.5deg); }
+      50% { transform: translateY(-6px) rotateY(10deg) rotateZ(-0.5deg); }
+    }
+    /* 横から見たメインローター：羽根の見かけの長さを伸縮させて回転を表現（2枚を位相をずらして重ねる） */
+    .rotor-blade { transform-box: fill-box; transform-origin: center; animation: heroRotor 0.28s linear infinite; }
+    .rotor-blade.b2 { animation-delay: -0.14s; }
+    @keyframes heroRotor { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.08); } 100% { transform: scaleX(1); } }
+    .tail-rotor { transform-box: fill-box; transform-origin: center; animation: heroSpin 0.22s linear infinite; }
+    @keyframes heroSpin { to { transform: rotate(360deg); } }
+    .beacon { animation: heroBlink 1.2s steps(1) infinite; }
+    /* 画面外にスクロールしたら・端末で「視差効果を減らす」設定の時はアニメーションを止める（電池と処理の節約） */
+    .hero.paused *, .hero.paused { animation-play-state: paused !important; }
+    @media (prefers-reduced-motion: reduce) { .hero *, .hero { animation: none !important; } }
+    @media (max-width: 560px) {
+      .hero-heli { order: -1; flex-basis: 100%; max-width: 300px; margin: 0 auto; padding: 14px 16px 0; }
+      .hero-text { padding-top: 6px; }
+      .hero-stat-value.main { font-size: 44px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -129,6 +184,92 @@
   <main id="printable-area">
     <!-- 🌟 印刷時は絞り込み欄が隠れるため、何の期間の集計かが紙に残らなかった。印刷時だけ期間と対象者を出す -->
     <h2 id="print-period"></h2>
+    <!-- 🚁 ヒーロー帯：集計期間の主要な数字をひと目で。数字は下の絞り込み（期間・スタッフ・キーワード）に連動する -->
+    <section class="hero no-print" id="hero" aria-label="集計期間の主要な数字">
+      <div class="hero-sky" id="hero-sky">
+        <div class="hero-ground" aria-hidden="true">
+          <svg viewBox="0 0 600 34" preserveAspectRatio="none"><path fill="#06101e" d="M0 34V22h18v-8h14v8h10V10h16v24h8V18h22v16h12V6h10v4h8v24h14V20h20v14h10V14h16v20h18V24h12v-8h10v18h16V8h14v26h10V18h20v16h14V22h12V12h18v22h10V16h16v18h22V10h12v24h14V20h10v14h18V8h16v26h12V18h14v16h16V12h10v22h18V22h22v12z"/><g fill="#ffd54f"><rect x="62" y="14" width="2" height="2"/><rect x="104" y="12" width="2" height="2"/><rect x="190" y="18" width="2" height="2"/><rect x="262" y="14" width="2" height="2"/><rect x="330" y="22" width="2" height="2"/><rect x="398" y="16" width="2" height="2"/><rect x="474" y="14" width="2" height="2"/><rect x="540" y="18" width="2" height="2"/></g></svg>
+          <svg viewBox="0 0 600 34" preserveAspectRatio="none"><path fill="#06101e" d="M0 34V22h18v-8h14v8h10V10h16v24h8V18h22v16h12V6h10v4h8v24h14V20h20v14h10V14h16v20h18V24h12v-8h10v18h16V8h14v26h10V18h20v16h14V22h12V12h18v22h10V16h16v18h22V10h12v24h14V20h10v14h18V8h16v26h12V18h14v16h16V12h10v22h18V22h22v12z"/><g fill="#ffd54f"><rect x="62" y="14" width="2" height="2"/><rect x="104" y="12" width="2" height="2"/><rect x="190" y="18" width="2" height="2"/><rect x="262" y="14" width="2" height="2"/><rect x="330" y="22" width="2" height="2"/><rect x="398" y="16" width="2" height="2"/><rect x="474" y="14" width="2" height="2"/><rect x="540" y="18" width="2" height="2"/></g></svg>
+        </div>
+      </div>
+      <div class="hero-text">
+        <div class="hero-eyebrow">AW109 DOCTOR HELI</div>
+        <div class="hero-period" id="hero-period">集計期間</div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-label">実出動</div>
+            <div><span class="hero-stat-value main" id="hero-actual">0</span><span class="hero-stat-unit">件</span></div>
+          </div>
+          <div>
+            <div class="hero-stat-label">総要請</div>
+            <div><span class="hero-stat-value" id="hero-total">0</span><span class="hero-stat-unit">件</span></div>
+          </div>
+          <div>
+            <div class="hero-stat-label">キャンセル</div>
+            <div><span class="hero-stat-value" id="hero-cancel">0</span><span class="hero-stat-unit">件</span></div>
+          </div>
+        </div>
+        <div class="hero-status" id="hero-status" role="status"><span class="hero-status-dot"></span><span id="hero-status-text">データを取得しています</span></div>
+      </div>
+      <div class="hero-heli" aria-hidden="true">
+        <!-- AW109（側面）：実機JA03KGの塗装に合わせ、白い機体・紺の「Doctor-Heli」・赤の斜めライン・赤縁の尾翼で描く。機首は右向き -->
+        <div class="heli-3d" id="heli-3d">
+        <svg viewBox="0 0 330 120">
+          <defs>
+            <clipPath id="heli-body-clip"><path d="M314 86C312 76 300 66 282 60L262 50Q254 44 244 44L206 44Q196 34 178 34L148 34Q134 36 126 48L58 60L54 67L122 76Q128 94 152 97L280 97Q306 97 314 86Z"/></clipPath>
+            <linearGradient id="heli-body-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.65" stop-color="#f1f3f6"/><stop offset="1" stop-color="#cdd3dc"/></linearGradient>
+          </defs>
+          <!-- 尾翼（垂直・下部）：赤い縁取り -->
+          <path d="M60 61L42 26Q41 22 46 22L52 22L70 60Z" fill="#f4f6f9"/>
+          <path d="M44 24L60 60" stroke="#d32f2f" stroke-width="3" stroke-linecap="round"/>
+          <path d="M51 22L69 59" stroke="#d32f2f" stroke-width="2"/>
+          <path d="M57 66L46 86L53 86L67 68Z" fill="#e3e7ed"/>
+          <!-- 水平安定板（先端が赤） -->
+          <rect x="64" y="62" width="26" height="3.5" rx="1.5" fill="#e3e7ed"/>
+          <rect x="64" y="62" width="6" height="3.5" rx="1.5" fill="#d32f2f"/>
+          <!-- 機体 -->
+          <path d="M314 86C312 76 300 66 282 60L262 50Q254 44 244 44L206 44Q196 34 178 34L148 34Q134 36 126 48L58 60L54 67L122 76Q128 94 152 97L280 97Q306 97 314 86Z" fill="url(#heli-body-shade)" stroke="#aeb7c3" stroke-width="0.8"/>
+          <g clip-path="url(#heli-body-clip)">
+            <!-- 尾部付け根の赤い斜めライン（2本） -->
+            <path d="M100 30L109 30L97 104L88 104Z" fill="#d32f2f"/>
+            <path d="M113 30L122 30L110 104L101 104Z" fill="#d32f2f"/>
+          </g>
+          <!-- 機体記号・ロゴ -->
+          <text x="150" y="44" font-size="8" font-weight="700" fill="#1c1c1e" font-family="Arial, Helvetica, sans-serif" letter-spacing="0.5">JA03KG</text>
+          <text x="128" y="87" font-size="12.5" font-weight="900" font-style="italic" fill="#1f3a7a" font-family="Arial, Helvetica, sans-serif" letter-spacing="-0.3">Doctor-Heli</text>
+          <!-- スター・オブ・ライフ（青） -->
+          <g transform="translate(214 66)" fill="#1e6fd9">
+            <rect x="-1.6" y="-5.5" width="3.2" height="11" rx="0.8"/>
+            <rect x="-1.6" y="-5.5" width="3.2" height="11" rx="0.8" transform="rotate(60)"/>
+            <rect x="-1.6" y="-5.5" width="3.2" height="11" rx="0.8" transform="rotate(-60)"/>
+          </g>
+          <!-- キャビンドアと窓・風防 -->
+          <rect x="220" y="49" width="42" height="42" rx="5" fill="none" stroke="#c4cbd5" stroke-width="0.8"/>
+          <rect x="224" y="54" width="16" height="19" rx="6" fill="#1f2d3d"/>
+          <rect x="244" y="54" width="15" height="19" rx="6" fill="#1f2d3d"/>
+          <path d="M282 60L264 51Q258 49 257 55L259 74L299 76Q295 66 282 60Z" fill="#22344a"/>
+          <path d="M268 55L278 59L270 72L262 72Z" fill="rgba(255,255,255,0.18)"/>
+          <!-- 格納した脚のスポンソン -->
+          <ellipse cx="196" cy="97" rx="16" ry="4.5" fill="#e9edf2" stroke="#aeb7c3" stroke-width="0.8"/>
+          <!-- 衝突防止灯（点滅） -->
+          <circle class="beacon" cx="142" cy="35" r="2.2" fill="#ff5252"/>
+          <!-- ローターマストとメインローター（4枚ブレードを2本の伸縮で表現） -->
+          <rect x="160" y="25" width="6" height="10" rx="1.5" fill="#8a94a1"/>
+          <ellipse class="rotor-blade" cx="163" cy="24" rx="146" ry="2.2" fill="rgba(225,230,238,0.9)"/>
+          <ellipse class="rotor-blade b2" cx="163" cy="24" rx="146" ry="2.2" fill="rgba(225,230,238,0.6)"/>
+          <circle cx="163" cy="24" r="4.5" fill="#5f6875"/>
+          <!-- テールローター（赤白の羽根） -->
+          <g class="tail-rotor">
+            <circle cx="46" cy="44" r="14" fill="rgba(255,255,255,0.07)"/>
+            <rect x="44.5" y="30" width="3" height="28" rx="1.5" fill="#f4f6f9"/>
+            <rect x="44.5" y="30" width="3" height="7" rx="1.5" fill="#d32f2f"/>
+            <rect x="44.5" y="51" width="3" height="7" rx="1.5" fill="#d32f2f"/>
+          </g>
+          <circle cx="46" cy="44" r="2.5" fill="#5f6875"/>
+        </svg>
+        </div>
+      </div>
+    </section>
     <div class="filter-section no-print">
       <div class="filter-group" style="flex: 1 1 100%;">
         <label>📅 集計期間の指定</label>
@@ -362,6 +503,7 @@
       localStorage.removeItem('aw109_auth_name');
       localStorage.removeItem('aw109_auth_isAdmin');
       localStorage.removeItem('aw109_auth_loginTime');
+      localStorage.removeItem('aw109_summary_cache_v1'); // 🌟 端末に保存した統計用データ（後述 STATS_CACHE_KEY）もログアウトと同時に消す
       alert('ログインから８時間が経過したため、自動的にログアウトしました。お手数ですが再度ログインしてください。');
       location.href = 'portal.html';
     }
@@ -428,10 +570,90 @@
     } catch(e) {}
   }
 
-  window.onload = () => { fetchData(); };
+  window.onload = () => { initHero(); fetchData(); };
+
+  // ===== 🚀 前回データの即時表示（端末内キャッシュ） =====
+  // 以前は開くたびにスプレッドシート全件の読み込み（数秒〜十数秒）が終わるまで画面が空のままだった。
+  // 最後に取得したデータを端末に保存しておき、開いた瞬間はそれで表示 → 裏で最新を取得して差し替える。
+  // ・保存するのは統計に使う列だけ（氏名以外の患者情報・自由記述・システムデータ等は保存しない）
+  // ・同じ人の同じログイン中に保存したものしか使わない（ログアウト・8時間経過・別の人のログインで無効）
+  const STATS_CACHE_KEY = 'aw109_summary_cache_v1';
+  const CASE_CACHE_COLUMNS = ["要請番号", "日付", "ステータス", "スキーム選択", "要請区分", "出場先",
+    "小児フラグ", "母性フラグ", "多数傷病フラグ", "気管挿管", "心エコー", "FAST", "胸腔ドレナージ", "EtCO2",
+    "12誘導心電図", "血糖測定", "静脈血採血", "現場診断", "キーワード要請", "フライトドクター", "フライトナース",
+    "要請時刻・施設間搬送依頼時刻", "初期離陸時間"];
+  const DEBRIEF_CACHE_COLUMNS = ["要請番号", "登録日時", "登録日", "実施日", "実施場所", "振り返り場所",
+    "疾患", "処置", "特殊ケース", "リスク関連", "記録者", "固定参加者", "外部参加者", "OJT参加者", "参加者一覧"];
+
+  // 列名（ヘッダー文字列）で必要な列だけを抜き出す（列の並び順には依存しない）
+  function pickColumns(rows, columns) {
+    return rows.map(row => {
+      const picked = {};
+      columns.forEach(col => { if (row && row[col] !== undefined && row[col] !== "") picked[col] = row[col]; });
+      return picked;
+    });
+  }
+
+  function saveStatsCache(cases, debriefs) {
+    try {
+      localStorage.setItem(STATS_CACHE_KEY, JSON.stringify({
+        owner: localStorage.getItem('aw109_auth_name') || "",
+        savedAt: Date.now(),
+        cases: pickColumns(cases, CASE_CACHE_COLUMNS),
+        debriefs: pickColumns(debriefs, DEBRIEF_CACHE_COLUMNS)
+      }));
+    } catch (e) {
+      // 端末の保存容量不足など。保存できなくても画面は通常どおり動くので、古い保存データだけ消して続行する
+      try { localStorage.removeItem(STATS_CACHE_KEY); } catch (e2) {}
+    }
+  }
+
+  function loadStatsCache() {
+    try {
+      const cache = JSON.parse(localStorage.getItem(STATS_CACHE_KEY) || "null");
+      if (!cache || !Array.isArray(cache.cases) || !Array.isArray(cache.debriefs)) return null;
+      const owner = localStorage.getItem('aw109_auth_name') || "";
+      const loginTime = parseInt(localStorage.getItem('aw109_auth_loginTime') || '0', 10);
+      // 別の人のデータ、または今回のログインより前に保存したデータは使わずに消す
+      if (cache.owner !== owner || !cache.savedAt || cache.savedAt < loginTime) {
+        localStorage.removeItem(STATS_CACHE_KEY);
+        return null;
+      }
+      return cache;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 電波切れ・タイムアウトかどうか（アプリの不具合と区別する。原則A4）
+  function isNetworkError(e) {
+    return !!e && (e.isTimeout || /Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline/.test(String(e.message || e)));
+  }
+
+  let hasDisplayedData = false; // すでに何かのデータ（前回保存分を含む）を画面に出しているか
 
   async function fetchData() {
-    showLoader("多次元データ集計中...", "データベースに直接接続しています");
+    // ① 初回だけ：前回保存したデータがあれば即座に表示する
+    let showingCache = false;
+    if (!hasDisplayedData) {
+      const cache = loadStatsCache();
+      if (cache) {
+        allData = cache.cases;
+        allDebriefData = cache.debriefs;
+        populateStaffFilter();
+        setDateFilter('thisMonth');
+        hasDisplayedData = true;
+        showingCache = true;
+        hideLoader(); // 最初から出ている全画面の読み込み表示を閉じて、前回データの画面をすぐ見せる
+        setHeroStatus('loading', `前回のデータ（${formatClock(cache.savedAt)}取得）を表示中・最新を取得しています`);
+      }
+    }
+    // ② 何も表示できていない時だけ、従来どおり全画面の読み込み表示を出す
+    if (hasDisplayedData) {
+      if (!showingCache) setHeroStatus('loading', '最新のデータを取得しています');
+    } else {
+      showLoader("多次元データ集計中...", "データベースに直接接続しています");
+    }
     try {
       // 🌟 事案データとデブリーフィングデータは互いに依存しないため、順番待ちせず同時に取得して表示までの時間を短縮する。
       // デブリーフィング側だけが失敗しても事案の統計は表示できるよう、そちらの失敗はエラー扱いにしない（従来も実施率0として表示していた）
@@ -453,17 +675,81 @@
         allData = (json1.data || []).map(item => item.rawData);
         allDebriefData = json2.status === "success" ? (json2.data || []) : [];
         populateStaffFilter();
-        setDateFilter('thisMonth');
+        if (hasDisplayedData) {
+          applyFilters(); // 表示中に選んだ期間・スタッフ・キーワードはそのまま、中身だけ最新に差し替える
+        } else {
+          setDateFilter('thisMonth');
+        }
+        hasDisplayedData = true;
+        if (json2.status === "success") saveStatsCache(allData, allDebriefData);
+        setHeroStatus('fresh', `最新のデータ（${formatClock(Date.now())}取得）`);
       } else {
+        if (json1.message === "認証エラー") { try { localStorage.removeItem(STATS_CACHE_KEY); } catch (e) {} }
+        setHeroStatus('offline', '最新のデータを取得できませんでした');
         alert("データの取得に失敗しました。");
         sendErrorLog("Fetch Status Error: " + json1.message);
       }
     } catch (e) {
-      document.getElementById("loader-sub-text").innerText = "通信エラーが発生しました";
-      alert("通信エラーが発生しました。電波状況の良い場所で再接続してください。");
-      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      if (hasDisplayedData && isNetworkError(e)) {
+        // 🌟 電波切れの時は前回のデータを出したまま、警告を出さずに静かに知らせるだけにする（原則A4）
+        setHeroStatus('offline', '電波がないため前回のデータを表示中（🔄更新で再取得）');
+      } else {
+        document.getElementById("loader-sub-text").innerText = "通信エラーが発生しました";
+        setHeroStatus('offline', '通信エラーが発生しました');
+        alert("通信エラーが発生しました。電波状況の良い場所で再接続してください。");
+        sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      }
     } finally {
       hideLoader();
+    }
+  }
+
+  // ===== 🚁 ヒーロー帯 =====
+  function formatClock(ms) {
+    const d = new Date(ms);
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function setHeroStatus(state, text) {
+    const box = document.getElementById("hero-status");
+    if (!box) return;
+    box.className = "hero-status " + state;
+    document.getElementById("hero-status-text").innerText = text;
+  }
+
+  function initHero() {
+    const hero = document.getElementById("hero");
+    if (!hero) return;
+    // 夜空の星（位置は固定の乱数ではなく毎回ランダムでよい装飾）
+    const sky = document.getElementById("hero-sky");
+    for (let i = 0; i < 24; i++) {
+      const star = document.createElement("span");
+      star.className = "hero-star";
+      star.style.left = (Math.random() * 100) + "%";
+      star.style.top = (Math.random() * 70) + "%";
+      star.style.opacity = (0.3 + Math.random() * 0.6).toFixed(2);
+      sky.appendChild(star);
+    }
+    // PC（マウスがある端末）だけ：マウスの位置に合わせて機体の向きを少し変える。スマホは傾きセンサーの許可ダイアログが出るため使わない
+    const heli3d = document.getElementById("heli-3d");
+    if (heli3d && window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      hero.addEventListener("pointermove", e => {
+        const rect = hero.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width - 0.5;
+        const py = (e.clientY - rect.top) / rect.height - 0.5;
+        heli3d.style.setProperty("--ty", (px * 24).toFixed(1) + "deg");
+        heli3d.style.setProperty("--tx", (-py * 14).toFixed(1) + "deg");
+      });
+      hero.addEventListener("pointerleave", () => {
+        heli3d.style.setProperty("--ty", "0deg");
+        heli3d.style.setProperty("--tx", "0deg");
+      });
+    }
+    // 画面外にスクロールしたらアニメーションを一時停止（電池と処理の節約）
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(entries => {
+        entries.forEach(entry => hero.classList.toggle("paused", !entry.isIntersecting));
+      }).observe(hero);
     }
   }
 
@@ -474,9 +760,13 @@
       if(r["フライトナース"]) staffSet.add(r["フライトナース"]); 
     });
     const sel = document.getElementById("filter-staff");
+    // 🌟 🔄更新や「前回データ→最新データ」の差し替えで呼ばれるたびに選択肢が重複して増えていたため、毎回作り直す（選択中の人は維持）
+    const current = sel.value;
+    sel.options.length = 1; // 先頭の「全員 (チーム全体)」だけ残す
     Array.from(staffSet).sort().forEach(s => { 
-      if(s && s !== "その他") sel.innerHTML += `<option value="${s}">${s}</option>`; 
+      if(s && s !== "その他") sel.add(new Option(s, s)); 
     });
+    sel.value = staffSet.has(current) ? current : "";
   }
 
   // 🌟 3. 日付フォーマットのパディング正規化
@@ -520,11 +810,25 @@
     applyFilters();
   }
 
+  // ヒーロー帯の見出し。1か月ちょうど・1年ちょうどは「2026年10月」「2026年」と短く、それ以外は日付の範囲で表示
+  function formatHeroPeriod(startStr, endStr) {
+    if (!startStr && !endStr) return "全期間";
+    const s = startStr ? startStr.split("-").map(Number) : null;
+    const e = endStr ? endStr.split("-").map(Number) : null;
+    if (s && e && s[2] === 1) {
+      const lastDay = new Date(s[0], s[1], 0).getDate();
+      if (s[0] === e[0] && s[1] === e[1] && e[2] === lastDay) return `${s[0]}年${s[1]}月`;
+      if (s[0] === e[0] && s[1] === 1 && e[1] === 12 && e[2] === 31) return `${s[0]}年`;
+    }
+    return `${startStr ? startStr.replace(/-/g, "/") : "最初"} 〜 ${endStr ? endStr.replace(/-/g, "/") : "最新"}`;
+  }
+
   function applyFilters() {
     const startStr = document.getElementById("filter-start").value; 
     const endStr = document.getElementById("filter-end").value; 
     const staffForPrint = document.getElementById("filter-staff").value;
     document.getElementById("print-period").textContent = `AW109 統計・分析　集計期間: ${startStr ? startStr.replace(/-/g, "/") : "最初"} 〜 ${endStr ? endStr.replace(/-/g, "/") : "最新"}　対象: ${staffForPrint || "全員"}`;
+    document.getElementById("hero-period").textContent = formatHeroPeriod(startStr, endStr) + (staffForPrint ? `（${staffForPrint}）` : "");
     const staffFilter = document.getElementById("filter-staff").value;
     const keywordFilter = document.getElementById("filter-keyword").value.toLowerCase().trim();
     
@@ -565,17 +869,26 @@
     }
   }
 
-  function animateValue(id, start, end, duration) {
-    if(start === end || isNaN(end)) { document.getElementById(id).innerText = end || 0; return; }
-    let range = end - start; let current = start; let increment = end > start ? 1 : -1;
-    let stepTime = Math.abs(Math.floor(duration / range)); if(stepTime < 5) stepTime = 5;
-    let obj = document.getElementById(id); 
-    if(!obj) return;
-    let timer = setInterval(function() { 
-      current += increment; 
-      obj.innerText = current; 
-      if (current == end) clearInterval(timer); 
-    }, stepTime);
+  // 🌟 数字のカウントアップ。以前は1ずつ増やすタイマーを数字ごとに起動しており、件数が多いと最後まで届くのが遅く、
+  // 連続で絞り込むとタイマーが重なって数字が行ったり来たりしていた。画面の書き換えタイミング（requestAnimationFrame）に合わせ、
+  // 今表示している数字から目標の数字へ、最後がゆっくりになる動きで移動させる
+  const valueAnimations = {};
+  function animateValue(id, end, duration) {
+    const obj = document.getElementById(id);
+    if (!obj) return;
+    if (valueAnimations[id]) cancelAnimationFrame(valueAnimations[id]);
+    const target = isNaN(end) ? 0 : end;
+    const from = parseInt(obj.innerText, 10) || 0;
+    if (from === target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { obj.innerText = target; return; }
+    const startTime = performance.now();
+    const step = now => {
+      const t = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      obj.innerText = Math.round(from + (target - from) * eased);
+      if (t < 1) valueAnimations[id] = requestAnimationFrame(step);
+      else delete valueAnimations[id];
+    };
+    valueAnimations[id] = requestAnimationFrame(step);
   }
 
   // 🌟 ダッシュボード描画処理（JSONパースをパージし、物理列データをダイレクトに高速パース）
@@ -652,16 +965,21 @@
     statsForCSV.scheme = schemeCounts;
     statsForCSV.reqType = reqTypeCounts;
 
-    animateValue("kpi-total", 0, total, 500); 
-    animateValue("kpi-actual", 0, actual, 500);
-    animateValue("kpi-debrief-count", 0, debriefCount, 500);
-    animateValue("kpi-debrief-rate", 0, debriefRate, 500);
-    animateValue("kpi-hamacho-count", 0, hamachoCount, 500);
+    animateValue("kpi-total", total, 700); 
+    animateValue("kpi-actual", actual, 700);
+    animateValue("kpi-debrief-count", debriefCount, 700);
+    animateValue("kpi-debrief-rate", debriefRate, 700);
+    animateValue("kpi-hamacho-count", hamachoCount, 700);
     
-    animateValue("kpi-pediatric", 0, pediaCount, 500);
-    animateValue("kpi-maternal", 0, maternalCount, 500);
-    animateValue("kpi-multiple", 0, multiCount, 500);
-    animateValue("kpi-procedure-rate", 0, avgProcRate, 500);
+    animateValue("kpi-pediatric", pediaCount, 700);
+    animateValue("kpi-maternal", maternalCount, 700);
+    animateValue("kpi-multiple", multiCount, 700);
+    animateValue("kpi-procedure-rate", avgProcRate, 700);
+
+    // 🚁 ヒーロー帯の数字（同じ集計結果を大きく表示）
+    animateValue("hero-actual", actual, 900);
+    animateValue("hero-total", total, 900);
+    animateValue("hero-cancel", cancel, 900);
     
     let trendCounts = {};
     filteredData.forEach(r => {
