@@ -151,11 +151,11 @@
       <div class="normal-info no-print" style="margin-bottom: 8px; padding: 12px 16px;">
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
           <div style="flex:1; min-width:120px;">
-            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検日</label>
+            <label style="font-size:13px; font-weight:bold; color:var(--sub);">共通 点検日</label>
             <input type="date" id="c-date" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="fetchChecklistStatus()">
           </div>
           <div style="flex:1.5; min-width:150px;">
-            <label style="font-size:11px; font-weight:bold; color:var(--sub);">共通 点検者 (Ns)</label>
+            <label style="font-size:13px; font-weight:bold; color:var(--sub);">共通 点検者 (Ns)</label>
             <select id="c-staff" class="text-input" style="padding:10px; font-size:14px; margin-bottom:0;" onchange="localStorage.setItem('aw109_last_ns', this.value)">
               <option value="">選択してください...</option>
             </select>
@@ -188,7 +188,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="font-weight:900; color:#0d47a1; font-size:15px;" id="current-check-title">始業点検 の入力</span>
           <div style="width:110px;">
-            <label style="font-size:10px; font-weight:bold; color:var(--sub); display:block; text-align:right; margin-bottom:4px;">実施時間</label>
+            <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; text-align:right; margin-bottom:4px;">実施時間</label>
             <input type="tel" inputmode="numeric" maxlength="5" placeholder="HH:MM" id="c-time" oninput="formatTimeInput(this)" onblur="clampTimeInput(this)" class="text-input" style="padding:6px; font-size:14px; margin-bottom:0;">
           </div>
         </div>
@@ -455,6 +455,7 @@
     async function fetchQA() {
       try {
         const json = await fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "現場" });
+        if (json.status === "success" && json.gasVersion) { try { localStorage.setItem("aw109_gas_version", json.gasVersion); } catch (e) {} }
         if (json.status === "success" && json.qa) { document.getElementById("qa-list").innerHTML = json.qa.filter(q => q.status === "◯").map(item => `<p style="white-space:pre-line;"><b>Q. ${escapeQaText(item.q)}</b><br>A. ${escapeQaText(item.a)}</p><hr style="border:none;border-top:1px solid var(--line);">`).join(""); }
       } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); }
     }
@@ -765,6 +766,18 @@
     window.addEventListener("beforeprint", () => { document.querySelectorAll("#history-container details").forEach(d => { d.dataset.wasOpen = d.open ? "1" : ""; d.open = true; }); });
     window.addEventListener("afterprint", () => { document.querySelectorAll("#history-container details").forEach(d => { if (d.dataset.wasOpen !== "1") d.open = false; }); });
 
+
+    // 🌟 送信ごとの識別番号（サーバー側で二重登録を防ぐために使う。送り直しでは同じ番号を使う）
+    function newClientSubmitId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16); });
+    }
+    // 🌟 サーバー(GAS)がv3.4以降なら、送り直しても二重登録にならない（二重送信の判定がある）
+    function gasPreventsDuplicates() {
+      const v = parseFloat(String(localStorage.getItem("aw109_gas_version") || "").replace(/^v/, ""));
+      return v >= 3.4;
+    }
+
     async function submitChecklist() {
       const staff = document.getElementById("c-staff").value;
       if(!staff) { alert("画面上部の「共通 点検者 (Ns)」を選択してください。"); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
@@ -804,12 +817,18 @@
 
       try {
         const reqType = currentType;
-        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload }), redirect: "follow" });
+        // 🌟 この点検（種類・点検日）の識別番号。送り直しでは同じ番号を使い、サーバー側で二重登録を防ぐ
+        const submitIdKey = "aw109_pending_cl_submit_" + clDraftKey;
+        let submitId = null;
+        try { submitId = localStorage.getItem(submitIdKey); } catch (e) {}
+        if (!submitId) { submitId = newClientSubmitId(); try { localStorage.setItem(submitIdKey, submitId); } catch (e) {} }
+        const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload, clientSubmitId: submitId }), redirect: "follow" });
         const json = await parseGasResponse(res);
         if (json.status === "success") {
           // 🌟 保存できたので下書きは不要（この後の画面切替で保存し直さないよう、先に止めてから消す）
           clDraftReady = false; clearTimeout(clDraftTimer);
-          try { localStorage.removeItem(clDraftKey); } catch (e) {}
+          try { localStorage.removeItem(clDraftKey); localStorage.removeItem(submitIdKey); } catch (e) {}
+          if (json.emailSent === false) alert("点検結果は保存しましたが、管理者への異常報告メールは送信できませんでした。\n管理者へ直接連絡してください。");
           document.getElementById("cl-draft-notice").style.display = "none";
           alert("点検を完了しました！"); fetchChecklistStatus(); fetchHistory(true); switchMainTab('history');
         } else { throw new Error(json.message); }
@@ -819,7 +838,8 @@
         if ((e && e.isTimeout) || m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
           // 🌟 電波切れはアプリの不具合ではないため、エラー報告は送らず案内だけ出す（原則A4）
           // 🌟 点検結果は保存のたびに新しい行として追加されるため、返事だけ届かなかった場合に送り直すと二重登録になる。先に履歴で確認してもらう
-          alert("電波が弱く、サーバーからの返事が届きませんでした。\n保存が完了している可能性があります。\n\n二重登録を防ぐため、もう一度保存する前に「履歴・検索」タブで登録されているか確認してください。\n入力内容は画面と端末内の下書きに残っています。");
+          // （サーバーがv3.4以降なら二重送信を判定できるので、そのまま送り直してよいと案内する）
+          if (gasPreventsDuplicates()) alert("電波が弱く、保存を完了できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n\n電波の良い場所で、もう一度保存してください。\n（すでに保存されていた場合も、二重には登録されません）"); else alert("電波が弱く、サーバーからの返事が届きませんでした。\n保存が完了している可能性があります。\n\n二重登録を防ぐため、もう一度保存する前に「履歴・検索」タブで登録されているか確認してください。\n入力内容は画面と端末内の下書きに残っています。");
         } else {
           alert("保存エラーが発生しました。入力内容は画面と端末内の下書きに残っています。");
           sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);

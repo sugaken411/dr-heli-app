@@ -32,7 +32,7 @@
     main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
-    .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
+    .cross-item label { font-size: 13px; font-weight: bold; color: var(--sub); }
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--blue); margin-bottom: 12px; border-bottom: 1px solid #efeff4; padding-bottom: 6px; text-transform: uppercase; }
     
@@ -137,18 +137,18 @@
       
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
         <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">日付指定で探す</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">日付指定で探す</label>
           <input type="date" id="s-date" onchange="clearSearchMonth(); searchCases();" style="margin-bottom:0;">
         </div>
         <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">月指定で探す</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">月指定で探す</label>
           <input type="month" id="s-month" onchange="clearSearchDate(); searchCases();" style="margin-bottom:0;">
         </div>
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
         <div style="flex:1;">
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">要請番号</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">要請番号</label>
           <input type="tel" inputmode="numeric" id="s-id" placeholder="番号入力（空欄でも可）" style="margin-bottom:0;" oninput="toHalfWidth(this); searchCases();">
         </div>
         <button type="button" class="btn-blue" onclick="searchCases()" style="padding:11px 16px; margin-top:16px; font-size:13px; width:auto; white-space:nowrap;">検索 🔍</button>
@@ -472,6 +472,12 @@
     el.value = String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
   }
   function clearSearchMonth() { document.getElementById("s-month").value = ""; }
+  function shiftSearchDate(days) {
+    const el = document.getElementById("s-date"); const d = el.value ? new Date(el.value + "T00:00:00") : new Date();
+    d.setDate(d.getDate() + days);
+    el.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    searchCases();
+  }
   function clearSearchDate() { document.getElementById("s-date").value = ""; }
   function clearSearchFilters() { document.getElementById("s-date").value = ""; document.getElementById("s-month").value = ""; document.getElementById("s-id").value = ""; }
 
@@ -780,7 +786,9 @@
 
     const resArea = document.getElementById("search-results-area");
     if(results.length === 0) {
-      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>";
+      // 🌟 日付は「今日」が初期値のため、夜間の出動を日付が変わってから振り返ると「該当なし」になっていた。前日・全件へすぐ切り替えられるようにする
+      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>" +
+        (sDate ? "<div style='display:flex; gap:8px;'><button type='button' onclick='shiftSearchDate(-1)' style='flex:1; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:bold;'>📅 前日の事案</button><button type='button' onclick='clearSearchFilters(); searchCases();' style='flex:1; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:bold;'>🔄 すべて表示</button></div>" : "");
     } else {
       resArea.innerHTML = results.map(r => {
         const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";

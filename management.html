@@ -10,7 +10,7 @@
     :root { --bg: #f2f2f7; --ink: #1c1c1e; --sub: #8e8e93; --blue: #007aff; --brand: #d32f2f; --line: rgba(60,60,67,0.12); }
     body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--ink); margin: 0; padding: 0; padding-top: env(safe-area-inset-top); }
     
-    header { position: sticky; top: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; z-index: 100; }
+    header { position: sticky; top: 0; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; z-index: 100; } /* 🌟 gap: 「◀ ポータル」と題名がくっついて「ポータル統括・業務管理」と読めていた */
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
     /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
        高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
