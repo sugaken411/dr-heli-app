@@ -15,6 +15,11 @@
     
     header { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--line); position: sticky; top: 0; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+    /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
+       高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
+       横幅そのものを44pxにするとタイトルが「…」で省略されてしまうため採用しない */
+    .hdr-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .hdr-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -6px; }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     main { padding: 16px; max-width: 800px; margin: 0 auto; }

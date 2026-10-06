@@ -16,6 +16,11 @@
     
     header { background: #fff; padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
     .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; padding: 4px 8px; }
+    /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
+       高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
+       横幅そのものを44pxにするとタイトルが「…」で省略されてしまうため採用しない */
+    .hdr-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .hdr-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -6px; }
     .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
     
     main { padding: 16px; flex: 1; overflow-y: auto; max-width: 1000px; margin: 0 auto; width: 100%; box-sizing: border-box; }
@@ -378,6 +383,15 @@
 
   // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
   // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+  // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
+  // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
+  // fetchGasJsonと同じく応答の冒頭を添えた明確なエラーにする（成功時の動作・タイムアウト・再送の有無は従来どおり）
+  async function parseGasResponse(res) {
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
+  }
+
   async function fetchGasJson(bodyObj) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -471,13 +485,13 @@
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "fetch_all", password: activePin }),
           redirect: "follow"
-        }).then(r => r.json());
+        }).then(parseGasResponse);
 
         const fetchDebriefPromise = debriefCachedStr ? Promise.resolve(null) : fetch(GAS_API_URL, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "fetch_debriefings", password: activePin }),
           redirect: "follow"
-        }).then(r => r.json()).catch(() => null);
+        }).then(parseGasResponse).catch(() => null);
 
         const [allJson, debriefJson] = await Promise.all([fetchAllPromise, fetchDebriefPromise]);
         json = allJson;

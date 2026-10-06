@@ -13,6 +13,11 @@
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-group { display: flex; gap: 12px; align-items: center; flex-shrink: 0; } 
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
+       高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
+       横幅そのものを44pxにするとタイトルが「…」で省略されてしまうため採用しない */
+    .hdr-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .hdr-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -6px; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } 
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
@@ -281,7 +286,7 @@
     window.onload = () => { 
       const urlParams = new URLSearchParams(window.location.search);
       const urlDate = urlParams.get('date');
-      document.getElementById('info-date').value = normalizeDate(urlDate) || new Date().toISOString().split('T')[0];
+      document.getElementById('info-date').value = normalizeDate(urlDate) || (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(); // 🌟 toISOString()は世界標準時の日付のため、日本時間の0〜9時に開くと前日の日付になっていた。端末の日付を使う
       
       if(urlDate) {
         const backBtn = document.getElementById("btn-back");
@@ -294,6 +299,15 @@
 
     // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
     // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+    // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
+    // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
+    // fetchGasJsonと同じく応答の冒頭を添えた明確なエラーにする（成功時の動作・タイムアウト・再送の有無は従来どおり）
+    async function parseGasResponse(res) {
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
+    }
+
     async function fetchGasJson(bodyObj) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -338,7 +352,7 @@
           body: JSON.stringify({ action: "fetch_daily_report", password: PIN_CODE, date: dateVal, force_sync: force }), 
           redirect: "follow" 
         });
-        const json = await res.json();
+        const json = await parseGasResponse(res);
         
         if (json.status === "success") {
           const data = json.data;
@@ -410,7 +424,7 @@
           body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }), 
           redirect: "follow" 
         });
-        const json = await res.json(); 
+        const json = await parseGasResponse(res); 
         if (json.status === "success") {
           alert("保存しました！"); 
           updateSyncTimestamp();

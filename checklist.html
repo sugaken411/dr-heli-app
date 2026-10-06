@@ -14,6 +14,11 @@
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(60px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 10px; padding-right: 10px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 60px; text-align: center; }
+    /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
+       高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
+       横幅そのものを44pxにするとタイトルが「…」で省略されてしまうため採用しない */
+    .hdr-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .hdr-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -6px; }
     .hdr-title { font-weight: 900; font-size: 16px; text-align: center; flex: 1; min-width: 0; display:flex; justify-content:center; align-items:center; overflow: hidden; white-space: nowrap; }
     @media (max-width: 400px) {
       /* 🌟 狭い画面ではタイトルを優先し、優先度の低い右側ボタンの文字ラベルとバージョンタグを隠してアイコンのみにする */
@@ -390,6 +395,15 @@
 
     // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
     // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+    // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
+    // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
+    // fetchGasJsonと同じく応答の冒頭を添えた明確なエラーにする（成功時の動作・タイムアウト・再送の有無は従来どおり）
+    async function parseGasResponse(res) {
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
+    }
+
     async function fetchGasJson(bodyObj) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -432,7 +446,7 @@
       try {
         const selectedDate = document.getElementById("c-date").value;
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_status", password: PIN_CODE, date: selectedDate }), redirect: "follow" });
-        const json = await res.json();
+        const json = await parseGasResponse(res);
         if (json.status === "success") {
           const btnMap = { 'ME機器': 'btn-type-me', 'ナースバック': 'btn-type-ns', 'ヘリ内': 'btn-type-heli', '始業点検': 'btn-type-daily-start', '終業点検': 'btn-type-daily-end', '定期点検': 'btn-type-periodic', 'ヘリバック': 'btn-type-hbag', '待機物品': 'btn-type-taiki', 'バックボード貸出': 'btn-type-backboard' };
           document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('completed'));
@@ -480,7 +494,7 @@
       currentData = {}; errorDetails = {};
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist", password: PIN_CODE, type: reqType }), redirect: "follow" });
-        const json = await res.json();
+        const json = await parseGasResponse(res);
         if (json.status === "success") {
           const itemsWithIndex = json.items.map((it, idx) => { return { ...it, originalIndex: idx }; });
           mastersCache[reqType] = itemsWithIndex; saveCache();
@@ -610,7 +624,7 @@
     async function loadBackboardLoanHints() {
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_backboard_status", password: PIN_CODE }), redirect: "follow" });
-        const json = await res.json();
+        const json = await parseGasResponse(res);
         if (json.status === "success") backboardLoanStatusCache = json.items || [];
       } catch(e) { /* ヒント表示はできなくても本体機能に影響しないため、失敗は静かに無視する */ }
     }
@@ -668,7 +682,7 @@
       try {
         const reqType = currentType;
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_checklist", password: PIN_CODE, type: reqType, data: payload }), redirect: "follow" });
-        const json = await res.json();
+        const json = await parseGasResponse(res);
         if (json.status === "success") { alert("点検を完了しました！"); fetchChecklistStatus(); fetchHistory(true); switchMainTab('history'); } else { throw new Error(json.message); }
       } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { btn.innerText = "点検データを保存する"; btn.disabled = false; hideLoader(); }
     }
@@ -691,7 +705,7 @@
       try {
         const reqType = currentType;
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_checklist_history", password: PIN_CODE, type: reqType }), redirect: "follow" });
-        const json = await res.json();
+        const json = await parseGasResponse(res);
         
         if (json.status === "success") {
           // 🌟 historyが欠けた応答でも「json.history.filter」でクラッシュしないよう空配列として扱う
@@ -747,7 +761,7 @@
       try {
         const reqType = currentType;
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "delete_checklist_record", password: PIN_CODE, id: recordId, type: reqType }), redirect: "follow" });
-        const json = await res.json();
+        const json = await parseGasResponse(res);
         if (json.status === "success") { alert("履歴を削除しました。"); fetchChecklistStatus(); fetchHistory(true); } else { alert("削除に失敗しました: " + json.message); }
       } catch(e) { alert("通信エラーが発生しました。"); sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); } finally { hideLoader(); }
     }
