@@ -383,7 +383,12 @@
     const timeoutId = setTimeout(() => controller.abort(), 20000);
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
-      return await res.json();
+      // 🌟 GASが停止・内部エラーの時はJSONではなくGoogleのエラー画面(HTML)が返り、res.json()のままでは
+      // 「Unexpected token '<'」「The string did not match the expected pattern」という原因不明のエラーになる。
+      // 中身を確認し、エラー報告メールでGAS側の原因が読めるよう応答の冒頭を添えて明確なエラーにする
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
     } catch (e) {
       if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）');
       throw e;
@@ -446,7 +451,7 @@
       if (dataCachedStr) {
         try {
           const cacheObj = JSON.parse(dataCachedStr);
-          if (Date.now() - cacheObj.timestampMs < DATA_CACHE_EXPIRE_MS) json = { status: "success", data: cacheObj.data };
+          if (Date.now() - cacheObj.timestampMs < DATA_CACHE_EXPIRE_MS && Array.isArray(cacheObj.data)) json = { status: "success", data: cacheObj.data };
         } catch(e) {}
       }
 
@@ -476,6 +481,11 @@
 
         const [allJson, debriefJson] = await Promise.all([fetchAllPromise, fetchDebriefPromise]);
         json = allJson;
+        // 🌟 status:"success"でもdataが配列でない応答（GAS側の不整合）を受け取ると、空データを
+        // キャッシュしてしまい以後90秒間「allData.slice」でクラッシュし続けていた。成功扱いにしない
+        if (json.status === "success" && !Array.isArray(json.data)) {
+          json = { status: "error", message: "サーバーから事案データを受け取れませんでした" };
+        }
         if (json.status === "success") {
           sessionStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ timestampMs: Date.now(), data: json.data }));
         }

@@ -88,7 +88,7 @@
 
 <header>
   <div class="hdr-group"><button type="button" class="hdr-btn" id="btn-account" onclick="openModal('modal-account')">🔐 ログイン</button></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.1</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.2</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn" onclick="fetchInit(false)">🔄 <span class="btn-label">更新</span></button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 <span class="btn-label">取説</span></button>
@@ -262,9 +262,30 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
-  // 🌟 スタッフ用PINは廃止済み。未ログイン時はwindow.onloadのrequireLogin()で
-  // ログイン画面に誘導されるため、ここに到達する時点で必ずトークンがある想定
-  const PIN_CODE = localStorage.getItem('aw109_auth_token') || "";
+  // 🌟 スタッフ用PINは廃止済み。トークンは「送信のたびに」localStorageから読む。
+  // 以前はページ読み込み時に定数へ1回だけ読み込んでいたため、未ログイン状態で
+  // ポータルを開き→ログインした直後のfetchInitが「空のトークン」で送信され、
+  // 毎回「認証エラー」になっていた（2026-09〜10月のエラー報告メールの大半がこれ）
+  function getAuthToken() {
+    return localStorage.getItem('aw109_auth_token') || "";
+  }
+
+  // 🌟 サーバーがトークンを受け付けなかった（期限切れ・署名鍵の再生成等）場合は、
+  // 無効なトークンを持ち続けると何度開いても失敗し続けるため、破棄して再ログインを求める
+  function isAuthError(json) {
+    return !!json && json.status === "error" && json.message === "認証エラー";
+  }
+  function handleAuthExpired() {
+    localStorage.removeItem('aw109_auth_token');
+    localStorage.removeItem('aw109_auth_name');
+    localStorage.removeItem('aw109_auth_isAdmin');
+    localStorage.removeItem('aw109_auth_loginTime');
+    updateAccountUI();
+    requireLogin();
+    const msgEl = document.getElementById('account-msg');
+    msgEl.style.color = 'var(--brand-danger,#d32f2f)';
+    msgEl.innerText = 'ログインの有効期限が切れました。お手数ですが再度ログインしてください。';
+  }
   const CACHE_KEY = "aw109_portal_cache_v13";
 
   function switchAccountTab(tab) {
@@ -410,7 +431,7 @@
       fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.1)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
+        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.2)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -484,7 +505,12 @@
       const timeoutId = setTimeout(() => controller.abort(), 20000);
       try {
         const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(bodyObj), redirect: "follow", signal: controller.signal });
-        return await res.json();
+        // 🌟 GASが停止・内部エラーの時はJSONではなくGoogleのエラー画面(HTML)が返り、res.json()のままでは
+        // 「Unexpected token '<'」「The string did not match the expected pattern」という原因不明のエラーになる。
+        // 中身を確認し、エラー報告メールでGAS側の原因が読めるよう応答の冒頭を添えて明確なエラーにする
+        const text = await res.text();
+        try { return JSON.parse(text); }
+        catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
       } catch (e) {
         if (attempt >= retries) { if (e.name === 'AbortError') throw new Error('サーバーの応答がありません（タイムアウト）'); throw e; }
         await new Promise(r => setTimeout(r, 1000));
@@ -500,7 +526,8 @@
       showLoader("初期データ読込中...", "マスターデータベースへ初回接続しています");
     }
     try {
-      const json = await fetchGasJson({ action: "fetch_init", password: PIN_CODE, app_name: "ポータル" });
+      const json = await fetchGasJson({ action: "fetch_init", password: getAuthToken(), app_name: "ポータル" });
+      if (isAuthError(json)) { handleAuthExpired(); return; }
       if (json.status === "success") {
         const nowMs = Date.now();
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: nowMs, data: json })); 
@@ -585,7 +612,8 @@
     if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      const json = await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: q, source: "ポータル" }, 0);
+      const json = await fetchGasJson({ action: "submit_question", password: getAuthToken(), question: q, source: "ポータル" }, 0);
+      if (isAuthError(json)) { closeModal('modal-qa'); handleAuthExpired(); return; }
       if (json.status === "success") {
         alert("要望を送信しました。");
         document.getElementById("qa-input").value = "";
