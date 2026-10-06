@@ -58,6 +58,20 @@ function clampTimeInput(el)  { /* HH:0-23, MM:0-59 に丸める。onblur属性�
 - 中央のタイトルは`flex:1; min-width:0;`にし、それでも入らない場合だけ`overflow:hidden; text-overflow:ellipsis;`で省略記号にする（最終手段。折り返しでレイアウトが崩れるほうが省略よりも悪いという判断）
 - search.htmlだけは`header`自体に`flex-wrap:wrap`を付けて、ヘッダー全体が2段に折り返る別方式を採用済み（既存の動作を変えていない）
 
+### 入力途中の下書き自動保存（2026-10-06追加）
+症例登録・デブリーフィング・業務日報・統合チェックリストは、入力のたびに（800ms待って）端末内のlocalStorageへ下書きを保存し、画面が裏に回る瞬間（`visibilitychange`/`pagehide`）にもすぐ保存する。キーはすべて`aw109_draft_`で始まる。
+| 画面 | キー | 中身 | 復元方法 |
+|---|---|---|---|
+| index.html | `aw109_draft_case_new` / `aw109_draft_case_edit_<sysId>` | `getCollectData()`の送信データ＋要請番号欄の生の値 | 編集画面と同じ`restoreData()`。開いた時に確認ダイアログ |
+| debriefing.html | `aw109_draft_debrief_<事案ID>` | `sysData`の写し＋処置・薬剤タグのON/OFF＋個別の入力欄 | `restoreSystemData()`。事案を選んだ時に確認ダイアログ。IDなしで開くと下書きのある事案を案内 |
+| report.html | `aw109_draft_report_<日付>` | 記載者・医師・待機事由・特記事項・`events` | サーバーの日報と違う時だけ確認ダイアログ |
+| checklist.html | `aw109_draft_cl_<点検種類>_<点検日>` | 「大分類_点検項目名」をキーにした値 | 同じ日・同じ点検を開くと自動で戻し、「消して最初から」ボタンを表示。前日以前の分は破棄 |
+
+- 送信・保存に成功したら下書きを消す。index/debriefing/reportは3日を過ぎた下書きを破棄する。
+- 画面を開いた直後の状態から何も変えていなければ保存しない（閲覧しただけで下書きが残らないようにするため）。
+- **新しい入力欄を追加したら**：index.htmlは`getCollectData()`と`restoreData()`に、debriefing.htmlは`sysData`か`DEBRIEF_DRAFT_FIELDS`に入っていれば自動で下書きの対象になる。どちらにも入らない欄は下書きにも残らない。
+- 電波切れ（Load failed / Failed to fetch / タイムアウト）で送信できなかった時は、エラー報告メールを送らず「入力内容は画面と端末内の下書きに残っています」と日本語で案内する。
+
 ### PWA / Service Worker
 `sw.js`は以前どのページからも`register()`されておらず、オフラインキャッシュが一度も有効化されていなかった（2026-08-15発見・修正）。現在は`portal.html`（start_url）のみが登録している。スコープはサイト全体に及ぶので他画面での登録は不要。
 

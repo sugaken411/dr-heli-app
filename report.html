@@ -28,7 +28,11 @@
     .print-only-container { display: none; }
     @media print { 
       @page { size: portrait; margin: 5mm; } 
-      body { background: white; transform: scale(0.65); transform-origin: top left; width: 153%; height: 100%; -webkit-print-color-adjust: exact; margin-top: 0; } 
+      /* 🌟 以前はtransform:scale(0.65)で縮小しており、文字が約6ptと小さすぎるうえ、ページの区切りは縮小前の高さで計算されるため
+         1枚目の下1/3が空白のまま2枚目に続いていた。zoomなら区切り位置も縮小後で計算される */
+      body { background: white; zoom: 0.8; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin-top: 0; }
+      tr { break-inside: avoid; }
+      td.truncate { white-space: normal !important; max-width: none !important; overflow: visible !important; text-overflow: clip !important; } /* 内容欄を「…」で切らずに全文印刷する */
       header { display: none !important; } 
       main { margin-top: 0; padding: 0; } 
       .no-print { display: none !important; } 
@@ -52,6 +56,13 @@
       #sync-timestamp { display: none !important; }
     }
   </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
+  </style>
 </head>
 <body>
 
@@ -66,7 +77,7 @@
       <button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hidden"></span>
     </div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.6</span></div>
+    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.7</span></div>
     <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ <span class="btn-label">印刷</span></button></div>
   </header>
 
@@ -173,6 +184,24 @@
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
     // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
     if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
     // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
@@ -229,7 +258,7 @@
         loader.classList.remove('hidden'); 
         loader.style.display = "flex";
         loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-        loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+        loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; }, 15000);
       } else { 
         clearTimeout(loaderTimer1); clearTimeout(loaderTimer2);
         loader.classList.add('hidden'); 
@@ -238,7 +267,7 @@
     }
     
     function sendErrorLog(errMsg) { 
-      if(String(errMsg).includes("Load failed") || String(errMsg).includes("Failed to fetch")) return;
+      if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
       try { 
         fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
@@ -344,7 +373,8 @@
     }
 
     async function syncFromDb(force) {
-      showLoader(true, "データを同期中...", "事案データベースからデータを取得しています"); 
+      if (!force) { saveReportDraftNow(); reportDraftReady = false; } // 🌟 日付切替の前に、表示中の日付の下書きを保存しておく
+      showLoader(true, "データを同期中...", "事案データベースからデータを取得しています");
       const dateVal = normalizeDate(document.getElementById('info-date').value);
       try {
         const res = await fetch(GAS_API_URL, { 
@@ -394,13 +424,15 @@
             }
             events = data.events || [];
           }
-          updatePrintHeader(); 
+          updatePrintHeader();
           updateSyncTimestamp();
           render();
+          if (!force) initReportDraft(); // 🌟 サーバーの日報を表示した後で、この日付の入力途中の下書きを確認
         } else { throw new Error(json.message); }
-      } catch(e) { 
-        sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
-        alert("事案の同期に失敗しました。オフライン保存データを確認してください。"); 
+      } catch(e) {
+        sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+        alert("事案の同期に失敗しました。オフライン保存データを確認してください。");
+        if (!force) initReportDraft(); // 🌟 電波がなくても、端末内の下書きの復元と保存は続ける
       } finally { showLoader(false); }
     }
 
@@ -408,6 +440,90 @@
       document.getElementById('sync-modal').classList.add('hidden');
       if (choice === 'overwrite') { events = [...tempManualEvents, ...tempAutoEvents]; alert("事案を優先しました。重複部分は一覧から「削除」してください。"); render(); }
     }
+
+    // ===== 🌟 入力途中の下書き自動保存（原則A3-C） =====
+    // 日報は当直中に少しずつ書き足していくため、画面を閉じたり、iPhoneが裏で画面を破棄したりすると、未保存の追記が消えていた。
+    // 日付ごと（aw109_draft_report_<日付>）に、記載者・医師・待機事由・特記事項・タイムラインを端末内(localStorage)へ自動保存する。
+    const REPORT_DRAFT_PREFIX = "aw109_draft_report_";
+    const REPORT_DRAFT_MAX_AGE_MS = 72 * 60 * 60 * 1000;
+    let reportDraftReady = false; let reportDraftBaseline = ""; let reportDraftTimer = null;
+    let reportDraftDate = ""; // 下書きの保存先の日付（日付欄を切り替えた瞬間に、別の日付へ保存してしまわないよう固定する）
+
+    function getReportSnapshot() {
+      return {
+        nurse: document.getElementById('info-nurse').value, nurseOther: document.getElementById('info-nurse-other').value,
+        doctor: document.getElementById('info-doctor').value, doctorOther: document.getElementById('info-doctor-other').value,
+        reasons: Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value),
+        remarks: document.getElementById('info-remarks').value,
+        events: events
+      };
+    }
+    function reportCompareString(snap) { return JSON.stringify([snap.nurse, snap.nurseOther, snap.doctor, snap.doctorOther, snap.reasons, snap.remarks, snap.events]); }
+
+    function saveReportDraftNow() {
+      if (!reportDraftReady || !reportDraftDate) return;
+      clearTimeout(reportDraftTimer);
+      try {
+        const snap = getReportSnapshot();
+        if (reportCompareString(snap) === reportDraftBaseline) return;
+        snap.savedAt = Date.now();
+        localStorage.setItem(REPORT_DRAFT_PREFIX + reportDraftDate, JSON.stringify(snap));
+      } catch (e) { console.warn("下書き保存に失敗しました:", e); }
+    }
+    function scheduleReportDraftSave() {
+      if (!reportDraftReady) return;
+      clearTimeout(reportDraftTimer);
+      reportDraftTimer = setTimeout(saveReportDraftNow, 800);
+    }
+    function clearReportDraft() {
+      clearTimeout(reportDraftTimer);
+      try { localStorage.removeItem(REPORT_DRAFT_PREFIX + reportDraftDate); } catch (e) {}
+      reportDraftBaseline = reportCompareString(getReportSnapshot()); // 保存した状態から変わった時だけ、また下書きにする
+    }
+
+    function applyReportDraft(d) {
+      const setSel = (selId, othId, val, other) => {
+        const sel = document.getElementById(selId);
+        sel.value = val || "";
+        document.getElementById(othId).value = other || "";
+        document.getElementById(othId).classList.toggle('hidden', val !== 'その他');
+      };
+      setSel('info-nurse', 'info-nurse-other', d.nurse, d.nurseOther);
+      setSel('info-doctor', 'info-doctor-other', d.doctor, d.doctorOther);
+      document.querySelectorAll('input[name="reason"]').forEach(cb => { cb.checked = (d.reasons || []).includes(cb.value); });
+      document.getElementById('info-remarks').value = d.remarks || "";
+      events = Array.isArray(d.events) ? d.events : [];
+      updatePrintHeader(); render();
+    }
+
+    // 日付ごとの表示が終わった時に呼ぶ。下書きがサーバーの内容と違えば復元を確認し、その後の状態を比較の基準にする
+    function initReportDraft() {
+      reportDraftDate = normalizeDate(document.getElementById('info-date').value);
+      const key = REPORT_DRAFT_PREFIX + reportDraftDate;
+      let d = null;
+      try { d = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { d = null; }
+      if (d && (!d.savedAt || Date.now() - d.savedAt > REPORT_DRAFT_MAX_AGE_MS)) { try { localStorage.removeItem(key); } catch (e) {} d = null; }
+      const current = reportCompareString(getReportSnapshot());
+      let restored = false;
+      if (d && reportCompareString(d) !== current) {
+        const t = new Date(d.savedAt);
+        const when = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+        if (confirm(`${reportDraftDate} の日報に、まだ保存していない入力途中の下書きがあります（${when}）。\n\n［OK］下書きを復元する\n［キャンセル］下書きを破棄する`)) {
+          applyReportDraft(d); restored = true;
+        } else {
+          try { localStorage.removeItem(key); } catch (e) {}
+        }
+      } else if (d) {
+        try { localStorage.removeItem(key); } catch (e) {} // サーバーの内容と同じ＝保存済みなので不要
+      }
+      reportDraftBaseline = restored ? "" : reportCompareString(getReportSnapshot());
+      reportDraftReady = true;
+      if (restored) saveReportDraftNow();
+    }
+
+    ["input", "change", "click"].forEach(evt => document.addEventListener(evt, () => scheduleReportDraftSave(), true));
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveReportDraftNow(); });
+    window.addEventListener("pagehide", saveReportDraftNow);
 
     async function saveReport() {
       const dateVal = normalizeDate(document.getElementById('info-date').value);
@@ -426,12 +542,20 @@
         });
         const json = await parseGasResponse(res); 
         if (json.status === "success") {
-          alert("保存しました！"); 
+          clearReportDraft(); // 🌟 保存できたので下書きは不要
+          alert("保存しました！");
           updateSyncTimestamp();
         } else { throw new Error(json.message); }
-      } catch(e) { 
-        sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); 
-        alert("保存エラーが発生しました。"); 
+      } catch(e) {
+        saveReportDraftNow();
+        const m = String(e.message || e);
+        if ((e && e.isTimeout) || m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
+          // 🌟 電波切れはアプリの不具合ではないため、エラー報告は送らず案内だけ出す（原則A4）
+          alert("電波が弱いため保存できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n電波の良い場所で、もう一度「日報を確定・保存」を押してください。");
+        } else {
+          sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+          alert("保存エラーが発生しました。入力内容は画面と端末内の下書きに残っています。");
+        }
       } finally { showLoader(false); }
     }
 
@@ -523,6 +647,7 @@
         `;
       });
       bars.innerHTML = barsHtml; tbody.innerHTML = listHtml;
+      scheduleReportDraftSave(); // 🌟 タイムラインの追加・修正・削除も下書きに反映する
     }
 
     function saveEvent() {

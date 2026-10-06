@@ -32,7 +32,7 @@
     main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
     .cross-item { display: flex; flex-direction: column; gap: 4px; }
-    .cross-item label { font-size: 11px; font-weight: bold; color: var(--sub); }
+    .cross-item label { font-size: 13px; font-weight: bold; color: var(--sub); }
     .card { background: var(--card); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border: 1px solid #d1d1d6; padding: 16px; }
     .section-label { font-size: 13px; font-weight: 800; color: var(--blue); margin-bottom: 12px; border-bottom: 1px solid #efeff4; padding-bottom: 6px; text-transform: uppercase; }
     
@@ -88,7 +88,14 @@
     .progress-bar-fill { position: absolute; top: 0; left: -40%; height: 100%; width: 40%; background: var(--blue); border-radius: 3px; animation: indeterminate 1.1s ease-in-out infinite; }
     @keyframes indeterminate { 0% { left: -40%; } 100% { left: 100%; } }
     
-    @media print { body { background: #fff; padding: 0; } header, .tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
+    @media print { body { background: #fff; padding: 0; } main { margin-top: 0 !important; padding-top: 0 !important; } header,.tab-container, main > div:not(#tab-sec4), .no-print { display: none !important; } #tab-sec4 { display: block !important; margin: 0; padding: 0; } }
+  </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
 </head>
 <body>
@@ -105,7 +112,7 @@
 
 <header>
   <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.16</span></div>
+  <div style="font-weight: 900; font-size: 16px;">デブリーフィング <span class="version-tag">v11.17</span></div>
   <div style="display:flex; gap:12px;">
     <button type="button" class="hdr-btn no-print" onclick="openModal('qa')">❓ Q&A</button>
   </div>
@@ -130,18 +137,18 @@
       
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
         <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">日付指定で探す</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">日付指定で探す</label>
           <input type="date" id="s-date" onchange="clearSearchMonth(); searchCases();" style="margin-bottom:0;">
         </div>
         <div>
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">月指定で探す</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">月指定で探す</label>
           <input type="month" id="s-month" onchange="clearSearchDate(); searchCases();" style="margin-bottom:0;">
         </div>
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
         <div style="flex:1;">
-          <label style="font-size:11px; font-weight:bold; color:var(--sub);">要請番号</label>
+          <label style="font-size:13px; font-weight:bold; color:var(--sub);">要請番号</label>
           <input type="tel" inputmode="numeric" id="s-id" placeholder="番号入力（空欄でも可）" style="margin-bottom:0;" oninput="toHalfWidth(this); searchCases();">
         </div>
         <button type="button" class="btn-blue" onclick="searchCases()" style="padding:11px 16px; margin-top:16px; font-size:13px; width:auto; white-space:nowrap;">検索 🔍</button>
@@ -321,6 +328,8 @@
     <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; padding:16px;"></div>
     <div class="no-print">
       <button type="button" class="btn-blue" id="btn-submit" onclick="submitDebriefing()" style="padding: 16px; font-size: 16px;">✅ アーカイブに保存</button>
+      <!-- 🌟 振り返りの内容を紙で配布・掲示できるよう印刷ボタンを置く（以前はブラウザのメニューから探す必要があった） -->
+      <button type="button" onclick="window.print()" style="width:100%; min-height:48px; margin-top:10px; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:bold; font-size:15px;">🖨️ この内容を印刷</button>
     </div>
   </div>
 </main>
@@ -338,6 +347,26 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
+  // 🌟 Q&Aの質問文は現場の誰でも送れるため、記号(<>等)をそのまま画面に埋め込まず無害化して表示する
+  function escapeQaText(str) { return String(str === undefined || str === null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
   // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
   if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
   // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
@@ -368,11 +397,11 @@
   });
 
   function sendErrorLog(errMsg) { 
-    if(String(errMsg).includes("Load failed")) return;
+    if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(errMsg))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
     try { 
       fetch(GAS_API_URL, { 
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.16)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
+        body: JSON.stringify({ action: "error_log", source: "デブリーフィング(v11.17)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -417,7 +446,7 @@
       document.getElementById("loader-sub-text").innerHTML = msg2;
       loader.style.display = "flex";
       loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; }, 5000);
-      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; }, 15000);
     }
   }
   function hideLoader() { 
@@ -443,6 +472,12 @@
     el.value = String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
   }
   function clearSearchMonth() { document.getElementById("s-month").value = ""; }
+  function shiftSearchDate(days) {
+    const el = document.getElementById("s-date"); const d = el.value ? new Date(el.value + "T00:00:00") : new Date();
+    d.setDate(d.getDate() + days);
+    el.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    searchCases();
+  }
   function clearSearchDate() { document.getElementById("s-date").value = ""; }
   function clearSearchFilters() { document.getElementById("s-date").value = ""; document.getElementById("s-month").value = ""; document.getElementById("s-id").value = ""; }
 
@@ -507,7 +542,7 @@
       const jianData = jianRes.data;
       const debData = debRes.data;
 
-      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
+      if(jsonInit.qa) document.getElementById("qa-list").innerHTML = jsonInit.qa.filter(q => q.status === "◯").map(item => `<p style="white-space:pre-line; margin-bottom:8px;"><b>Q. ${escapeQaText(item.q)}</b><br><span style="color:var(--ink);">A. ${escapeQaText(item.a)}</span></p><hr style="border:none;border-top:1px solid var(--line);">`).join("");
 
       const cacheObj = { timestamp: Utilities_formatDate(new Date()), allCases: jianData, existing: debData, masters: jsonInit.masters };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
@@ -559,13 +594,18 @@
       document.getElementById("s-date").value = ""; 
       // 🌟 UUID（sysId）または要請番号（displayId）で合致判定
       let targetRow = allCasesData.find(r => String(r.id) === String(editId) || String(r.displayId) === String(editId));
-      if (targetRow) {
+      // 🌟 キャッシュで表示した直後に裏で最新データを取り直すと、ここで同じ事案をもう一度選び直してしまい、
+      // その数秒の間に入力した内容がサーバーの値で上書きされていた。既に同じ事案を開いている場合は選び直さない
+      if (targetRow && currentCase && String(linkedCaseId) === String(targetRow.id || targetRow.displayId)) {
+        // 何もしない（入力中の内容を保持）
+      } else if (targetRow) {
         selectCase(targetRow);
       } else {
         searchCases();
       }
     } else {
       searchCases();
+      setTimeout(offerPendingDebriefDrafts, 0); // 🌟 下書きのある事案の案内
     }
   }
 
@@ -589,7 +629,8 @@
     const q = document.getElementById("qa-input").value.trim(); if (!q) return alert("入力してください。");
     const btn = event.target; btn.textContent = "送信中..."; btn.disabled = true;
     try {
-      await fetchGasJson({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}, 0);
+      const json = await fetchGasJson({action:"submit_question", password:PIN_CODE, question:q, source:"デブリーフィング"}, 0);
+      if (json.status !== "success") throw new Error(json.message || "サーバー側で受付できませんでした"); // 🌟 失敗の応答でも「送信しました」と出ていた
       alert("要望を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('qa');
     } catch (e) {
       const msg = String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再度送信してください。" : "通信エラーが発生しました。";
@@ -745,7 +786,9 @@
 
     const resArea = document.getElementById("search-results-area");
     if(results.length === 0) {
-      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>";
+      // 🌟 日付は「今日」が初期値のため、夜間の出動を日付が変わってから振り返ると「該当なし」になっていた。前日・全件へすぐ切り替えられるようにする
+      resArea.innerHTML = "<div style='color:var(--brand); font-weight:bold; text-align:center; padding:10px;'>該当する事案がありません</div>" +
+        (sDate ? "<div style='display:flex; gap:8px;'><button type='button' onclick='shiftSearchDate(-1)' style='flex:1; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:bold;'>📅 前日の事案</button><button type='button' onclick='clearSearchFilters(); searchCases();' style='flex:1; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:bold;'>🔄 すべて表示</button></div>" : "");
     } else {
       resArea.innerHTML = results.map(r => {
         const time = r.rawData["要請時刻・施設間搬送依頼時刻"] || r.rawData["初期離陸時間"] || "--:--";
@@ -934,6 +977,12 @@
         document.getElementById("d-date").value = past["実施日"] || "";
         document.getElementById("d-time").value = past["開始時間"] || "";
         document.getElementById("d-time-end").value = past["終了時間"] || "";
+        // 🌟 振り返り場所・方法は従来復元されず、過去データを開くと既定値（浜町待機所・対面）に戻り、
+        // そのまま上書き保存すると記録が書き換わっていた。保存済みの値が選択肢にある場合だけ選び直す
+        [["env-loc", past["実施場所"]], ["env-method", past["実施方法"]]].forEach(([name, val]) => {
+          if (!val) return;
+          document.querySelectorAll(`input[name="${name}"]`).forEach(r => { if (r.value === val) r.checked = true; });
+        });
         document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存";
         document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       } catch(e) {
@@ -991,6 +1040,8 @@
 
 
     document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div><button type="button" class="btn-small" style="background:#fff3e0; color:#e65100; margin-top:8px;" onclick="goToEditCase()">✏️ 症例登録の内容を修正する</button>`;
+
+    afterCaseSelected(); // 🌟 この事案の入力途中の下書きを確認する
   }
 
   async function updateReviewStatus() {
@@ -1165,7 +1216,7 @@
     document.querySelectorAll('.ext-row').forEach(r => { const a=r.querySelector('.e-affil').value; const n=r.querySelector('.e-name').value; if(a||n) ptList.push(`${a} ${n}`); });
     document.querySelectorAll('.ojt-row').forEach(r => { const j=r.querySelector('.o-job').value; const n=r.querySelector('.o-name').value; if(j||n) ptList.push(`[OJT]${j} ${n}`); });
 
-    let diseaseStr = `[${sysData.disease.main}]`;
+    let diseaseStr = sysData.disease.main && String(sysData.disease.main) !== "" ? `[${sysData.disease.main}]` : "-"; // 🌟 未選択時に「[]」と表示されていた
     if(sysData.disease.cause) diseaseStr += ` 原因:${sysData.disease.cause}`;
     if(sysData.disease.sub) diseaseStr += ` -> ${sysData.disease.sub}`;
 
@@ -1222,6 +1273,149 @@
         </div>
       </div>`;
   }
+
+  // ===== 🌟 入力途中の下書き自動保存（原則A3-C） =====
+  // デブリーフィングは入力量が多く、iPhoneで他のアプリに切り替えて戻ると画面が破棄され入力が消えることがあった。
+  // 事案ごと（aw109_draft_debrief_<事案ID>）に、入力中の状態を端末内(localStorage)へ自動保存し、次にその事案を開いたときに復元を確認する。
+  // 中身は保存処理と同じsysData（タグ・評価・フィードバック）＋個別の入力欄で、復元は既存データの読込と同じrestoreSystemData()を使う。
+  const DEBRIEF_DRAFT_PREFIX = "aw109_draft_debrief_";
+  const DEBRIEF_DRAFT_MAX_AGE_MS = 72 * 60 * 60 * 1000;
+  const DEBRIEF_DRAFT_FIELDS = ["d-date", "d-time", "d-time-end", "v-gap", "v-team", "v-master-gap", "v-action", "diag-name"];
+  let debriefDraftReady = false; let debriefDraftBaseline = ""; let debriefDraftTimer = null;
+  let debriefDraftCaseId = ""; // 下書きの保存先になっている事案ID
+  let debriefDraftAutoAccept = ""; // ページを開いた時の案内で「開く」を選んだ事案は、重ねて確認しない
+
+  function getDebriefDraftKey(caseId) { return DEBRIEF_DRAFT_PREFIX + caseId; }
+
+  function getDebriefSnapshot() {
+    const sys = JSON.parse(JSON.stringify(sysData));
+    sys.summary = document.getElementById("v-summary").value;
+    sys.ext = []; document.querySelectorAll('.ext-row').forEach(r => sys.ext.push({ affil: r.querySelector('.e-affil').value, name: r.querySelector('.e-name').value }));
+    sys.ojt = []; document.querySelectorAll('.ojt-row').forEach(r => sys.ojt.push({ job: r.querySelector('.o-job').value, name: r.querySelector('.o-name').value }));
+    const pills = sel => Array.from(document.querySelectorAll(sel)).map(el => ({ t: el.innerText, on: el.classList.contains('on') }));
+    const fields = {}; DEBRIEF_DRAFT_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) fields[id] = el.value; });
+    return {
+      caseId: debriefDraftCaseId,
+      caseNo: currentCase ? (currentCase["要請番号"] || "") : "",
+      sys: sys,
+      procPills: pills('#v-fetched-procs .pill'),
+      drugPills: pills('#v-fetched-drugs .pill'),
+      fields: fields,
+      envLoc: document.querySelector('input[name="env-loc"]:checked')?.value || "",
+      envMethod: document.querySelector('input[name="env-method"]:checked')?.value || ""
+    };
+  }
+
+  function debriefCompareString(snap) { return JSON.stringify([snap.sys, snap.procPills, snap.drugPills, snap.fields, snap.envLoc, snap.envMethod]); }
+
+  function saveDebriefDraftNow() {
+    if (!debriefDraftReady || !debriefDraftCaseId || !currentCase) return;
+    clearTimeout(debriefDraftTimer);
+    try {
+      const snap = getDebriefSnapshot();
+      if (debriefCompareString(snap) === debriefDraftBaseline) return;
+      snap.savedAt = Date.now();
+      localStorage.setItem(getDebriefDraftKey(debriefDraftCaseId), JSON.stringify(snap));
+    } catch (e) { console.warn("下書き保存に失敗しました:", e); }
+  }
+
+  function scheduleDebriefDraftSave() {
+    if (!debriefDraftReady) return;
+    clearTimeout(debriefDraftTimer);
+    debriefDraftTimer = setTimeout(saveDebriefDraftNow, 800);
+  }
+
+  function readDebriefDraft(caseId) {
+    try {
+      const d = JSON.parse(localStorage.getItem(getDebriefDraftKey(caseId)) || "null");
+      if (d && d.savedAt && Date.now() - d.savedAt <= DEBRIEF_DRAFT_MAX_AGE_MS) return d;
+      if (d) localStorage.removeItem(getDebriefDraftKey(caseId)); // 古い下書きは破棄
+    } catch (e) {}
+    return null;
+  }
+
+  function applyDebriefDraft(d) {
+    restoreSystemData(JSON.parse(JSON.stringify(d.sys)));
+    const renderPills = (id, list) => {
+      if (!list || list.length === 0) return;
+      const wrap = document.getElementById(id);
+      wrap.innerHTML = "";
+      list.forEach(p => {
+        const el = document.createElement("div");
+        el.className = "pill" + (p.on ? " on" : "");
+        el.innerText = p.t;
+        el.onclick = function() { this.classList.toggle('on'); };
+        wrap.appendChild(el);
+      });
+    };
+    renderPills("v-fetched-procs", d.procPills);
+    renderPills("v-fetched-drugs", d.drugPills);
+    Object.keys(d.fields || {}).forEach(id => { const el = document.getElementById(id); if (el) el.value = d.fields[id]; });
+    [["env-loc", d.envLoc], ["env-method", d.envMethod]].forEach(([name, val]) => {
+      document.querySelectorAll(`input[name="${name}"]`).forEach(r => { if (r.value === val) r.checked = true; });
+    });
+  }
+
+  // 事案を選んだ直後に呼ぶ。restoreSystemData()内の疾患分類の時間差復元が終わってから下書きを確認し、比較の基準を取る
+  function afterCaseSelected() {
+    debriefDraftReady = false;
+    clearTimeout(debriefDraftTimer);
+    const caseId = String(linkedCaseId || "");
+    debriefDraftCaseId = caseId;
+    setTimeout(() => {
+      if (debriefDraftCaseId !== caseId) return; // その間に別の事案が選ばれた
+      const d = readDebriefDraft(caseId);
+      let restored = false;
+      if (d) {
+        const t = new Date(d.savedAt);
+        const when = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+        const ok = debriefDraftAutoAccept === caseId || confirm(`この事案（No.${d.caseNo || caseId}）の入力途中の下書きがあります（${when} 保存）。\n\n［OK］下書きを復元する\n［キャンセル］下書きを破棄する`);
+        if (ok) { applyDebriefDraft(d); restored = true; }
+        else { try { localStorage.removeItem(getDebriefDraftKey(caseId)); } catch (e) {} }
+      }
+      debriefDraftAutoAccept = "";
+      setTimeout(() => {
+        if (debriefDraftCaseId !== caseId) return;
+        // 復元した場合は、すぐ閉じられても下書きが残るよう基準を空にして保存しておく
+        debriefDraftBaseline = restored ? "" : debriefCompareString(getDebriefSnapshot());
+        debriefDraftReady = true;
+        if (restored) saveDebriefDraftNow();
+      }, 300);
+    }, 300);
+  }
+
+  // ページを開いた時、まだ事案を選んでいなければ、入力途中の下書きがある事案を案内する
+  function offerPendingDebriefDrafts() {
+    if (currentCase) return;
+    const pending = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(DEBRIEF_DRAFT_PREFIX)) { const d = readDebriefDraft(k.slice(DEBRIEF_DRAFT_PREFIX.length)); if (d) pending.push(d); }
+      }
+    } catch (e) { return; }
+    if (pending.length === 0) return;
+    pending.sort((a, b) => b.savedAt - a.savedAt);
+    const d = pending[0];
+    const row = allCasesData.find(r => String(r.id) === String(d.caseId) || String(r.displayId) === String(d.caseId));
+    if (!row) return;
+    const more = pending.length > 1 ? `\n（ほかに${pending.length - 1}件の下書きがあります。事案を選ぶと確認できます）` : "";
+    if (confirm(`入力途中のデブリーフィングがあります（No.${d.caseNo || d.caseId}）。\n続きを開きますか？${more}`)) {
+      debriefDraftAutoAccept = String(row.id || row.displayId || "");
+      selectCase(row);
+    }
+  }
+
+  ["input", "change", "click"].forEach(evt => document.addEventListener(evt, scheduleDebriefDraftSave, true));
+  // 評価・フィードバック欄は入力確定(change)の時にsysDataへ反映される作りのため、入力途中で裏に回った場合は
+  // 先に確定させてから保存する（iOSはアプリ切替時に入力欄のフォーカスを外さないことがある）
+  function flushAndSaveDebriefDraft() {
+    const ae = document.activeElement;
+    if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA") && ae.type !== "radio" && ae.type !== "checkbox") ae.dispatchEvent(new Event("change", { bubbles: true }));
+    saveDebriefDraftNow();
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushAndSaveDebriefDraft(); });
+  window.addEventListener("pagehide", flushAndSaveDebriefDraft);
 
   async function submitDebriefing() {
     if (!currentCase) return alert("事案がありません。");
@@ -1323,10 +1517,22 @@
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
       const json = await parseGasResponse(res); 
-      if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else { throw new Error(json.message); }
-    } catch(e) { 
-      sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);
-      alert("通信エラーが発生しました。入力データは保持されています。電波の良い場所で再度お試しください。"); 
+      if (json.status === "success") {
+        // 🌟 保存できたので下書きは不要（移動中に保存し直さないよう止めてから消す）
+        debriefDraftReady = false; clearTimeout(debriefDraftTimer);
+        try { localStorage.removeItem(getDebriefDraftKey(debriefDraftCaseId)); } catch (e) {}
+        alert("保存しました！"); location.href = "portal.html";
+      } else { throw new Error(json.message); }
+    } catch(e) {
+      saveDebriefDraftNow();
+      const m = String(e.message || e);
+      if ((e && e.isTimeout) || m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost")) {
+        // 🌟 電波切れはアプリの不具合ではないため、エラー報告は送らず案内だけ出す（原則A4）
+        alert("電波が弱いため保存できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n電波の良い場所で、もう一度保存してください。");
+      } else {
+        sendErrorLog(`Submit Error\nMsg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+        alert(`保存エラーが発生しました。入力内容は画面と端末内の下書きに残っています。\n[エラー詳細]: ${e.message || e}`);
+      }
     } finally { btn.disabled = false; btn.innerText = "✅ アーカイブに保存"; hideLoader(); }
   }
 </script>

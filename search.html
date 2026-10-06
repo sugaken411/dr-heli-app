@@ -15,6 +15,13 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
     
     header { background: #fff; padding: 12px 16px; padding-top: calc(12px + var(--safe-top)); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+    /* 🌟 スマホではヘッダーが3段になり、検索欄が画面の下に押し出されていた。題名を1段目、ボタンを2段目にまとめて2段にする */
+    @media (max-width: 600px) {
+      header { gap: 4px 8px; }
+      header .hdr-title { order: -1; flex-basis: 100%; text-align: center; }
+      header .hdr-lbl { display: none; }
+      header > div { gap: 6px !important; }
+    }
     .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; padding: 4px 8px; }
     /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
        高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
@@ -33,7 +40,8 @@
     
     .res-item { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
     .res-item:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,122,255,0.1); }
-    .res-item::after { content: "編集 ➔"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--blue); font-weight: bold; opacity: 0; transition: opacity 0.2s; }
+    .card-act-btn { flex: 1; min-height: 44px; border: 1px solid #b3d4ff; background: #fff; color: var(--blue); border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; }
+    .res-item::after { display: none; content: "編集 ➔";position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--blue); font-weight: bold; opacity: 0; transition: opacity 0.2s; }
     .res-item:hover::after { opacity: 1; }
     .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
     
@@ -60,7 +68,16 @@
       main, main * { visibility: visible; }
       main { position: absolute; left: 0; top: 0; width: 100%; }
       .no-print { display: none !important; }
+      body, main { background: #fff !important; }
+      .res-item { break-inside: avoid; box-shadow: none; }
     }
+  </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
 </head>
 <body>
@@ -76,13 +93,13 @@
   <header>
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
       <button type="button" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
-      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 マスタ更新</button>
+      <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)" title="マスタ更新" aria-label="マスタ更新">🔄<span class="hdr-lbl"> マスタ更新</span></button>
     </div>
-    <div style="font-weight:900;">検索コンソール <span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v14.12</span></div>
+    <div class="hdr-title" style="font-weight:900;">検索コンソール<span style="font-size:11px; background:var(--blue); color:#fff; padding:3px 6px; border-radius:4px;">v14.13</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ Q&A</button>
       <span class="timer-badge" id="lock-timer" title="オートロックまで">10:00</span>
-      <button type="button" class="hdr-btn" onclick="location.reload()" style="color:var(--brand);">🔒 ロック</button>
+      <button type="button" class="hdr-btn" onclick="lockNow()" style="color:var(--brand);" title="ロック" aria-label="ロック">🔒<span class="hdr-lbl"> ロック</span></button>
     </div>
   </header>
   
@@ -145,7 +162,7 @@
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;" class="no-print">
       <div id="result-count" style="font-weight:bold; color:var(--ink);">検索結果: 0 件</div>
-      <button type="button" onclick="exportCSV()" style="background:#34a853; padding:8px 12px; font-size:13px; box-shadow: 0 2px 6px rgba(52,168,83,0.3);">📊 CSV出力</button>
+      <div style="display:flex; gap:8px;"><button type="button" onclick="window.print()" style="background:#5f6368; min-height:44px; padding:8px 12px; font-size:13px;">🖨️ 印刷</button><button type="button" onclick="exportCSV()" style="background:#34a853; min-height:44px; padding:8px 12px; font-size:13px; box-shadow: 0 2px 6px rgba(52,168,83,0.3);">📊 CSV出力</button></div>
     </div>
     
     <div id="results">
@@ -170,6 +187,24 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
   // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
   if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
   // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
@@ -189,11 +224,11 @@
 
   function toHalfWidth(ele) { let val = ele.value; val = val.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }); ele.value = val; }
 
-  function sendErrorLog(detail) {
+  function sendErrorLog(detail) { if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(detail))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
     console.error("[System Error Log]", detail);
     fetch(GAS_API_URL, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "error_log", password: PIN_CODE, errorMsg: detail, source: "AW109_Search(v14.12)", authName: localStorage.getItem('aw109_auth_name') || '' }),
+      body: JSON.stringify({ action: "error_log", password: PIN_CODE, errorMsg: detail, source: "AW109_Search(v14.13)", authName: localStorage.getItem('aw109_auth_name') || '' }),
       redirect: "follow"
     }).catch(err => console.error("Error log dispatch failed:", err));
   }
@@ -226,7 +261,7 @@
       document.getElementById("loader-sub-text").innerText = m2; 
       loader.style.display = "flex";
       loaderTimer1 = setTimeout(() => { document.getElementById("loader-sub-text").innerText = "電波が弱く同期に時間がかかっています。そのままお待ちください..."; }, 5000);
-      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; }, 15000);
+      loaderTimer2 = setTimeout(() => { document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; }, 15000);
     }
   }
 
@@ -248,6 +283,21 @@
     document.getElementById("lock-timer").textContent = `${m}:${s}`; 
   }
   
+  // 🌟 ログアウトしてポータルへ戻す（オートロックと「🔒 ロック」ボタンで共通）
+  function doLogout() {
+    localStorage.removeItem('aw109_auth_token');
+    localStorage.removeItem('aw109_auth_name');
+    localStorage.removeItem('aw109_auth_isAdmin');
+    localStorage.removeItem('aw109_auth_loginTime');
+    location.href = 'portal.html';
+  }
+
+  // 🌟 以前の「🔒 ロック」ボタンは画面を再読込するだけで、ロックされていなかった（離席時に押しても誰でも続けて操作できた）。
+  // オートロックと同じく本当にログアウトする。押し間違いで再ログインが必要にならないよう確認を挟む
+  function lockNow() {
+    if (confirm("ロックして、ポータルのログイン画面に戻りますか？\n（再開するにはもう一度ログインが必要です）")) doLogout();
+  }
+
   function startTimer() {
     updateTimerDisplay();
     timerInterval = setInterval(() => {
@@ -255,11 +305,7 @@
       updateTimerDisplay();
       if(lockTime <= 0) {
         // 🌟 一定時間操作がなければ、本当にログアウトしてポータルへの再ログインを求める
-        localStorage.removeItem('aw109_auth_token');
-        localStorage.removeItem('aw109_auth_name');
-        localStorage.removeItem('aw109_auth_isAdmin');
-        localStorage.removeItem('aw109_auth_loginTime');
-        location.href = 'portal.html';
+        doLogout();
       }
     }, 1000);
     ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evt => window.addEventListener(evt, resetTimer));
@@ -371,7 +417,7 @@
     }
     
     if (jsonRes.qa) { 
-      document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>'; 
+      document.getElementById("qa-list").innerHTML = jsonRes.qa.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px; white-space:pre-line;"><b>Q. ${escapeHtml(item.q)}</b><br><span style="color:var(--ink);">A. ${escapeHtml(item.a)}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
     }
     
     const urlParams = new URLSearchParams(window.location.search); 
@@ -578,18 +624,25 @@
           // 保存されているかケースによって異なるため、両方をチェックして紐付け済みかを判定する
           const hasDebrief = debriefIds.has(String(item.id || "")) || debriefIds.has(String(item.displayId || r["要請番号"] || ""));
 
+          // 🌟 入力された文字（出場先・氏名など）はそのまま画面に埋め込まず、記号を無害化してから表示する
+          const e = escapeHtml;
           return `
-          <div class="res-item" onclick="goToEdit('${targetId}')">
+          <div class="res-item" data-id="${e(targetId)}" onclick="goToEdit(this.dataset.id)">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-              <b style="font-size:15px; ${idColor}">No.${r["要請番号"]} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${r["日付"]||"日付不明"})</span>${hasDebrief ? ' <span class="badge" style="background:#e3f2fd; color:#1565c0; font-weight:normal;">📝 デブリーフィング済み</span>' : ''}</b>
-              <span class="badge" style="background:${isDone?'#d1fae5':'#ffebeb'}; color:${isDone?'#065f46':'#d32f2f'}">${r["ステータス"]||"未完了"}</span>
+              <b style="font-size:15px; ${idColor}">No.${e(r["要請番号"])} <span style="color:var(--sub); font-size:12px; font-weight:normal;">(${e(r["日付"]||"日付不明")})</span>${hasDebrief ? ' <span class="badge" style="background:#e3f2fd; color:#1565c0; font-weight:normal;">📝 デブリーフィング済み</span>' : ''}</b>
+              <span class="badge" style="background:${isDone?'#d1fae5':'#ffebeb'}; color:${isDone?'#065f46':'#d32f2f'}">${e(r["ステータス"]||"未完了")}</span>
             </div>
             <div style="font-size:12px; color:var(--ink); margin-bottom:4px; display:flex; justify-content:space-between;">
-              <span><b>${r["要請区分"]||"未選択"}</b> (${r["スキーム選択"]||"未選択"})</span>
-              <span>[要請 ${safeTime(r["要請時刻・施設間搬送依頼時刻"])}] 出場先: ${r["出場先"]||"-"}</span>
+              <span><b>${e(r["要請区分"]||"未選択")}</b> (${e(r["スキーム選択"]||"未選択")})</span>
+              <span>[要請 ${e(safeTime(r["要請時刻・施設間搬送依頼時刻"]))}] 出場先: ${e(r["出場先"]||"-")}</span>
             </div>
-            <div style="font-size:12px; color:var(--sub); margin-bottom:4px;"><b>Dr:</b> ${r["フライトドクター"]||"-"} ｜ <b>Ns:</b> ${r["フライトナース"]||"-"}</div>
-            <div style="font-size:12px; color:var(--sub);"><b>接触［${safeTime(r["接触"])}］</b> ｜ <b>病着:</b> ${safeTime(r["病着"])} ｜ <b>終了:</b> ${safeTime(r["終了"])}</div>
+            <div style="font-size:12px; color:var(--sub); margin-bottom:4px;"><b>Dr:</b> ${e(r["フライトドクター"]||"-")} ｜ <b>Ns:</b> ${e(r["フライトナース"]||"-")}</div>
+            <div style="font-size:12px; color:var(--sub);"><b>接触［${e(safeTime(r["接触"]))}］</b> ｜ <b>病着:</b> ${e(safeTime(r["病着"]))} ｜ <b>終了:</b> ${e(safeTime(r["終了"]))}</div>
+            <!-- 🌟 事案から直接デブリーフィング（振り返り）の入力・確認へ進めるようにする（以前はポータル経由で事案を探し直す必要があった） -->
+            <div class="no-print" style="display:flex; gap:8px; margin-top:10px;">
+              <button type="button" class="card-act-btn" onclick="event.stopPropagation(); goToEdit(this.closest('.res-item').dataset.id)">✏️ 症例を編集</button>
+              <button type="button" class="card-act-btn" style="color:#5856d6; border-color:#c7c6f5;" onclick="event.stopPropagation(); goToDebrief(this.closest('.res-item').dataset.id)">🧠 ${hasDebrief ? 'デブリーフィングを見る' : 'デブリーフィングを入力'}</button>
+            </div>
           </div>`;
         }).join("");
         
@@ -612,6 +665,14 @@
   }
 
   // 🌟 編集画面へのシームレスなルーティングとスクロール位置保存
+  function goToDebrief(targetId) {
+    sessionStorage.setItem("aw109_search_scroll", window.scrollY);
+    showLoader("画面遷移中...", "デブリーフィング画面へ移動しています");
+    location.href = 'debriefing.html?editId=' + encodeURIComponent(targetId);
+  }
+
+  function escapeHtml(str) { if (str === undefined || str === null) return ""; return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
   function goToEdit(targetId) {
     sessionStorage.setItem("aw109_search_scroll", window.scrollY);
     showLoader("画面遷移中...", "編集画面へ移動しています");

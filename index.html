@@ -594,10 +594,17 @@
     }
     
     @media print {
-      header, .tab-bar, .no-print { display: none !important; }
+      header, .tab-bar, .no-print, #btn-submit-main, #master-sync-info { display: none !important; }
       body { padding-bottom: 0; background: #fff; }
       main { margin-top: 0; max-width: 100%; padding: 0; }
     }
+  </style>
+  <style>
+    /* 🌟 現場（手袋・揺れる機内・片手操作）でも押し間違えないよう、入力欄・選択欄・ボタン・選択チップは高さ44px以上にそろえる（原則：タップ領域44px） */
+    main input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]), main select, main button,
+    .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
+    main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media print { main button, main .chip, main .pill { min-height: 0; } }
   </style>
 </head>
 <body>
@@ -616,7 +623,7 @@
       <button type="button" class="hdr-btn no-print" onclick="goBackOrHome()">◀ <span class="btn-label">戻る</span></button>
       <button type="button" class="hdr-btn no-print" onclick="fetchLatestData(false, true)">🔄 <span class="btn-label">更新</span></button>
     </div>
-    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.12</span></div>
+    <div style="font-weight:900;" id="app-title">AW109 症例登録 <span style="font-size:11px; background:var(--brand); color:#fff; padding:3px 6px; border-radius:4px;">v14.14</span></div>
     <div style="display:flex; gap:12px; align-items:center;">
       <button type="button" class="hdr-btn" onclick="openModal('modal-qa')">❓ <span class="btn-label">Q&A</span></button>
     </div>
@@ -1113,9 +1120,9 @@
         <div id="preview-error" style="color:#d32f2f; font-weight:bold; font-size:13px; display:none; margin-bottom:8px;"></div>
         <div id="preview-box" style="font-size:14px; line-height:1.6; color:var(--ink); background:#f9f9f9; padding:12px; border-radius:8px; border:1px solid var(--line);"></div>
         
-        <div class="edit-section-title">✉️ 送信先オプション</div>
-        <div id="mail-options-box" style="margin-bottom:12px; display:flex; flex-direction:column; gap:8px;"></div>
-        <input type="email" id="custom-email" placeholder="手入力 (カンマ区切り可)" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:14px; background:#fff;">
+        <div class="edit-section-title no-print">✉️ 送信先オプション</div>
+        <div id="mail-options-box" class="no-print" style="margin-bottom:12px; display:flex; flex-direction:column; gap:8px;"></div>
+        <input type="email" id="custom-email" class="no-print" placeholder="手入力 (カンマ区切り可)" style="width:100%; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:14px; background:#fff;">
 
         <button type="button" id="btn-submit-main" onclick="submitData('submit')" style="width:100%; background:var(--brand); padding:16px; border-radius:12px; font-size:16px; font-weight:bold; color:#fff; border:none; box-shadow:0 4px 12px rgba(211,47,47,0.3); margin-top:20px;">🚀 この内容で送信する</button>
         
@@ -1177,13 +1184,34 @@
       <div style="font-size:40px; margin-bottom:8px;">✅</div>
       <h3 id="nav-choice-title" style="margin-top:0;">完了しました</h3>
       <p id="nav-choice-msg" style="color:var(--sub); font-size:14px; white-space:pre-line;"></p>
-      <button type="button" id="nav-choice-portal-btn" style="width:100%; padding:12px; border-radius:8px; background:var(--blue); color:#fff; font-weight:bold; margin-top:12px; border:none;">ポータルへ戻る</button>
-      <button type="button" onclick="closeModal('modal-nav-choice')" style="width:100%; padding:12px; border-radius:8px; background:#e5e5ea; color:var(--ink); font-weight:bold; margin-top:8px; border:none;">この画面にとどまる</button>
+      <button type="button" id="nav-choice-debrief-btn" style="display:none; width:100%; min-height:48px; padding:12px; border-radius:8px; background:#5856d6; color:#fff; font-weight:bold; margin-top:12px; border:none;" onclick="location.href='debriefing.html'">🧠 続けてデブリーフィングを入力</button>
+      <button type="button" id="nav-choice-portal-btn" style="width:100%; min-height:48px; padding:12px; border-radius:8px; background:var(--blue); color:#fff; font-weight:bold; margin-top:12px; border:none;">ポータルへ戻る</button>
+      <button type="button" id="nav-choice-stay-btn" onclick="closeModal('modal-nav-choice')" style="width:100%; min-height:48px; padding:12px; border-radius:8px; background:#e5e5ea; color:var(--ink); font-weight:bold; margin-top:8px; border:none;">この画面にとどまる</button>
     </div>
   </div>
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+  // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
+  // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
+  // 個別に上限時間を指定している通信（signal付き）はそのまま使う
+  (function() {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      opts = opts || {};
+      if (String(url).indexOf(GAS_API_URL) !== 0 || opts.signal) return originalFetch(url, opts);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+      return originalFetch(url, Object.assign({}, opts, { signal: controller.signal }))
+        .catch(e => {
+          if (e && e.name === "AbortError") { const err = new Error("サーバーの応答がありません（通信タイムアウト・60秒）。電波状況を確認し、再度お試しください。"); err.isTimeout = true; throw err; }
+          throw e;
+        })
+        .finally(() => clearTimeout(timer));
+    };
+  })();
+  // 🌟 Q&Aの質問文は現場の誰でも送れるため、記号(<>等)をそのまま画面に埋め込まず無害化して表示する
+  function escapeQaText(str) { return String(str === undefined || str === null ? "" : str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
   // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
   if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
   // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
@@ -1220,11 +1248,11 @@
     }
   }
 
-  function sendErrorLog(detail) {
+  function sendErrorLog(detail) { if(/Load failed|Failed to fetch|NetworkError|network connection was lost|Internet connection appears to be offline|タイムアウト/.test(String(detail))) return; // 🌟 電波切れはアプリの不具合ではないため報告しない（原則A4・メール送信枠の節約）
     console.error("[System Error Log]", detail);
     fetch(GAS_API_URL, {
       method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "error_log", password: PIN_CODE, errorMsg: detail, source: "AW109_CaseRegister(v14.12)", authName: localStorage.getItem('aw109_auth_name') || '' }),
+      body: JSON.stringify({ action: "error_log", password: PIN_CODE, errorMsg: detail, source: "AW109_CaseRegister(v14.14)", authName: localStorage.getItem('aw109_auth_name') || '' }),
       redirect: "follow"
     }).catch(err => console.error("Error log dispatch failed:", err));
   }
@@ -1251,7 +1279,7 @@
         document.getElementById("loader-sub-text").innerText = "電波が弱い可能性があります。そのままお待ちください..."; 
       }, 5000);
       loaderTimer2 = setTimeout(() => { 
-        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>通信タイムアウト<br>フリーズしている場合はリロードしてください。</span>"; 
+        document.getElementById("loader-sub-text").innerHTML = "<span style='color:var(--brand);'>電波が弱いか、サーバーの処理に時間がかかっています。<br>このままお待ちください（最大60秒）。</span>"; 
       }, 15000);
     }
   }
@@ -1270,10 +1298,16 @@
 
   // 🌟 保存成功後、location.href等の自動遷移に頼らず、ユーザー自身に「ポータルへ戻る/このまま」を選ばせる。
   // 自動遷移はService Worker経由のfetchがハングすると固まって見えるため、明示的な操作に置き換える。
-  function showNavChoice(title, msg) {
+  // afterNew=true：新規登録の完了時。入力欄は送信済みの内容のままなので「とどまる」は選ばせず、
+  // 「デブリーフィングへ」「もう1件入力（空の画面に戻す）」「ポータルへ」から次の行動を選べるようにする
+  function showNavChoice(title, msg, afterNew = false) {
     document.getElementById("nav-choice-title").innerText = title;
     document.getElementById("nav-choice-msg").innerText = msg;
     document.getElementById("nav-choice-portal-btn").onclick = () => { location.href = "portal.html"; };
+    document.getElementById("nav-choice-debrief-btn").style.display = afterNew ? "block" : "none";
+    const stayBtn = document.getElementById("nav-choice-stay-btn");
+    stayBtn.innerText = afterNew ? "➕ 続けて別の事案を入力" : "この画面にとどまる";
+    stayBtn.onclick = afterNew ? () => { location.href = "index.html"; } : () => closeModal("modal-nav-choice");
     openModal("modal-nav-choice");
   }
   
@@ -1434,7 +1468,7 @@
     }
 
     if (qaList) {
-      document.getElementById("qa-list").innerHTML = qaList.filter(q => q.status === "◯").map(item => `<p style="margin-bottom:8px;"><b>Q. ${item.q}</b><br><span style="color:var(--ink);">A. ${item.a}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
+      document.getElementById("qa-list").innerHTML = qaList.filter(q => q.status === "◯").map(item => `<p style="white-space:pre-line; margin-bottom:8px;"><b>Q. ${escapeQaText(item.q)}</b><br><span style="color:var(--ink);">A. ${escapeQaText(item.a)}</span></p><hr style="margin:12px 0; border:none; border-top:1px solid #ccc;">`).join("") || '<p>公開Q&Aはありません。</p>';
     }
     
     if (timestampMs) {
@@ -1453,28 +1487,48 @@
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('editId');
     if (editId) {
-      isEditMode = true; 
+      isEditMode = true;
       editTargetSysId = editId;
       document.getElementById('app-title').innerHTML = `AW109 症例登録 <span style="font-size:11px; background:#ff9800; color:#fff; padding:3px 6px; border-radius:4px;">編集中</span>`;
       fetchCaseForEdit(editId);
+    } else {
+      setTimeout(initDraft, 0); // 🌟 新規入力：マスタ反映後に下書きの有無を確認
     }
   }
 
   async function fetchCaseForEdit(targetId) {
     showLoader("事案データ読み込み中...", "過去のカルテを復元しています");
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
-      const json = await parseGasResponse(res);
+      // 🌟 編集する1件だけを取得する（fetch_case、GAS v3.4以降）。以前は毎回全事案を読み込んでおり、件数が増えるほど遅くなっていた。
+      // 再デプロイ前の古いサーバーは「不明なアクション」を返すので、その時は従来どおり全件から探す
+      const post = (body) => fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body), redirect: "follow" }).then(parseGasResponse);
+      let json = await post({ action: "fetch_case", password: PIN_CODE, id: targetId });
+      let row = null;
+      if (json.status === "success") {
+        row = json.data || null;
+      } else if (String(json.message || "").includes("不明なアクション")) {
+        json = await post({ action: "fetch_recent_cases", password: PIN_CODE });
+        if (json.status === "success") row = json.data.find(r => String(r.id) === String(targetId) || String(r.displayId) === String(targetId));
+      }
       if(json.status === "success") {
-        const row = json.data.find(r => String(r.id) === String(targetId) || String(r.displayId) === String(targetId));
-        if (row) { 
-          restoreData(row.rawData); 
+        if (row) {
+          restoreData(row.rawData);
+          // 🌟 編集：サーバーの記録を表示し終えてから（疾患分類の時間差復元を待って）、この事案の編集途中の下書きを確認
+          setTimeout(initDraft, 300);
         } else { 
           alert("指定された事案データが見つかりませんでした。"); 
           isEditMode = false; 
         }
       } else { throw new Error(json.message); }
-    } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("データ復元に失敗しました。"); } finally { hideLoader(); }
+    } catch(e) {
+      sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      // 🌟 読み込めないまま空の編集画面で「上書き保存」すると、記録を空欄で上書きしてしまう恐れがある。
+      // 再読込するか、前の画面に戻るかを選んでもらい、空のまま編集を続けさせない
+      hideLoader();
+      const why = isNetworkError(e) ? "電波が弱いため、事案データを読み込めませんでした。" : "事案データを読み込めませんでした。";
+      if (confirm(`${why}\n\n［OK］もう一度読み込む\n［キャンセル］前の画面に戻る`)) { setTimeout(() => fetchCaseForEdit(targetId), 0); }
+      else { if (history.length > 1) history.back(); else location.href = "search.html"; }
+    } finally { hideLoader(); }
   }
 
   function restoreData(row) {
@@ -1837,6 +1891,19 @@
     if(currentKeywords.length > 0) document.getElementById('chip-keyword-all').classList.add('open');
     if(currentDiagnosis.length > 0) document.getElementById('chip-diagnosis-all-wrap').classList.add('open');
 
+    // 🌟 算定項目（往診料・搬送料・長時間・SpO2）は、これまで復元されていなかった。setScheme()とcalcMonitor()が
+    // スキームや時刻から自動で付け直すため一見正しく見えるが、手動で変更した値（搬送料(新生児)、手動で外した往診料など）は
+    // 編集画面を開くと自動値に戻り、そのまま上書き保存すると記録が変わってしまっていた。
+    // 保存済みの値が算定の選択肢と一致する場合だけ、自動値の後に上書きして元の状態に戻す（列が無い古い記録は自動値のまま）。
+    [["oshin", "往診料"], ["hansou", "搬送料"], ["long", "長時間加算"], ["spo2", "経皮的酸素飽和度"]].forEach(([key, col]) => {
+      if (row[col] === undefined) return;
+      const idx = state.calcVals[key].indexOf(String(row[col]).trim());
+      if (idx !== -1) setCalc(key, idx);
+    });
+    // 同じ理由で、管理料（人工呼吸器・除細動装置）もhandleLifeSupport()が処置から自動で付け直した後に、保存済みの値へ戻す
+    if (row["管理料_人工呼吸器"] !== undefined) document.getElementById("chk-ls-vent").checked = String(row["管理料_人工呼吸器"]).includes("あり");
+    if (row["管理料_除細動装置"] !== undefined) document.getElementById("chk-ls-defib").checked = String(row["管理料_除細動装置"]).includes("あり");
+
     switchTab('input');
   }
 
@@ -2033,14 +2100,18 @@
       if (json.status === "success") {
         const m = json.masters; const now = Date.now();
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: now, masters: m, qa: json.qa }));
+        if (json.gasVersion) { try { localStorage.setItem("aw109_gas_version", json.gasVersion); } catch (e) {} }
         applyMasters(m, json.qa, now);
-        if(!isEditMode) checkRouting();
+        // 🌟 編集画面の読込(fetchCaseForEdit)が出す「読み込み中」表示を、この関数の最後のhideLoader()が直後に消してしまい、
+        // 読込が終わる前に空の入力画面が操作できる状態で見えていた。この関数が終わってから画面の振り分けを行う
+        if(!isEditMode) setTimeout(checkRouting, 0);
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       }
     } catch(e) {
       sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+      if (!isEditMode && !new URLSearchParams(window.location.search).get('editId')) setTimeout(initDraft, 0); // 🌟 マスタが読めなくても入力の保護は続ける
       if(!isBackground) {
-        const msg = String(e.message || e).includes("タイムアウト") ? "サーバーからの応答がありません。時間をおいて再読込してください（起動直後は時間がかかる場合があります）。" : "通信エラーが発生しました。";
+        const msg = String(e.message || e).includes("タイムアウト")? "サーバーからの応答がありません。時間をおいて再読込してください（起動直後は時間がかかる場合があります）。" : "通信エラーが発生しました。";
         alert(msg);
       }
     } finally { if(!isBackground) hideLoader(); }
@@ -2225,7 +2296,8 @@
 
     showLoader("送信中...", "要望・報告データをサーバーに送信しています");
     try {
-      await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" });
+      const json = await fetchGasJson({ action: "submit_question", password: PIN_CODE, question: finalQuestion, source: "現場アプリ" });
+      if (json.status !== "success") throw new Error(json.message || "サーバー側で受付できませんでした"); // 🌟 失敗の応答でも「送信しました」と出ていた
       alert("要望・報告を送信しました。"); document.getElementById("qa-input").value = ""; closeModal('modal-qa');
     } catch(e) {
       sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
@@ -2520,7 +2592,7 @@
         html += `${d["_dynTextForPreview"]}</div>`;
       }
 
-      let diseaseComboStr = `[${sys.disease ? sys.disease.main : '未選択'}]`;
+      let diseaseComboStr = `[${sys.disease && sys.disease.main && String(sys.disease.main) !== "" ? sys.disease.main : '未選択'}]`; // 🌟 未選択時に「[]」と表示されていた
       if(sys.disease && sys.disease.cause) diseaseComboStr += ` 原因:${sys.disease.cause}`;
       if(sys.disease && sys.disease.sub) diseaseComboStr += ` -> ${sys.disease.sub}`;
       
@@ -2577,6 +2649,7 @@
       });
       const json = await parseGasResponse(res);
       if (json.status === "success") {
+        clearDraft(); // 🌟 削除した事案の編集途中の下書きは不要
         showNavChoice("削除しました", "事案データを削除しました。");
       } else {
         throw new Error(json.message);
@@ -2626,6 +2699,125 @@
     }
   }
 
+  // ===== 🌟 入力途中の下書き自動保存（原則A3-C：電波断・画面破棄でも入力を失わない） =====
+  // iPhoneのホーム画面アプリは、電話や他のアプリに切り替えるとiOSが裏で画面を破棄することがあり、
+  // 戻ったときに入力途中の症例が消えていた。入力のたびに端末内(localStorage)へ下書きを保存し、次に開いたときに復元を確認する。
+  // 下書きの中身は送信データと同じ形(getCollectData)で持ち、復元は編集画面と同じrestoreData()を使う（復元ロジックを二重に持たない）。
+  // 新規入力は1件分（aw109_draft_case_new）、既存事案の編集は事案ごと（aw109_draft_case_edit_<sysId>）に分けて保存する。
+  const DRAFT_KEY_PREFIX = "aw109_draft_case_";
+  const DRAFT_MAX_AGE_MS = 72 * 60 * 60 * 1000; // 3日以上前の下書きは古いものとして破棄する
+  let draftReady = false;     // 初期表示（マスタ読込・編集データ復元・下書き確認）が終わるまでは保存しない
+  let draftBaseline = "";     // 画面を開いた直後の状態。ここから変化していなければ下書きとして保存しない
+  let draftTimer = null;
+
+  function getDraftKey() { return DRAFT_KEY_PREFIX + (isEditMode ? "edit_" + editTargetSysId : "new"); }
+
+  function getDraftSnapshot() {
+    const payload = getCollectData();
+    return {
+      payload: payload,
+      // 要請番号は未入力だとgetCollectData()が「仮+時刻」を自動で入れるため、画面の入力欄の値を別に持っておく
+      vId: document.getElementById("v-id").value,
+      edabanOn: document.getElementById("chk-edaban").checked,
+      edaban: document.getElementById("v-edaban").value
+    };
+  }
+
+  // 比較用の文字列（自動採番の要請番号は時刻で変わるため除外する）
+  function draftCompareString(snap) {
+    const p = Object.assign({}, snap.payload); delete p["要請番号"];
+    return JSON.stringify([p, snap.vId, snap.edabanOn, snap.edaban]);
+  }
+
+  function saveDraftNow() {
+    if (!draftReady) return;
+    clearTimeout(draftTimer);
+    try {
+      const snap = getDraftSnapshot();
+      if (draftCompareString(snap) === draftBaseline) return; // 開いた時から何も変わっていない
+      snap.savedAt = Date.now();
+      localStorage.setItem(getDraftKey(), JSON.stringify(snap));
+    } catch (e) {
+      // 下書き保存の失敗（容量不足等）で入力操作を止めないよう、記録だけ残して続行する
+      console.warn("下書き保存に失敗しました:", e);
+    }
+  }
+
+  function scheduleDraftSave() {
+    if (!draftReady) return;
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(saveDraftNow, 800);
+  }
+
+  function clearDraft() {
+    draftReady = false; // 送信成功後の再読込中に保存し直さないよう止める
+    clearTimeout(draftTimer);
+    try { localStorage.removeItem(getDraftKey()); } catch (e) {}
+    if (!isEditMode) { try { localStorage.removeItem(PENDING_SUBMIT_KEY); } catch (e) {} } // 登録が済んだので、次の事案は新しい識別番号にする
+  }
+  const PENDING_SUBMIT_KEY = "aw109_pending_submit_id";
+
+  // 🌟 送信ごとの識別番号（サーバー側で二重登録を防ぐために使う。送り直しでは同じ番号を使う）
+  function newClientSubmitId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16); });
+  }
+  // 🌟 サーバー(GAS)がv3.4以降なら、送り直しても二重登録にならない（二重送信の判定がある）
+  function gasPreventsDuplicates() {
+    const v = parseFloat(String(localStorage.getItem("aw109_gas_version") || "").replace(/^v/, ""));
+    return v >= 3.4;
+  }
+
+
+  function applyDraft(d) {
+    restoreData(d.payload);
+    document.getElementById("v-id").value = d.vId || "";
+    document.getElementById("chk-edaban").checked = !!d.edabanOn;
+    document.getElementById("v-edaban").value = d.edaban || "";
+    toggleBox('box-edaban', !!d.edabanOn);
+  }
+
+  // 初期表示が終わった時点で1回だけ呼ぶ。下書きがあれば復元を確認し、その後の状態を比較の基準にする
+  function initDraft() {
+    if (draftReady) return;
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(getDraftKey()) || "null"); } catch (e) { d = null; }
+    if (d && (!d.savedAt || Date.now() - d.savedAt > DRAFT_MAX_AGE_MS)) {
+      try { localStorage.removeItem(getDraftKey()); } catch (e) {}
+      d = null;
+    }
+    const finish = () => {
+      draftBaseline = draftCompareString(getDraftSnapshot());
+      draftReady = true;
+    };
+    if (!d || !d.payload) { finish(); return; }
+
+    const t = new Date(d.savedAt);
+    const when = `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    const label = [d.vId ? `要請番号 ${d.vId}` : "", d.payload["出場先"] || "", d.payload["スキーム選択"] || ""].filter(Boolean).join(" / ");
+    const msg = `${isEditMode ? "この事案の編集途中" : "入力途中"}の下書きがあります（${when} 保存）。\n${label}\n\n［OK］下書きを復元する\n［キャンセル］下書きを破棄する`;
+    if (confirm(msg)) {
+      applyDraft(d);
+      // restoreData()内の疾患分類の復元は時間差(setTimeout)で行われるため、それが終わってから基準を取る。
+      // 復元した直後に画面が閉じられても下書きが残るよう、基準は「何も入っていない状態」とみなして保存対象にしておく
+      setTimeout(() => { draftBaseline = ""; draftReady = true; saveDraftNow(); }, 300);
+    } else {
+      try { localStorage.removeItem(getDraftKey()); } catch (e) {}
+      finish();
+    }
+  }
+
+  // 入力・選択・ボタン操作のたびに保存を予約し、画面を離れる/裏に回る瞬間はすぐ保存する
+  ["input", "change", "click"].forEach(evt => document.addEventListener(evt, scheduleDraftSave, true));
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveDraftNow(); });
+  window.addEventListener("pagehide", saveDraftNow);
+
+  // 通信断（電波切れ・タイムアウト）かどうかの判定。現場で英語の生エラーを見せず、日本語で次の行動を案内するために使う
+  function isNetworkError(e) {
+    const m = String((e && e.message) || e);
+    return (e && e.isTimeout) || m.includes("Load failed") || m.includes("Failed to fetch") || m.includes("NetworkError") || m.includes("network connection was lost");
+  }
+
   async function submitData(mode = 'submit') {
     if (!state.scheme) return alert("最終スキーム選択は必須入力項目です。");
     if (diseaseMainVal === "4心肺停止" && !diseaseCauseVal) return alert("心肺停止(CPA)の場合は、必ず「原因疾患」を選択してください。");
@@ -2654,6 +2846,13 @@
 
       let actionName = mode === 'update' ? 'update_record' : 'submit';
       let reqBody = { action: actionName, password: PIN_CODE, data: payload };
+      if (mode !== 'update') {
+        // 🌟 新規登録の識別番号。送信に失敗して送り直す時（画面を開き直した後も）は同じ番号を使い、サーバー側で二重登録を防ぐ
+        let submitId = null;
+        try { submitId = localStorage.getItem(PENDING_SUBMIT_KEY); } catch (e) {}
+        if (!submitId) { submitId = newClientSubmitId(); try { localStorage.setItem(PENDING_SUBMIT_KEY, submitId); } catch (e) {} }
+        reqBody.clientSubmitId = submitId;
+      }
       if (mode === 'update') {
         reqBody.old_id = editTargetSysId;
         reqBody.editor = editor;
@@ -2667,22 +2866,45 @@
       });
       const json = await parseGasResponse(res);
       if (json.status === "success") {
+        clearDraft(); // 🌟 保存できたので下書きは不要
         if(mode === 'update') {
+          // 上書き保存後もこの画面で修正を続けられるため、保存した状態を新しい基準にして下書き保存を再開する
+          draftBaseline = draftCompareString(getDraftSnapshot()); draftReady = true;
           sessionStorage.removeItem("aw109_search_data_cache");
           const emailMsg = wantsEmail
             ? (json.emailSent ? "メールを送信しました。" : `メール送信に失敗しました。\n${json.emailMessage || ""}`)
             : "(メールは送信していません)";
           showNavChoice("上書き保存しました", emailMsg);
         } else {
-          alert("事案の新規登録が正常に完了しました。");
-          location.reload();
+          // 🌟 以前はalert後に画面を再読込するだけで、続けてデブリーフィングを書く時はポータル経由で探し直す必要があった。
+          // 次に行うことを選べるようにする。サーバーがメール送信結果(emailSent)を返す場合は、失敗した時だけ知らせる
+          const mailNote = json.emailSent === false ? `\n\n⚠️ 通知メールは送信できませんでした。\n${json.emailMessage || ""}\n事案検索から「メール再送」を行ってください。` : "";
+          // duplicate：前回の送信で既に登録されていた（返事だけ届かなかった）ため、今回は追加していない
+          const dupNote = json.duplicate ? "\n（前回の送信で登録済みでした。二重には登録していません）" : "";
+          showNavChoice("登録しました", "事案の新規登録が完了しました。" + dupNote + mailNote, true);
         }
       } else {
         throw new Error(json.message || "サーバー側で登録が拒否されました");
       }
     } catch(e) {
-      if (!e.isTimeout) sendErrorLog(`Submit Data Error\nMsg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); // 🌟 iOSではe.stackにメッセージ本文が含まれないため共通形式で送る
-      alert(`送信エラーが発生しました。\n[エラー詳細]: ${e.message}`);
+      if (isNetworkError(e)) {
+        // 🌟 電波切れ・タイムアウトはアプリの不具合ではないため、エラー報告は送らず日本語で次の行動を案内する（原則A4）
+        saveDraftNow();
+        if (mode === 'submit' && gasPreventsDuplicates()) {
+          // 🌟 サーバーが二重送信を判定できるので、そのまま送り直してよい
+          alert("電波が弱く、送信を完了できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n\n電波の良い場所で、もう一度「送信」を押してください。\n（すでに登録されていた場合も、二重には登録されません）");
+        } else if (mode === 'submit') {
+          // 🌟 タイムアウトや途中での電波切れは「サーバーには届いて登録済みだが、返事だけが届かなかった」場合がある。
+          // そのまま送信し直すと同じ事案が2件登録され、通知メールも2回届くため、先に確認してもらう
+          alert("電波が弱く、サーバーからの返事が届きませんでした。\n登録が完了している可能性があります。\n\n二重登録を防ぐため、再送信の前に「事案検索」で登録されているか確認してください。\n入力内容は画面と端末内の下書きに残っています。");
+        } else {
+          // 上書き保存は同じ事案を上書きするだけなので送り直しても二重にはならない（メールを選んだ場合は再送で2通届くことがある）
+          alert("電波が弱いため保存できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n電波の良い場所で、もう一度「上書き保存」を押してください。" + (wantsEmail ? "\n\n※メール送信を選んでいた場合、届いているか確認してから送り直してください（2通届くことがあります）。" : ""));
+        }
+      } else {
+        sendErrorLog(`Submit Data Error\nMsg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); // 🌟 iOSではe.stackにメッセージ本文が含まれないため共通形式で送る
+        alert(`送信エラーが発生しました。入力内容は画面と端末内の下書きに残っています。\n[エラー詳細]: ${e.message}`);
+      }
     } finally {
       btn.disabled = false;
       btn.innerText = "🚀 この内容で送信する";
