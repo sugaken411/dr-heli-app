@@ -13,6 +13,11 @@
     
     header { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--line); flex-shrink: 0; position: sticky; top: 0; z-index: 100; }
     .hdr-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; font-size: 14px; }
+    /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
+       高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
+       横幅そのものを44pxにするとタイトルが「…」で省略されてしまうため採用しない */
+    .hdr-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .hdr-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -6px; }
     .timer-badge { background: #e5e5ea; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-weight: bold; font-size: 14px; color: var(--ink); }
     
     .tab-bar { display: flex; background: #fff; border-bottom: 1px solid var(--line); padding: 0 16px; overflow-x: auto; white-space: nowrap; flex-shrink: 0; }
@@ -302,6 +307,15 @@
 
   // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
   // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+  // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
+  // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
+  // fetchGasJsonと同じく応答の冒頭を添えた明確なエラーにする（成功時の動作・タイムアウト・再送の有無は従来どおり）
+  async function parseGasResponse(res) {
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
+  }
+
   async function fetchGasJson(bodyObj) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -402,7 +416,7 @@
     showLoader("Q&Aデータベース更新中...");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "manage_qa_full", password: PIN_ADMIN, sub_action: actionType, rowIdx: rowIdx, data: data }), redirect: "follow" });
-      const json = await res.json();
+      const json = await parseGasResponse(res);
       if(json.status === "success") { closeModal('modal-edit-qa'); fetchLatestData(true, false); alert("処理が完了しました。"); } else { throw new Error(json.message); }
     } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
@@ -434,7 +448,7 @@
     showLoader("お知らせデータベース更新中...");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "manage_news", password: PIN_ADMIN, sub_action: actionType, rowIdx: rIdx, data: d }), redirect: "follow" });
-      const json = await res.json();
+      const json = await parseGasResponse(res);
       if(json.status === "success") { 
         if(actionType === 'add') { ["news-date", "news-category", "news-title", "news-content"].forEach(id => document.getElementById(id).value = ""); }
         closeModal('modal-edit-news'); fetchLatestData(true, false); alert("処理が完了しました。"); 
@@ -466,7 +480,7 @@
     showLoader("取扱説明書マスタ更新中...");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "manage_manual", password: PIN_ADMIN, sub_action: actionType, rowIdx: rIdx, data: d }), redirect: "follow" });
-      const json = await res.json();
+      const json = await parseGasResponse(res);
       if(json.status === "success") { 
         if(actionType === 'add') { ["man-title", "man-text", "man-target"].forEach(id => document.getElementById(id).value = ""); }
         closeModal('modal-edit-manual'); fetchLatestData(true, false); alert("処理が完了しました。"); 
@@ -484,7 +498,7 @@
     showLoader("マスタデータ追加中...", "システム全体へ即時反映させています");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2 }), redirect: "follow" });
-      const json = await res.json();
+      const json = await parseGasResponse(res);
       if (json.status === "success") { alert("マスタデータベースに正常に追加しました。"); document.getElementById("add-val1").value = ""; document.getElementById("add-val2").value = ""; } else { throw new Error(json.message); }
     } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
@@ -496,7 +510,7 @@
     showLoader(makeAdmin ? "管理者権限を付与中..." : "管理者権限を剥奪中...", "システムに反映しています");
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "set_admin_flag", password: PIN_ADMIN, email: email, isAdmin: makeAdmin }), redirect: "follow" });
-      const json = await res.json();
+      const json = await parseGasResponse(res);
       if (json.status === "success") {
         alert((makeAdmin ? "管理者権限を付与しました。" : "管理者権限を剥奪しました。") + "\n対象者が既にログイン中の場合、再ログインするまで画面上の表示には反映されません。");
         document.getElementById("admin-flag-email").value = "";

@@ -16,11 +16,18 @@
     
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; }
+    /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
+       高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
+       横幅そのものを44pxにするとタイトルが「…」で省略されてしまうため採用しない */
+    .hdr-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .hdr-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -6px; }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
     .tab-container { position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; height: 44px; background: #fff; border-bottom: 1px solid var(--line); display: flex; z-index: 99; }
     .nav-tab { flex: 1; text-align: center; line-height: 44px; font-size: 13px; font-weight: 700; color: var(--sub); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
     .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    /* 🌟 iPhone幅（5タブ×約75px）で「1.環境・疾患」等のタブ名が隣にはみ出していたため、狭い画面だけ文字を詰める */
+    @media (max-width: 400px) { .nav-tab { font-size: 12px; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; } }
     
     main { margin-top: calc(100px + var(--safe-top)); padding: 16px; max-width: 800px; margin-left: auto; margin-right: auto; padding-bottom: calc(40px + var(--safe-bot)); }
     .cross-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -457,6 +464,15 @@
   // 🌟 電波不良でレスポンスが途中で切れJSON解析に失敗した場合、1回だけ自動リトライする
   // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
   // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
+  // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
+  // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
+  // fetchGasJsonと同じく応答の冒頭を添えた明確なエラーにする（成功時の動作・タイムアウト・再送の有無は従来どおり）
+  async function parseGasResponse(res) {
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
+  }
+
   async function fetchGasJson(bodyObj, retries) {
     if (retries === undefined) retries = 1;
     for (let attempt = 0; ; attempt++) {
@@ -921,7 +937,7 @@
         document.getElementById("btn-submit").innerHTML = "💾 過去データを上書き保存";
         document.getElementById("btn-submit").style.backgroundColor = "#ff9800";
       } catch(e) {
-        sendErrorLog(`restoreSystemData parse error: ${e.stack || e.toString()}`);
+        sendErrorLog(`restoreSystemData parse error\nMsg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
       }
     } else if (!sysData.disease.main && currentCase["疾患大分類"]) {
       // 🌟 過去のデブリーフィングが無い（初回）場合、症例登録側の疾患分類をそのまま引き継ぐ
@@ -982,7 +998,7 @@
     const newStatus = document.getElementById("v-review-status").value;
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "update_review_status", password: PIN_CODE, caseId: currentDebriefCaseId, reviewStatus: newStatus }), redirect: "follow" });
-      const json = await res.json();
+      const json = await parseGasResponse(res);
       if (json.status !== "success") throw new Error(json.message);
       const target = existingDebriefs.find(d => String(d["要請番号"]) === String(currentDebriefCaseId));
       if (target) target["レビューステータス"] = newStatus;
@@ -1306,7 +1322,7 @@
     
     try {
       const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "submit_debriefing", password: PIN_CODE, data: payload }), redirect: "follow" });
-      const json = await res.json(); 
+      const json = await parseGasResponse(res); 
       if (json.status === "success") { alert("保存しました！"); location.href = "portal.html"; } else { throw new Error(json.message); }
     } catch(e) { 
       sendErrorLog(`Submit Error: ${e.name} - ${e.message}\nStack: ${e.stack}`);

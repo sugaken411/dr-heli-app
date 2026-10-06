@@ -20,6 +20,11 @@
     header { position: fixed; top: 0; left: 0; right: 0; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); padding-left: 16px; padding-right: 16px; background: rgba(242,242,247,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; z-index: 100; }
     .hdr-group { display: flex; gap: 12px; flex-shrink: 0; }
     .hdr-btn { color: var(--blue); background: none; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    /* 🌟 現場基準（A3）：ヘッダーボタンも手袋・揺れる機内で確実に押せるよう、見た目と配置は変えずにタップ領域だけを広げる。
+       高さは44pxを確保し、横幅は透明な当たり判定(::after)を左右6pxずつ（隣のボタンとの隙間の半分）伸ばす。
+       横幅そのものを44pxにするとタイトルが「…」で省略されてしまうため採用しない */
+    .hdr-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .hdr-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -6px; }
     .title-box { text-align: center; font-weight: 800; font-size: 16px; letter-spacing: 0.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .version-tag { font-size: 10px; color: #fff; font-weight: bold; background: var(--blue); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
     
@@ -44,6 +49,7 @@
     .filter-btn { padding: 8px 14px; background: #fff; color: var(--ink); border: 1px solid #ccc; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .filter-btn.active { background: #d48806; color: #fff; border-color: #d48806; }
     .date-input, .staff-select, .bi-select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; width: 100%; }
+    .date-input { min-width: 0; } /* 🌟 iPhone幅で期間指定の終了日がカードの外へはみ出していたため、2つの日付欄を枠内で縮めて並べる */
     
     .search-input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; font-weight: bold; outline: none; background: #fff; min-width: 200px; width: 100%; }
     .csv-btn { padding: 10px 16px; background: var(--green); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; margin-left: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
@@ -120,7 +126,7 @@
           <button type="button" class="filter-btn" id="btn-last-month" onclick="setDateFilter('lastMonth')">先月</button>
           <button type="button" class="filter-btn" id="btn-this-year" onclick="setDateFilter('thisYear')">今年</button>
           <button type="button" class="filter-btn" id="btn-all" onclick="setDateFilter('all')">全期間</button>
-          <div style="display:flex; align-items:center; gap:4px; margin-left:8px;">
+          <div style="display:flex; align-items:center; gap:4px; flex:1 1 260px; min-width:0;">
             <input type="date" id="filter-start" class="date-input" onchange="applyFilters()">
             <span style="color:var(--sub); font-weight:bold;">〜</span>
             <input type="date" id="filter-end" class="date-input" onchange="applyFilters()">
@@ -307,6 +313,15 @@
 
 <script>
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
+
+  // 🌟 fetchGasJsonを通らない個別通信（保存・削除など）用の共通JSON変換。GASが停止・内部エラーの時は
+  // Googleのエラー画面(HTML)が返り、res.json()のままでは「Unexpected token '<'」等の原因不明エラーになるため、
+  // fetchGasJsonと同じく応答の冒頭を添えた明確なエラーにする（成功時の動作・タイムアウト・再送の有無は従来どおり）
+  async function parseGasResponse(res) {
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (parseErr) { throw new Error(`サーバーが正しいデータを返しませんでした（HTTP ${res.status}: ${text.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120)}）`); }
+  }
   // 🌟 スタッフ用PINは廃止。ログイン必須（未ログインならポータルへ誘導）
   if (!localStorage.getItem('aw109_auth_token')) { location.href = 'portal.html'; }
   // 🌟 勤務シフト想定：ログインから８時間経過で自動ログアウト（現場端末の共有・放置対策）
@@ -389,19 +404,20 @@
   async function fetchData() {
     showLoader("多次元データ集計中...", "データベースに直接接続しています");
     try {
-      const res1 = await fetch(GAS_API_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }), 
-        redirect: "follow"
-      });
-      const json1 = await res1.json();
-      
-      const res2 = await fetch(GAS_API_URL, {
-        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }), 
-        redirect: "follow"
-      });
-      const json2 = await res2.json();
+      // 🌟 事案データとデブリーフィングデータは互いに依存しないため、順番待ちせず同時に取得して表示までの時間を短縮する。
+      // デブリーフィング側だけが失敗しても事案の統計は表示できるよう、そちらの失敗はエラー扱いにしない（従来も実施率0として表示していた）
+      const [json1, json2] = await Promise.all([
+        fetch(GAS_API_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "fetch_all", password: PIN_CODE }),
+          redirect: "follow"
+        }).then(parseGasResponse),
+        fetch(GAS_API_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "fetch_debriefings", password: PIN_CODE }),
+          redirect: "follow"
+        }).then(parseGasResponse).catch(() => ({ status: "error" }))
+      ]);
       
       if (json1.status === "success") {
         // 🌟 fetch_allは {id, displayId, ..., rawData} の入れ子構造なので、中身(rawData)だけを展開する
@@ -681,6 +697,7 @@
   // --- Chart.js 描画ロジック ---
 
   function drawTrendChart(dataObj) {
+    if (typeof Chart === 'undefined') return; // 🌟 Chart.js(外部CDN)が電波不良で読めなかった場合もグラフだけ省略し、件数などの集計表示は続行する
     const ctx = document.getElementById('trendChart'); if(!ctx) return;
     if (chartInstances['trend']) chartInstances['trend'].destroy();
     const sortedKeys = Object.keys(dataObj).sort();
@@ -699,6 +716,7 @@
 
   // 🌟 ヒートマップの縦軸・横軸の選択肢に「要請区分」を正式統合し、名称も完全バインド
   function replotHeatmap() {
+    if (typeof Chart === 'undefined') return; // 🌟 Chart.js(外部CDN)が電波不良で読めなかった場合もグラフだけ省略し、件数などの集計表示は続行する
     const ctx = document.getElementById('pivotHeatmapChart'); if(!ctx) return;
     if (chartInstances['heatmap']) chartInstances['heatmap'].destroy();
 
@@ -822,6 +840,7 @@
   }
 
   function drawSchemePieChart(schemeCounts) {
+    if (typeof Chart === 'undefined') return; // 🌟 Chart.js(外部CDN)が電波不良で読めなかった場合もグラフだけ省略し、件数などの集計表示は続行する
     const ctx = document.getElementById('schemePieChart'); if(!ctx) return;
     if (chartInstances['schemePie']) chartInstances['schemePie'].destroy();
 
@@ -849,6 +868,7 @@
 
   // 🌟 要請区分別 構成比率 Doughnut チャート
   function drawReqTypePieChart(reqTypeCounts) {
+    if (typeof Chart === 'undefined') return; // 🌟 Chart.js(外部CDN)が電波不良で読めなかった場合もグラフだけ省略し、件数などの集計表示は続行する
     const ctx = document.getElementById('reqTypePieChart'); if(!ctx) return;
     if (chartInstances['reqTypePie']) chartInstances['reqTypePie'].destroy();
 
@@ -875,6 +895,7 @@
   }
 
   function replotRadar() {
+    if (typeof Chart === 'undefined') return; // 🌟 Chart.js(外部CDN)が電波不良で読めなかった場合もグラフだけ省略し、件数などの集計表示は続行する
     const ctx = document.getElementById('radarChart'); if(!ctx) return;
     if (chartInstances['radar']) chartInstances['radar'].destroy();
 
@@ -920,6 +941,7 @@
   }
 
   function drawDebriefPlaceChart() {
+    if (typeof Chart === 'undefined') return; // 🌟 Chart.js(外部CDN)が電波不良で読めなかった場合もグラフだけ省略し、件数などの集計表示は続行する
     const ctx = document.getElementById('debriefPlaceChart'); if(!ctx) return;
     if (chartInstances['debriefPlace']) chartInstances['debriefPlace'].destroy();
 
