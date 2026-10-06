@@ -1499,10 +1499,18 @@
   async function fetchCaseForEdit(targetId) {
     showLoader("事案データ読み込み中...", "過去のカルテを復元しています");
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "fetch_recent_cases", password: PIN_CODE }), redirect: "follow" });
-      const json = await parseGasResponse(res);
+      // 🌟 編集する1件だけを取得する（fetch_case、GAS v3.4以降）。以前は毎回全事案を読み込んでおり、件数が増えるほど遅くなっていた。
+      // 再デプロイ前の古いサーバーは「不明なアクション」を返すので、その時は従来どおり全件から探す
+      const post = (body) => fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body), redirect: "follow" }).then(parseGasResponse);
+      let json = await post({ action: "fetch_case", password: PIN_CODE, id: targetId });
+      let row = null;
+      if (json.status === "success") {
+        row = json.data || null;
+      } else if (String(json.message || "").includes("不明なアクション")) {
+        json = await post({ action: "fetch_recent_cases", password: PIN_CODE });
+        if (json.status === "success") row = json.data.find(r => String(r.id) === String(targetId) || String(r.displayId) === String(targetId));
+      }
       if(json.status === "success") {
-        const row = json.data.find(r => String(r.id) === String(targetId) || String(r.displayId) === String(targetId));
         if (row) {
           restoreData(row.rawData);
           // 🌟 編集：サーバーの記録を表示し終えてから（疾患分類の時間差復元を待って）、この事案の編集途中の下書きを確認
@@ -2092,6 +2100,7 @@
       if (json.status === "success") {
         const m = json.masters; const now = Date.now();
         localStorage.setItem(CACHE_KEY, JSON.stringify({ timestampMs: now, masters: m, qa: json.qa }));
+        if (json.gasVersion) { try { localStorage.setItem("aw109_gas_version", json.gasVersion); } catch (e) {} }
         applyMasters(m, json.qa, now);
         // 🌟 編集画面の読込(fetchCaseForEdit)が出す「読み込み中」表示を、この関数の最後のhideLoader()が直後に消してしまい、
         // 読込が終わる前に空の入力画面が操作できる状態で見えていた。この関数が終わってから画面の振り分けを行う
@@ -2744,7 +2753,21 @@
     draftReady = false; // 送信成功後の再読込中に保存し直さないよう止める
     clearTimeout(draftTimer);
     try { localStorage.removeItem(getDraftKey()); } catch (e) {}
+    if (!isEditMode) { try { localStorage.removeItem(PENDING_SUBMIT_KEY); } catch (e) {} } // 登録が済んだので、次の事案は新しい識別番号にする
   }
+  const PENDING_SUBMIT_KEY = "aw109_pending_submit_id";
+
+  // 🌟 送信ごとの識別番号（サーバー側で二重登録を防ぐために使う。送り直しでは同じ番号を使う）
+  function newClientSubmitId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16); });
+  }
+  // 🌟 サーバー(GAS)がv3.4以降なら、送り直しても二重登録にならない（二重送信の判定がある）
+  function gasPreventsDuplicates() {
+    const v = parseFloat(String(localStorage.getItem("aw109_gas_version") || "").replace(/^v/, ""));
+    return v >= 3.4;
+  }
+
 
   function applyDraft(d) {
     restoreData(d.payload);
@@ -2823,6 +2846,13 @@
 
       let actionName = mode === 'update' ? 'update_record' : 'submit';
       let reqBody = { action: actionName, password: PIN_CODE, data: payload };
+      if (mode !== 'update') {
+        // 🌟 新規登録の識別番号。送信に失敗して送り直す時（画面を開き直した後も）は同じ番号を使い、サーバー側で二重登録を防ぐ
+        let submitId = null;
+        try { submitId = localStorage.getItem(PENDING_SUBMIT_KEY); } catch (e) {}
+        if (!submitId) { submitId = newClientSubmitId(); try { localStorage.setItem(PENDING_SUBMIT_KEY, submitId); } catch (e) {} }
+        reqBody.clientSubmitId = submitId;
+      }
       if (mode === 'update') {
         reqBody.old_id = editTargetSysId;
         reqBody.editor = editor;
@@ -2849,7 +2879,9 @@
           // 🌟 以前はalert後に画面を再読込するだけで、続けてデブリーフィングを書く時はポータル経由で探し直す必要があった。
           // 次に行うことを選べるようにする。サーバーがメール送信結果(emailSent)を返す場合は、失敗した時だけ知らせる
           const mailNote = json.emailSent === false ? `\n\n⚠️ 通知メールは送信できませんでした。\n${json.emailMessage || ""}\n事案検索から「メール再送」を行ってください。` : "";
-          showNavChoice("登録しました", "事案の新規登録が完了しました。" + mailNote, true);
+          // duplicate：前回の送信で既に登録されていた（返事だけ届かなかった）ため、今回は追加していない
+          const dupNote = json.duplicate ? "\n（前回の送信で登録済みでした。二重には登録していません）" : "";
+          showNavChoice("登録しました", "事案の新規登録が完了しました。" + dupNote + mailNote, true);
         }
       } else {
         throw new Error(json.message || "サーバー側で登録が拒否されました");
@@ -2858,7 +2890,10 @@
       if (isNetworkError(e)) {
         // 🌟 電波切れ・タイムアウトはアプリの不具合ではないため、エラー報告は送らず日本語で次の行動を案内する（原則A4）
         saveDraftNow();
-        if (mode === 'submit') {
+        if (mode === 'submit' && gasPreventsDuplicates()) {
+          // 🌟 サーバーが二重送信を判定できるので、そのまま送り直してよい
+          alert("電波が弱く、送信を完了できませんでした。\n入力内容は画面と端末内の下書きに残っています。\n\n電波の良い場所で、もう一度「送信」を押してください。\n（すでに登録されていた場合も、二重には登録されません）");
+        } else if (mode === 'submit') {
           // 🌟 タイムアウトや途中での電波切れは「サーバーには届いて登録済みだが、返事だけが届かなかった」場合がある。
           // そのまま送信し直すと同じ事案が2件登録され、通知メールも2回届くため、先に確認してもらう
           alert("電波が弱く、サーバーからの返事が届きませんでした。\n登録が完了している可能性があります。\n\n二重登録を防ぐため、再送信の前に「事案検索」で登録されているか確認してください。\n入力内容は画面と端末内の下書きに残っています。");
