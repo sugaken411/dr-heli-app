@@ -205,40 +205,59 @@
         <div class="hero-status" id="hero-status" role="status"><span class="hero-status-dot"></span><span id="hero-status-text">データを取得しています</span></div>
       </div>
       <div class="hero-heli" aria-hidden="true">
-        <!-- AW109（側面）：白い機体に赤ライン。機首は右向き -->
-        <svg viewBox="0 0 300 120">
+        <!-- AW109（側面）：実機JA03KGの塗装に合わせ、白い機体・紺の「Doctor-Heli」・赤の斜めライン・赤縁の尾翼で描く。機首は右向き -->
+        <svg viewBox="0 0 330 120">
           <defs>
-            <clipPath id="heli-body-clip"><path d="M262 78Q260 60 236 54L184 48Q176 38 156 38L134 38Q122 40 116 50L46 62L46 68L116 74Q120 88 138 90L230 90Q256 90 262 78Z"/></clipPath>
-            <linearGradient id="heli-body-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d9dee6"/></linearGradient>
+            <clipPath id="heli-body-clip"><path d="M314 86C312 76 300 66 282 60L262 50Q254 44 244 44L206 44Q196 34 178 34L148 34Q134 36 126 48L58 60L54 67L122 76Q128 94 152 97L280 97Q306 97 314 86Z"/></clipPath>
+            <linearGradient id="heli-body-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.65" stop-color="#f1f3f6"/><stop offset="1" stop-color="#cdd3dc"/></linearGradient>
           </defs>
-          <!-- 尾翼（垂直・下部）と水平安定板 -->
-          <path d="M52 63L34 30L25 30L36 64Z" fill="#f2f4f7"/>
-          <path d="M44 67L34 82L40 82L52 68Z" fill="#e2e6ec"/>
-          <rect x="58" y="62" width="22" height="3" rx="1.5" fill="#cfd5de"/>
+          <!-- 尾翼（垂直・下部）：赤い縁取り -->
+          <path d="M60 61L42 26Q41 22 46 22L52 22L70 60Z" fill="#f4f6f9"/>
+          <path d="M44 24L60 60" stroke="#d32f2f" stroke-width="3" stroke-linecap="round"/>
+          <path d="M51 22L69 59" stroke="#d32f2f" stroke-width="2"/>
+          <path d="M57 66L46 86L53 86L67 68Z" fill="#e3e7ed"/>
+          <!-- 水平安定板（先端が赤） -->
+          <rect x="64" y="62" width="26" height="3.5" rx="1.5" fill="#e3e7ed"/>
+          <rect x="64" y="62" width="6" height="3.5" rx="1.5" fill="#d32f2f"/>
           <!-- 機体 -->
+          <path d="M314 86C312 76 300 66 282 60L262 50Q254 44 244 44L206 44Q196 34 178 34L148 34Q134 36 126 48L58 60L54 67L122 76Q128 94 152 97L280 97Q306 97 314 86Z" fill="url(#heli-body-shade)" stroke="#aeb7c3" stroke-width="0.8"/>
           <g clip-path="url(#heli-body-clip)">
-            <rect x="40" y="30" width="230" height="70" fill="url(#heli-body-shade)"/>
-            <rect x="40" y="72" width="230" height="7" fill="#e53935"/>
-            <rect x="40" y="81" width="230" height="2.5" fill="#b71c1c"/>
-            <rect x="40" y="63" width="80" height="3" fill="#e53935"/>
+            <!-- 尾部付け根の赤い斜めライン（2本） -->
+            <path d="M100 30L109 30L97 104L88 104Z" fill="#d32f2f"/>
+            <path d="M113 30L122 30L110 104L101 104Z" fill="#d32f2f"/>
           </g>
-          <!-- 窓（風防・キャビン） -->
-          <path d="M236 57Q254 62 257 73L232 72Z" fill="#7fb3e6"/>
-          <rect x="190" y="55" width="36" height="14" rx="4" fill="#5d8fc4"/>
-          <rect x="146" y="53" width="38" height="16" rx="4" fill="#5d8fc4"/>
+          <!-- 機体記号・ロゴ -->
+          <text x="150" y="44" font-size="8" font-weight="700" fill="#1c1c1e" font-family="Arial, Helvetica, sans-serif" letter-spacing="0.5">JA03KG</text>
+          <text x="128" y="87" font-size="12.5" font-weight="900" font-style="italic" fill="#1f3a7a" font-family="Arial, Helvetica, sans-serif" letter-spacing="-0.3">Doctor-Heli</text>
+          <!-- スター・オブ・ライフ（青） -->
+          <g transform="translate(214 66)" fill="#1e6fd9">
+            <rect x="-1.6" y="-5.5" width="3.2" height="11" rx="0.8"/>
+            <rect x="-1.6" y="-5.5" width="3.2" height="11" rx="0.8" transform="rotate(60)"/>
+            <rect x="-1.6" y="-5.5" width="3.2" height="11" rx="0.8" transform="rotate(-60)"/>
+          </g>
+          <!-- キャビンドアと窓・風防 -->
+          <rect x="220" y="49" width="42" height="42" rx="5" fill="none" stroke="#c4cbd5" stroke-width="0.8"/>
+          <rect x="224" y="54" width="16" height="19" rx="6" fill="#1f2d3d"/>
+          <rect x="244" y="54" width="15" height="19" rx="6" fill="#1f2d3d"/>
+          <path d="M282 60L264 51Q258 49 257 55L259 74L299 76Q295 66 282 60Z" fill="#22344a"/>
+          <path d="M268 55L278 59L270 72L262 72Z" fill="rgba(255,255,255,0.18)"/>
+          <!-- 格納した脚のスポンソン -->
+          <ellipse cx="196" cy="97" rx="16" ry="4.5" fill="#e9edf2" stroke="#aeb7c3" stroke-width="0.8"/>
           <!-- 衝突防止灯（点滅） -->
-          <circle class="beacon" cx="150" cy="37" r="2.2" fill="#ff5252"/>
-          <!-- ローターマストとメインローター -->
-          <rect x="155" y="27" width="6" height="12" rx="1.5" fill="#9aa3af"/>
-          <ellipse class="rotor-blade" cx="158" cy="26" rx="128" ry="2.2" fill="rgba(220,226,235,0.85)"/>
-          <ellipse class="rotor-blade b2" cx="158" cy="26" rx="128" ry="2.2" fill="rgba(220,226,235,0.6)"/>
-          <circle cx="158" cy="26" r="4" fill="#6b7480"/>
-          <!-- テールローター -->
+          <circle class="beacon" cx="142" cy="35" r="2.2" fill="#ff5252"/>
+          <!-- ローターマストとメインローター（4枚ブレードを2本の伸縮で表現） -->
+          <rect x="160" y="25" width="6" height="10" rx="1.5" fill="#8a94a1"/>
+          <ellipse class="rotor-blade" cx="163" cy="24" rx="146" ry="2.2" fill="rgba(225,230,238,0.9)"/>
+          <ellipse class="rotor-blade b2" cx="163" cy="24" rx="146" ry="2.2" fill="rgba(225,230,238,0.6)"/>
+          <circle cx="163" cy="24" r="4.5" fill="#5f6875"/>
+          <!-- テールローター（赤白の羽根） -->
           <g class="tail-rotor">
-            <circle cx="33" cy="44" r="13" fill="rgba(255,255,255,0.08)"/>
-            <rect x="31.5" y="31" width="3" height="26" rx="1.5" fill="rgba(220,226,235,0.85)"/>
+            <circle cx="46" cy="44" r="14" fill="rgba(255,255,255,0.07)"/>
+            <rect x="44.5" y="30" width="3" height="28" rx="1.5" fill="#f4f6f9"/>
+            <rect x="44.5" y="30" width="3" height="7" rx="1.5" fill="#d32f2f"/>
+            <rect x="44.5" y="51" width="3" height="7" rx="1.5" fill="#d32f2f"/>
           </g>
-          <circle cx="33" cy="44" r="2.5" fill="#6b7480"/>
+          <circle cx="46" cy="44" r="2.5" fill="#5f6875"/>
         </svg>
       </div>
     </section>
