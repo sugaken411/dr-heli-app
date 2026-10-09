@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>業務日報 (浜町日誌)</title>
+  <title>業務日報 (業務日誌)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
   <style>
@@ -62,6 +62,11 @@
     .modal input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .modal select, .modal button { min-height: 44px; }
     main .chip, main .pill, main .filter-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
     @media print { main button, main .chip, main .pill { min-height: 0; } }
+    /* 待機場所・待機理由の選択ボタン（押した物が青く光る） */
+    .place-pill, .reason-pill { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; font-size: 14px; font-weight: 700; color: #475569; cursor: pointer; }
+    .place-pill input, .reason-pill input { width: 18px; height: 18px; }
+    .place-pill:has(input:checked), .reason-pill:has(input:checked) { background: #e0efff; border-color: var(--blue); color: #0b4fa3; }
+    .print-pre { white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -77,7 +82,7 @@
       <button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hidden"></span>
     </div>
-    <div class="title-box">業務日報 (浜町日誌)<span class="version-tag">v11.7</span></div>
+    <div class="title-box">業務日報 (業務日誌)<span class="version-tag">v12.0</span></div>
     <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ <span class="btn-label">印刷</span></button></div>
   </header>
 
@@ -85,14 +90,17 @@
     <!-- 🌟 印刷時にTailwindのバグを回避して100%表示されるように修正 -->
     <div class="print-only-container mb-4 border-2 border-slate-800 p-4 rounded-lg bg-white">
       <div class="flex justify-between font-bold text-sm mb-2">
-        <span class="text-lg tracking-widest font-extrabold">業務日報（浜町日誌）</span>
+        <span class="text-lg tracking-widest font-extrabold">業務日報（業務日誌）</span>
         <span class="text-lg">日付: <span id="print-date"></span></span>
       </div>
       <div class="flex justify-between font-bold text-sm mb-2 border-t border-slate-200 pt-2">
         <span>フライトドクター: <span id="print-dr" class="font-black text-slate-800">未入力</span></span>
         <span>記載者(Ns): <span id="print-ns" class="font-black text-slate-800">未入力</span></span>
       </div>
-      <div class="font-bold text-sm border-t border-slate-200 pt-2 mt-1">待機事由/備考: <span id="print-reason">特になし</span></div>
+      <div class="font-bold text-sm border-t border-slate-200 pt-2 mt-1">待機場所・待機理由: <span id="print-reason">未入力</span></div>
+      <div id="print-briefing-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">ブリーフィング</div><div id="print-briefing" class="print-pre"></div></div>
+      <div id="print-free-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">フリー内容</div><div id="print-free" class="print-pre"></div></div>
+      <div id="print-handover-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">特記事項・引き継ぎ事項</div><div id="print-handover" class="print-pre"></div></div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-4 flex flex-wrap gap-3 justify-between items-center no-print">
@@ -124,16 +132,45 @@
               <input type="text" id="info-doctor-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
             </div>
           </div>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-xs font-bold text-slate-500 mb-2">待機事由 / 特記事項</label>
-          <div class="flex flex-wrap gap-2 mb-3">
-            <label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-100"><input type="checkbox" name="reason" value="風向き" onchange="updatePrintHeader()"> 風向き</label>
-            <label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-100"><input type="checkbox" name="reason" value="天候不良" onchange="updatePrintHeader()"> 天候不良</label>
-            <label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-100"><input type="checkbox" name="reason" value="強風" onchange="updatePrintHeader()"> 強風</label>
-            <label class="flex items-center gap-1.5 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-100"><input type="checkbox" name="reason" value="機体トラブル" onchange="updatePrintHeader()"> 機体トラブル</label>
+          <!-- 🌟 待機場所：浜町待機・院内待機を選んだ時だけ待機理由を出す。その他は場所を手入力 -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">待機場所</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="place-pill"><input type="radio" name="standby-place" value="浜町待機" onchange="onPlaceChange()"><span>浜町待機</span></label>
+              <label class="place-pill"><input type="radio" name="standby-place" value="院内待機" onchange="onPlaceChange()"><span>院内待機</span></label>
+              <label class="place-pill"><input type="radio" name="standby-place" value="その他" onchange="onPlaceChange()"><span>その他</span></label>
+            </div>
+            <input type="text" id="info-place-other" placeholder="待機場所（手入力）" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader()">
           </div>
-          <textarea id="info-remarks" rows="3" placeholder="その他・特記事項" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm outline-none resize-none" onchange="updatePrintHeader()"></textarea>
+          <div id="reason-box" class="hidden">
+            <label class="block text-xs font-bold text-slate-500 mb-1">待機理由</label>
+            <div id="reason-options" class="flex flex-wrap gap-2 mb-2"></div>
+            <input type="text" id="info-reason-other" placeholder="その他の待機理由（自由入力）" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader()">
+          </div>
+        </div>
+        <div class="md:col-span-2 space-y-4">
+          <!-- 🌟 鹿児島市（薩摩地方）の天気概況：気象庁の公開データを表示するだけ（保存はしない）。電波がない時は静かに「取得できません」と出す -->
+          <div id="weather-box" class="bg-sky-50 border border-sky-200 rounded-lg p-3">
+            <div class="flex justify-between items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-sky-800">☁️ 鹿児島の天気概況（気象庁）</span>
+              <button type="button" onclick="fetchWeather()" class="text-xs font-bold text-sky-700 bg-white border border-sky-200 rounded-lg px-3 min-h-[44px]">↻ 更新</button>
+            </div>
+            <div id="weather-today" class="text-sm font-bold text-slate-800"></div>
+            <div id="weather-text" class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">読み込み中...</div>
+            <div id="weather-time" class="text-xs text-slate-500 mt-1"></div>
+          </div>
+          <div>
+            <label for="info-briefing" class="block text-xs font-bold text-slate-500 mb-1">ブリーフィング</label>
+            <textarea id="info-briefing" rows="4" placeholder="ブリーフィングの内容（天候・機体・人員・連絡事項など）" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm outline-none" onchange="updatePrintHeader()"></textarea>
+          </div>
+          <div>
+            <label for="info-free" class="block text-xs font-bold text-slate-500 mb-1">フリー内容</label>
+            <textarea id="info-free" rows="3" placeholder="自由記載" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm outline-none" onchange="updatePrintHeader()"></textarea>
+          </div>
+          <div>
+            <label for="info-remarks" class="block text-xs font-bold text-slate-500 mb-1">特記事項・引き継ぎ事項</label>
+            <textarea id="info-remarks" rows="3" placeholder="次の勤務者への引き継ぎなど" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm outline-none" onchange="updatePrintHeader()"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -271,7 +308,7 @@
       try { 
         fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          body: JSON.stringify({ action: "error_log", source: "浜町日誌(report.html)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
+          body: JSON.stringify({ action: "error_log", source: "業務日誌(report.html)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
           redirect: "follow" 
         }); 
       } catch(e) {} 
@@ -323,8 +360,49 @@
         backBtn.onclick = () => location.href = "management.html";
       }
       
-      drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); fetchInit(); 
+      drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); fetchInit(); fetchWeather();
     };
+
+    // ===== 鹿児島の天気概況（気象庁の公開データ・APIキー不要） =====
+    // 460100 = 鹿児島県（奄美地方除く）、460010 = 薩摩地方（鹿児島市を含む）。
+    // ブリーフィングでCSが読み上げる内容の確認用。日報には保存しない。
+    // 電波がない時はエラー報告もアラートも出さず、「取得できません」と表示するだけ（原則A4）
+    async function fetchWeather() {
+      const elText = document.getElementById('weather-text');
+      const elToday = document.getElementById('weather-today');
+      const elTime = document.getElementById('weather-time');
+      elText.textContent = "読み込み中...";
+      const getJson = async (url) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 10000);
+        try { const res = await fetch(url, { signal: controller.signal, cache: "no-store" }); if (!res.ok) throw new Error("HTTP " + res.status); return await res.json(); }
+        finally { clearTimeout(timer); }
+      };
+      try {
+        const [overview, forecast] = await Promise.all([
+          getJson("https://www.jma.go.jp/bosai/forecast/data/overview_forecast/460100.json"),
+          getJson("https://www.jma.go.jp/bosai/forecast/data/forecast/460100.json").catch(() => null)
+        ]);
+        elText.textContent = String(overview.text || "").replace(/\n\n+/g, "\n").trim() || "概況の発表がありません";
+        const t = new Date(overview.reportDatetime);
+        elTime.textContent = isNaN(t) ? "" : `${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')} ${overview.publishingOffice || ""}発表`;
+        elToday.textContent = "";
+        try {
+          const area = forecast[0].timeSeries[0].areas.find(a => a.area && a.area.code === "460010");
+          if (area) {
+            const clean = v => String(v || "").replace(/\u3000/g, " ").trim();
+            const parts = [`今日（薩摩地方）：${clean(area.weathers && area.weathers[0])}`];
+            if (area.winds && area.winds[0]) parts.push(`風：${clean(area.winds[0])}`);
+            if (area.waves && area.waves[0]) parts.push(`波：${clean(area.waves[0])}`);
+            elToday.textContent = parts.join(" ／ ");
+          }
+        } catch (e) { /* 予報部分が読めなくても概況は表示する */ }
+      } catch (e) {
+        elToday.textContent = "";
+        elText.textContent = "天気概況を取得できません（電波状況を確認し「更新」を押してください）";
+        elTime.textContent = "";
+      }
+    }
 
     // 🌟 サーバー側の応答が返ってこない（ハング）場合、fetch自体は永遠に待ち続けてしまうため
     // 20秒でタイムアウトさせ打ち切る（GASのコールドスタート等で発生しうる）
@@ -409,19 +487,7 @@
             setIfNotSelected('info-nurse', 'info-nurse-other', data.recorder); 
             setIfNotSelected('info-doctor', 'info-doctor-other', data.doctor);
             
-            document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false);
-            document.getElementById('info-remarks').value = "";
-            
-            if (data.hamamachiReason) {
-              let others = [];
-              const reasonCbs = Array.from(document.querySelectorAll('input[name="reason"]'));
-              data.hamamachiReason.split(',').forEach(r => {
-                const val = r.trim();
-                const cb = reasonCbs.find(el => el.value === val);
-                if(cb) cb.checked = true; else others.push(val);
-              });
-              if(others.length > 0) document.getElementById('info-remarks').value = others.join(", ");
-            }
+            applyStandbyInfo(parseStandbyInfo(data.hamamachiReason));
             events = data.events || [];
           }
           updatePrintHeader();
@@ -443,7 +509,85 @@
 
     // ===== 🌟 入力途中の下書き自動保存（原則A3-C） =====
     // 日報は当直中に少しずつ書き足していくため、画面を閉じたり、iPhoneが裏で画面を破棄したりすると、未保存の追記が消えていた。
-    // 日付ごと（aw109_draft_report_<日付>）に、記載者・医師・待機事由・特記事項・タイムラインを端末内(localStorage)へ自動保存する。
+    // ===== 待機場所・待機理由・ブリーフィング等の入力欄 =====
+    // 🌟 日報シート4列目（待機事由）に保存する。新形式は {"v":2,...} のJSON文字列。
+    // 旧形式（「風向き,強風,その他の文」のカンマ区切り）は、内容をそのまま特記事項・引き継ぎ事項として読む。
+    // 統括・業務管理（management.html）も同じ形式を読む。形式を変える時は両方を直すこと
+    const STANDBY_REASONS = {
+      "浜町待機": ["風向き", "天候不良", "強風", "機体トラブル"],
+      "院内待機": ["風向き", "天候不良", "強風", "機体トラブル", "整備・点検"]
+    };
+
+    function getStandbyPlace() { const r = document.querySelector('input[name="standby-place"]:checked'); return r ? r.value : ""; }
+
+    // 待機場所に合わせて待機理由の選択肢を出し直す（選択済みで新しい一覧にもある理由はチェックを残す）
+    function renderReasonOptions(checkedList) {
+      const place = getStandbyPlace();
+      const list = STANDBY_REASONS[place] || [];
+      const keep = checkedList || Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
+      const box = document.getElementById('reason-options');
+      box.innerHTML = "";
+      list.forEach(val => {
+        const lbl = document.createElement('label'); lbl.className = 'reason-pill';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.name = 'reason'; cb.value = val; cb.checked = keep.includes(val);
+        cb.addEventListener('change', updatePrintHeader);
+        const sp = document.createElement('span'); sp.textContent = val;
+        lbl.appendChild(cb); lbl.appendChild(sp); box.appendChild(lbl);
+      });
+      document.getElementById('reason-box').classList.toggle('hidden', list.length === 0);
+      document.getElementById('info-place-other').classList.toggle('hidden', place !== 'その他');
+    }
+    function onPlaceChange() {
+      renderReasonOptions();
+      if (getStandbyPlace() !== 'その他') document.getElementById('info-place-other').value = "";
+      if (!STANDBY_REASONS[getStandbyPlace()]) document.getElementById('info-reason-other').value = "";
+      updatePrintHeader();
+    }
+
+    // 画面の入力内容を1つのオブジェクトにまとめる
+    function getStandbyInfo() {
+      const place = getStandbyPlace();
+      return {
+        v: 2,
+        place: place,
+        placeOther: place === 'その他' ? document.getElementById('info-place-other').value.trim() : "",
+        reasons: STANDBY_REASONS[place] ? Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value) : [],
+        reasonOther: STANDBY_REASONS[place] ? document.getElementById('info-reason-other').value.trim() : "",
+        briefing: document.getElementById('info-briefing').value.trim(),
+        free: document.getElementById('info-free').value.trim(),
+        handover: document.getElementById('info-remarks').value.trim()
+      };
+    }
+    // まとめたオブジェクトを画面へ戻す（null なら全部空にする）
+    function applyStandbyInfo(info) {
+      const d = info || {};
+      document.querySelectorAll('input[name="standby-place"]').forEach(r => { r.checked = (r.value === d.place); });
+      document.getElementById('info-place-other').value = d.placeOther || "";
+      renderReasonOptions(d.reasons || []);
+      document.getElementById('info-reason-other').value = d.reasonOther || "";
+      document.getElementById('info-briefing').value = d.briefing || "";
+      document.getElementById('info-free').value = d.free || "";
+      document.getElementById('info-remarks').value = d.handover || "";
+    }
+    // シートの値（新形式JSON／旧形式カンマ区切り）を読み取る
+    function parseStandbyInfo(raw) {
+      const str = String(raw || "").trim();
+      if (!str) return null;
+      if (str.charAt(0) === "{") {
+        try { const o = JSON.parse(str); if (o && o.v === 2) return o; } catch (e) { /* 旧形式として読む */ }
+      }
+      // 旧形式には待機場所の区別が無いため、場所は推測せず、内容をそのまま特記事項に入れる（文字は失わない）
+      return { v: 2, place: "", placeOther: "", reasons: [], reasonOther: "", briefing: "", free: "", handover: str.split(',').map(r => r.trim()).filter(Boolean).join(", ") };
+    }
+    // 印刷・一覧用の短い表記（例：浜町待機（風向き・強風））
+    function standbySummary(info) {
+      if (!info || !info.place) return "";
+      const placeLabel = info.place === 'その他' ? (info.placeOther ? `その他：${info.placeOther}` : 'その他') : info.place;
+      const rs = (info.reasons || []).concat(info.reasonOther ? [info.reasonOther] : []);
+      return rs.length ? `${placeLabel}（${rs.join('・')}）` : placeLabel;
+    }
+
+    // 日付ごと（aw109_draft_report_<日付>）に、記載者・医師・待機場所・待機理由・ブリーフィング等・タイムラインを端末内(localStorage)へ自動保存する。
     const REPORT_DRAFT_PREFIX = "aw109_draft_report_";
     const REPORT_DRAFT_MAX_AGE_MS = 72 * 60 * 60 * 1000;
     let reportDraftReady = false; let reportDraftBaseline = ""; let reportDraftTimer = null;
@@ -453,12 +597,11 @@
       return {
         nurse: document.getElementById('info-nurse').value, nurseOther: document.getElementById('info-nurse-other').value,
         doctor: document.getElementById('info-doctor').value, doctorOther: document.getElementById('info-doctor-other').value,
-        reasons: Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value),
-        remarks: document.getElementById('info-remarks').value,
+        standby: getStandbyInfo(),
         events: events
       };
     }
-    function reportCompareString(snap) { return JSON.stringify([snap.nurse, snap.nurseOther, snap.doctor, snap.doctorOther, snap.reasons, snap.remarks, snap.events]); }
+    function reportCompareString(snap) { return JSON.stringify([snap.nurse, snap.nurseOther, snap.doctor, snap.doctorOther, snap.standby, snap.events]); }
 
     function saveReportDraftNow() {
       if (!reportDraftReady || !reportDraftDate) return;
@@ -490,8 +633,8 @@
       };
       setSel('info-nurse', 'info-nurse-other', d.nurse, d.nurseOther);
       setSel('info-doctor', 'info-doctor-other', d.doctor, d.doctorOther);
-      document.querySelectorAll('input[name="reason"]').forEach(cb => { cb.checked = (d.reasons || []).includes(cb.value); });
-      document.getElementById('info-remarks').value = d.remarks || "";
+      // 旧形式の下書き（reasons/remarks）も読めるようにする
+      applyStandbyInfo(d.standby || parseStandbyInfo([].concat(d.reasons || [], d.remarks ? [d.remarks] : []).join(',')));
       events = Array.isArray(d.events) ? d.events : [];
       updatePrintHeader(); render();
     }
@@ -530,14 +673,14 @@
       const nsVal = document.getElementById('info-nurse').value === 'その他' ? document.getElementById('info-nurse-other').value : document.getElementById('info-nurse').value;
       const drVal = document.getElementById('info-doctor').value === 'その他' ? document.getElementById('info-doctor-other').value : document.getElementById('info-doctor').value;
       if (!nsVal || !drVal) return alert("記載者とフライトドクターを選択・入力してください。");
-      const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
-      const otherReason = document.getElementById('info-remarks').value.trim(); if(otherReason) reasons.push(otherReason);
+      const standby = getStandbyInfo();
+      if (standby.place === 'その他' && !standby.placeOther) return alert("待機場所「その他」の場所を入力してください。");
       
       showLoader(true, "保存中...", "日誌データを更新しています");
       try {
         const res = await fetch(GAS_API_URL, { 
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: reasons.join(','), events: events }), 
+          body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: dateVal, recorder: nsVal, doctor: drVal, hamamachiReason: JSON.stringify(standby), events: events }), 
           redirect: "follow" 
         });
         const json = await parseGasResponse(res); 
@@ -563,9 +706,12 @@
       document.getElementById('print-date').innerText = normalizeDate(document.getElementById('info-date').value);
       const ns = document.getElementById('info-nurse').value; document.getElementById('print-ns').innerText = ns === 'その他' ? document.getElementById('info-nurse-other').value : ns || "未入力";
       const dr = document.getElementById('info-doctor').value; document.getElementById('print-dr').innerText = dr === 'その他' ? document.getElementById('info-doctor-other').value : dr || "未入力";
-      const reasons = Array.from(document.querySelectorAll('input[name="reason"]:checked')).map(cb => cb.value);
-      const other = document.getElementById('info-remarks').value.trim(); if(other) reasons.push(other);
-      document.getElementById('print-reason').innerText = reasons.join(', ') || '特になし';
+      const info = getStandbyInfo();
+      document.getElementById('print-reason').innerText = standbySummary(info) || '未入力';
+      [["briefing", info.briefing], ["free", info.free], ["handover", info.handover]].forEach(([k, v]) => {
+        document.getElementById('print-' + k).innerText = v;
+        document.getElementById('print-' + k + '-box').classList.toggle('hidden', !v);
+      });
     }
     
     function populateSelect(id, array) { const sel = document.getElementById(id); sel.innerHTML = `<option value="">-- 選択 --</option>`; array.forEach(name => sel.innerHTML += `<option value="${name}">${name}</option>`); sel.innerHTML += `<option value="その他">その他(手入力)</option>`; }
@@ -678,7 +824,7 @@
     }
 
     function deleteEvent(id) { if(confirm("本当にこの記録を削除しますか？\n（この操作は取り消せません）")) { events = events.filter(e => e.id !== id); if (editingId === id) cancelEdit(); render(); } }
-    function resetAll() { if(confirm("画面上の入力内容をすべてリセットしますか？")) { events = []; document.getElementById('info-nurse').value = ''; document.getElementById('info-doctor').value = ''; document.getElementById('info-remarks').value = ''; document.querySelectorAll('input[name="reason"]').forEach(cb => cb.checked = false); cancelEdit(); updatePrintHeader(); render(); } }
+    function resetAll() { if(confirm("画面上の入力内容をすべてリセットしますか？")) { events = []; document.getElementById('info-nurse').value = ''; document.getElementById('info-doctor').value = ''; applyStandbyInfo(null); cancelEdit(); updatePrintHeader(); render(); } }
   </script>
 </body>
 </html>
