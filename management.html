@@ -137,6 +137,37 @@
   </main>
 
   <script>
+    // ===== 日報シート4列目（待機事由）の読み取り =====
+    // 🌟 業務日誌（report.html）v12.0から {"v":2,"place":"浜町待機","reasons":[...],...} のJSON文字列で保存される。
+    // 旧形式（カンマ区切りの文字）もそのまま表示する。形式を変える時は report.html の parseStandbyInfo と合わせること
+    function parseReportReasonJson(raw) {
+      const str = String(raw || "").trim();
+      if (str.charAt(0) !== "{") return null;
+      try { const o = JSON.parse(str); return (o && o.v === 2) ? o : null; } catch (e) { return null; }
+    }
+    function reportPlaceSummary(o) {
+      if (!o.place) return "";
+      const placeLabel = o.place === 'その他' ? (o.placeOther ? `その他：${o.placeOther}` : 'その他') : o.place;
+      const rs = (o.reasons || []).concat(o.reasonOther ? [o.reasonOther] : []);
+      return rs.length ? `${placeLabel}（${rs.join('・')}）` : placeLabel;
+    }
+    // 一覧表用：待機場所（理由）／特記事項
+    function formatReportReason(raw) {
+      const o = parseReportReasonJson(raw);
+      if (!o) return String(raw || "");
+      return [reportPlaceSummary(o), o.handover ? `特記: ${o.handover}` : ""].filter(Boolean).join(" ／ ");
+    }
+    // カレンダー用：浜町待機以外の日、または理由がある日だけ短く表示（旧形式は従来どおり風・天候・トラブル・待機を含む語）
+    function calendarReason(raw) {
+      const o = parseReportReasonJson(raw);
+      if (!o) return String(raw || "").split(',').filter(r => r.includes('風')||r.includes('天候')||r.includes('トラブル')||r.includes('待機'))[0] || "";
+      const rs = (o.reasons || []).concat(o.reasonOther ? [o.reasonOther] : []);
+      if (!o.place) return "";
+      if (o.place === "浜町待機" && rs.length === 0) return "";
+      return rs.length ? `${o.place === 'その他' ? (o.placeOther || 'その他') : o.place}:${rs[0]}` : (o.place === 'その他' ? (o.placeOther || 'その他') : o.place);
+    }
+    function escapeHtml(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
   // 🌟 サーバー(GAS)への通信に上限時間（60秒）を設ける。以前は保存・読込の多くに上限がなく、電波が途切れると
   // 「通信中」の表示が終わらないまま操作できなくなっていた。上限を超えたら「タイムアウト」のエラーにして、各画面の案内を出す。
@@ -346,7 +377,7 @@
             });
           }
           if(monthData[normalizedReportDate]) {
-            monthData[normalizedReportDate] = { date: parseInt(normalizedReportDate.split('-')[2]), dr: r.doctor, ns: r.recorder, reason: r.reason, mission: mCount, cancel: cCount, exists: true };
+            monthData[normalizedReportDate] = { date: parseInt(normalizedReportDate.split('-')[2]), dr: r.doctor, ns: r.recorder, reason: formatReportReason(r.reason), calReason: calendarReason(r.reason), mission: mCount, cancel: cCount, exists: true };
           }
         }
       });
@@ -399,10 +430,7 @@
           content += `<div class="cal-staff">Dr: ${dat.dr || '-'}<br>Ns: ${dat.ns || '-'}</div>`;
           if(dat.mission > 0) content += `<div class="cal-badge bg-blue-500">🚁 ${dat.mission}</div>`;
           if(dat.cancel > 0) content += `<div class="cal-badge bg-slate-500">⚠️ ${dat.cancel}</div>`;
-          if(dat.reason) {
-            const reasons = dat.reason.split(',').filter(r => r.includes('風')||r.includes('天候')||r.includes('トラブル')||r.includes('待機'));
-            if(reasons.length > 0) content += `<div class="cal-reason truncate w-full">${reasons[0]}</div>`;
-          }
+          if(dat.calReason) content += `<div class="cal-reason truncate w-full">${escapeHtml(dat.calReason)}</div>`;
         }
         calBody.innerHTML += `<div class="cal-cell" onclick="location.href='report.html?date=${fullDate}'">${content}</div>`;
       }
@@ -419,7 +447,7 @@
               <td class="px-4 py-3 text-slate-600"><span class="font-bold text-slate-800">${dat.dr || '-'}</span> / ${dat.ns || '-'}</td>
               <td class="px-4 py-3 text-center"><span class="bg-blue-100 text-blue-700 font-bold px-2 py-1 rounded">${dat.mission}</span></td>
               <td class="px-4 py-3 text-center"><span class="bg-slate-100 text-slate-600 font-bold px-2 py-1 rounded">${dat.cancel}</span></td>
-              <td class="px-4 py-3 text-slate-600 truncate max-w-[200px] print:max-w-none print:whitespace-normal">${dat.reason || '-'}</td>
+              <td class="px-4 py-3 text-slate-600 truncate max-w-[200px] print:max-w-none print:whitespace-normal">${escapeHtml(dat.reason) || '-'}</td>
               <td class="px-4 py-3 text-center no-print"><a href="report.html?date=${dateKey}" class="text-blue-600 font-bold text-xs bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100">詳細・日誌</a></td>
             </tr>
           `;
