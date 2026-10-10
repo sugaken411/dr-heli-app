@@ -44,7 +44,9 @@
       .bg-white { border: none !important; box-shadow: none !important; }
       .break-after { page-break-after: always; }
       #view-list { display: block !important; }
+      body.staff-mode #view-list, body.staff-mode #view-cal, body.staff-mode #activity-box { display: none !important; }
     }
+    .staff-input { min-height: 44px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 0 8px; font-weight: 700; }
     @media (max-width: 400px) {
       /* 🌟 狭い画面ではタイトルを優先し、右側ボタンの文字ラベルと補足バッジを隠す */
       .btn-label { display: none; }
@@ -70,7 +72,7 @@
   <header class="no-print">
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="font-black text-base flex items-center gap-2" style="flex:1; min-width:0; overflow:hidden; white-space:nowrap;">
-      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.4</span>
+      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.5</span>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden" style="flex-shrink:0;"></span>
     </div>
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="fetchData()">🔄 <span class="btn-label">更新</span></button>
@@ -86,7 +88,7 @@
 
     <!-- コントロールパネル -->
     <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center justify-between no-print">
-      <div class="flex items-center gap-4">
+      <div id="month-ctrl" class="flex items-center gap-4">
         <button type="button" onclick="changeMonth(-1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">◀</button>
         <input type="month" id="month-picker" class="font-black text-xl text-slate-800 bg-transparent outline-none cursor-pointer" onchange="fetchData()">
         <button type="button" onclick="changeMonth(1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600">▶</button>
@@ -95,11 +97,12 @@
       <div class="flex bg-slate-100 p-1 rounded-lg">
         <button type="button" id="btn-view-cal" onclick="switchView('cal')" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition">📅 カレンダー</button>
         <button type="button" id="btn-view-list" onclick="switchView('list')" class="px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition">📋 リスト</button>
+        <button type="button" id="btn-view-staff" onclick="switchView('staff')" class="px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition">👤 スタッフ別</button>
       </div>
     </div>
 
     <!-- 業務活動時間の内訳 -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-5 break-after">
+    <div id="activity-box" class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-5 break-after">
       <h3 class="text-sm font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2">⏱️ 業務活動時間（分数）の内訳</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
         <div class="relative h-48 w-full">
@@ -134,6 +137,44 @@
       </div>
     </div>
 
+    <!-- 🌟 スタッフ別・期間指定リスト：いつ誰がヘリ担当で、要請何件中何件対応し、どこで待機し、何時に勤務終了したかを一覧で見て、その場で直す。
+         件数は空欄なら日誌のタイムライン（事案）から自動で数え、入力すると入力値が優先される。編集は日誌シート4列目のJSONに保存され、業務日誌にも表示される -->
+    <div id="view-staff" class="hidden">
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 mb-4 grid grid-cols-2 md:grid-cols-5 gap-3 items-end no-print">
+        <div class="col-span-2 md:col-span-1">
+          <label for="staff-filter" class="block text-xs font-bold text-slate-500 mb-1">スタッフ</label>
+          <select id="staff-filter" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 text-sm font-bold" onchange="renderStaffList()"></select>
+        </div>
+        <div>
+          <label for="staff-from" class="block text-xs font-bold text-slate-500 mb-1">開始日</label>
+          <input type="date" id="staff-from" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 text-sm font-bold" value="2025-04-01" onchange="renderStaffList()">
+        </div>
+        <div>
+          <label for="staff-to" class="block text-xs font-bold text-slate-500 mb-1">終了日</label>
+          <input type="date" id="staff-to" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 text-sm font-bold" value="2026-09-30" onchange="renderStaffList()">
+        </div>
+        <div>
+          <label for="staff-place" class="block text-xs font-bold text-slate-500 mb-1">待機場所</label>
+          <select id="staff-place" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 text-sm font-bold" onchange="renderStaffList()">
+            <option value="">すべて</option><option value="浜町待機">浜町待機</option><option value="院内待機">院内待機</option><option value="その他">その他</option><option value="未選択">未選択</option>
+          </select>
+        </div>
+        <button type="button" onclick="exportStaffCsv()" class="bg-emerald-600 text-white font-bold rounded-lg px-3 text-sm">⬇️ CSV出力</button>
+      </div>
+      <div id="staff-summary" class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 text-sm font-bold text-slate-700"></div>
+      <div id="staff-pending" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 mb-3 text-sm font-bold text-red-700 no-print"></div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left whitespace-nowrap text-sm">
+            <thead class="bg-slate-50 text-slate-500 text-xs border-b border-slate-200">
+              <tr><th class="px-3 py-3">日付</th><th class="px-3 py-3">ナース / ドクター</th><th class="px-3 py-3 text-center">要請</th><th class="px-3 py-3 text-center">対応</th><th class="px-3 py-3">待機場所</th><th class="px-3 py-3">勤務終了</th><th class="px-3 py-3">時間外</th><th class="px-3 py-3 text-center no-print">保存</th><th class="px-3 py-3 text-center no-print">日誌</th></tr>
+            </thead>
+            <tbody id="staff-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 mt-2 no-print">件数の欄が空のときは、日誌のタイムラインから自動で数えた数（要請＝ヘリ活動＋キャンセル、対応＝ヘリ活動）を薄く表示しています。数値を入れるとその値が優先されます。時間外は勤務終了時刻から16:30を引いた時間です。</p>
+    </div>
   </main>
 
   <script>
@@ -305,15 +346,15 @@
     function switchView(view) {
       document.getElementById('view-cal').classList.toggle('hidden', view !== 'cal');
       document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
-      
-      const btnCal = document.getElementById('btn-view-cal'); const btnList = document.getElementById('btn-view-list');
-      if(view === 'cal') {
-        btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
-        btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
-      } else {
-        btnList.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
-        btnCal.className = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
-      }
+      document.getElementById('view-staff').classList.toggle('hidden', view !== 'staff');
+      // 🌟 スタッフ別は期間で絞るため、月の切替と月間グラフは隠す
+      document.getElementById('month-ctrl').classList.toggle('invisible', view === 'staff');
+      document.getElementById('activity-box').classList.toggle('hidden', view === 'staff');
+      document.body.classList.toggle('staff-mode', view === 'staff');
+      const on = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-blue-600 shadow-sm transition";
+      const off = "px-4 py-1.5 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition";
+      [['cal', 'btn-view-cal'], ['list', 'btn-view-list'], ['staff', 'btn-view-staff']].forEach(([v, id]) => { document.getElementById(id).className = view === v ? on : off; });
+      if (view === 'staff') renderStaffList();
     }
 
     function timeToMins(tStr) {
@@ -342,6 +383,9 @@
           allReports = json.data;
           updateSyncTimestamp();
           renderViews();
+          buildStaffOptions();
+          if (!document.getElementById('view-staff').classList.contains('hidden')) renderStaffList();
+          flushStaffPending();
         } else { throw new Error(json.message); }
       } catch (e) {
         alert("データ同期に失敗しました。接続を確認してください。");
@@ -454,6 +498,210 @@
         }
       });
       if(listBody.innerHTML === "") listBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500 font-bold">データがありません</td></tr>`;
+    }
+
+    // ===== 👤 スタッフ別・期間指定リスト =====
+    // 日誌シート4列目のJSON（{"v":2,...}）に reqCount（要請件数）・respCount（対応件数）・endTime（勤務終了）を足して保存する。
+    // 業務日誌（report.html）の getStandbyInfo / applyStandbyInfo も同じ項目名で読み書きする。形式を変える時は両方を直すこと
+    const STANDBY_REASONS = { "浜町待機": ["風向き", "天候不良", "強風", "機体トラブル"], "院内待機": ["風向き", "天候不良", "強風", "機体トラブル", "整備・点検"] }; // report.html と同じ一覧
+    const OVERTIME_START_MINS = 16 * 60 + 30; // 16:30以降が時間外
+    const STAFF_PENDING_KEY = "aw109_mgmt_staff_pending_v1"; // 電波が無くて送れなかった編集（日付ごとの変更項目だけ）を端末内に残す
+    const WEEK_JA = ["日","月","火","水","木","金","土"];
+
+    // 4列目の値を、編集できる新形式オブジェクトにする（旧形式のカンマ区切りは特記事項として残す：report.html の parseStandbyInfo と同じ）
+    function reasonToEditable(raw) {
+      const o = parseReportReasonJson(raw);
+      if (o) return Object.assign({}, o);
+      const str = String(raw || "").trim();
+      return { v: 2, place: "", placeOther: "", reasons: [], reasonOther: "", briefing: "", free: "", handover: str ? str.split(',').map(r => r.trim()).filter(Boolean).join(", ") : "" };
+    }
+    function autoCounts(r) {
+      const ev = Array.isArray(r.events) ? r.events : [];
+      const m = ev.filter(e => e.cat === 'mission').length; const c = ev.filter(e => e.cat === 'cancel').length;
+      return { req: m + c, resp: m };
+    }
+    function overtimeMins(endTime) {
+      const p = String(endTime || "").split(':');
+      if (p.length !== 2 || isNaN(parseInt(p[0], 10)) || isNaN(parseInt(p[1], 10))) return null;
+      return Math.max(0, parseInt(p[0], 10) * 60 + parseInt(p[1], 10) - OVERTIME_START_MINS);
+    }
+    function minsToHm(mins) { return `${Math.floor(mins / 60)}時間${mins % 60}分`; }
+    function staffCountVal(v) { return (v === undefined || v === null || String(v).trim() === "") ? "" : String(v).trim(); }
+    function findReport(dateKey) { return allReports.find(r => normalizeDate(r.date) === dateKey); }
+
+    // スタッフの選択肢（日誌の記載者＝ナース、フライトドクター＝ドクター）
+    function buildStaffOptions() {
+      const sel = document.getElementById('staff-filter'); const keep = sel.value;
+      const ns = new Set(); const dr = new Set();
+      allReports.forEach(r => { if (String(r.recorder || "").trim()) ns.add(String(r.recorder).trim()); if (String(r.doctor || "").trim()) dr.add(String(r.doctor).trim()); });
+      const opt = (prefix, set) => [...set].sort((a, b) => a.localeCompare(b, 'ja')).map(n => `<option value="${prefix}:${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+      sel.innerHTML = `<option value="">すべて</option><optgroup label="ナース">${opt('ns', ns)}</optgroup><optgroup label="ドクター">${opt('dr', dr)}</optgroup>`;
+      if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
+    }
+
+    // 絞り込み結果（日付順）。各行は { key, r, info, auto }
+    function getStaffRows() {
+      const f = document.getElementById('staff-filter').value;
+      const from = document.getElementById('staff-from').value || "0000-00-00";
+      const to = document.getElementById('staff-to').value || "9999-12-31";
+      const place = document.getElementById('staff-place').value;
+      const role = f.slice(0, 2); const name = f.slice(3);
+      return allReports.map(r => ({ key: normalizeDate(r.date), r: r, info: reasonToEditable(r.reason), auto: autoCounts(r) }))
+        .filter(x => x.key && x.key >= from && x.key <= to)
+        .filter(x => !f || String((role === 'ns' ? x.r.recorder : x.r.doctor) || "").trim() === name)
+        .filter(x => !place || (place === '未選択' ? !x.info.place : x.info.place === place))
+        .sort((a, b) => a.key < b.key ? -1 : 1);
+    }
+
+    function renderStaffList() {
+      const rows = getStaffRows();
+      const body = document.getElementById('staff-body');
+      let sumReq = 0, sumResp = 0, sumOt = 0, hamaDays = 0, hamaOt = 0;
+      body.innerHTML = rows.map(x => {
+        const k = x.key; const i = x.info;
+        const req = staffCountVal(i.reqCount); const resp = staffCountVal(i.respCount);
+        sumReq += Number(req !== "" ? req : x.auto.req) || 0; sumResp += Number(resp !== "" ? resp : x.auto.resp) || 0;
+        const ot = overtimeMins(i.endTime);
+        if (ot) sumOt += ot;
+        if (i.place === '浜町待機') { hamaDays++; if (ot) hamaOt += ot; }
+        const placeOpts = ["", "浜町待機", "院内待機", "その他"].map(p => `<option value="${p}" ${i.place === p ? 'selected' : ''}>${p || '未選択'}</option>`).join("");
+        const wk = WEEK_JA[new Date(k.replace(/-/g, '/')).getDay()];
+        return `<tr class="hover:bg-blue-50 ${i.place === '浜町待機' ? 'bg-amber-50/40' : ''}">
+          <td class="px-3 py-2 font-mono font-bold text-slate-700">${k} (${wk})</td>
+          <td class="px-3 py-2 text-slate-600"><span class="font-bold text-slate-800">${escapeHtml(x.r.recorder || '-')}</span> / ${escapeHtml(x.r.doctor || '-')}</td>
+          <td class="px-3 py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-16 text-center" data-date="${k}" data-field="reqCount" value="${escapeHtml(req)}" placeholder="${x.auto.req}" onchange="onStaffEdit(this)"></td>
+          <td class="px-3 py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-16 text-center" data-date="${k}" data-field="respCount" value="${escapeHtml(resp)}" placeholder="${x.auto.resp}" onchange="onStaffEdit(this)"></td>
+          <td class="px-3 py-2"><select class="staff-input" data-date="${k}" data-field="place" onchange="onStaffEdit(this)">${placeOpts}</select>${i.place === 'その他' && i.placeOther ? `<div class="text-xs text-slate-500">${escapeHtml(i.placeOther)}</div>` : ''}</td>
+          <td class="px-3 py-2"><input type="text" inputmode="numeric" maxlength="5" placeholder="17:45" class="staff-input w-20 text-center" data-date="${k}" data-field="endTime" value="${escapeHtml(i.endTime || '')}" oninput="formatStaffTime(this)" onchange="clampStaffTime(this); onStaffEdit(this)"></td>
+          <td class="px-3 py-2 font-bold ${ot ? 'text-red-600' : 'text-slate-400'}">${ot === null ? '-' : (ot ? minsToHm(ot) : 'なし')}</td>
+          <td class="px-3 py-2 text-center text-xs font-bold no-print" id="staff-st-${k}">${getStaffPending()[k] ? '<span class="text-red-600">未送信</span>' : ''}</td>
+          <td class="px-3 py-2 text-center no-print"><a href="report.html?date=${k}" class="text-blue-600 font-bold text-xs bg-blue-50 px-3 py-3 rounded-lg inline-block">開く</a></td>
+        </tr>`;
+      }).join("") || `<tr><td colspan="9" class="text-center py-8 text-slate-500 font-bold">該当する日誌がありません</td></tr>`;
+      document.getElementById('staff-summary').innerHTML =
+        `${rows.length}日 ／ 要請 ${sumReq}件・対応 ${sumResp}件 ／ 浜町待機 ${hamaDays}日・時間外 ${minsToHm(hamaOt)}` +
+        `<span class="text-slate-500 font-semibold">（全待機場所の時間外 ${minsToHm(sumOt)}）</span>`;
+      showStaffPendingBanner();
+    }
+
+    // 時刻欄：テンキーで「1745」と打つと「17:45」にする（report.html の formatTimeInput / clampTimeInput と同じ動き）
+    function formatStaffTime(el) {
+      let digits = el.value.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, "").slice(0, 4);
+      el.value = digits.length >= 3 ? digits.slice(0, 2) + ":" + digits.slice(2) : digits;
+    }
+    function clampStaffTime(el) {
+      const digits = el.value.replace(/[^0-9]/g, "").slice(0, 4);
+      if (!digits) { el.value = ""; return; }
+      const hh = Math.min(23, parseInt(digits.slice(0, 2) || "0", 10)); const mm = Math.min(59, parseInt(digits.slice(2) || "0", 10));
+      el.value = String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
+    }
+
+    function getStaffPending() { try { return JSON.parse(localStorage.getItem(STAFF_PENDING_KEY) || "{}") || {}; } catch (e) { return {}; } }
+    function setStaffPending(p) { try { if (Object.keys(p).length) localStorage.setItem(STAFF_PENDING_KEY, JSON.stringify(p)); else localStorage.removeItem(STAFF_PENDING_KEY); } catch (e) {} }
+    function showStaffPendingBanner() {
+      const n = Object.keys(getStaffPending()).length; const el = document.getElementById('staff-pending');
+      el.classList.toggle('hidden', n === 0);
+      el.innerText = n ? `電波が戻ったら自動で送信します（未送信 ${n}日分。この端末に保存済み）` : "";
+    }
+
+    // 変更項目を日誌の4列目へ反映する（他の項目：待機理由・ブリーフィング・特記・タイムラインはそのまま残す）
+    function applyStaffChanges(r, changes) {
+      const info = reasonToEditable(r.reason);
+      Object.keys(changes).forEach(f => {
+        if (f === 'place') {
+          const pl = changes.place; info.place = pl;
+          if (pl !== 'その他') info.placeOther = "";
+          const list = STANDBY_REASONS[pl];
+          info.reasons = list ? (info.reasons || []).filter(x => list.includes(x)) : [];
+          if (!list) info.reasonOther = "";
+        } else if (f === 'reqCount' || f === 'respCount') {
+          const v = String(changes[f]).trim();
+          info[f] = /^\d{1,3}$/.test(v) ? v : ""; // 数字以外・空欄は「自動」に戻す
+        } else if (f === 'endTime') {
+          info.endTime = /^\d{2}:\d{2}$/.test(changes.endTime) ? changes.endTime : "";
+        }
+      });
+      r.reason = JSON.stringify(info);
+      return info;
+    }
+
+    function onStaffEdit(el) {
+      const k = el.dataset.date; const r = findReport(k); if (!r) return;
+      const pending = getStaffPending();
+      pending[k] = Object.assign(pending[k] || {}, { [el.dataset.field]: el.value });
+      setStaffPending(pending); // 🌟 送信前に端末内へ残す（原則A3-C：電波が切れても編集が消えない）
+      applyStaffChanges(r, { [el.dataset.field]: el.value });
+      renderStaffList(); renderViews();
+      sendStaffRow(k);
+    }
+
+    const staffSending = {};
+    async function sendStaffRow(k) {
+      if (staffSending[k]) { staffSending[k] = "again"; return; }
+      staffSending[k] = true;
+      const st = () => document.getElementById('staff-st-' + k);
+      if (st()) st().innerHTML = '<span class="text-slate-500">保存中…</span>';
+      const r = findReport(k);
+      const sentChanges = JSON.stringify(getStaffPending()[k] || {});
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "save_daily_report", password: PIN_CODE, date: k, recorder: r.recorder || "", doctor: r.doctor || "", hamamachiReason: r.reason, events: Array.isArray(r.events) ? r.events : [] }),
+          redirect: "follow"
+        });
+        const json = await parseGasResponse(res);
+        if (json.status !== "success") throw new Error(json.message || "保存に失敗しました");
+        const pending = getStaffPending();
+        if (JSON.stringify(pending[k] || {}) === sentChanges) { delete pending[k]; setStaffPending(pending); } // 送信中に更に直した分は残す
+        if (st()) st().innerHTML = '<span class="text-emerald-600">✓ 保存</span>';
+      } catch (e) {
+        const isNetwork = e.isTimeout || /Load failed|Failed to fetch|NetworkError|network connection was lost|offline/i.test(String(e.message || e));
+        if (st()) st().innerHTML = '<span class="text-red-600">未送信</span>';
+        if (!isNetwork) { // 🌟 電波切れは静かに再送待ち。アプリ内部のエラーだけ知らせる（原則A4）
+          alert(`${k} の保存に失敗しました：${e.message || e}\n入力内容はこの端末に残っています。`);
+          sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
+        }
+      } finally {
+        const again = staffSending[k] === "again"; delete staffSending[k];
+        showStaffPendingBanner();
+        if (again && getStaffPending()[k]) sendStaffRow(k);
+      }
+    }
+
+    // 未送信の編集を、最新の日誌データに重ねてから送り直す（古いタイムラインで上書きしないため、変更項目だけを持っておく）
+    function flushStaffPending() {
+      const pending = getStaffPending();
+      Object.keys(pending).forEach(k => {
+        const r = findReport(k);
+        if (!r) { delete pending[k]; return; }
+        applyStaffChanges(r, pending[k]);
+      });
+      setStaffPending(pending);
+      if (Object.keys(pending).length) { renderViews(); if (!document.getElementById('view-staff').classList.contains('hidden')) renderStaffList(); }
+      Object.keys(pending).forEach(k => sendStaffRow(k));
+    }
+    window.addEventListener('online', () => { if (allReports.length) flushStaffPending(); });
+
+    // CSV出力（Excelで文字化けしないようBOM付きUTF-8。先頭が = + - @ の値は数式にならないよう ' を付ける）
+    function exportStaffCsv() {
+      const rows = getStaffRows();
+      if (!rows.length) return alert("出力する日誌がありません。");
+      const cell = v => { let t = String(v == null ? "" : v); if (/^[=+\-@]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
+      const lines = [["日付", "曜日", "ナース(記載者)", "フライトドクター", "要請件数", "対応件数", "件数の入力", "待機場所", "待機理由", "勤務終了", "時間外(分)", "時間外"].map(cell).join(",")];
+      rows.forEach(x => {
+        const i = x.info; const req = staffCountVal(i.reqCount); const resp = staffCountVal(i.respCount); const ot = overtimeMins(i.endTime);
+        const place = i.place === 'その他' && i.placeOther ? `その他：${i.placeOther}` : (i.place || "");
+        const reasons = (i.reasons || []).concat(i.reasonOther ? [i.reasonOther] : []).join("・");
+        lines.push([x.key, WEEK_JA[new Date(x.key.replace(/-/g, '/')).getDay()], x.r.recorder || "", x.r.doctor || "",
+          req !== "" ? req : x.auto.req, resp !== "" ? resp : x.auto.resp, (req !== "" || resp !== "") ? "手入力" : "自動",
+          place, reasons, i.endTime || "", ot === null ? "" : ot, ot === null ? "" : minsToHm(ot)].map(cell).join(","));
+      });
+      const f = document.getElementById('staff-filter').value;
+      const who = f ? f.slice(3) : "全員";
+      const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `スタッフ別_${who}_${document.getElementById('staff-from').value}_${document.getElementById('staff-to').value}.csv`.replace(/[\\/:*?"<>|]/g, "_");
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
     }
   </script>
 </body>
