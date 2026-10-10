@@ -46,6 +46,10 @@
       #view-list { display: block !important; }
       body.staff-mode #view-list, body.staff-mode #view-cal, body.staff-mode #activity-box { display: none !important; }
     }
+    /* 🌟 スタッフ別はPCで横スクロールせずに収まるよう、画面幅いっぱいまで広げて列を詰める */
+    @media (min-width: 1024px) { body.staff-mode main { max-width: 1440px; } }
+    #view-staff td, #view-staff th { padding-left: 6px; padding-right: 6px; }
+    .staff-hama { width: 26px; height: 26px; accent-color: #d97706; cursor: pointer; }
     .staff-input { min-height: 44px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 0 8px; font-weight: 700; }
     @media (max-width: 400px) {
       /* 🌟 狭い画面ではタイトルを優先し、右側ボタンの文字ラベルと補足バッジを隠す */
@@ -72,7 +76,7 @@
   <header class="no-print">
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="font-black text-base flex items-center gap-2" style="flex:1; min-width:0; overflow:hidden; white-space:nowrap;">
-      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.6</span>
+      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.7</span>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden" style="flex-shrink:0;"></span>
     </div>
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="fetchData()">🔄 <span class="btn-label">更新</span></button>
@@ -165,16 +169,16 @@
       <div id="staff-pending" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 mb-3 text-sm font-bold text-red-700 no-print"></div>
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-left whitespace-nowrap text-sm">
+          <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 text-xs border-b border-slate-200">
-              <tr><th class="px-3 py-3">日付</th><th class="px-3 py-3">ナース / ドクター</th><th class="px-3 py-3 text-center">要請</th><th class="px-3 py-3 text-center">対応</th><th class="px-3 py-3">待機場所</th><th class="px-3 py-3">勤務終了</th><th class="px-3 py-3">時間外</th><th class="px-3 py-3 text-center no-print">保存</th><th class="px-3 py-3 text-center no-print">日誌</th></tr>
+              <tr><th class="py-3 text-center whitespace-nowrap">浜町</th><th class="py-3">日付・要請番号</th><th class="py-3">ナース / ドクター</th><th class="py-3 text-center">要請</th><th class="py-3 text-center">対応</th><th class="py-3">待機場所</th><th class="py-3">勤務終了</th><th class="py-3 whitespace-nowrap">時間外</th><th class="py-3 text-center no-print">日誌</th></tr>
             </thead>
             <tbody id="staff-body" class="divide-y divide-slate-100"></tbody>
           </table>
           <datalist id="staff-ns-list"></datalist><datalist id="staff-dr-list"></datalist>
         </div>
       </div>
-      <p class="text-xs text-slate-500 mt-2 no-print">件数の欄が空のときは、日誌のタイムラインから自動で数えた数（要請＝ヘリ活動＋キャンセル、対応＝ヘリ活動）を薄く表示しています。数値を入れるとその値が優先されます。時間外は勤務終了時刻から16:30を引いた時間です。</p>
+      <p class="text-xs text-slate-500 mt-2 no-print">件数の欄が空のときは、日誌のタイムラインから自動で数えた数（要請＝ヘリ活動＋キャンセル、対応＝ヘリ活動）を薄く表示しています。数値を入れるとその値が優先されます。時間外は勤務終了時刻から16:30を引いた時間です。左端の「浜町」にチェックを入れると待機場所が浜町待機に、外すと院内待機に切り替わり、上の浜町待機の日数・時間外の合計もすぐ変わります。</p>
     </div>
   </main>
 
@@ -571,16 +575,16 @@
         if (i.place === '浜町待機') { hamaDays++; if (ot) hamaOt += ot; }
         const placeOpts = ["", "浜町待機", "院内待機", "その他"].map(p => `<option value="${p}" ${i.place === p ? 'selected' : ''}>${p || '未選択'}</option>`).join("");
         const wk = WEEK_JA[new Date(k.replace(/-/g, '/')).getDay()];
-        return `<tr class="hover:bg-blue-50 ${i.place === '浜町待機' ? 'bg-amber-50/40' : ''}">
-          <td class="px-3 py-2 font-mono font-bold text-slate-700">${k} (${wk})${staffCaseNos(x.r)}</td>
-          <td class="px-3 py-2 text-slate-600 whitespace-nowrap"><input type="text" list="staff-ns-list" maxlength="20" placeholder="ナース" class="staff-input w-24 font-bold" data-date="${k}" data-field="recorder" value="${escapeHtml(x.r.recorder || '')}" onchange="onStaffEdit(this)"> / <input type="text" list="staff-dr-list" maxlength="20" placeholder="ドクター" class="staff-input w-24" data-date="${k}" data-field="doctor" value="${escapeHtml(x.r.doctor || '')}" onchange="onStaffEdit(this)"></td>
-          <td class="px-3 py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-16 text-center" data-date="${k}" data-field="reqCount" value="${escapeHtml(req)}" placeholder="${x.auto.req}" onchange="onStaffEdit(this)"></td>
-          <td class="px-3 py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-16 text-center" data-date="${k}" data-field="respCount" value="${escapeHtml(resp)}" placeholder="${x.auto.resp}" onchange="onStaffEdit(this)"></td>
-          <td class="px-3 py-2"><select class="staff-input" data-date="${k}" data-field="place" onchange="onStaffEdit(this)">${placeOpts}</select>${i.place === 'その他' && i.placeOther ? `<div class="text-xs text-slate-500">${escapeHtml(i.placeOther)}</div>` : ''}</td>
-          <td class="px-3 py-2"><input type="text" inputmode="numeric" maxlength="5" placeholder="17:45" class="staff-input w-20 text-center" data-date="${k}" data-field="endTime" value="${escapeHtml(i.endTime || '')}" oninput="formatStaffTime(this)" onchange="clampStaffTime(this); onStaffEdit(this)"></td>
-          <td class="px-3 py-2 font-bold ${ot ? 'text-red-600' : 'text-slate-400'}">${ot === null ? '-' : (ot ? minsToHm(ot) : 'なし')}</td>
-          <td class="px-3 py-2 text-center text-xs font-bold no-print" id="staff-st-${k}">${getStaffPending()[k] ? '<span class="text-red-600">未送信</span>' : ''}</td>
-          <td class="px-3 py-2 text-center no-print"><a href="report.html?date=${k}" class="text-blue-600 font-bold text-xs bg-blue-50 px-3 py-3 rounded-lg inline-block">開く</a></td>
+        return `<tr class="hover:bg-blue-50 ${i.place === '浜町待機' ? 'bg-amber-50' : ''}">
+          <td class="py-2 text-center"><input type="checkbox" class="staff-hama" aria-label="${k} 浜町待機" data-date="${k}" ${i.place === '浜町待機' ? 'checked' : ''} onchange="onStaffHama(this)"></td>
+          <td class="py-2 font-mono font-bold text-slate-700 max-w-[220px]"><span class="whitespace-nowrap">${k} (${wk})</span>${staffCaseNos(x.r)}</td>
+          <td class="py-2 text-slate-600 whitespace-nowrap"><input type="text" list="staff-ns-list" maxlength="20" placeholder="ナース" class="staff-input w-24 font-bold" data-date="${k}" data-field="recorder" value="${escapeHtml(x.r.recorder || '')}" onchange="onStaffEdit(this)"> <input type="text" list="staff-dr-list" maxlength="20" placeholder="ドクター" class="staff-input w-24" data-date="${k}" data-field="doctor" value="${escapeHtml(x.r.doctor || '')}" onchange="onStaffEdit(this)"></td>
+          <td class="py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-14 text-center" data-date="${k}" data-field="reqCount" value="${escapeHtml(req)}" placeholder="${x.auto.req}" onchange="onStaffEdit(this)"></td>
+          <td class="py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-14 text-center" data-date="${k}" data-field="respCount" value="${escapeHtml(resp)}" placeholder="${x.auto.resp}" onchange="onStaffEdit(this)"></td>
+          <td class="py-2"><select class="staff-input" data-date="${k}" data-field="place" onchange="onStaffEdit(this)">${placeOpts}</select>${i.place === 'その他' && i.placeOther ? `<div class="text-xs text-slate-500">${escapeHtml(i.placeOther)}</div>` : ''}</td>
+          <td class="py-2"><input type="text" inputmode="numeric" maxlength="5" placeholder="17:45" class="staff-input w-20 text-center" data-date="${k}" data-field="endTime" value="${escapeHtml(i.endTime || '')}" oninput="formatStaffTime(this)" onchange="clampStaffTime(this); onStaffEdit(this)"></td>
+          <td class="py-2 font-bold whitespace-nowrap ${ot ? (i.place === '浜町待機' ? 'text-red-600' : 'text-slate-600') : 'text-slate-400'}">${ot === null ? '-' : (ot ? minsToHm(ot) : 'なし')}</td>
+          <td class="py-2 text-center no-print whitespace-nowrap"><a href="report.html?date=${k}" class="text-blue-600 font-bold text-xs bg-blue-50 px-3 py-3 rounded-lg inline-block">開く</a><div class="text-[11px] font-bold mt-0.5" id="staff-st-${k}">${getStaffPending()[k] ? '<span class="text-red-600">未送信</span>' : ''}</div></td>
         </tr>`;
       }).join("") || `<tr><td colspan="9" class="text-center py-8 text-slate-500 font-bold">該当する日誌がありません</td></tr>`;
       document.getElementById('staff-summary').innerHTML =
@@ -639,12 +643,15 @@
       return info;
     }
 
-    function onStaffEdit(el) {
-      const k = el.dataset.date; const r = findReport(k); if (!r) return;
+    // 左端の「浜町」チェック：入れると浜町待機、外すと院内待機にする（右の待機場所プルダウンと時間外の集計も切り替わる）
+    function onStaffHama(el) { staffEdit(el.dataset.date, 'place', el.checked ? '浜町待機' : '院内待機'); }
+    function onStaffEdit(el) { staffEdit(el.dataset.date, el.dataset.field, el.value); }
+    function staffEdit(k, field, value) {
+      const r = findReport(k); if (!r) return;
       const pending = getStaffPending();
-      pending[k] = Object.assign(pending[k] || {}, { [el.dataset.field]: el.value });
+      pending[k] = Object.assign(pending[k] || {}, { [field]: value });
       setStaffPending(pending); // 🌟 送信前に端末内へ残す（原則A3-C：電波が切れても編集が消えない）
-      applyStaffChanges(r, { [el.dataset.field]: el.value });
+      applyStaffChanges(r, { [field]: value });
       setTimeout(() => { renderStaffList(); renderViews(); }, 0); // 入力欄のフォーカスが外れる最中に一覧を作り直すとエラーになるため1拍おく
       sendStaffRow(k);
     }
