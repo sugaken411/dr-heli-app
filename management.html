@@ -72,7 +72,7 @@
   <header class="no-print">
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="font-black text-base flex items-center gap-2" style="flex:1; min-width:0; overflow:hidden; white-space:nowrap;">
-      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.5</span>
+      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.6</span>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden" style="flex-shrink:0;"></span>
     </div>
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="fetchData()">🔄 <span class="btn-label">更新</span></button>
@@ -171,6 +171,7 @@
             </thead>
             <tbody id="staff-body" class="divide-y divide-slate-100"></tbody>
           </table>
+          <datalist id="staff-ns-list"></datalist><datalist id="staff-dr-list"></datalist>
         </div>
       </div>
       <p class="text-xs text-slate-500 mt-2 no-print">件数の欄が空のときは、日誌のタイムラインから自動で数えた数（要請＝ヘリ活動＋キャンセル、対応＝ヘリ活動）を薄く表示しています。数値を入れるとその値が優先されます。時間外は勤務終了時刻から16:30を引いた時間です。</p>
@@ -536,6 +537,10 @@
       allReports.forEach(r => { if (String(r.recorder || "").trim()) ns.add(String(r.recorder).trim()); if (String(r.doctor || "").trim()) dr.add(String(r.doctor).trim()); });
       const opt = (prefix, set) => [...set].sort((a, b) => a.localeCompare(b, 'ja')).map(n => `<option value="${prefix}:${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
       sel.innerHTML = `<option value="">すべて</option><optgroup label="ナース">${opt('ns', ns)}</optgroup><optgroup label="ドクター">${opt('dr', dr)}</optgroup>`;
+      // 一覧のナース・ドクター欄の入力候補
+      const dl = (set) => [...set].sort((a, b) => a.localeCompare(b, 'ja')).map(n => `<option value="${escapeHtml(n)}">`).join("");
+      document.getElementById('staff-ns-list').innerHTML = dl(ns);
+      document.getElementById('staff-dr-list').innerHTML = dl(dr);
       if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
     }
 
@@ -567,8 +572,8 @@
         const placeOpts = ["", "浜町待機", "院内待機", "その他"].map(p => `<option value="${p}" ${i.place === p ? 'selected' : ''}>${p || '未選択'}</option>`).join("");
         const wk = WEEK_JA[new Date(k.replace(/-/g, '/')).getDay()];
         return `<tr class="hover:bg-blue-50 ${i.place === '浜町待機' ? 'bg-amber-50/40' : ''}">
-          <td class="px-3 py-2 font-mono font-bold text-slate-700">${k} (${wk})</td>
-          <td class="px-3 py-2 text-slate-600"><span class="font-bold text-slate-800">${escapeHtml(x.r.recorder || '-')}</span> / ${escapeHtml(x.r.doctor || '-')}</td>
+          <td class="px-3 py-2 font-mono font-bold text-slate-700">${k} (${wk})${staffCaseNos(x.r)}</td>
+          <td class="px-3 py-2 text-slate-600 whitespace-nowrap"><input type="text" list="staff-ns-list" maxlength="20" placeholder="ナース" class="staff-input w-24 font-bold" data-date="${k}" data-field="recorder" value="${escapeHtml(x.r.recorder || '')}" onchange="onStaffEdit(this)"> / <input type="text" list="staff-dr-list" maxlength="20" placeholder="ドクター" class="staff-input w-24" data-date="${k}" data-field="doctor" value="${escapeHtml(x.r.doctor || '')}" onchange="onStaffEdit(this)"></td>
           <td class="px-3 py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-16 text-center" data-date="${k}" data-field="reqCount" value="${escapeHtml(req)}" placeholder="${x.auto.req}" onchange="onStaffEdit(this)"></td>
           <td class="px-3 py-2 text-center"><input type="number" inputmode="numeric" min="0" class="staff-input w-16 text-center" data-date="${k}" data-field="respCount" value="${escapeHtml(resp)}" placeholder="${x.auto.resp}" onchange="onStaffEdit(this)"></td>
           <td class="px-3 py-2"><select class="staff-input" data-date="${k}" data-field="place" onchange="onStaffEdit(this)">${placeOpts}</select>${i.place === 'その他' && i.placeOther ? `<div class="text-xs text-slate-500">${escapeHtml(i.placeOther)}</div>` : ''}</td>
@@ -604,6 +609,13 @@
       el.innerText = n ? `電波が戻ったら自動で送信します（未送信 ${n}日分。この端末に保存済み）` : "";
     }
 
+    // その日の要請番号（キャンセルは薄く表示）
+    function staffCaseNos(r) {
+      const ev = (Array.isArray(r.events) ? r.events : []).filter(e => (e.cat === 'mission' || e.cat === 'cancel') && e.no);
+      if (!ev.length) return "";
+      return `<div class="text-[11px] font-normal leading-tight mt-0.5">${ev.map(e => `<span class="${e.cat === 'cancel' ? 'text-slate-400' : 'text-blue-700'}">${escapeHtml(e.no)}</span>`).join(" ")}</div>`;
+    }
+
     // 変更項目を日誌の4列目へ反映する（他の項目：待機理由・ブリーフィング・特記・タイムラインはそのまま残す）
     function applyStaffChanges(r, changes) {
       const info = reasonToEditable(r.reason);
@@ -617,6 +629,8 @@
         } else if (f === 'reqCount' || f === 'respCount') {
           const v = String(changes[f]).trim();
           info[f] = /^\d{1,3}$/.test(v) ? v : ""; // 数字以外・空欄は「自動」に戻す
+        } else if (f === 'recorder' || f === 'doctor') {
+          r[f] = String(changes[f] || "").trim(); // ナース(記載者)・ドクターは日誌の2・3列目
         } else if (f === 'endTime') {
           info.endTime = /^\d{2}:\d{2}$/.test(changes.endTime) ? changes.endTime : "";
         }
@@ -631,7 +645,7 @@
       pending[k] = Object.assign(pending[k] || {}, { [el.dataset.field]: el.value });
       setStaffPending(pending); // 🌟 送信前に端末内へ残す（原則A3-C：電波が切れても編集が消えない）
       applyStaffChanges(r, { [el.dataset.field]: el.value });
-      renderStaffList(); renderViews();
+      setTimeout(() => { renderStaffList(); renderViews(); }, 0); // 入力欄のフォーカスが外れる最中に一覧を作り直すとエラーになるため1拍おく
       sendStaffRow(k);
     }
 
@@ -687,14 +701,15 @@
       const rows = getStaffRows();
       if (!rows.length) return alert("出力する日誌がありません。");
       const cell = v => { let t = String(v == null ? "" : v); if (/^[=+\-@]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
-      const lines = [["日付", "曜日", "ナース(記載者)", "フライトドクター", "要請件数", "対応件数", "件数の入力", "待機場所", "待機理由", "勤務終了", "時間外(分)", "時間外"].map(cell).join(",")];
+      const lines = [["日付", "曜日", "ナース(記載者)", "フライトドクター", "要請件数", "対応件数", "件数の入力", "待機場所", "待機理由", "勤務終了", "時間外(分)", "時間外", "要請番号"].map(cell).join(",")];
       rows.forEach(x => {
         const i = x.info; const req = staffCountVal(i.reqCount); const resp = staffCountVal(i.respCount); const ot = overtimeMins(i.endTime);
         const place = i.place === 'その他' && i.placeOther ? `その他：${i.placeOther}` : (i.place || "");
         const reasons = (i.reasons || []).concat(i.reasonOther ? [i.reasonOther] : []).join("・");
         lines.push([x.key, WEEK_JA[new Date(x.key.replace(/-/g, '/')).getDay()], x.r.recorder || "", x.r.doctor || "",
           req !== "" ? req : x.auto.req, resp !== "" ? resp : x.auto.resp, (req !== "" || resp !== "") ? "手入力" : "自動",
-          place, reasons, i.endTime || "", ot === null ? "" : ot, ot === null ? "" : minsToHm(ot)].map(cell).join(","));
+          place, reasons, i.endTime || "", ot === null ? "" : ot, ot === null ? "" : minsToHm(ot),
+          (Array.isArray(x.r.events) ? x.r.events : []).filter(e => (e.cat === 'mission' || e.cat === 'cancel') && e.no).map(e => e.no + (e.cat === 'cancel' ? '(キャンセル)' : '')).join(" ")].map(cell).join(","));
       });
       const f = document.getElementById('staff-filter').value;
       const who = f ? f.slice(3) : "全員";
