@@ -82,7 +82,7 @@
       <button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hidden"></span>
     </div>
-    <div class="title-box">業務日報 (業務日誌)<span class="version-tag">v12.0</span></div>
+    <div class="title-box">業務日報 (業務日誌)<span class="version-tag">v12.1</span></div>
     <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ <span class="btn-label">印刷</span></button></div>
   </header>
 
@@ -98,6 +98,7 @@
         <span>記載者(Ns): <span id="print-ns" class="font-black text-slate-800">未入力</span></span>
       </div>
       <div class="font-bold text-sm border-t border-slate-200 pt-2 mt-1">待機場所・待機理由: <span id="print-reason">未入力</span></div>
+      <div class="font-bold text-sm">件数・勤務終了: <span id="print-counts"></span></div>
       <div id="print-briefing-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">ブリーフィング</div><div id="print-briefing" class="print-pre"></div></div>
       <div id="print-free-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">フリー内容</div><div id="print-free" class="print-pre"></div></div>
       <div id="print-handover-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">特記事項・引き継ぎ事項</div><div id="print-handover" class="print-pre"></div></div>
@@ -147,6 +148,22 @@
             <div id="reason-options" class="flex flex-wrap gap-2 mb-2"></div>
             <input type="text" id="info-reason-other" placeholder="その他の待機理由（自由入力）" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader()">
           </div>
+          <!-- 🌟 件数・勤務終了：空欄なら、タイムラインの事案から自動で数える。入力した数値が優先される。業務管理の「スタッフ別」一覧からも編集できる -->
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label for="info-req-count" class="block text-xs font-bold text-slate-500 mb-1">要請件数</label>
+              <input type="number" inputmode="numeric" min="0" id="info-req-count" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm font-bold" oninput="updatePrintHeader()">
+            </div>
+            <div>
+              <label for="info-resp-count" class="block text-xs font-bold text-slate-500 mb-1">対応件数</label>
+              <input type="number" inputmode="numeric" min="0" id="info-resp-count" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm font-bold" oninput="updatePrintHeader()">
+            </div>
+            <div>
+              <label for="info-end-time" class="block text-xs font-bold text-slate-500 mb-1">勤務終了</label>
+              <input type="text" inputmode="numeric" maxlength="5" placeholder="17:45" id="info-end-time" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm font-bold" oninput="formatTimeInput(this)" onchange="clampTimeInput(this); updatePrintHeader()">
+            </div>
+          </div>
+          <div id="info-overtime" class="text-xs font-bold text-slate-500"></div>
         </div>
         <div class="md:col-span-2 space-y-4">
           <!-- 🌟 鹿児島市（薩摩地方）の天気概況：気象庁の公開データを表示するだけ（保存はしない）。電波がない時は静かに「取得できません」と出す -->
@@ -555,7 +572,10 @@
         reasonOther: STANDBY_REASONS[place] ? document.getElementById('info-reason-other').value.trim() : "",
         briefing: document.getElementById('info-briefing').value.trim(),
         free: document.getElementById('info-free').value.trim(),
-        handover: document.getElementById('info-remarks').value.trim()
+        handover: document.getElementById('info-remarks').value.trim(),
+        reqCount: document.getElementById('info-req-count').value.trim(),
+        respCount: document.getElementById('info-resp-count').value.trim(),
+        endTime: document.getElementById('info-end-time').value.trim()
       };
     }
     // まとめたオブジェクトを画面へ戻す（null なら全部空にする）
@@ -568,6 +588,22 @@
       document.getElementById('info-briefing').value = d.briefing || "";
       document.getElementById('info-free').value = d.free || "";
       document.getElementById('info-remarks').value = d.handover || "";
+      document.getElementById('info-req-count').value = d.reqCount != null ? d.reqCount : "";
+      document.getElementById('info-resp-count').value = d.respCount != null ? d.respCount : "";
+      document.getElementById('info-end-time').value = d.endTime || "";
+    }
+    // 🌟 タイムラインから数える件数（要請＝ヘリ活動＋キャンセル、対応＝ヘリ活動）。業務管理の自動件数と同じ数え方
+    function autoCaseCounts() {
+      const m = events.filter(e => e.cat === 'mission').length; const c = events.filter(e => e.cat === 'cancel').length;
+      return { req: m + c, resp: m };
+    }
+    // 🌟 16:30以降を時間外として「何時間何分」を返す（16:30以前・未入力は空）
+    function overtimeText(endTime) {
+      const p = String(endTime || "").split(':');
+      if (p.length !== 2) return "";
+      const over = parseInt(p[0], 10) * 60 + parseInt(p[1], 10) - (16 * 60 + 30);
+      if (!(over > 0)) return "時間外なし";
+      return `時間外 ${Math.floor(over / 60)}時間${over % 60}分`;
     }
     // シートの値（新形式JSON／旧形式カンマ区切り）を読み取る
     function parseStandbyInfo(raw) {
@@ -708,6 +744,12 @@
       const dr = document.getElementById('info-doctor').value; document.getElementById('print-dr').innerText = dr === 'その他' ? document.getElementById('info-doctor-other').value : dr || "未入力";
       const info = getStandbyInfo();
       document.getElementById('print-reason').innerText = standbySummary(info) || '未入力';
+      const ac = autoCaseCounts();
+      document.getElementById('info-req-count').placeholder = `自動 ${ac.req}`;
+      document.getElementById('info-resp-count').placeholder = `自動 ${ac.resp}`;
+      const ot = overtimeText(info.endTime);
+      document.getElementById('info-overtime').innerText = ot;
+      document.getElementById('print-counts').innerText = `要請 ${info.reqCount !== "" ? info.reqCount : ac.req}件 / 対応 ${info.respCount !== "" ? info.respCount : ac.resp}件` + (info.endTime ? ` / 終了 ${info.endTime}（${ot}）` : "");
       [["briefing", info.briefing], ["free", info.free], ["handover", info.handover]].forEach(([k, v]) => {
         document.getElementById('print-' + k).innerText = v;
         document.getElementById('print-' + k + '-box').classList.toggle('hidden', !v);
@@ -793,6 +835,7 @@
         `;
       });
       bars.innerHTML = barsHtml; tbody.innerHTML = listHtml;
+      updatePrintHeader(); // 🌟 自動件数（要請・対応の目安）をタイムラインに合わせて更新
       scheduleReportDraftSave(); // 🌟 タイムラインの追加・修正・削除も下書きに反映する
     }
 
