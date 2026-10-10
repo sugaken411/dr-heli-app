@@ -105,7 +105,7 @@
 
 <header>
   <div class="hdr-group"><button type="button" class="hdr-btn" id="btn-account" onclick="openModal('modal-account')">🔐 ログイン</button></div>
-  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.2</span></div>
+  <div class="title-box">AW109 EMS PORTAL <span class="version-tag">v13.3</span></div>
   <div class="hdr-group">
     <button type="button" class="hdr-btn" onclick="fetchInit(false)">🔄 <span class="btn-label">更新</span></button>
     <button type="button" class="hdr-btn" onclick="openModal('modal-manual')">📖 <span class="btn-label">取説</span></button>
@@ -470,7 +470,7 @@
       fetch(GAS_API_URL, { 
         method: "POST", 
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.2)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
+        body: JSON.stringify({ action: "error_log", source: "ポータル(v13.3)", errorMsg: errMsg, userAgent: navigator.userAgent, authName: localStorage.getItem('aw109_auth_name') || '' }),
         redirect: "follow" 
       }); 
     } catch(e) {} 
@@ -601,9 +601,12 @@
     const alertBox = document.getElementById("alert-box"); alertBox.innerHTML = "";
     if (json.alerts && json.alerts.length > 0) {
       alertBox.style.display = "flex";
-      alertBox.innerHTML = json.alerts.map(a => { 
-        if (a.type === "warning") return `<div class="alert-item" onclick="location.href='search.html?auto_filter=uncompleted'">` + a.text + `</div>`; 
-        else return `<div class="alert-item error" onclick="location.href='report.html'">` + a.text + `</div>`; 
+      // 🌟 カルテ未完了（countあり）だけを検索の「未完了のみ」へ。点検日・有効期限のお知らせまで検索へ飛ばしていたため、
+      // 押しても「未完了が出てこない」状態になっていた。点検・期限の案内は点検チェックリストへ
+      alertBox.innerHTML = json.alerts.map(a => {
+        const isKarte = a.count !== undefined || String(a.text || "").includes("カルテ未完了");
+        const href = isKarte ? 'search.html?auto_filter=uncompleted' : 'checklist.html';
+        return `<div class="alert-item${a.type === "warning" ? "" : " error"}" onclick="location.href='${href}'">` + a.text + `</div>`;
       }).join("");
     } else { 
       alertBox.style.display = "none"; 
