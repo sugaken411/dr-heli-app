@@ -1,4 +1,4 @@
-const GAS_VERSION = "v3.4"; // 🌟 v3.4(2026-10-07): 通信タイムアウト後の送り直しによる二重登録の防止（submit/submit_checklist/submit_question）、メール送信失敗で保存がエラー扱いになる問題の修正、編集画面用に1件だけ返すfetch_caseを追加。
+const GAS_VERSION = "v3.5"; // 🌟 v3.5(2026-10-11): 日誌保存をロックで1件ずつ処理（行の重複防止）、タイムライン未送信時に既存を消さない、DB_日報に見出しと参照用の列（F〜M）を追加。 🌟 v3.4(2026-10-07): 通信タイムアウト後の送り直しによる二重登録の防止（submit/submit_checklist/submit_question）、メール送信失敗で保存がエラー扱いになる問題の修正、編集画面用に1件だけ返すfetch_caseを追加。
 // v3.3:// 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
 // 緊急管理者アクセス(emergency_admin_login)も廃止。復旧が必要な場合はスプレッドシートを直接編集する運用に統一。
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
@@ -194,6 +194,58 @@ function gasNormalizeDate(dateStr) {
  return clean.replace(/\//g, "-");
 }
 
+
+// 🌟 DB_日報の見出し。アプリが読み書きするのはA〜E列のみ。F列以降は保存のたびに作り直す「参照用」の列で、
+// シート上で直接見て・並べ替えて・絞り込めるようにするためのもの（ここを手で直してもアプリには反映されない）
+const DAILY_REPORT_HEADERS = ["日付", "ナース(記録者)", "ドクター", "日誌詳細(アプリ用)", "タイムライン(アプリ用)",
+  "待機場所(参照用)", "待機理由(参照用)", "要請件数(参照用)", "対応件数(参照用)", "勤務終了(参照用)", "時間外(分)(参照用)", "特記事項(参照用)", "最終更新(参照用)"];
+
+function ensureDailyReportHeaders_(sheet) {
+  const cur = sheet.getRange(1, 1, 1, DAILY_REPORT_HEADERS.length).getDisplayValues()[0];
+  if (cur.join("\t") !== DAILY_REPORT_HEADERS.join("\t")) sheet.getRange(1, 1, 1, DAILY_REPORT_HEADERS.length).setValues([DAILY_REPORT_HEADERS]);
+}
+
+// 日誌詳細JSON（{"v":2,...}）とタイムラインから参照用の列（F〜M）を作る。壊れたデータでも例外にせず空欄にする
+function buildDailyReportMirror_(reasonStr, eventsStr) {
+  let o = null;
+  try { const p = JSON.parse(String(reasonStr || "")); if (p && p.v === 2) o = p; } catch (e) {}
+  let ev = [];
+  try { const p = JSON.parse(String(eventsStr || "[]")); if (Array.isArray(p)) ev = p; } catch (e) {}
+  const missions = ev.filter(x => x && x.cat === "mission").length;
+  const cancels = ev.filter(x => x && x.cat === "cancel").length;
+  const place = o ? (o.place === "その他" && o.placeOther ? "その他：" + o.placeOther : (o.place || "")) : "";
+  const reasons = o ? (o.reasons || []).concat(o.reasonOther ? [o.reasonOther] : []).join("・") : "";
+  const req = o && String(o.reqCount || "") !== "" ? o.reqCount : (missions + cancels);
+  const resp = o && String(o.respCount || "") !== "" ? o.respCount : missions;
+  const endTime = o && /^\d{1,2}:\d{2}$/.test(String(o.endTime || "")) ? o.endTime : "";
+  let overtime = "";
+  if (endTime) { const t = endTime.split(":"); overtime = Math.max(0, parseInt(t[0], 10) * 60 + parseInt(t[1], 10) - (16 * 60 + 30)); }
+  const handover = o ? String(o.handover || "") : (reasonStr && String(reasonStr).charAt(0) !== "{" ? String(reasonStr) : "");
+  const updated = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm");
+  return [place, reasons, req, resp, endTime ? "'" + endTime : "", overtime, handover, updated].map(v => typeof v === "string" && v.charAt(0) !== "'" ? sanitizeInput(v) : v);
+}
+
+function fillDailyReportMirrors_(sheet, d) {
+  const lastIdx = DAILY_REPORT_HEADERS.length - 1;
+  const needs = [];
+  for (let i = 1; i < d.length; i++) if (d[i][0] && !String(d[i][lastIdx] || "").trim()) needs.push(i);
+  const headerOk = String(d[0][lastIdx] || "") === DAILY_REPORT_HEADERS[lastIdx];
+  if (!needs.length && headerOk) return;
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return;
+  try {
+    ensureDailyReportHeaders_(sheet);
+    if (!needs.length) return;
+    // 1行ずつ書くと遅いため、最初〜最後の対象行をまとめて1回で書く（対象外の行は今の値をそのまま書き戻す）
+    const first = needs[0], last = needs[needs.length - 1];
+    const block = [];
+    for (let i = first; i <= last; i++) {
+      if (d[i][0] && !String(d[i][lastIdx] || "").trim()) block.push(buildDailyReportMirror_(d[i][3], d[i][4]));
+      else block.push([5, 6, 7, 8, 9, 10, 11, 12].map(c => { const v = d[i][c]; return v === undefined ? "" : (/^\d{1,2}:\d{2}$/.test(String(v)) ? "'" + v : sanitizeInput(v)); }));
+    }
+    sheet.getRange(first + 1, 6, block.length, 8).setValues(block);
+  } finally { lock.releaseLock(); }
+}
 
 function sanitizeInput(val) {
  if (typeof val !== "string") return val;
@@ -772,27 +824,40 @@ function doPost(e) {
      if (!hSheet) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "日報データベースのシートが見つかりません" })).setMimeType(ContentService.MimeType.JSON);
     
      const targetDate = gasNormalizeDate(requestData.date);
-     const d = hSheet.getDataRange().getDisplayValues();
-     let rowIndex = -1;
-     for (let i = 1; i < d.length; i++) {
-       if (gasNormalizeDate(d[i][0]) === targetDate) {
-         rowIndex = i + 1;
-         break;
+     if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "日付が正しくありません" })).setMimeType(ContentService.MimeType.JSON);
+     // 🌟 同じ日を2人が同時に保存しても行が重複しないよう、検索〜書き込みを1件ずつ処理する
+     const dailyLock = LockService.getScriptLock();
+     dailyLock.waitLock(20000);
+     try {
+       ensureDailyReportHeaders_(hSheet);
+       const d = hSheet.getDataRange().getDisplayValues();
+       let rowIndex = -1;
+       for (let i = 1; i < d.length; i++) {
+         if (gasNormalizeDate(d[i][0]) === targetDate) {
+           rowIndex = i + 1;
+           break;
+         }
        }
-     }
-    
-     const writeRow = [
-       requestData.date,
-       requestData.recorder,
-       requestData.doctor,
-       requestData.hamamachiReason,
-       JSON.stringify(requestData.events)
-     ].map(sanitizeInput);
-    
-     if (rowIndex !== -1) {
-       hSheet.getRange(rowIndex, 1, 1, writeRow.length).setValues([writeRow]);
-     } else {
-       hSheet.appendRow(writeRow);
+       // 🌟 タイムラインが送られてこなかった場合は、既存のタイムラインを消さずに残す
+       let eventsStr;
+       if (Array.isArray(requestData.events)) eventsStr = JSON.stringify(requestData.events);
+       else eventsStr = rowIndex !== -1 ? String(d[rowIndex - 1][4] || "[]") : "[]";
+      
+       const writeRow = [
+         requestData.date,
+         requestData.recorder,
+         requestData.doctor,
+         requestData.hamamachiReason,
+         eventsStr
+       ].map(sanitizeInput).concat(buildDailyReportMirror_(requestData.hamamachiReason, eventsStr));
+      
+       if (rowIndex !== -1) {
+         hSheet.getRange(rowIndex, 1, 1, writeRow.length).setValues([writeRow]);
+       } else {
+         hSheet.appendRow(writeRow);
+       }
+     } finally {
+       dailyLock.releaseLock();
      }
      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
    }
@@ -815,6 +880,8 @@ function doPost(e) {
          events: events
        });
      }
+     // 🌟 参照用の列（F〜M）が空の行だけ埋める（導入時の一括作成と、シートを手で直した行の補完）。失敗しても一覧の取得は止めない
+     try { fillDailyReportMirrors_(hSheet, d); } catch (mirrorErr) {}
      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: result })).setMimeType(ContentService.MimeType.JSON);
    }
    if (action === "fetch_init") {
