@@ -76,7 +76,7 @@
   <header class="no-print">
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="location.href='portal.html'">◀ ポータル</button>
     <div class="font-black text-base flex items-center gap-2" style="flex:1; min-width:0; overflow:hidden; white-space:nowrap;">
-      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.7</span>
+      <span style="overflow:hidden; text-overflow:ellipsis;">統括・業務管理</span> <span class="bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded" style="flex-shrink:0;">v1.8</span>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 hidden" style="flex-shrink:0;"></span>
     </div>
     <button type="button" class="hdr-btn" style="flex-shrink:0; white-space:nowrap;" onclick="fetchData()">🔄 <span class="btn-label">更新</span></button>
@@ -377,12 +377,23 @@
       
       showLoader();
       try {
-        const res = await fetch(GAS_API_URL, { 
-          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), 
-          redirect: "follow" 
-        });
-        const json = await parseGasResponse(res);
+        // 🌟 Googleが一時的にエラー画面（ドライブの404等）や中身のない応答を返すことがあるため、1回だけ自動で再取得する
+        let json;
+        for (let attempt = 1; ; attempt++) {
+          try {
+            const res = await fetch(GAS_API_URL, { 
+              method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+              body: JSON.stringify({ action: "fetch_all_reports", password: PIN_CODE }), 
+              redirect: "follow" 
+            });
+            json = await parseGasResponse(res);
+            if (json.status === "success" && !Array.isArray(json.data)) throw new Error("サーバーの応答に日誌データが含まれていませんでした");
+            break;
+          } catch (err) {
+            if (attempt >= 2 || err.isTimeout) throw err;
+            await new Promise(r => setTimeout(r, 1500));
+          }
+        }
         
         if (json.status === "success") {
           allReports = json.data;
@@ -401,6 +412,7 @@
     }
 
     function renderViews() {
+      if (!Array.isArray(allReports)) allReports = [];
       const targetPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
       let monthData = {};
       const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
