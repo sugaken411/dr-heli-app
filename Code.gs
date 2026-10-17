@@ -1,4 +1,4 @@
-const GAS_VERSION = "v3.6"; // 🌟 v3.6(2026-10-17): DB_日報を見出しの名前で読み書き（列の並べ替え可・足りない列は右端に追加）、機長/整備士/CS・デブリーフィング欄の参照用列を追加、業務種別をマスタ_基本設定で管理（fetch_init/fetch_all_reportsでworkTypesを返す、add_masterにworktype追加）、メール宛先の追加をメールアドレスの見出しで書く、fetch_daily_reportにstaff_only追加。 🌟 v3.5(2026-10-11): 日誌保存をロックで1件ずつ処理（行の重複防止）、タイムライン未送信時に既存を消さない、DB_日報に見出しと参照用の列（F〜M）を追加。 🌟 v3.4(2026-10-07): 通信タイムアウト後の送り直しによる二重登録の防止（submit/submit_checklist/submit_question）、メール送信失敗で保存がエラー扱いになる問題の修正、編集画面用に1件だけ返すfetch_caseを追加。
+const GAS_VERSION = "v3.7"; // 🌟 v3.7(2026-10-17): 要請番号を常に文字として保存（枝番付き「18652-1」と枝番なし「18653」が数値・文字に分かれてシートの並べ替えが崩れる問題の修正）。 🌟 v3.6(2026-10-17): DB_日報を見出しの名前で読み書き（列の並べ替え可・足りない列は右端に追加）、機長/整備士/CS・デブリーフィング欄の参照用列を追加、業務種別をマスタ_基本設定で管理（fetch_init/fetch_all_reportsでworkTypesを返す、add_masterにworktype追加）、メール宛先の追加をメールアドレスの見出しで書く、fetch_daily_reportにstaff_only追加。 🌟 v3.5(2026-10-11): 日誌保存をロックで1件ずつ処理（行の重複防止）、タイムライン未送信時に既存を消さない、DB_日報に見出しと参照用の列（F〜M）を追加。 🌟 v3.4(2026-10-07): 通信タイムアウト後の送り直しによる二重登録の防止（submit/submit_checklist/submit_question）、メール送信失敗で保存がエラー扱いになる問題の修正、編集画面用に1件だけ返すfetch_caseを追加。
 // v3.3:// 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
 // 緊急管理者アクセス(emergency_admin_login)も廃止。復旧が必要な場合はスプレッドシートを直接編集する運用に統一。
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
@@ -319,6 +319,14 @@ function getWorkTypes_(ss) {
     list.push({ id: get(d[i], cId) || name, name: name, color: get(d[i], cColor), mark: get(d[i], cMark) });
   }
   return list;
+}
+
+// 🌟 要請番号は常に文字として書く。数字だけの番号はシートが数値に変換し、枝番付き（例 18652-1）は文字のままになるため、
+// 並べ替えると数値と文字が別々に固まってしまう。全件を文字にそろえると 18651 → 18652 → 18652-1 → 18653 の順に並ぶ。
+function yoseiIdAsText_(val) {
+ const str = String(val === undefined || val === null ? "" : val).trim();
+ if (!str) return "";
+ return "'" + str.replace(/^'+/, "");
 }
 
 function sanitizeInput(val) {
@@ -1611,6 +1619,8 @@ function doPost(e) {
          newRow[idx] = JSON.stringify(sysDataObj);
        } else if (header === "日付" && appData["日付"] !== undefined) {
          newRow[idx] = "'" + String(appData["日付"]).replace(/-/g, '/');
+       } else if (header === "要請番号") {
+         newRow[idx] = yoseiIdAsText_(appData["要請番号"] !== undefined ? appData["要請番号"] : newRow[idx]);
        } else if (appData[header] !== undefined) {
          newRow[idx] = sanitizeInput(appData[header]);
        }
@@ -1664,6 +1674,8 @@ function doPost(e) {
          newRow.push(`${Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm")} : 新規登録\n`);
        } else if (header === "日付" && appData["日付"] !== undefined) {
          newRow.push("'" + String(appData["日付"]).replace(/-/g, '/'));
+       } else if (header === "要請番号") {
+         newRow.push(yoseiIdAsText_(appData["要請番号"]));
        } else if (header === "システムデータ") {
          let sysDataObj = {};
          if (appData["システムデータ"]) {
@@ -1767,7 +1779,8 @@ function doPost(e) {
      const setVal = (colName, val) => { const idx = head.indexOf(colName); if (idx !== -1) newRow[idx] = sanitizeInput(val); };
 
 
-     setVal("要請番号", p.caseId);
+     const caseIdIdx = head.indexOf("要請番号");
+     if (caseIdIdx !== -1) newRow[caseIdIdx] = yoseiIdAsText_(p.caseId);
      setVal("登録日時", Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy/MM/dd HH:mm"));
      setVal("実施日", p.dDate || "");
      setVal("開始時間", p.dTime || "");
