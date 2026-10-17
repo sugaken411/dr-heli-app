@@ -82,7 +82,7 @@
       <button type="button" id="btn-back" class="hdr-btn" onclick="location.href='portal.html'">◀ ポータル</button>
       <span id="sync-timestamp" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hidden"></span>
     </div>
-    <div class="title-box">業務日報 (業務日誌)<span class="version-tag">v12.1</span></div>
+    <div class="title-box">業務日報 (業務日誌)<span class="version-tag">v12.2</span></div>
     <div class="hdr-group"><button type="button" class="hdr-btn" onclick="window.print()">🖨️ <span class="btn-label">印刷</span></button></div>
   </header>
 
@@ -97,11 +97,13 @@
         <span>フライトドクター: <span id="print-dr" class="font-black text-slate-800">未入力</span></span>
         <span>記載者(Ns): <span id="print-ns" class="font-black text-slate-800">未入力</span></span>
       </div>
+      <div class="font-bold text-sm mb-2">機長: <span id="print-pilot">未入力</span> ／ 整備士: <span id="print-mechanic">未入力</span> ／ CS: <span id="print-cs">未入力</span></div>
       <div class="font-bold text-sm border-t border-slate-200 pt-2 mt-1">待機場所・待機理由: <span id="print-reason">未入力</span></div>
       <div class="font-bold text-sm">件数・勤務終了: <span id="print-counts"></span></div>
       <div id="print-briefing-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">ブリーフィング</div><div id="print-briefing" class="print-pre"></div></div>
       <div id="print-free-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">フリー内容</div><div id="print-free" class="print-pre"></div></div>
       <div id="print-handover-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">特記事項・引き継ぎ事項</div><div id="print-handover" class="print-pre"></div></div>
+      <div id="print-debrief-box" class="text-sm border-t border-slate-200 pt-2 mt-1 hidden"><div class="font-bold">デブリーフィング</div><div id="print-debrief-ref" class="font-bold"></div><div id="print-debrief" class="print-pre"></div></div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-4 flex flex-wrap gap-3 justify-between items-center no-print">
@@ -131,6 +133,24 @@
               <label class="block text-xs font-bold text-slate-500 mb-1">フライトドクター</label>
               <select id="info-doctor" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700" onchange="toggleCustomInput('info-doctor', 'info-doctor-other'); updatePrintHeader();"></select>
               <input type="text" id="info-doctor-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
+            </div>
+          </div>
+          <!-- 🌟 機長・整備士・CS：マスタ_基本設定の名簿から選ぶ。デブリーフィングの参加者に自動で入る -->
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1">機長</label>
+              <select id="info-pilot" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700 min-h-[44px]" onchange="toggleCustomInput('info-pilot', 'info-pilot-other'); updatePrintHeader();"></select>
+              <input type="text" id="info-pilot-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1">整備士</label>
+              <select id="info-mechanic" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700 min-h-[44px]" onchange="toggleCustomInput('info-mechanic', 'info-mechanic-other'); updatePrintHeader();"></select>
+              <input type="text" id="info-mechanic-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1">CS</label>
+              <select id="info-cs" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700 min-h-[44px]" onchange="toggleCustomInput('info-cs', 'info-cs-other'); updatePrintHeader();"></select>
+              <input type="text" id="info-cs-other" placeholder="氏名" class="hidden mt-2 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" onchange="updatePrintHeader();">
             </div>
           </div>
           <!-- 🌟 待機場所：浜町待機・院内待機を選んだ時だけ待機理由を出す。その他は場所を手入力 -->
@@ -188,6 +208,12 @@
             <label for="info-remarks" class="block text-xs font-bold text-slate-500 mb-1">特記事項・引き継ぎ事項</label>
             <textarea id="info-remarks" rows="3" placeholder="次の勤務者への引き継ぎなど" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm outline-none" onchange="updatePrintHeader()"></textarea>
           </div>
+          <!-- 🌟 デブリーフィング：症例ごとの内容はデブリーフィングアプリ（別紙）。ここは別紙の有無と、症例に限らない全体の振り返り・引き継ぎ -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1">デブリーフィング</label>
+            <label class="place-pill justify-start mb-2"><input type="checkbox" id="info-debrief-ref" onchange="updatePrintHeader()"><span>デブリーフィング実施（別紙参照）</span></label>
+            <textarea id="info-debrief-note" rows="3" placeholder="症例に限らない全体の振り返り・引き継ぎ" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm outline-none" onchange="updatePrintHeader()"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -198,7 +224,7 @@
         <button type="button" id="btn-cancel-edit" onclick="cancelEdit()" class="hidden text-xs bg-white border border-slate-300 px-3 py-1.5 rounded-md text-slate-600 font-bold hover:bg-slate-50">キャンセル</button>
       </div>
       <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-        <div class="md:col-span-3"><label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label><select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700"><option value="mission">🚁 ヘリ活動(実施)</option><option value="cancel">⚠️ キャンセル</option><option value="inspection">⚙️ 始業点検</option><option value="inspection_end">🛠️ 終業点検</option><option value="assistant">🏃 補助者</option><option value="management">📁 管理</option><option value="group">👥 グループ</option><option value="other">💼 その他</option></select></div>
+        <div class="md:col-span-3"><label class="block text-xs font-bold text-slate-500 mb-1">業務種別</label><select id="event-cat" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none font-bold text-slate-700"></select></div>
         <!-- 🌟 「事案No」から、手動入力を想定した統一名称「要請番号 / タイトル」へ改善 -->
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">要請番号 / タイトル</label><input type="text" id="event-no" placeholder="12345 等" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-bold" oninput="toHalfWidth(this)"></div>
         <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">開始時間</label><input type="tel" inputmode="numeric" maxlength="5" placeholder="HH:MM" id="event-start" oninput="formatTimeInput(this)" onblur="clampTimeInput(this)" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm outline-none text-center font-mono font-bold"></div>
@@ -289,16 +315,42 @@
 
     const START_HOUR = 8; const END_HOUR = 19; const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60;
 
-    const CATS = {
-      mission: { label: 'ヘリ活動', color: 'bg-blue-600', prep: 10, rec: 'auto' },
-      cancel: { label: 'キャンセル', color: 'bg-gray-400', prep: 10, rec: 10 },
-      inspection: { label: '始業点検', color: 'bg-orange-400', prep: 0, rec: 0 },
-      inspection_end: { label: '終業点検', color: 'bg-orange-600', prep: 0, rec: 0 },
-      assistant: { label: '補助者', color: 'bg-rose-400', prep: 0, rec: 0 },
-      management: { label: '管理業務', color: 'bg-slate-500', prep: 0, rec: 0 },
-      group: { label: 'グループ', color: 'bg-teal-500', prep: 0, rec: 0 },
-      other: { label: 'その他', color: 'bg-purple-500', prep: 0, rec: 0 }
+    // 🌟 業務種別の色（マスタ_基本設定「業務種別色」に書く名前 → 実際の色）。Code.gs・management.html・admin.html と同じ10色
+    const WORK_TYPE_PALETTE = { "青": "#2563eb", "灰": "#9ca3af", "橙": "#fb923c", "濃橙": "#ea580c", "ピンク": "#fb7185", "紺灰": "#64748b", "青緑": "#14b8a6", "紫": "#a855f7", "緑": "#16a34a", "赤": "#dc2626" };
+    // 既定の業務種別（マスタが空・読めない時に使う）。prep/rec＝準備・復帰の帯の分数（ヘリ活動とキャンセルだけ。集計にも使うため、この2つは必ず残す）
+    const DEFAULT_CATS = {
+      mission: { label: 'ヘリ活動', color: '#2563eb', mark: '🚁', prep: 10, rec: 'auto' },
+      cancel: { label: 'キャンセル', color: '#9ca3af', mark: '⚠️', prep: 10, rec: 10 },
+      inspection: { label: '始業点検', color: '#fb923c', mark: '⚙️', prep: 0, rec: 0 },
+      inspection_end: { label: '終業点検', color: '#ea580c', mark: '🛠️', prep: 0, rec: 0 },
+      assistant: { label: '補助者', color: '#fb7185', mark: '🏃', prep: 0, rec: 0 },
+      management: { label: '管理業務', color: '#64748b', mark: '📁', prep: 0, rec: 0 },
+      group: { label: 'グループ', color: '#14b8a6', mark: '👥', prep: 0, rec: 0 },
+      other: { label: 'その他', color: '#a855f7', mark: '💼', prep: 0, rec: 0 }
     };
+    let CATS = Object.assign({}, DEFAULT_CATS);
+
+    // 🌟 マスタの業務種別（[{id,name,color,mark}]）を画面用に組み立てる。並び順はマスタの行の順番
+    function applyWorkTypes(list) {
+      if (Array.isArray(list) && list.length) {
+        const next = {};
+        list.forEach(w => {
+          const id = String(w.id || w.name || "").trim(); if (!id || next[id]) return;
+          const base = DEFAULT_CATS[id] || { color: '#a855f7', mark: '', prep: 0, rec: 0 };
+          next[id] = { label: String(w.name || base.label || id), color: WORK_TYPE_PALETTE[w.color] || base.color, mark: w.mark || base.mark || '', prep: base.prep, rec: base.rec };
+        });
+        // ヘリ活動・キャンセルは件数・時間外の集計に使うため、マスタから消えていても残す
+        ['mission', 'cancel'].forEach(k => { if (!next[k]) next[k] = DEFAULT_CATS[k]; });
+        CATS = next;
+      }
+      const sel = document.getElementById('event-cat'); const cur = sel.value;
+      sel.innerHTML = Object.keys(CATS).map(k => `<option value="${escapeAttr(k)}">${escapeAttr((CATS[k].mark ? CATS[k].mark + ' ' : '') + CATS[k].label)}</option>`).join('');
+      if (cur && CATS[cur]) sel.value = cur;
+      drawLegend();
+    }
+    function escapeAttr(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+    // マスタから消した種別の過去の記録も、名前と色を出せるようにする
+    function catOf(key) { return CATS[key] || DEFAULT_CATS[key] || { label: String(key || 'その他'), color: '#a855f7', mark: '', prep: 0, rec: 0 }; }
 
     let events = []; let editingId = null; 
     let tempAutoEvents = []; let tempManualEvents = [];
@@ -377,7 +429,7 @@
         backBtn.onclick = () => location.href = "management.html";
       }
       
-      drawGrid(); drawLegend(); calculateSun(); updatePrintHeader(); fetchInit(); fetchWeather();
+      drawGrid(); applyWorkTypes(null); calculateSun(); updatePrintHeader(); fetchInit(); fetchWeather();
     };
 
     // ===== 鹿児島の天気概況（気象庁の公開データ・APIキー不要） =====
@@ -458,6 +510,10 @@
         if (json.status === "success") {
           populateSelect('info-nurse', json.masters.ns || []);
           populateSelect('info-doctor', json.masters.dr || []);
+          populateSelect('info-pilot', json.masters.pilot || []);
+          populateSelect('info-mechanic', json.masters.mechanic || []);
+          populateSelect('info-cs', json.masters.cs || []);
+          applyWorkTypes(json.masters.workTypes);
           updateSyncTimestamp();
           await syncFromDb(false);
         } else { throw new Error(json.message); }
@@ -575,7 +631,12 @@
         handover: document.getElementById('info-remarks').value.trim(),
         reqCount: document.getElementById('info-req-count').value.trim(),
         respCount: document.getElementById('info-resp-count').value.trim(),
-        endTime: document.getElementById('info-end-time').value.trim()
+        endTime: document.getElementById('info-end-time').value.trim(),
+        pilot: staffValue('info-pilot', 'info-pilot-other'),
+        mechanic: staffValue('info-mechanic', 'info-mechanic-other'),
+        cs: staffValue('info-cs', 'info-cs-other'),
+        debriefRef: document.getElementById('info-debrief-ref').checked,
+        debriefNote: document.getElementById('info-debrief-note').value.trim()
       };
     }
     // まとめたオブジェクトを画面へ戻す（null なら全部空にする）
@@ -591,6 +652,20 @@
       document.getElementById('info-req-count').value = d.reqCount != null ? d.reqCount : "";
       document.getElementById('info-resp-count').value = d.respCount != null ? d.respCount : "";
       document.getElementById('info-end-time').value = d.endTime || "";
+      setStaffValue('info-pilot', 'info-pilot-other', d.pilot);
+      setStaffValue('info-mechanic', 'info-mechanic-other', d.mechanic);
+      setStaffValue('info-cs', 'info-cs-other', d.cs);
+      document.getElementById('info-debrief-ref').checked = !!d.debriefRef;
+      document.getElementById('info-debrief-note').value = d.debriefNote || "";
+    }
+    // 🌟 名簿の選択欄から名前を取り出す（「その他」なら手入力の名前）
+    function staffValue(selId, othId) { const v = document.getElementById(selId).value; return (v === 'その他' ? document.getElementById(othId).value : v).trim(); }
+    // 名前を選択欄へ戻す（名簿に無い名前は「その他」＋手入力に入れる）
+    function setStaffValue(selId, othId, val) {
+      const sel = document.getElementById(selId); const oth = document.getElementById(othId);
+      if (val && [...sel.options].some(o => o.value === val)) { sel.value = val; oth.value = ""; oth.classList.add('hidden'); }
+      else if (val) { sel.value = 'その他'; oth.value = val; oth.classList.remove('hidden'); }
+      else { sel.value = ""; oth.value = ""; oth.classList.add('hidden'); }
     }
     // 🌟 タイムラインから数える件数（要請＝ヘリ活動＋キャンセル、対応＝ヘリ活動）。業務管理の自動件数と同じ数え方
     function autoCaseCounts() {
@@ -750,6 +825,12 @@
       const ot = overtimeText(info.endTime);
       document.getElementById('info-overtime').innerText = ot;
       document.getElementById('print-counts').innerText = `要請 ${info.reqCount !== "" ? info.reqCount : ac.req}件 / 対応 ${info.respCount !== "" ? info.respCount : ac.resp}件` + (info.endTime ? ` / 終了 ${info.endTime}（${ot}）` : "");
+      document.getElementById('print-pilot').innerText = info.pilot || "未入力";
+      document.getElementById('print-mechanic').innerText = info.mechanic || "未入力";
+      document.getElementById('print-cs').innerText = info.cs || "未入力";
+      document.getElementById('print-debrief-ref').innerText = info.debriefRef ? "デブリーフィング実施：別紙（デブリーフィングレポート）参照" : "";
+      document.getElementById('print-debrief').innerText = info.debriefNote;
+      document.getElementById('print-debrief-box').classList.toggle('hidden', !info.debriefRef && !info.debriefNote);
       [["briefing", info.briefing], ["free", info.free], ["handover", info.handover]].forEach(([k, v]) => {
         document.getElementById('print-' + k).innerText = v;
         document.getElementById('print-' + k + '-box').classList.toggle('hidden', !v);
@@ -795,7 +876,7 @@
 
     function drawLegend() {
       const box = document.getElementById('legend-box'); let html = '';
-      for(let k in CATS) html += `<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full ${CATS[k].color}"></div>${CATS[k].label}</span>`;
+      for(let k in CATS) html += `<span class="flex items-center gap-1"><div class="w-3 h-3 rounded-full" style="background-color:${CATS[k].color}"></div>${escapeAttr((CATS[k].mark ? CATS[k].mark + ' ' : '') + CATS[k].label)}</span>`;
       box.innerHTML = html + `<span class="flex items-center gap-1 border-l border-slate-300 pl-3"><div class="w-3 h-3 bg-yellow-300 opacity-60"></div>準備</span><span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-300"></div>復帰</span>`;
     }
 
@@ -807,7 +888,7 @@
       let barsHtml = ''; let listHtml = '';
 
       events.forEach((ev, idx) => {
-        const s = timeToMins(ev.start); const e = timeToMins(ev.end); const dur = e - s; const cat = CATS[ev.cat] || CATS['other'];
+        const s = timeToMins(ev.start); const e = timeToMins(ev.end); const dur = e - s; const cat = catOf(ev.cat);
         let prep = cat.prep; if (idx > 0 && events[idx-1].cont) prep = 0; 
         let rec = 0; if (!ev.cont) { if (cat.rec === 'auto') rec = (dur < 60) ? 30 : 45; else rec = cat.rec; }
 
@@ -816,13 +897,13 @@
 
         barsHtml += `<div class="absolute h-full w-full top-0">`;
         if (prep > 0) barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-10 bg-yellow-300 opacity-60 rounded-l-md border-y border-l border-yellow-500" style="left: ${pLeft}%; width: ${pWidth}%;"></div>`;
-        barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-14 ${cat.color} rounded-md shadow flex items-center justify-center text-white text-[10px] font-bold border-b-4 border-black/20" style="left: ${mLeft}%; width: ${mWidth}%;"><span class="truncate px-1">${ev.no ? '#'+ev.no : cat.label}</span></div>`;
+        barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-14 rounded-md shadow flex items-center justify-center text-white text-[10px] font-bold border-b-4 border-black/20" style="background-color:${cat.color}; left: ${mLeft}%; width: ${mWidth}%;"><span class="truncate px-1">${ev.no ? '#'+escapeAttr(ev.no) : escapeAttr(cat.label)}</span></div>`;
         if (rec > 0) barsHtml += `<div class="absolute top-1/2 -translate-y-1/2 h-10 bg-green-100 opacity-80 rounded-r-md border-y border-r border-green-300 text-[9px] text-green-800 font-bold flex items-center justify-center" style="left: ${rLeft}%; width: ${rWidth}%;">${rec}m</div>`;
         barsHtml += `</div>`;
 
         listHtml += `
           <tr class="hover:bg-slate-50 border-b border-slate-100 ${editingId === ev.id ? 'bg-amber-50' : ''}">
-            <td class="px-4 py-2"><span class="px-2 py-1 rounded text-xs font-bold text-white ${cat.color}">${cat.label}</span></td>
+            <td class="px-4 py-2"><span class="px-2 py-1 rounded text-xs font-bold text-white" style="background-color:${cat.color}">${escapeAttr((cat.mark ? cat.mark + ' ' : '') + cat.label)}</span></td>
             <td class="px-4 py-2 font-mono text-center">${ev.no || '-'}</td>
             <td class="px-4 py-2 font-mono text-center">${ev.start} - ${ev.end}</td>
             <td class="px-4 py-2 font-mono text-center">${dur}m</td>

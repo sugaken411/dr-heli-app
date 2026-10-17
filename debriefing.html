@@ -1041,7 +1041,33 @@
 
     document.getElementById("v-fetched-data").innerHTML = `<div class="data-preview">No: <b>${currentCase["要請番号"]}</b><br>出場先: ${currentCase["出場先"]}<br>Dr: ${currentCase["フライトドクター"]} / Ns: ${currentCase["フライトナース"]}</div><button type="button" class="btn-small" style="background:#fff3e0; color:#e65100; margin-top:8px;" onclick="goToEditCase()">✏️ 症例登録の内容を修正する</button>`;
 
+    if (!past) prefillTeam(currentCase); // 🌟 初回だけ、参加者に症例の Dr/Ns と日報の機長・整備士・CS を入れる
     afterCaseSelected(); // 🌟 この事案の入力途中の下書きを確認する
+  }
+
+  // 🌟 参加者（固定メンバー）に、症例登録の Dr/Ns と、その日の日報（日誌）の機長・整備士・CS を入れる。
+  // 名簿（マスタ）にある名前だけ・その職種がまだ空の時だけ入れる（診断・キーワードの引き継ぎと同じ考え方）。電波が無い時は Dr/Ns だけ
+  async function prefillTeam(caseRow) {
+    const caseId = String(linkedCaseId || "");
+    const add = (cat, raw) => {
+      const name = String(raw || "").trim();
+      if (!name || !(masters[cat] || []).includes(name)) return;
+      if (!sysData.tags[cat]) sysData.tags[cat] = [];
+      if (sysData.tags[cat].length === 0) sysData.tags[cat].push(name);
+    };
+    const redraw = () => ['dr','ns','pilot','mechanic','cs'].forEach(cat => renderChips(`chip-container-${cat}`, masters[cat], cat));
+    add('dr', caseRow["フライトドクター"]); add('ns', caseRow["フライトナース"]);
+    redraw();
+    if (!caseRow["日付"]) return;
+    try {
+      const json = await fetchGasJson({ action: "fetch_daily_report", password: PIN_CODE, date: caseRow["日付"], staff_only: true });
+      if (String(linkedCaseId || "") !== caseId || !json || json.status !== "success" || !json.data) return; // その間に別の事案が選ばれた
+      let info = null;
+      try { info = JSON.parse(json.data.hamamachiReason || ""); } catch (e) { info = null; }
+      if (!info || info.v !== 2) return;
+      add('pilot', info.pilot); add('mechanic', info.mechanic); add('cs', info.cs);
+      redraw();
+    } catch (e) {} // 補助機能のため、失敗しても手で選べる
   }
 
   async function updateReviewStatus() {

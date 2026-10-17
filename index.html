@@ -642,7 +642,7 @@
           </div>
           <div class="cross-item">
             <label>日付</label>
-            <input type="date" id="v-date">
+            <input type="date" id="v-date" onchange="prefillStaffFromReport()">
           </div>
         </div>
         
@@ -678,13 +678,13 @@
           </div>
           <div class="cross-item">
             <label>フライトDr</label>
-            <select id="v-dr" onchange="localStorage.setItem('aw109_last_dr', this.value)">
+            <select id="v-dr" onchange="staffTouched.dr = true; localStorage.setItem('aw109_last_dr', this.value)">
               <option value="">選択...</option>
             </select>
           </div>
           <div class="cross-item">
             <label>フライトNs</label>
-            <select id="v-ns" onchange="localStorage.setItem('aw109_last_ns', this.value)">
+            <select id="v-ns" onchange="staffTouched.ns = true; localStorage.setItem('aw109_last_ns', this.value)">
               <option value="">選択...</option>
             </select>
           </div>
@@ -2131,6 +2131,27 @@
     }
   }
 
+  // 🌟 その日の日報（日誌）に入っている Dr/Ns を、新規登録の欄へ入れる（日誌を先に書いた日も、症例登録で選び直さなくてよい）。
+  // 自分で選んだ欄や、下書きから戻した欄（端末の前回値と違う値）はそのまま。電波が無い・日誌が無い時は何もしない
+  let staffTouched = { dr: false, ns: false };
+  async function prefillStaffFromReport() {
+    if (isEditMode || new URLSearchParams(window.location.search).get('editId')) return;
+    const date = document.getElementById("v-date").value;
+    if (!date) return;
+    try {
+      const json = await fetchGasJson({ action: "fetch_daily_report", password: PIN_CODE, date: date, staff_only: true });
+      if (!json || json.status !== "success" || !json.data) return;
+      if (isEditMode || document.getElementById("v-date").value !== date) return; // その間に日付が変わった・編集画面になった
+      [["v-dr", "dr", json.data.doctor, "aw109_last_dr"], ["v-ns", "ns", json.data.recorder, "aw109_last_ns"]].forEach(([id, key, raw, lsKey]) => {
+        const sel = document.getElementById(id); const val = String(raw || "").trim();
+        if (!sel || !val || staffTouched[key]) return;
+        const cur = sel.value; const last = localStorage.getItem(lsKey) || "";
+        if (cur && cur !== last) return;
+        if ([...sel.options].some(o => o.value === val)) sel.value = val;
+      });
+    } catch (e) {} // 補助機能のため、失敗しても入力の邪魔をしない（Dr/Ns は手で選べる）
+  }
+
   async function fetchLatestData(isBackground, isManualUpdate) {
     if(!isBackground) showLoader("マスタデータ同期中...", "システムを初期化しています");
     try {
@@ -2143,6 +2164,7 @@
         // 🌟 編集画面の読込(fetchCaseForEdit)が出す「読み込み中」表示を、この関数の最後のhideLoader()が直後に消してしまい、
         // 読込が終わる前に空の入力画面が操作できる状態で見えていた。この関数が終わってから画面の振り分けを行う
         if(!isEditMode) setTimeout(checkRouting, 0);
+        if(!isEditMode) prefillStaffFromReport();
         if(isManualUpdate) alert("最新のマスタデータを取得しました。");
       }
     } catch(e) {
