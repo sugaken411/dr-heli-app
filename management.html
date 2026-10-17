@@ -279,7 +279,10 @@
     let currentMonth = new Date().getMonth() + 1;
     let chartInstance = null;
 
-    const CAT_INFO = {
+    // 🌟 業務種別の色（マスタ_基本設定「業務種別色」の名前 → 実際の色）。report.html と同じ10色
+    const WORK_TYPE_PALETTE = { "青": "#2563eb", "灰": "#9ca3af", "橙": "#fb923c", "濃橙": "#ea580c", "ピンク": "#fb7185", "紺灰": "#64748b", "青緑": "#14b8a6", "紫": "#a855f7", "緑": "#16a34a", "赤": "#dc2626" };
+    // 既定の業務種別（マスタが空の時に使う）。マスタがあれば applyWorkTypes で置き換える
+    let CAT_INFO = {
       mission: { label: 'ヘリ活動', color: '#2563eb' }, 
       cancel: { label: 'キャンセル', color: '#9ca3af' }, 
       inspection: { label: '始業点検', color: '#fb923c' }, 
@@ -289,6 +292,21 @@
       group: { label: 'グループ', color: '#14b8a6' }, 
       other: { label: 'その他', color: '#a855f7' } 
     };
+    const DEFAULT_CAT_INFO = Object.assign({}, CAT_INFO);
+    // マスタの業務種別（[{id,name,color,mark}]）でグラフの名前・色・並び順を決める
+    function applyWorkTypes(list) {
+      if (!Array.isArray(list) || !list.length) return;
+      const next = {};
+      list.forEach(w => {
+        const id = String(w.id || w.name || "").trim(); if (!id || next[id]) return;
+        const base = DEFAULT_CAT_INFO[id] || { color: '#a855f7' };
+        next[id] = { label: (w.mark ? w.mark + ' ' : '') + String(w.name || id), color: WORK_TYPE_PALETTE[w.color] || base.color };
+      });
+      ['mission', 'cancel'].forEach(k => { if (!next[k]) next[k] = DEFAULT_CAT_INFO[k]; });
+      CAT_INFO = next;
+    }
+    // マスタから消した種別の過去の記録も、名前と色を出せるようにする
+    function catInfo(key) { return CAT_INFO[key] || DEFAULT_CAT_INFO[key] || { label: String(key || 'その他'), color: '#a855f7' }; }
 
     let loaderTimer1, loaderTimer2;
     function showLoader() {
@@ -397,6 +415,7 @@
         
         if (json.status === "success") {
           allReports = json.data;
+          applyWorkTypes(json.workTypes);
           updateSyncTimestamp();
           renderViews();
           buildStaffOptions();
@@ -417,7 +436,7 @@
       let monthData = {};
       const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
       
-      let timeStats = { mission:0, cancel:0, inspection:0, inspection_end:0, assistant:0, management:0, group:0, other:0 };
+      let timeStats = {}; Object.keys(CAT_INFO).forEach(k => { timeStats[k] = 0; });
 
       for(let d=1; d<=daysInMonth; d++) {
         monthData[`${targetPrefix}-${String(d).padStart(2,'0')}`] = { date: d, dr: "", ns: "", reason: "", mission: 0, cancel: 0, exists: false };
@@ -432,8 +451,8 @@
             r.events.forEach(ev => { 
               if(ev.cat === 'mission') mCount++; else if(ev.cat === 'cancel') cCount++; 
               let sMins = timeToMins(ev.start); let eMins = timeToMins(ev.end);
-              if(sMins < eMins && timeStats[ev.cat] !== undefined) {
-                timeStats[ev.cat] += (eMins - sMins);
+              if(sMins < eMins && ev.cat) {
+                timeStats[ev.cat] = (timeStats[ev.cat] || 0) + (eMins - sMins);
               }
             });
           }
@@ -450,13 +469,13 @@
       Object.keys(timeStats).forEach(key => {
         if(timeStats[key] > 0) {
           totalMins += timeStats[key];
-          chartLabels.push(CAT_INFO[key].label);
+          chartLabels.push(catInfo(key).label);
           chartData.push(timeStats[key]);
-          chartColors.push(CAT_INFO[key].color);
+          chartColors.push(catInfo(key).color);
           
           let h = Math.floor(timeStats[key]/60); let m = timeStats[key]%60;
           let timeStr = h > 0 ? `${h}時間${m}分` : `${m}分`;
-          statsHtml.push(`<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background-color:${CAT_INFO[key].color}"></span>${CAT_INFO[key].label}: <span class="ml-auto">${timeStr}</span></div>`);
+          statsHtml.push(`<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background-color:${catInfo(key).color}"></span>${escapeHtml(catInfo(key).label)}: <span class="ml-auto">${timeStr}</span></div>`);
         }
       });
 

@@ -120,6 +120,7 @@
               <option value="ext_affil">🚒 外部所属 (消防本部など)</option>
               <option value="ext_staff">🧑‍🚒 外部スタッフ (救急隊員など)</option>
               <option value="mail">✉️ メール送信先 (宛先リスト)</option>
+              <option value="worktype">📋 日報の業務種別 (色・マーク)</option>
             </select>
           </div>
           <div>
@@ -129,6 +130,16 @@
           <div id="box-val2" style="display:none;">
             <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:4px;">値2 (メールアドレス ※メール送信先追加時のみ)</label>
             <input type="email" id="add-val2" placeholder="example@gmail.com" style="background:#fff;">
+          </div>
+ <!-- 🌟 日報の業務種別：色は10色から選ぶ（夜間・印刷でも見分けやすい色だけ）。名前の変更・削除・並べ替えはマスタ_基本設定の「業務種別」列で行う -->
+          <div id="box-worktype" style="display:none;">
+            <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:4px;">グラフの色</label>
+            <select id="add-wt-color" style="background:#fff; margin-bottom:12px;">
+              <option value="青">青</option><option value="灰">灰</option><option value="橙">橙</option><option value="濃橙">濃橙</option><option value="ピンク">ピンク</option>
+              <option value="紺灰">紺灰</option><option value="青緑">青緑</option><option value="紫" selected>紫</option><option value="緑">緑</option><option value="赤">赤</option>
+            </select>
+            <label style="font-size:12px; font-weight:bold; color:var(--sub); display:block; margin-bottom:4px;">マーク (絵文字1つ・空欄可)</label>
+            <input type="text" id="add-wt-mark" maxlength="4" placeholder="例：📞" style="background:#fff;">
           </div>
           <button type="button" class="btn-primary" onclick="addMaster()" style="background:#d48806; padding:14px; margin-top:8px;">＋ マスタデータベースに追加</button>
         </div>
@@ -518,7 +529,7 @@
     } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
-  document.getElementById("add-type").addEventListener('change', (e) => { document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; });
+  document.getElementById("add-type").addEventListener('change', (e) => { document.getElementById("box-val2").style.display = e.target.value === 'mail' ? 'block' : 'none'; document.getElementById("box-worktype").style.display = e.target.value === 'worktype' ? 'block' : 'none'; });
   
   async function addMaster() {
     const type = document.getElementById("add-type").value; const val1 = document.getElementById("add-val1").value.trim(); const val2 = document.getElementById("add-val2").value.trim();
@@ -527,9 +538,9 @@
     
     showLoader("マスタデータ追加中...", "システム全体へ即時反映させています");
     try {
-      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2 }), redirect: "follow" });
+      const res = await fetch(GAS_API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "add_master", password: PIN_ADMIN, type: type, val1: val1, val2: val2, color: document.getElementById("add-wt-color").value, mark: document.getElementById("add-wt-mark").value.trim() }), redirect: "follow" });
       const json = await parseGasResponse(res);
-      if (json.status === "success") { alert("マスタデータベースに正常に追加しました。"); document.getElementById("add-val1").value = ""; document.getElementById("add-val2").value = ""; } else { throw new Error(json.message); }
+      if (json.status === "success") { alert("マスタデータベースに正常に追加しました。"); document.getElementById("add-val1").value = ""; document.getElementById("add-val2").value = ""; document.getElementById("add-wt-mark").value = ""; } else { throw new Error(json.message); }
     } catch(e) { sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`); alert("通信エラーが発生しました。"); } finally { hideLoader(); }
   }
 
