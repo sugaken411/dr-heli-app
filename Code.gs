@@ -1,4 +1,4 @@
-const GAS_VERSION = "v3.7"; // 🌟 v3.7(2026-10-17): 要請番号を常に文字として保存（枝番付き「18652-1」と枝番なし「18653」が数値・文字に分かれてシートの並べ替えが崩れる問題の修正）。 🌟 v3.6(2026-10-17): DB_日報を見出しの名前で読み書き（列の並べ替え可・足りない列は右端に追加）、機長/整備士/CS・デブリーフィング欄の参照用列を追加、業務種別をマスタ_基本設定で管理（fetch_init/fetch_all_reportsでworkTypesを返す、add_masterにworktype追加）、メール宛先の追加をメールアドレスの見出しで書く、fetch_daily_reportにstaff_only追加。 🌟 v3.5(2026-10-11): 日誌保存をロックで1件ずつ処理（行の重複防止）、タイムライン未送信時に既存を消さない、DB_日報に見出しと参照用の列（F〜M）を追加。 🌟 v3.4(2026-10-07): 通信タイムアウト後の送り直しによる二重登録の防止（submit/submit_checklist/submit_question）、メール送信失敗で保存がエラー扱いになる問題の修正、編集画面用に1件だけ返すfetch_caseを追加。
+const GAS_VERSION = "v3.8"; // 🌟 v3.8(2026-10-17): 事案の削除(delete_record)を管理者のみにし、管理者本人のログインパスワード再入力で照合（固定パスワード廃止後、削除ボタンのコードが入力不能になっていた問題の修正）。 🌟 v3.7(2026-10-17): 要請番号を常に文字として保存（枝番付き「18652-1」と枝番なし「18653」が数値・文字に分かれてシートの並べ替えが崩れる問題の修正）。 🌟 v3.6(2026-10-17): DB_日報を見出しの名前で読み書き（列の並べ替え可・足りない列は右端に追加）、機長/整備士/CS・デブリーフィング欄の参照用列を追加、業務種別をマスタ_基本設定で管理（fetch_init/fetch_all_reportsでworkTypesを返す、add_masterにworktype追加）、メール宛先の追加をメールアドレスの見出しで書く、fetch_daily_reportにstaff_only追加。 🌟 v3.5(2026-10-11): 日誌保存をロックで1件ずつ処理（行の重複防止）、タイムライン未送信時に既存を消さない、DB_日報に見出しと参照用の列（F〜M）を追加。 🌟 v3.4(2026-10-07): 通信タイムアウト後の送り直しによる二重登録の防止（submit/submit_checklist/submit_question）、メール送信失敗で保存がエラー扱いになる問題の修正、編集画面用に1件だけ返すfetch_caseを追加。
 // v3.3:// 🌟 セキュリティ強化: 全アクション共通の固定パスワード(PIN_ADMIN="9999"、コード上に平文で公開されていた)を廃止。
 // 緊急管理者アクセス(emergency_admin_login)も廃止。復旧が必要な場合はスプレッドシートを直接編集する運用に統一。
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdmgxL3GL-x7sANo05V4nujuZ9CzKTZIuQ-KMNJlawOAJdcMTMZH37c4S0xdSXRFnr/exec";
@@ -1579,6 +1579,27 @@ function doPost(e) {
 
 
    if (action === "delete_record") {
+     // 🌟 v3.8: 削除は管理者のみ。誤操作防止のため、ログイン中の管理者本人のパスワードを再入力してもらい照合する
+     if (!isAdminUser) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "削除できるのは管理者だけです" })).setMimeType(ContentService.MimeType.JSON);
+     const delEmail = String(tokenPayload.email || "").trim().toLowerCase();
+     const delPass = String(requestData.adminPassword || "");
+     const delMs = getSheetFlexible(SpreadsheetApp.getActiveSpreadsheet(), ["マスタ_基本設定", "マスタデータ"]);
+     const delMsData = delMs ? delMs.getDataRange().getDisplayValues() : [[]];
+     const delMsHeaders = delMsData[0].map(h => String(h).trim());
+     const dMail = delMsHeaders.indexOf("メールアドレス");
+     const dHash = delMsHeaders.indexOf("パスワードハッシュ");
+     const dSalt = delMsHeaders.indexOf("パスワードソルト");
+     let delOk = false;
+     if (delEmail && delPass && dMail !== -1 && dHash !== -1 && dSalt !== -1) {
+       for (let i = 1; i < delMsData.length; i++) {
+         if (String(delMsData[i][dMail]).trim().toLowerCase() === delEmail) {
+           delOk = !!delMsData[i][dHash] && hashPassword(delPass, delMsData[i][dSalt]) === delMsData[i][dHash];
+           break;
+         }
+       }
+     }
+     if (!delOk) return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "パスワードが違います。削除は中止されました。" })).setMimeType(ContentService.MimeType.JSON);
+
      const sheet = getDbSheet();
      const data = sheet.getDataRange().getDisplayValues();
      const headers = data[0].map(h => h.trim());

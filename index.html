@@ -2720,16 +2720,15 @@
   }
 
   async function deleteRecord() {
-    const p = prompt("この事案データを完全に削除しますか？\n実行するにはアクセスコードを入力してください。");
-    if (p !== PIN_CODE) { 
-      if (p !== null) alert("パスワードが一致しません。削除は中止されました。"); 
-      return; 
-    }
+    // 🌟 削除は管理者のみ。管理者本人のログインパスワードをサーバー側で照合する（旧: 固定アクセスコード）
+    const p = prompt("この事案データを完全に削除しますか？\n実行するには管理者のログインパスワードを入力してください。");
+    if (p === null) return;
+    if (!p) { alert("パスワードが入力されていません。削除は中止されました。"); return; }
     showLoader("削除処理中...", "データベースからレコードを削除しています");
     try {
       const res = await fetchWithTimeout(GAS_API_URL, {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "delete_record", password: PIN_CODE, id: editTargetSysId }),
+        body: JSON.stringify({ action: "delete_record", password: PIN_CODE, adminPassword: p, id: editTargetSysId }),
         redirect: "follow"
       });
       const json = await parseGasResponse(res);
@@ -2737,7 +2736,8 @@
         clearDraft(); // 🌟 削除した事案の編集途中の下書きは不要
         showNavChoice("削除しました", "事案データを削除しました。");
       } else {
-        throw new Error(json.message);
+        // パスワード違い・権限なしなどはサーバーの説明をそのまま表示（通信エラー扱いにしない）
+        alert(json.message || "削除できませんでした。");
       }
     } catch(e) {
       if (!e.isTimeout) sendErrorLog(`Msg: ${e.message || e}\nStack: ${e.stack || e.toString()}`);
